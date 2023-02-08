@@ -1,4 +1,6 @@
 ﻿using FJarvis.Data;
+using FJarvis.Data.Traits;
+using FJarvis.Traits.FlightCentre;
 using Shouldly;
 
 namespace JarvisBot.Tests;
@@ -21,7 +23,7 @@ public class BitmaskTests
     {
         // Arrange
         var entity = Jarvis.EntityManager().CreatEntity();
-        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
         bitmask.Resize(24);
@@ -40,7 +42,7 @@ public class BitmaskTests
     {
         // Arrange
         var entity = Jarvis.EntityManager().CreatEntity();
-        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
         bitmask.Resize(128);
@@ -62,7 +64,7 @@ public class BitmaskTests
     {
         // Arrange
         var entity = Jarvis.EntityManager().CreatEntity();
-        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
         var result = bitmask.GetSize();
@@ -81,7 +83,7 @@ public class BitmaskTests
     {
         // Arrange
         var entity = Jarvis.EntityManager().CreatEntity();
-        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
         bitmask.Resize(65);
@@ -110,11 +112,30 @@ public class BitmaskTests
         // Arrange
         
         var entity = Jarvis.EntityManager().CreatEntity();
-        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Assert
         
         // Test to see if the Bitmask is 64bits
         bitmask.Validate().ShouldBe( false, "There is no Traits set, therefore the bitmask will be empty");
+    }
+    
+    // Check to see if a Bitmask has a Trait Flag
+    [Test]
+    public void Bitmask_Should_HaveTraitFlag()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
+        
+        
+        // Act
+        bitmask.SetBitFlag(entity, new Flight());
+        
+        // Assert
+        
+        // Test to see if the Bitmask is 64bits
+        bitmask.HasBitFlag<Flight>().ShouldBeTrue( "The Bitmask should have the Flight Trait Flag");
+        bitmask.HasBitFlag<Coupon>().ShouldBeFalse( "The Bitmask should not have the Coupon Trait Flag");
     }
 }

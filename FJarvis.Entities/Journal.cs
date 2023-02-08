@@ -11,7 +11,7 @@ using Autofac;
 public class Journal 
 { 
     private readonly IComponentContext _container;
-    private static HashSet<TraitData>  _entities;
+    private static HashSet<EntityInfo>  _entities;
 
     public Journal(IComponentContext  container, ILogger logger)
     {
@@ -31,5 +31,5 @@ public class Journal
 
     
   
-    public HashSet<TraitData> Entities => _entities;
+    public HashSet<EntityInfo> Entities => _entities;
 }

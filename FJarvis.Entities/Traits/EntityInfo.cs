@@ -16,17 +16,17 @@ namespace FJarvis.Data.Traits;
 /// <GUID:Bitmask>
 /// "JournalHeaderBitflags:"a929d1ac-bdb6-4dd2-9124-8c945e2f0a55:111111101111111000000111111111111110111111111111111111";
 /// </summary>
-public class TraitData
+public class EntityInfo
 {
 
     // If the Entity is not passed a ILogger, throw an exception
-    public TraitData()
+    public EntityInfo()
     {
         throw new NotImplementedException( "This constructor is not implemented. Please use the constructor that takes a ILogger parameter.");
     }
     
     // Constructor
-    public TraitData(ILogger logger)
+    public EntityInfo(ILogger logger)
     {
         // Set the size of the TraitData Bitmask to 64 bits
         Resize(64);
@@ -41,7 +41,7 @@ public class TraitData
     private readonly ILogger _logger;
 
     // Identify the Entity this TraitData is registered to
-    public EntityId EntityId { get; set; }
+    public Entity EntityId { get; set; }
  
     // Get the size of the TraitData Bitmask
     public int GetSize()
@@ -85,28 +85,28 @@ public class TraitData
     /// </summary>
     /// <param name="id"></param>
     /// <param name="trait"></param>
-    public void SetBitFlag(EntityId id, ITrait trait)
+    public void SetBitFlag(Entity id, ITrait trait)
     {
         // Register the Entity
-        RegisterEntity(id);
+        SetEntityId(id);
         
         // Update the Traits Bitflag on _traits
         Bitmask.Set(trait.Index, true);
     }
     
     /// <summary>
-    ///  This method will register the Entity Id with the TraitData Internal Bitmask.
+    ///  This method will set the EntityId to the EntityInfo
     /// </summary>
     /// <param name="entityId"></param>
     /// <exception cref="Exception"></exception>
-    private void RegisterEntity(EntityId entityId)
+    private void SetEntityId(Entity entityId)
     {
         // Check to see if the Entity is already registered
-        if (EntityId.Index == 0)
+        if (entityId.Id.Equals(Guid.Empty))
         {
-            _logger.Fatal("An attempt to register an Entity to the Bitmask was made, but the Entity Index is 0.");
+            _logger.Fatal("An attempt to register an Entity to the Bitmask was made, but the Entity has no Id.");
             // If the Entity is already registered, return
-            throw new Exception("Entity Index cannot be 0 or empty");
+            throw new Exception("An attempt to register an Entity to the Bitmask was made, but the Entity has no Id.");
         }
         // Register the Entity to the Bitmask
         EntityId = entityId;
@@ -118,8 +118,18 @@ public class TraitData
     /// <returns></returns>
     public bool Validate()
     {
-        return !Bitmask.Cast<bool>().Any(b => b) && EntityId.Index != 0;
+        return !Bitmask.Cast<bool>().Any(b => b) && EntityId.Id != Guid.Empty;
     }
-    
-  
+
+
+    /// <summary>
+    ///  This method the Bitflag for the Trait
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public bool HasBitFlag<T>() where T : ITrait
+    {
+        var trait = default(T);
+        return Bitmask.Get(trait.Index);
+    }
 }

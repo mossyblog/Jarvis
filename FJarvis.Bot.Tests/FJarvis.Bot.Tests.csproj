@@ -20,8 +20,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\FJarvis.Data\FJarvis.Data.csproj" />
+      <ProjectReference Include="..\FJarvis.Entities\FJarvis.Entities.csproj" />
       <ProjectReference Include="..\FJarvis.Bot\FJarvis.Bot.csproj" />
+      <ProjectReference Include="..\FJarvis.Traits.FlightCentre\FJarvis.Traits.FlightCentre.csproj" />
     </ItemGroup>
 
 </Project>

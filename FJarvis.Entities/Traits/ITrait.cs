@@ -3,7 +3,8 @@
 public interface ITrait
 {
     int Index { get; }
-    int Version { get; set; }
+
     
+    Guid Id { get; set; }
     DateTime LastUpdated { get; set; }
 }

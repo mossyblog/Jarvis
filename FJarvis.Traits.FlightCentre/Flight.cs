@@ -4,6 +4,11 @@ namespace FJarvis.Data;
 
 public struct Flight : ITrait
 {
+    public Flight()
+    {
+        Id = Guid.NewGuid();
+    }
+    
     public int FlightNumber { get; set; }
     public string Departure { get; set; }
     public string Arrival { get; set; }
@@ -15,7 +20,8 @@ public struct Flight : ITrait
     public string Status { get; set; }
 
     // This is the index of the Bitmask this trait is registered to
-    public int Index => (int)TraitDataIndex.Flight;
+    public int Index => (int)FCBitmaskIndex.Flight;
+    public Guid Id { get; set; }
     public int Version { get; set; }
     public DateTime LastUpdated { get; set; }
 }

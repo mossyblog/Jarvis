@@ -2,5 +2,5 @@
 
 public struct Archetype
 {
-    public TraitData[] TraitDatas;
+    public EntityInfo[] TraitDatas;
 }

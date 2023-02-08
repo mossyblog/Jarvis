@@ -19,7 +19,7 @@ public static class Jarvis
         builder.RegisterInstance(logger).As<ILogger>();
 
         // Register the Entity class
-        builder.RegisterType<TraitData>().AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<EntityInfo>().AsSelf().InstancePerLifetimeScope();
 
         builder.RegisterInstance(journalLogger).AsSelf().SingleInstance();
         builder.RegisterType<EntityManager>().AsSelf().SingleInstance();
@@ -29,7 +29,7 @@ public static class Jarvis
 
         // Build the container
         container = builder.Build();
-        container.Resolve<TraitData>();
+        container.Resolve<EntityInfo>();
         
         
     }
