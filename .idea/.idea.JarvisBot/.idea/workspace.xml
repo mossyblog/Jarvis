@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="2c117dca-9955-4abd-83dd-ef2378e1c815" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/.idea.JarvisBot/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Bot.Tests/BitmaskTests.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Bot.Tests/DiscordTests.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Bot.Tests/FJarvis.Bot.Tests.csproj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Bot.Tests/Usings.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Bot/FJarvis.Bot.csproj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Bot/JarvisBot.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/EntityBinarySearchTree.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/EntityManager.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/FJarvis.Data.csproj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/Jarvis.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/Journal.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/JournalLogger.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/FJarvis.Data/TraitData.cs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Jarvis.sln" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/FJarvis.Bot.Tests/BitmaskTests.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$PROJECT_DIR$/FJarvis.Bot/JarvisBot.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/DecompilerCache/decompiler/382049698ae94833a7769d39460acfd7bf200/5f/2e03a521/DiscordSocketClient.cs" root0="FORCE_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2362daeded72ecb93e45c6daeb8864f181f9258f26bee37e95f8c0d066a0bda/ILogger.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/2a5cc194fee19ec98ae1c3a8395d4f42f3d0dc84adbe34dcc08c28eec6bc9b1/TaskAwaiter.cs" root0="SKIP_HIGHLIGHTING" />
+    <setting file="file://$APPLICATION_CONFIG_DIR$/resharper-host/SourcesCache/794bcfedceb3c6d957fbddf0e1c9a04afca77f9b5470c6859466cfba35e1ddb1/Task.cs" root0="SKIP_HIGHLIGHTING" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectId" id="2LRX7imkYHdJOW3fwtrp3qe3AfY" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "rider.external.source.directories": [
+      "C:\\Users\\scbarnes\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\DecompilerCache",
+      "C:\\Users\\scbarnes\\AppData\\Roaming\\JetBrains\\Rider2022.3\\resharper-host\\SourcesCache",
+      "C:\\Users\\scbarnes\\AppData\\Local\\Symbols\\src"
+    ]
+  }
+}]]></component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="2c117dca-9955-4abd-83dd-ef2378e1c815" name="Changes" comment="" />
+      <created>1675834705763</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1675834705763</updated>
+      <workItem from="1675834705915" duration="26367000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="VcsManagerConfiguration">
+    <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+  </component>
+</project>

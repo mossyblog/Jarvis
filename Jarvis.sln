@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Bot", "FJarvis.Bot\FJarvis.Bot.csproj", "{87162172-E589-455D-BA84-0FE1022BCAB0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Bot.Tests", "FJarvis.Bot.Tests\FJarvis.Bot.Tests.csproj", "{09D888BB-FB45-4689-B9BD-6EBD11534BD1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Data", "FJarvis.Data\FJarvis.Data.csproj", "{741C764B-50CC-4B43-B31E-72A4F38E3BEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{87162172-E589-455D-BA84-0FE1022BCAB0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{87162172-E589-455D-BA84-0FE1022BCAB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{87162172-E589-455D-BA84-0FE1022BCAB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{87162172-E589-455D-BA84-0FE1022BCAB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09D888BB-FB45-4689-B9BD-6EBD11534BD1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09D888BB-FB45-4689-B9BD-6EBD11534BD1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09D888BB-FB45-4689-B9BD-6EBD11534BD1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09D888BB-FB45-4689-B9BD-6EBD11534BD1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{741C764B-50CC-4B43-B31E-72A4F38E3BEE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{741C764B-50CC-4B43-B31E-72A4F38E3BEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{741C764B-50CC-4B43-B31E-72A4F38E3BEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{741C764B-50CC-4B43-B31E-72A4F38E3BEE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

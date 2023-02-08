@@ -1,0 +1,120 @@
+﻿using FJarvis.Data;
+using Shouldly;
+
+namespace JarvisBot.Tests;
+
+public class BitmaskTests
+{
+    private Journal _journal;
+
+    [SetUp]
+    public void Setup()
+    {
+        Jarvis.Initialize();
+    }
+    
+    /// <summary>
+    ///  This test will check to see if the Bitmask is 64 bits even if the size is set to 24 bits
+    /// </summary>
+    [Test]
+    public void Bitmask_Should_NotGoBelow64Bits()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        
+        // Act
+        bitmask.Resize(24);
+        
+        // Assert
+        
+        // Test to see if the Bitmask is 64bits
+        bitmask.GetSize().ShouldBe( 64, "The size of the Bitmask should not go below 64 bits");
+    }
+    
+    /// <summary>
+    ///  This test will check to ensure the Bitmask doesn't go below the existing Bits.
+    /// </summary>
+    [Test]
+    public void Bitmask_Should_NotGoBelowExistingSize()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        
+        // Act
+        bitmask.Resize(128);
+        
+        // Should throw an exception
+        Should.Throw<Exception>(() => bitmask.Resize(24));
+        
+        // Assert
+        
+        // Test to see if the Bitmask is 64bits
+        bitmask.GetSize().ShouldBe( 128, "The size of the Bitmask should not go below the existing size");
+    }
+    
+    /// <summary>
+    ///  This test will check to ensure the minimum size of the Bitmask is 64 bits
+    /// </summary>
+    [Test]
+    public void Bitmask_Should_CreateDefaultSizeOf64Bits()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        
+        // Act
+        var result = bitmask.GetSize();
+        
+        // Assert
+        
+        // Test to see if the Bitmask is 64bits
+        result.ShouldBe( 64, "The size of the Bitmask should be 64 bits");
+    }
+    
+    /// <summary>
+    ///  This test will check to see if the Bitmask is a multiple of 64 bits
+    /// </summary>
+    [Test]
+    public void Bitmask_Should_IncreaseSizeBy64Bits()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        
+        // Act
+        bitmask.Resize(65);
+        var Result65 = bitmask.GetSize();
+        
+        bitmask.Resize(128);
+        var Result128 = bitmask.GetSize();
+        
+        bitmask.Resize(127);
+        var Result127 = bitmask.GetSize();
+        
+        // Assert
+        
+        Result65.ShouldBe(128, "The size of the Bitmask should be a multiple of 64 bits");
+        Result127.ShouldBe( 128, "The size of the Bitmask should be a multiple of 64 bits");
+        Result128.ShouldBe( 128, "The size of the Bitmask should be a multiple of 64 bits");
+        
+    }
+
+    /// <summary>
+    ///  This test will check to see if any of the bits are set
+    /// </summary>
+    [Test]
+    public void Bitmask_Should_Validate()
+    {
+        // Arrange
+        
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetTraitData(entity);
+        
+        // Assert
+        
+        // Test to see if the Bitmask is 64bits
+        bitmask.Validate().ShouldBe( false, "There is no Traits set, therefore the bitmask will be empty");
+    }
+}
