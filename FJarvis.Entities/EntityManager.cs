@@ -104,6 +104,22 @@ public class EntityManager
             entityInfo.RemoveTrait(trait);
     }
     
+    /// <summary>
+    ///  Removes all the Traits from an Entity. If the Entity has no Traits, It's bitfield is set to 0.
+    /// </summary>
+    /// <param name="entity"></param>
+    public void RemoveAllTraitData(Entity entity)
+    {
+        if (entities.All(e => e.EntityId != entity.Id))
+        {
+            _logger.Warning("RemovalTraits :: The Entity {EntityId} does not exist in the system.");
+            return;
+        }
+        
+        var entityInfo = entities.First(e => e.EntityId == entity.Id);
+        entityInfo.Clear();
+    }
+    
     // Get All Traits of Type registered for an Entity. Returns a HashSet<T> of Traits
     public HashSet<T> GetTraits<T>(Entity entity) where T: ITrait
     {
@@ -165,4 +181,5 @@ public class EntityManager
         _logger.Warning($"GetEntityInfo ::  Entity {entity.Id} does not exist in the system.", entity.Id);
         throw new Exception($"GetEntityInfo ::  The Entity {entity.Id} does not exist in the system.");
     }
+    
 }

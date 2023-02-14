@@ -101,12 +101,14 @@ public class EntityInfo
     }
     
     /// <summary>
-    ///  This method will clear the Bitmask for this Entity, resulting in all Traits being BitFlagged as unselected.
+    ///  This method will remove all the Traits from the Entity and set all the bitmasks back to default state.
     /// </summary>
     internal void Clear()
     {
         // Clear the Bitmask
         bitFlags.SetAll(false);
+        
+        // Clear the Traits Registry
         TraitsRegistry.Clear();
     }
     
@@ -163,7 +165,7 @@ public class EntityInfo
     /// </summary>
     /// <param name="entityId"></param>
     /// <exception cref="Exception"></exception>
-    private void SetEntityId(Entity entityId)
+    internal void SetEntityId(Entity entityId)
     {
         // Check to see if the Entity is already registered
         if (entityId.Id.Equals(Guid.Empty))
@@ -260,6 +262,16 @@ public class EntityInfo
         // Determine Slot index from Trait type
         var trait = default(T);
         
+        // Determine if the Trait has even been registered
+        if (!HasTraits(trait.Index))
+        {
+            _logger.Warning($"The Trait {trait.GetType().Name} has not been registered to the Entity {EntityId}");
+            
+            // NOTE: I am not sure if this is the best way to handle this, but I am returning an empty HashSet<Guid>
+            // to prevent a null reference exception.
+            return new HashSet<Guid>();
+        }
+
         // Return all traits of type T that are found in the TraitsRegistry
         return TraitsRegistry[trait.Index];
     }

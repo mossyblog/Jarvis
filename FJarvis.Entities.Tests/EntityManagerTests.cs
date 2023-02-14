@@ -139,5 +139,65 @@ public void EntityManager_Should_SetMultipleTraitsForEntity()
         entityManager.GetEntityInfo(entity).GetTraits<Flight>().Count.ShouldBe(0);
     }
 
+    
+    /// EntityManager Should Determine if it has a Trait
+    [Test]
+    public void EntityManager_Should_DetermineIfItHasTrait()
+    {
+        // Arrange
+        Jarvis.Initialize();
+        var entityManager = Jarvis.EntityManager();
+        var entity = entityManager.CreatEntity();
+        var flight = new Flight();
+        
+        // Act
+        entityManager.AddTraitData(entity, flight);
+        
+        // Assert
+        entityManager.HasTrait<Flight>(entity).ShouldBeTrue();
+        entityManager.HasTrait<Coupon>(entity).ShouldBeFalse();
+    }
+    
+    // EntityManager should RemoveAll Traits for Entity
+    [Test]
+    public void EntityManager_Should_RemoveAllTraitsForEntity()
+    {
+        // Arrange
+        Jarvis.Initialize();
+        var entityManager = Jarvis.EntityManager();
+        var entity = entityManager.CreatEntity();
+        var flight = new Flight();
+        var flight2 = new Flight();
+        
+        // Act
+        entityManager.AddTraitData(entity, flight, flight2);
+        entityManager.RemoveAllTraitData(entity);
+        
+        // Assert
+        entityManager.HasTrait<Flight>(entity).ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).GetBitFlag<Flight>().ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).Validate().ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).GetSize().ShouldBe(64);
+        entityManager.GetEntityInfo(entity).Count<Flight>().ShouldBe(0);
+        entityManager.GetEntityInfo(entity).Count<Coupon>().ShouldBe(0);
+        entityManager.GetEntityInfo(entity).HasTrait(flight.Id).ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).HasTrait(flight2.Id).ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).GetTraits<Flight>().Count.ShouldBe(0);
+    }
+    
+    // SetEntity should fail when there is no Id
+    [Test]
+    public void SetEntity_Should_Fail_WhenThereIsNoId()
+    {
+        // Arrange
+        Jarvis.Initialize();
+        var entityManager = Jarvis.EntityManager();
+        var entity = entityManager.CreatEntity();
+        
+        // Act
+        var entityInfo = entityManager.GetEntityInfo(entity);
+        Should.Throw<Exception>(() => entityInfo.SetEntityId(new Entity()));
+
+    }
 
 }
