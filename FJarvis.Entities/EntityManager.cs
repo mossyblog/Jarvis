@@ -29,8 +29,12 @@ public class EntityManager
         _context = context;
         _logger = logger;
     }
-    
-    // Generates an empty Entity and registers it with the system.
+
+    /// <summary>
+    ///  Creates a new Entity and registers it with the system.
+    /// </summary>
+    /// <param name="components"></param>
+    /// <returns></returns>
     public Entity CreatEntity(params Archetype[] components)
     {
         Entity entity = new Entity();
@@ -47,7 +51,11 @@ public class EntityManager
         return entity;
     }
     
-    // Returns whether the Entity has been registered with the system.
+    /// <summary>
+    ///  Determines if the Entity has been registered with the system.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <returns></returns>
     public bool EntityExists(Entity entity)
     {
         return entities.Any(e => e.EntityId == entity.Id);
@@ -68,14 +76,13 @@ public class EntityManager
         foreach (var trait in traits)
         {
             // Check to see if the Entity itself exists in the EntityInfo
-            if (entities.Any(e => e.EntityId == entity.Id))
+            if (EntityExists(entity))
                 entityInfo = entities.FirstOrDefault(e => e.EntityId == entity.Id);
            
             // Update the Bitmask to reflect that this entity has at least one Trait registered.
             // ⚠️ Important for network RPC calls.⚠️
             entityInfo.RegisterTrait(entity, trait);
-            
-            
+
             // A Trait can be attached to multiple Entities, therefore we only need to register the Trait once.
             if (!this.traits.Any(t => t.Id.Equals( trait.Id)))
             {
@@ -93,13 +100,7 @@ public class EntityManager
     /// <param name="traits"></param>
     public void RemoveTraitData(Entity entity, params ITrait[] traits)
     {
-        if (entities.All(e => e.EntityId != entity.Id))
-        {
-            _logger.Warning("RemoveTraitData :: The Entity {EntityId} does not exist in the system.");
-            return;
-        }
-        
-        var entityInfo = entities.First(e => e.EntityId == entity.Id);
+        var entityInfo = GetEntityInfo(entity);
         foreach (var trait in traits) 
             entityInfo.RemoveTrait(trait);
     }
@@ -110,26 +111,19 @@ public class EntityManager
     /// <param name="entity"></param>
     public void RemoveAllTraitData(Entity entity)
     {
-        if (entities.All(e => e.EntityId != entity.Id))
-        {
-            _logger.Warning("RemovalTraits :: The Entity {EntityId} does not exist in the system.");
-            return;
-        }
-        
-        var entityInfo = entities.First(e => e.EntityId == entity.Id);
+        var entityInfo = GetEntityInfo(entity);
         entityInfo.Clear();
     }
-    
-    // Get All Traits of Type registered for an Entity. Returns a HashSet<T> of Traits
+
+    /// <summary>
+    /// Returns all the Traits registered to an Entity.
+    /// </summary>
+    /// <param name="entity"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
     public HashSet<T> GetTraits<T>(Entity entity) where T: ITrait
     {
-        if (entities.All(e => e.EntityId != entity.Id))
-        {
-            _logger.Warning("GetTraits :: The Entity {EntityId} does not exist in the system.");
-            return new HashSet<T>();
-        }
-        
-        var entityInfo = entities.First(e => e.EntityId == entity.Id);
+        var entityInfo = GetEntityInfo(entity);
         var traitIds = entityInfo.GetTraits<T>();
         return traits.Where(t => traitIds.Contains(t.Id)).Cast<T>().ToHashSet();
     }
@@ -163,18 +157,10 @@ public class EntityManager
     // Checks to see if an Entity has a Trait
     public bool HasTrait<T>(Entity entity) where T : ITrait
     {
-        // Check to see if the Entity exists in the system
-        if (entities.Any(e => e.EntityId == entity.Id))
-        {
-            var entityInfo = entities.FirstOrDefault(e => e.EntityId == entity.Id);
+        var entityInfo = GetEntityInfo(entity);
 
-            // Check to see if the Entity has the Trait
-            return entityInfo.GetBitFlag<T>();
-        }
-
-        // Get the EntityInfo for the Entity
-        _logger.Warning("HasTrait :: Entity {EntityId} does not exist in the system.", entity.Id);
-        return false;
+        // Check to see if the Entity has the Trait
+        return entityInfo.GetBitFlag<T>();
     }
 
     // Returns the EntityInfo for an Entity if it exists in the system.
