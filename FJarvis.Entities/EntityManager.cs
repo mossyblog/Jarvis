@@ -123,9 +123,15 @@ public class EntityManager
     // Get All Traits of Type registered for an Entity. Returns a HashSet<T> of Traits
     public HashSet<T> GetTraits<T>(Entity entity) where T: ITrait
     {
-        // Find the Entity in entities registry
+        if (entities.All(e => e.EntityId != entity.Id))
+        {
+            _logger.Warning("GetTraits :: The Entity {EntityId} does not exist in the system.");
+            return new HashSet<T>();
+        }
+        
         var entityInfo = entities.First(e => e.EntityId == entity.Id);
-        throw new NotImplementedException();
+        var traitIds = entityInfo.GetTraits<T>();
+        return traits.Where(t => traitIds.Contains(t.Id)).Cast<T>().ToHashSet();
     }
     
     // Set a Traits Parent

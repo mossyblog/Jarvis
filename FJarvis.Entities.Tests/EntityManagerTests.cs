@@ -122,18 +122,19 @@ public void EntityManager_Should_SetMultipleTraitsForEntity()
         var entity = entityManager.CreatEntity();
         var flight = new Flight();
         var flight2 = new Flight();
+        var coupon = new Coupon();
         
         // Act
-        entityManager.AddTraitData(entity, flight, flight2);
+        entityManager.AddTraitData(entity, flight, flight2, coupon);
         entityManager.RemoveTraitData(entity, flight, flight2);
         
         // Assert
         entityManager.HasTrait<Flight>(entity).ShouldBeFalse();
         entityManager.GetEntityInfo(entity).GetBitFlag<Flight>().ShouldBeFalse();
-        entityManager.GetEntityInfo(entity).Validate().ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).Validate().ShouldBeTrue();
         entityManager.GetEntityInfo(entity).GetSize().ShouldBe(64);
         entityManager.GetEntityInfo(entity).Count<Flight>().ShouldBe(0);
-        entityManager.GetEntityInfo(entity).Count<Coupon>().ShouldBe(0);
+        entityManager.GetEntityInfo(entity).Count<Coupon>().ShouldBe(1);
         entityManager.GetEntityInfo(entity).HasTrait(flight.Id).ShouldBeFalse();
         entityManager.GetEntityInfo(entity).HasTrait(flight2.Id).ShouldBeFalse();
         entityManager.GetEntityInfo(entity).GetTraits<Flight>().Count.ShouldBe(0);
@@ -160,7 +161,7 @@ public void EntityManager_Should_SetMultipleTraitsForEntity()
     
     // EntityManager should RemoveAll Traits for Entity
     [Test]
-    public void EntityManager_Should_RemoveAllTraitsForEntity()
+    public void RemoveAllTraitsData_Should_RemoveTraitsForAnEntity()
     {
         // Arrange
         Jarvis.Initialize();
@@ -168,9 +169,10 @@ public void EntityManager_Should_SetMultipleTraitsForEntity()
         var entity = entityManager.CreatEntity();
         var flight = new Flight();
         var flight2 = new Flight();
+        var coupon = new Coupon();
         
         // Act
-        entityManager.AddTraitData(entity, flight, flight2);
+        entityManager.AddTraitData(entity, flight, flight2, coupon);
         entityManager.RemoveAllTraitData(entity);
         
         // Assert
@@ -187,7 +189,7 @@ public void EntityManager_Should_SetMultipleTraitsForEntity()
     
     // SetEntity should fail when there is no Id
     [Test]
-    public void SetEntity_Should_Fail_WhenThereIsNoId()
+    public void EntityManager_Should_ThrowException_When_EntityIdIsEmpty()
     {
         // Arrange
         Jarvis.Initialize();
@@ -198,6 +200,24 @@ public void EntityManager_Should_SetMultipleTraitsForEntity()
         var entityInfo = entityManager.GetEntityInfo(entity);
         Should.Throw<Exception>(() => entityInfo.SetEntityId(new Entity()));
 
+    }
+    
+    [Test]
+    public void GetAllTraits_Should_ReturnTotalPerType()
+    {
+        // Arrange
+        Jarvis.Initialize();
+        var entityManager = Jarvis.EntityManager();
+        var entity = entityManager.CreatEntity();
+        var flight = new Flight();
+        var flight2 = new Flight();
+        var coupon = new Coupon();
+        
+        // Act
+        entityManager.AddTraitData(entity, flight, flight2, coupon);
+        
+        // Assert
+        entityManager.GetTraits<Flight>(entity).Count.ShouldBe(2);
     }
 
 }
