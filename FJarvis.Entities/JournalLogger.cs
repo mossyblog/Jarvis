@@ -11,10 +11,18 @@ public class JournalLogger : ILogEventEnricher
     public JournalLogger()
     {
     }
-   
+
     public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
     {
         Debug.WriteLine($"Logging Called {logEvent.MessageTemplate.Text}");
         _logEvents.Add(logEvent);
+    }
+
+    public void Save()
+    {
+        foreach (var logEvent in _logEvents)
+        {
+            Debug.WriteLine($"Saving {logEvent.MessageTemplate.Text}");
+        }
     }
 }

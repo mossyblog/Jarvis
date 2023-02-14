@@ -39,11 +39,9 @@ public static class Jarvis
         return container.Resolve<Journal>();
     }
     
+    
     public static EntityManager EntityManager()
     {
         return container.Resolve<EntityManager>();
     }
-    
-   
-    
 }

@@ -7,7 +7,13 @@ public class RelationshipTrait : ITrait
         Id = Guid.NewGuid();
         LastUpdated = DateTime.UtcNow;
     }
+    
+    // ⚠️ CAUTION 
+    // ----------------------------------------------------- //
+    // Relationship Trait is Always Reserved to Slot 1. 
     public int Index => 1;
+    // ----------------------------------------------------- // 
+    
     public Guid Id { get; set; }
     public DateTime LastUpdated { get; set; }
     

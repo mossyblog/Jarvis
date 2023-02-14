@@ -1,4 +1,5 @@
-﻿using FJarvis.Data;
+﻿using System.Collections;
+using FJarvis.Data;
 using FJarvis.Data.Traits;
 using FJarvis.Traits.FlightCentre;
 using Shouldly;
@@ -118,9 +119,14 @@ public class BitmaskTests
         
         // Test to see if the Bitmask is 64bits
         bitmask.Validate().ShouldBe( false, "There is no Traits set, therefore the bitmask will be empty");
+
+        Jarvis.Journal().Save();
     }
     
-    // Check to see if a Bitmask has a Trait Flag
+
+    /// <summary>
+    ///  This test will check to see if EntityInfo has bitflag set
+    /// </summary>
     [Test]
     public void Bitmask_Should_HaveTraitFlag()
     {
@@ -128,14 +134,36 @@ public class BitmaskTests
         var entity = Jarvis.EntityManager().CreatEntity();
         var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
+        // Act
+        bitmask.SetBitFlag(entity, new Flight());
+        
+        // Assert
+        bitmask.HasBitFlag<Flight>().ShouldBeTrue( "The Bitmask should have the Flight Trait Flag");
+        bitmask.HasBitFlag<Coupon>().ShouldBeFalse( "The Bitmask should not have the Coupon Trait Flag");
+    }
+
+    [Test]
+    public void Bitmask_Should_ReturnUlongBitmask()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
         bitmask.SetBitFlag(entity, new Flight());
         
         // Assert
+        /*
         
-        // Test to see if the Bitmask is 64bits
-        bitmask.HasBitFlag<Flight>().ShouldBeTrue( "The Bitmask should have the Flight Trait Flag");
-        bitmask.HasBitFlag<Coupon>().ShouldBeFalse( "The Bitmask should not have the Coupon Trait Flag");
+        0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60  61  62  63
+        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+        | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+         */
+
+        ulong expectedMask = 0x0000000000000002;
+        ulong actualMask = bitmask.GetBitmask();
+        Assert.AreEqual(expectedMask, actualMask, $"Expected: {expectedMask:x}, Actual: {actualMask:x}"); 
+
     }
 }

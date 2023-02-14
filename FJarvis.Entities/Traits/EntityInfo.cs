@@ -78,7 +78,31 @@ public class EntityInfo
         // Set the size of the Bitmask
         Bitmask.Length = size;
     }
+    
+    /// <summary>
+    /// Returns the Bitmask for this Entity
+    /// </summary>
+    /// <returns></returns>
+    public ulong GetBitmask()
+    {
+        ulong actualMask = 0;
+        foreach (bool bit in Bitmask)
+        {
+            ulong bitNum = (ulong)(bit ? 1 : 0);
+            actualMask = (actualMask << 1) | bitNum;
+        }
 
+        return actualMask;
+    }
+    
+    /// <summary>
+    ///  This method will clear the Bitmask for this Entity, resulting in all Traits being BitFlagged as unselected.
+    /// </summary>
+    public void Clear()
+    {
+        // Clear the Bitmask
+        Bitmask.SetAll(false);
+    }
     
     /// <summary>
     ///  This method will register the Trait to the TraitData Bitmask.
@@ -120,8 +144,7 @@ public class EntityInfo
     {
         return !Bitmask.Cast<bool>().Any(b => b) && EntityId.Id != Guid.Empty;
     }
-
-
+    
     /// <summary>
     ///  This method the Bitflag for the Trait
     /// </summary>

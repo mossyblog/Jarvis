@@ -12,12 +12,13 @@ public class Journal
 { 
     private readonly IComponentContext _container;
     private static HashSet<EntityInfo>  _entities;
+    private readonly JournalLogger _journalLogger;
 
-    public Journal(IComponentContext  container, ILogger logger)
+    public Journal(IComponentContext  container, ILogger logger, JournalLogger journalLogger)
     {
         // store the container
         _container = container;
-        
+        _journalLogger = journalLogger;
         logger.Information("Journal Initialized");
         
     }
@@ -29,6 +30,13 @@ public class Journal
         _container.Resolve<ILogger>().Write(level, message);
     }
 
+    public void Save()
+    {
+        // Check to see if Journal Logger has been initialized.
+        if (_journalLogger == null)
+            return;
+        _journalLogger.Save();
+    }
     
   
     public HashSet<EntityInfo> Entities => _entities;
