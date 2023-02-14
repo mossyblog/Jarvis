@@ -142,7 +142,7 @@ public class EntityInfo
     /// <returns></returns>
     public bool Validate()
     {
-        return !Bitmask.Cast<bool>().Any(b => b) && EntityId.Id != Guid.Empty;
+        return Bitmask.Cast<bool>().Any(b => b);
     }
     
     /// <summary>
@@ -154,5 +154,14 @@ public class EntityInfo
     {
         var trait = default(T);
         return Bitmask.Get(trait.Index);
+    }
+
+    /// <summary>
+    /// Returns whether or not any traits have been assigned to this Entity.
+    /// </summary>
+    /// <returns></returns>
+    public bool HasTraits()
+    {
+        return Bitmask.Cast<bool>().Any(b => b);
     }
 }

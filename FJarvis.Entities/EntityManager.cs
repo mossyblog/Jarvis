@@ -1,8 +1,13 @@
-﻿using Autofac;
+﻿
+using System.Runtime.CompilerServices;
+using Autofac;
 using FJarvis.Data.Traits;
 using Serilog;
 
+[assembly: InternalsVisibleTo("Jarvis.Entities.Tests")]
+
 namespace FJarvis.Data;
+
 
 public class EntityManager
 {
@@ -25,13 +30,27 @@ public class EntityManager
         _logger = logger;
     }
     
-    // Generates an empty Entity
+    // Generates an empty Entity and registers it with the system.
     public Entity CreatEntity(params Archetype[] components)
     {
         Entity entity = new Entity();
         entity.Id = Guid.NewGuid();
-        _logger.Information("Entity Created: {EntityId}", entity.Id);
+        entity.CreatedAt = DateTime.UtcNow;
+        entity.UpdatedAt = DateTime.UtcNow;
+    
+        // Using IoC generates a new instance of EntityInfo
+        var entityInfo = _context.Resolve<EntityInfo>();
+        entityInfo.EntityId = entity;
+        entities.Add(entityInfo);
+        
+        _logger.Information("Entity Registered with the System: {EntityId}", entity.Id);
         return entity;
+    }
+    
+    // Returns whether the Entity has been registered with the system.
+    public bool EntityExists(Entity entity)
+    {
+        return entities.Any(e => e.EntityId.Id == entity.Id);
     }
 
 
@@ -71,22 +90,17 @@ public class EntityManager
     {
         // Check to see if the Trait exists in the system
         if (!traits.Any(t => t.Id.Equals(trait.Id)))
-        {
-            _logger.Error("The Trait {TraitId} does not exist in the system.", trait.Id);
-        }
-        
+            _logger.Error("SetParentTrait :: The Trait {TraitId} does not exist in the system.", trait.Id);
+
         // Check to see if the Parent Trait exists in the system
         if (!traits.Any(t => t.Id.Equals(parent.Id)))
-        {
-            _logger.Error("The Parent Trait {TraitId} does not exist in the system.", parent.Id);
-        }
-        
+            _logger.Error("SetParentTrait :: The Parent Trait {TraitId} does not exist in the system.", parent.Id);
+
         // Check to see if the Parent Trait is already a Parent of the Trait
         if (relationshipList.Any(r => r.Parent.Equals(parent.Id) && r.Child.Equals(trait.Id)))
-        {
-            _logger.Warning("The Parent Trait {TraitId} is already a Parent of the Trait {TraitId}.", parent.Id, trait.Id);
-        }
-        
+            _logger.Warning("SetParentTrait :: The Parent Trait {TraitId} is already a Parent of the Trait {TraitId}.",
+                parent.Id, trait.Id);
+
         // Create a new RelationshipTrait
         var relationshipTrait = new RelationshipTrait();
         relationshipTrait.Parent = parent.Id;
@@ -101,29 +115,27 @@ public class EntityManager
     public bool HasTrait<T>(Entity entity) where T : ITrait
     {
         // Check to see if the Entity exists in the system
-        if (!entities.Any(e => e.EntityId.Id == entity.Id))
+        if (entities.Any(e => e.EntityId.Id == entity.Id))
         {
-            _logger.Error("The Entity {EntityId} does not exist in the system.", entity.Id);
-            return false;
+            var entityInfo = entities.FirstOrDefault(e => e.EntityId.Id == entity.Id);
+
+            // Check to see if the Entity has the Trait
+            return entityInfo.HasBitFlag<T>();
         }
-        
+
         // Get the EntityInfo for the Entity
-        var entityInfo = entities.FirstOrDefault(e => e.EntityId.Id == entity.Id);
-        
-        // Check to see if the Entity has the Trait
-        if (entityInfo.HasBitFlag<T>())
-        {
-            return true;
-        }
+        _logger.Warning("HasTrait :: Entity {EntityId} does not exist in the system.", entity.Id);
         return false;
     }
 
-    // Returns the EntityInfo for the Entity. If no EntityInfo exists, it will return default empty EntityInfo that
-    // has no Traits registered.
-    public EntityInfo GetEntityInfo(Entity entity)
+    // Returns the EntityInfo for an Entity if it exists in the system.
+    internal EntityInfo GetEntityInfo(Entity entity)
     {
         if (entities.Any(e => e.EntityId.Id == entity.Id))
-            return entities.FirstOrDefault(e => e.EntityId.Id == entity.Id);
-        return _context.Resolve<EntityInfo>();
+            return entities.First(e => e.EntityId.Id == entity.Id);
+
+        // If no Entity Found, log the error and throw an general exception.
+        _logger.Warning($"GetEntityInfo ::  Entity {entity.Id} does not exist in the system.", entity.Id);
+        throw new Exception($"GetEntityInfo ::  The Entity {entity.Id} does not exist in the system.");
     }
 }

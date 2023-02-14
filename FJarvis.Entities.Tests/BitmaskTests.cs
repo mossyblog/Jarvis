@@ -113,14 +113,11 @@ public class BitmaskTests
         // Arrange
         
         var entity = Jarvis.EntityManager().CreatEntity();
-        var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
+        var entityInfo =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Assert
         
-        // Test to see if the Bitmask is 64bits
-        bitmask.Validate().ShouldBe( false, "There is no Traits set, therefore the bitmask will be empty");
-
-        Jarvis.Journal().Save();
+        entityInfo.Validate().ShouldBe( false, "There is no Traits set, therefore the bitmask will be empty");
     }
     
 
