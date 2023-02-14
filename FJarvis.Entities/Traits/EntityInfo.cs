@@ -36,21 +36,26 @@ public class EntityInfo
     }
     
     // By default the TraitData bitmask will be 64 bits
-    BitArray Bitmask = new BitArray(64);
+    BitArray bitFlags = new BitArray(64);
     
     private readonly ILogger _logger;
 
     // Identify the Entity this TraitData is registered to
-    public Entity EntityId { get; set; }
- 
+    internal Guid EntityId { get; set; }
+    private Dictionary<int, HashSet<Guid>> TraitsRegistry = new Dictionary<int, HashSet<Guid>>();
+
     // Get the size of the TraitData Bitmask
-    public int GetSize()
+    internal int GetSize()
     {
-        return Bitmask.Length;
+        return bitFlags.Length;
     }
-    
-    // Set the size of the TraitData Bitmask
-    public void Resize(int size)
+
+    /// <summary>
+    ///  This method will Resize the Bitmask to the specified size.
+    /// </summary>
+    /// <param name="size"></param>
+    /// <exception cref="Exception"></exception>
+    internal void Resize(int size)
     {
         // Check to see if the size is greater than 64 bits
         if (size < 64)
@@ -67,26 +72,26 @@ public class EntityInfo
         }
         
         // Check to see if the Size is less than the current size of the Bitmask
-        if (size < Bitmask.Length)
+        if (size < bitFlags.Length)
         {
             // If the size is less than the current size of the Bitmask, return the current size of the Bitmask
             _logger.Error(
-                ($"Cannot decrease the size of the Bitmask. The current size of the Bitmask is {Bitmask.Length}."));
+                ($"Cannot decrease the size of the Bitmask. The current size of the Bitmask is {bitFlags.Length}."));
             throw new Exception("Cannot decrease the size of the Bitmask");
         }
         
         // Set the size of the Bitmask
-        Bitmask.Length = size;
+        bitFlags.Length = size;
     }
     
     /// <summary>
     /// Returns the Bitmask for this Entity
     /// </summary>
     /// <returns></returns>
-    public ulong GetBitmask()
+    internal ulong GetBitmask()
     {
         ulong actualMask = 0;
-        foreach (bool bit in Bitmask)
+        foreach (bool bit in bitFlags)
         {
             ulong bitNum = (ulong)(bit ? 1 : 0);
             actualMask = (actualMask << 1) | bitNum;
@@ -98,24 +103,59 @@ public class EntityInfo
     /// <summary>
     ///  This method will clear the Bitmask for this Entity, resulting in all Traits being BitFlagged as unselected.
     /// </summary>
-    public void Clear()
+    internal void Clear()
     {
         // Clear the Bitmask
-        Bitmask.SetAll(false);
+        bitFlags.SetAll(false);
+        TraitsRegistry.Clear();
     }
     
     /// <summary>
-    ///  This method will register the Trait to the TraitData Bitmask.
+    ///  This method will register the Trait to the Entity
     /// </summary>
     /// <param name="id"></param>
     /// <param name="trait"></param>
-    public void SetBitFlag(Entity id, ITrait trait)
+    internal void RegisterTrait(Entity id, ITrait trait)
     {
         // Register the Entity
         SetEntityId(id);
         
         // Update the Traits Bitflag on _traits
-        Bitmask.Set(trait.Index, true);
+        bitFlags.Set(trait.Index, true);
+        
+        // Determine if the Trait Index has been registered
+        if (!TraitsRegistry.ContainsKey(trait.Index))
+            // Add the Trait Index to the Traits Registry
+            TraitsRegistry.Add(trait.Index, new HashSet<Guid>());
+
+        // Determine if the Trait Id has already been added
+        if (!TraitsRegistry[trait.Index].Contains(trait.Id))
+            // Add the Trait Id to the Trait Index
+            TraitsRegistry[trait.Index].Add(trait.Id);
+
+    }
+
+
+    /// <summary>
+    ///  This method will remove the Trait from the Entity and will update the BitFlag for the Trait should there be no more Traits registered to the Entity.
+    /// </summary>
+    /// <param name="trait"></param>
+    internal void RemoveTrait(ITrait trait)
+    {
+        // Determine if the Trait Index has been registered
+        if (TraitsRegistry.ContainsKey(trait.Index))
+        {
+            // Determine if the Trait Id has already been added
+            if (TraitsRegistry[trait.Index].Contains(trait.Id))
+            {
+                // Remove the Trait Id from the Trait Index
+                TraitsRegistry[trait.Index].Remove(trait.Id);
+            }
+            // Set the Bitflag to true or false depending on if their are still traits remaining in the TraitRegistry
+            bitFlags.Set(trait.Index, TraitsRegistry[trait.Index].Count > 0);
+        }
+        
+        
     }
     
     /// <summary>
@@ -133,16 +173,16 @@ public class EntityInfo
             throw new Exception("An attempt to register an Entity to the Bitmask was made, but the Entity has no Id.");
         }
         // Register the Entity to the Bitmask
-        EntityId = entityId;
+        EntityId = entityId.Id;
     }
 
     /// <summary>
     /// This method will validate that at least one Trait has been registered to an entity, or that the entity has been registered.
     /// </summary>
     /// <returns></returns>
-    public bool Validate()
+    internal bool Validate()
     {
-        return Bitmask.Cast<bool>().Any(b => b);
+        return bitFlags.Cast<bool>().Any(b => b);
     }
     
     /// <summary>
@@ -150,18 +190,77 @@ public class EntityInfo
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public bool HasBitFlag<T>() where T : ITrait
+    internal bool GetBitFlag<T>() where T : ITrait
     {
         var trait = default(T);
-        return Bitmask.Get(trait.Index);
+        
+        return bitFlags.Get(trait.Index);
     }
 
     /// <summary>
     /// Returns whether or not any traits have been assigned to this Entity.
     /// </summary>
     /// <returns></returns>
-    public bool HasTraits()
+    internal bool HasTraits()
     {
-        return Bitmask.Cast<bool>().Any(b => b);
+        return bitFlags.Cast<bool>().Any(b => b);
+    }
+
+    /// <summary>
+    /// Returns whether or not this Entity has any Traits with the specified Trait type
+    /// </summary>
+    /// <param name="slot"></param>
+    /// <returns></returns>
+    internal bool HasTraits(int slot)
+    { 
+        // How many traits are registered to the Entity via TraitsRegistry based on the Trait type
+        return TraitsRegistry.Any(e => e.Key == slot);
+    }
+    
+   
+    /// <summary>
+    /// Returns a count of the number of Traits that have been registered to the Entity
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    internal int Count<T>() where T : ITrait
+    { 
+        // Determine Slot index from Trait type
+        var trait = default(T);
+        
+        // Determine if the Trait has even been registered
+
+        if (!HasTraits(trait.Index))
+            // If the Trait has not been registered, return 0
+            return 0;
+        
+        // Determine how many Trait Ids are registered against a Trait Index
+        return TraitsRegistry[trait.Index].Count;
+        
+    }
+    
+    /// <summary>
+    ///  This method will return whether or not the Trait has been registered to the Entity
+    /// </summary>
+    /// <param name="id"></param>
+    /// <returns></returns>
+    internal bool HasTrait(Guid id)
+    {
+        // Determine if the Trait Id has already been added
+        return TraitsRegistry.Any(e => e.Value.Contains(id));
+    }
+    
+    /// <summary>
+    ///  This method will return whether or not the Trait has been registered to the Entity
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    internal HashSet<Guid> GetTraits<T>() where T : ITrait
+    {
+        // Determine Slot index from Trait type
+        var trait = default(T);
+        
+        // Return all traits of type T that are found in the TraitsRegistry
+        return TraitsRegistry[trait.Index];
     }
 }

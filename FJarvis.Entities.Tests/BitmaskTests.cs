@@ -132,11 +132,11 @@ public class BitmaskTests
         var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
-        bitmask.SetBitFlag(entity, new Flight());
+        bitmask.RegisterTrait(entity, new Flight());
         
         // Assert
-        bitmask.HasBitFlag<Flight>().ShouldBeTrue( "The Bitmask should have the Flight Trait Flag");
-        bitmask.HasBitFlag<Coupon>().ShouldBeFalse( "The Bitmask should not have the Coupon Trait Flag");
+        bitmask.GetBitFlag<Flight>().ShouldBeTrue( "The Bitmask should have the Flight Trait Flag");
+        bitmask.GetBitFlag<Coupon>().ShouldBeFalse( "The Bitmask should not have the Coupon Trait Flag");
     }
 
     [Test]
@@ -147,7 +147,7 @@ public class BitmaskTests
         var bitmask =  Jarvis.EntityManager().GetEntityInfo(entity);
         
         // Act
-        bitmask.SetBitFlag(entity, new Flight());
+        bitmask.RegisterTrait(entity, new Flight());
         
         // Assert
         /*

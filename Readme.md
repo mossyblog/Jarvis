@@ -1,8 +1,13 @@
 # [J]ust [A] [R]ather [V]ery [I]ntelligent [S]ystem
 
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT) [![codecov](https://codecov.io/gh/mossyblog/Jarvis/branch/master/graph/badge.svg?token=RH82MAUWZ7)](https://codecov.io/gh/mossyblog/Jarvis)
 
-JARVIS is an open source Entity-Component-System (ECS) framework designed to help developers create and manage data in their applications. It is available as a NuGet package and can be used in any .NET application.  JARVIS is based on the ECS pattern, but it has been adapted to suit the specific needs of its application. Instead of using the standard decorator pattern to add components to entities at runtime, JARVIS uses a factory pattern to ensure that entities are created with the correct properties and methods. Additionally, the ECS pattern is used to create a normalized model of the data instead of a hierarchical structure.  JARVIS provides developers with a powerful and flexible way to manage their data. It is designed to be easy to use and understand, and it is highly extensible. It also provides a number of features to help developers create and maintain their applications, such as a data modeler, a query builder, and a data validation system.  JARVIS is an ideal choice for developers who need to create and manage data in their applications. It is open source, so developers can customize it to suit their needs, and it is available as a NuGet package, so it can be easily integrated into any .NET application. With its powerful features and flexible design, JARVIS is the perfect choice for developers who need to create and manage data in their applications.
+
+JARVIS is an open source Entity-Component-System (ECS) framework designed to help developers create and manage data in their applications. It is available as a NuGet package and can be used in any .NET application.  JARVIS is based on the ECS pattern, but it has been adapted to suit the specific needs of its application.
+
+Instead of using the standard decorator pattern to add components to entities at runtime, JARVIS uses a factory pattern to ensure that entities are created with the correct properties and methods. Additionally, the ECS pattern is used to create a normalized model of the data instead of a hierarchical structure.
+
+JARVIS provides developers with a powerful and flexible way to manage their data. It is designed to be easy to use and understand, and it is highly extensible. It also provides a number of features to help developers create and maintain their applications, such as a data modeler, a query builder, and a data validation system.  JARVIS is an ideal choice for developers who need to create and manage data in their applications. It is open source, so developers can customize it to suit their needs, and it is available as a NuGet package, so it can be easily integrated into any .NET application. With its powerful features and flexible design, JARVIS is the perfect choice for developers who need to create and manage data in their applications.
 
 ## Getting Started
 
@@ -40,7 +45,7 @@ JARVIS requires .NET 6.0 or above, in addition to the Autofac and Serilog librar
 In order to use JARVIS, the FJarvis class must be used as a singleton.
 
 ```
-Jarvis.EntitiesGive examples
+Jarvis.Initialize();
 ```
 
 ### Need Help?

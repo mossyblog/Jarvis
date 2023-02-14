@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 using FJarvis.Data;
 using FJarvis.Data.Traits;
+using FJarvis.Traits.FlightCentre;
 using Shouldly;
 
 namespace FJarvis.Entities.Tests;
@@ -35,8 +36,9 @@ public class EntityManagerTests
         
         entityManager.EntityExists(entityViaInstance).ShouldBeFalse();
         entityManager.EntityExists(entityViaCreate).ShouldBeTrue();
-        entityManager.GetEntityInfo(entityViaCreate).EntityId.ShouldBe(entityViaCreate);
+        entityManager.GetEntityInfo(entityViaCreate).EntityId.ShouldBe(entityViaCreate.Id);
         Should.Throw<Exception>(() => entityManager.GetEntityInfo(entityViaInstance));
+    
     }
     
     // EntityManager Should Return EntityInfo for Entity with default Headers.
@@ -54,7 +56,7 @@ public class EntityManagerTests
         // Assert
         
         // EntityInfo EntityId should be the same as the above entity.
-        entityInfo.EntityId.ShouldBe(entity);
+        entityInfo.EntityId.ShouldBe(entity.Id);
         entityInfo.GetSize().ShouldBe(64);
         entityInfo.HasTraits().ShouldBeFalse();
         entityInfo.Validate().ShouldBeFalse();
@@ -74,9 +76,68 @@ public class EntityManagerTests
         entityManager.AddTraitData(entity, flight);
         
         // Assert
-        
+        entityManager.HasTrait<Flight>(entity).ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).GetBitFlag<Flight>().ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).Validate().ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).GetSize().ShouldBe(64);
+        entityManager.GetEntityInfo(entity).Count<Flight>().ShouldBe(1);
+        entityManager.GetEntityInfo(entity).HasTrait(flight.Id).ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).GetTraits<Flight>().Count.ShouldBe(1);
     }
 
-    
-   
+    // EntityManager Should Set Multiple Traits for Entity
+    [Test]
+public void EntityManager_Should_SetMultipleTraitsForEntity()
+    {
+        // Arrange
+        Jarvis.Initialize();
+        var entityManager = Jarvis.EntityManager();
+        var entity = entityManager.CreatEntity();
+        var flight = new Flight();
+        var flight2 = new Flight();
+        
+        // Act
+        entityManager.AddTraitData(entity, flight);
+        entityManager.AddTraitData(entity, flight2);
+        
+        // Assert
+        entityManager.HasTrait<Flight>(entity).ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).GetBitFlag<Flight>().ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).Validate().ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).GetSize().ShouldBe(64);
+        entityManager.GetEntityInfo(entity).Count<Flight>().ShouldBe(2);
+        entityManager.GetEntityInfo(entity).Count<Coupon>().ShouldBe(0);
+        entityManager.GetEntityInfo(entity).HasTrait(flight.Id).ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).HasTrait(flight2.Id).ShouldBeTrue();
+        entityManager.GetEntityInfo(entity).GetTraits<Flight>().Count.ShouldBe(2);
+    }
+
+    // EntityManager Should Remove Multiple Traits for Entity and return BitFlag to false
+    [Test]
+    public void EntityManager_Should_RemoveMultipleTraitsForEntity_AndReturnBitFlagToFalse()
+    {
+        // Arrange
+        Jarvis.Initialize();
+        var entityManager = Jarvis.EntityManager();
+        var entity = entityManager.CreatEntity();
+        var flight = new Flight();
+        var flight2 = new Flight();
+        
+        // Act
+        entityManager.AddTraitData(entity, flight, flight2);
+        entityManager.RemoveTraitData(entity, flight, flight2);
+        
+        // Assert
+        entityManager.HasTrait<Flight>(entity).ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).GetBitFlag<Flight>().ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).Validate().ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).GetSize().ShouldBe(64);
+        entityManager.GetEntityInfo(entity).Count<Flight>().ShouldBe(0);
+        entityManager.GetEntityInfo(entity).Count<Coupon>().ShouldBe(0);
+        entityManager.GetEntityInfo(entity).HasTrait(flight.Id).ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).HasTrait(flight2.Id).ShouldBeFalse();
+        entityManager.GetEntityInfo(entity).GetTraits<Flight>().Count.ShouldBe(0);
+    }
+
+
 }

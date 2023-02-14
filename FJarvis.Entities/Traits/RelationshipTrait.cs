@@ -10,8 +10,8 @@ public class RelationshipTrait : ITrait
     
     // ⚠️ CAUTION 
     // ----------------------------------------------------- //
-    // Relationship Trait is Always Reserved to Slot 1. 
-    public int Index => 1;
+    // Relationship Trait is Always Reserved to Slot 0. 
+    public int Index => 0;
     // ----------------------------------------------------- // 
     
     public Guid Id { get; set; }
