@@ -52,8 +52,9 @@ public class EntityManagerTests
         
         // Act
         var entityInfo = entityManager.GetEntityInfo(entity);
-        
+
         // Assert
+        entityManager.GetTraits<Flight>(entity);
         
         // EntityInfo EntityId should be the same as the above entity.
         entityInfo.EntityId.ShouldBe(entity.Id);

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Text;
 using Serilog;
 
 namespace FJarvis.Data.Traits;
@@ -36,7 +37,7 @@ public class EntityInfo
     }
     
     // By default the TraitData bitmask will be 64 bits
-    BitArray bitFlags = new BitArray(64);
+    public BitArray bitFlags = new BitArray(64);
     
     private readonly ILogger _logger;
 
@@ -88,17 +89,78 @@ public class EntityInfo
     /// Returns the Bitmask for this Entity
     /// </summary>
     /// <returns></returns>
-    internal ulong GetBitmask()
+    internal string GetBitmask()
     {
-        ulong actualMask = 0;
-        foreach (bool bit in bitFlags)
+        return CompressBitmask(bitFlags.Cast<bool>().ToArray());
+    }
+
+
+    public string CompressBitmask(string binaryStr)
+    {
+        if (binaryStr.Length != 64)
         {
-            ulong bitNum = (ulong)(bit ? 1 : 0);
-            actualMask = (actualMask << 1) | bitNum;
+            throw new ArgumentException("The length of the binary string must be 64.", nameof(binaryStr));
         }
 
-        return actualMask;
+        
+        int numChunks = (int)Math.Ceiling(binaryStr.Length / 64.0);
+        ulong[] chunks = new ulong[numChunks];
+        for (int i = 0; i < numChunks; i++)
+        {
+            int startIndex = i * 64;
+            int length = Math.Min(64, binaryStr.Length - startIndex);
+            string chunkStr = binaryStr.Substring(startIndex, length);
+            chunks[i] = Convert.ToUInt64(chunkStr, 2);
+        }
+        string compressed = string.Join(";", chunks);
+        return compressed;
     }
+
+    public string CompressBitmask(bool[] bitFlags)
+    {
+        int numChunks = (int)Math.Ceiling(bitFlags.Length / 64.0);
+
+        ulong[] chunks = new ulong[numChunks];
+    
+        for (int i = 0; i < numChunks; i++)
+        {
+            for (int j = 0; j < 64; j++)
+            {
+                chunks[i] = (chunks[i] << 1) | (ulong)(bitFlags[i * 64 + j] ? 1 : 0);
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+        foreach (ulong chunk in chunks)
+        {
+            sb.Append(chunk).Append(';');
+        }
+
+        return sb.ToString();
+    }
+
+    internal bool[] DecompressBitmask(string compressed)
+    {
+        string[] chunksStr = compressed.Split(';', StringSplitOptions.RemoveEmptyEntries);
+        int numChunks = chunksStr.Length;
+        ulong[] chunks = new ulong[numChunks];
+        bool[] bitFlags = new bool[numChunks * 64];
+    
+        for (int i = 0; i < numChunks; i++)
+        {
+            chunks[i] = ulong.Parse(chunksStr[i]);
+            string binaryStr = Convert.ToString((long)chunks[i], 2).PadLeft(64, '0');
+            for (int j = 0; j < 64; j++)
+            {
+                bitFlags[i * 64 + j] = binaryStr[j] == '1';
+            }
+        }
+
+        return bitFlags;
+    }
+
+
+
     
     /// <summary>
     ///  This method will remove all the Traits from the Entity and set all the bitmasks back to default state.
@@ -112,6 +174,17 @@ public class EntityInfo
         TraitsRegistry.Clear();
     }
     
+    /// <summary>
+    ///  This method will remove all the Traits from the Entity and set all the bitmasks back to default state.
+    /// </summary>
+    internal void Clear(int index)
+    {
+        // Clear the Bitmask
+        bitFlags.Set(index,false);
+        
+        // Clear the Traits Registry
+        TraitsRegistry.Remove(index);
+    }
     /// <summary>
     ///  This method will register the Trait to the Entity
     /// </summary>

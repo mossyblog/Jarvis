@@ -11,6 +11,8 @@ public class JarvisTests
     {
         // Arrange
         Jarvis.Initialize();
+        
+        
         var entityManager = Jarvis.EntityManager();
         
         // Act

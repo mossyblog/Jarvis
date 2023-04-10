@@ -11,7 +11,7 @@ public class EntityInfoTests
     {
         // Arrange
         Should.Throw<Exception>(() => new EntityInfo());
-
+        
     }
     
     
