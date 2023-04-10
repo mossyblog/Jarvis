@@ -94,42 +94,60 @@ public class EntityInfo
         return CompressBitmask(bitFlags.Cast<bool>().ToArray());
     }
 
-
     public string CompressBitmask(string binaryStr)
     {
-        if (binaryStr.Length != 64)
+        // Remove trailing semicolon if present
+        if (binaryStr.EndsWith(";"))
         {
-            throw new ArgumentException("The length of the binary string must be 64.", nameof(binaryStr));
+            binaryStr = binaryStr.Remove(binaryStr.Length - 1);
         }
 
-        
-        int numChunks = (int)Math.Ceiling(binaryStr.Length / 64.0);
-        ulong[] chunks = new ulong[numChunks];
-        for (int i = 0; i < numChunks; i++)
-        {
-            int startIndex = i * 64;
-            int length = Math.Min(64, binaryStr.Length - startIndex);
-            string chunkStr = binaryStr.Substring(startIndex, length);
-            chunks[i] = Convert.ToUInt64(chunkStr, 2);
-        }
-        string compressed = string.Join(";", chunks);
-        return compressed;
-    }
+        string[] chunks = binaryStr.Split(';');
 
-    public string CompressBitmask(bool[] bitFlags)
-    {
-        int numChunks = (int)Math.Ceiling(bitFlags.Length / 64.0);
+        bool[] bitFlags = new bool[chunks.Length * 64];
 
-        ulong[] chunks = new ulong[numChunks];
-    
-        for (int i = 0; i < numChunks; i++)
+        for (int i = 0; i < chunks.Length; i++)
         {
+            if (chunks[i].Length != 64)
+                throw new ArgumentException("Invalid bitmask string. 64-bit chunks must be 64 characters long.");
+                    
+            string chunkStr = chunks[i].PadLeft(64, '0');
             for (int j = 0; j < 64; j++)
             {
+                bitFlags[i * 64 + j] = chunkStr[j] == '1';
+            }
+        }
+        return CompressBitmask(bitFlags);
+    }
+    
+    /// <summary>
+    ///  This method will convert the Bitmask to a compressed string representation
+    /// </summary>
+    /// <param name="bitFlags"></param>
+    /// <returns></returns>
+    public string CompressBitmask(bool[] bitFlags)
+    {
+        
+        
+        // Calculate the number of 64-bit chunks required to represent the entire boolean array
+        int numChunks = (int)Math.Ceiling(bitFlags.Length / 64.0);
+
+        // Create an array to hold the 64-bit chunks
+        ulong[] chunks = new ulong[numChunks];
+    
+        // Loop through each chunk and set the bits according to the boolean array
+        for (int i = 0; i < numChunks; i++)
+        {
+            // Each chunk is 64 bits in length, so loop through each bit in the chunk
+            for (int j = 0; j < 64; j++)
+            {
+                // Shift the current value of the chunk one bit to the left and OR it with the next bit from the boolean array
+                // This effectively sets the current bit in the chunk to the value of the corresponding boolean value in the array
                 chunks[i] = (chunks[i] << 1) | (ulong)(bitFlags[i * 64 + j] ? 1 : 0);
             }
         }
 
+        // Convert the 64-bit chunks to a compressed string representation
         StringBuilder sb = new StringBuilder();
         foreach (ulong chunk in chunks)
         {
@@ -138,6 +156,8 @@ public class EntityInfo
 
         return sb.ToString();
     }
+
+    
 
     internal bool[] DecompressBitmask(string compressed)
     {

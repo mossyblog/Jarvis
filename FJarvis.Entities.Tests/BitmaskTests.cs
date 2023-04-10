@@ -145,17 +145,16 @@ public class BitmaskTests
        | 0 | 1 | 0 | 0 | 4 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
        +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
         */
-    
+
     [Test]
     public void CompressBitmask_Should_ReturnExpectedCompressedBitmask()
     {
-        
         /*
          This test is verifying that the CompressBitmask and DecompressBitmask methods of an entity bitmask are working correctly, 
          by compressing a known binary string into a compressed string, then decompressing it back into 
          the original boolean array and checking that it matches the expected value.
          */
-        
+
         // Arrange
         var entity = Jarvis.EntityManager().CreatEntity();
         var bitmask = Jarvis.EntityManager().GetEntityInfo(entity);
@@ -165,25 +164,28 @@ public class BitmaskTests
         bitmask.RegisterTrait(entity, new Coupon());
 
         // Assert
-        string expectedMask = "0100100000000000000000000000000000000000000000000000000000000000";
+        string expectedMask = "0100100000000000000000000000000000000000000000000000000000000000;";
         var actualMask = bitmask.CompressBitmask(expectedMask);
         var result = bitmask.DecompressBitmask(actualMask);
 
         // Assert that the decompressed bitmask matches the expected boolean array
-        bool[] expectedBits = new bool[] { false, true, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false};
+        bool[] expectedBits = new bool[]
+        {
+            false, true, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false
+        };
         Assert.AreEqual(expectedBits, result);
-
     }
-    
+
     [Test]
     public void DecompressBitmask_Should_ReturnExpectedCompressedBitmask()
     {
-        
-          /*
-            This test is verifying that the CompressBitmask and DecompressBitmask methods of an entity bitmask are working correctly, 
-            by adding and removing a trait from an entity bitmask, then compressing the bitmask and comparing it to the expected value.
-            */
-        
+        /*
+          This test is verifying that the CompressBitmask and DecompressBitmask methods of an entity bitmask are working correctly, 
+          by adding and removing a trait from an entity bitmask, then compressing the bitmask and comparing it to the expected value.
+          */
+
         // Arrange
         var entity = Jarvis.EntityManager().CreatEntity();
         var bitmask = Jarvis.EntityManager().GetEntityInfo(entity);
@@ -195,13 +197,13 @@ public class BitmaskTests
 
         // Assert
         var withTrait = bitmask.GetBitmask();
-        
+
         bitmask.RemoveTrait(flightTrait);
-        
+
         var withOutTrait = bitmask.GetBitmask();
-        
+
         Assert.AreEqual("5188146770730811392;", withTrait);
-        Assert.AreEqual("576460752303423488;",withOutTrait);
+        Assert.AreEqual("576460752303423488;", withOutTrait);
     }
 
     [Test]
@@ -302,4 +304,43 @@ public class BitmaskTests
             Assert.IsFalse(entityInfo.bitFlags.Get(i));
         }
     }
+    
+    [Test]
+    public void CompressBitmask_Should_ReturnExpectedCompressedString_When_MultipleChunks()
+    {
+        // Arrange
+        var entity = Jarvis.EntityManager().CreatEntity();
+        var bitmask = Jarvis.EntityManager().GetEntityInfo(entity);
+
+        // Act
+        bitmask.RegisterTrait(entity, new Flight());
+        bitmask.RegisterTrait(entity, new Coupon());
+
+        // Assert
+        
+        string expectedMask = "0100100000000000000000000000000000000000000000000000000000000000;0000100000000000000000000000000000000000000000000000000000000000;";
+        var actualMask = bitmask.CompressBitmask(expectedMask);
+        var result = bitmask.DecompressBitmask(actualMask);
+
+        // Assert that the decompressed bitmask matches the expected boolean array
+        bool[] expectedBits = new bool[]
+        {
+            false, true, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false,
+            
+            false, false, false, false, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false,
+            false, false, false, false, false
+        };
+        
+        Assert.AreEqual("5188146770730811392", actualMask.Split(";")[0]);
+        Assert.AreEqual("576460752303423488", actualMask.Split(";")[1]);
+        
+        Assert.AreEqual(expectedBits, result);
+        
+        string badMask = "0100100000000000000000000000000000000000000000000000000000000000;0000;";
+        Should.Throw<ArgumentException>(() => bitmask.CompressBitmask(badMask));
+    }
+
 }
