@@ -1,14 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Bot", "FJarvis.Bot\FJarvis.Bot.csproj", "{87162172-E589-455D-BA84-0FE1022BCAB0}"
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33516.290
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FJarvis.Bot", "FJarvis.Bot\FJarvis.Bot.csproj", "{87162172-E589-455D-BA84-0FE1022BCAB0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Bot.Tests", "FJarvis.Bot.Tests\FJarvis.Bot.Tests.csproj", "{09D888BB-FB45-4689-B9BD-6EBD11534BD1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FJarvis.Bot.Tests", "FJarvis.Bot.Tests\FJarvis.Bot.Tests.csproj", "{09D888BB-FB45-4689-B9BD-6EBD11534BD1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Entities", "FJarvis.Entities\FJarvis.Entities.csproj", "{741C764B-50CC-4B43-B31E-72A4F38E3BEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FJarvis.Data", "FJarvis.Data\FJarvis.Data.csproj", "{741C764B-50CC-4B43-B31E-72A4F38E3BEE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Traits.FlightCentre", "FJarvis.Traits.FlightCentre\FJarvis.Traits.FlightCentre.csproj", "{E8D73666-5DD9-456C-8384-0B6490EAFCFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FJarvis.Traits.FlightCentre", "FJarvis.Traits.FlightCentre\FJarvis.Traits.FlightCentre.csproj", "{E8D73666-5DD9-456C-8384-0B6490EAFCFA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FJarvis.Entities.Tests", "FJarvis.Entities.Tests\FJarvis.Entities.Tests.csproj", "{0B6F40A6-673C-4276-BA83-8F312069ADBF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FJarvis.Entities.Tests", "FJarvis.Entities.Tests\FJarvis.Entities.Tests.csproj", "{0B6F40A6-673C-4276-BA83-8F312069ADBF}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FAirlink.Demo.ClientDemo", "FAirlink.Demo.ClientDemo\FAirlink.Demo.ClientDemo.csproj", "{C46BD286-1F26-42D2-A1A3-C6BB0E39818B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FAirlink.Demo.MyProcessor", "FAirlink.Demo.MyProcessor\FAirlink.Demo.MyProcessor.csproj", "{789B0FD6-F439-4854-BC6D-24768DC4625B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,5 +43,19 @@ Global
 		{0B6F40A6-673C-4276-BA83-8F312069ADBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0B6F40A6-673C-4276-BA83-8F312069ADBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0B6F40A6-673C-4276-BA83-8F312069ADBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C46BD286-1F26-42D2-A1A3-C6BB0E39818B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C46BD286-1F26-42D2-A1A3-C6BB0E39818B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C46BD286-1F26-42D2-A1A3-C6BB0E39818B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C46BD286-1F26-42D2-A1A3-C6BB0E39818B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{789B0FD6-F439-4854-BC6D-24768DC4625B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{789B0FD6-F439-4854-BC6D-24768DC4625B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{789B0FD6-F439-4854-BC6D-24768DC4625B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{789B0FD6-F439-4854-BC6D-24768DC4625B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4BB68C27-5632-4FF7-86D0-749EA1154FA6}
 	EndGlobalSection
 EndGlobal

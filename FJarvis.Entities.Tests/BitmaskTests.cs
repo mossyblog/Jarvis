@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using FJarvis.Data;
 using FJarvis.Data.Traits;
+using FJarvis.Data.Utils;
 using FJarvis.Traits.FlightCentre;
 using Shouldly;
 
@@ -165,8 +166,8 @@ public class BitmaskTests
 
         // Assert
         string expectedMask = "0100100000000000000000000000000000000000000000000000000000000000;";
-        var actualMask = bitmask.CompressBitmask(expectedMask);
-        var result = bitmask.DecompressBitmask(actualMask);
+        var actualMask = EntityHelper.CompressBitmask(expectedMask);
+        var result = EntityHelper.DecompressBitmask(actualMask);
 
         // Assert that the decompressed bitmask matches the expected boolean array
         bool[] expectedBits = new bool[]
@@ -229,11 +230,11 @@ public class BitmaskTests
         // Get the Bitmask
         var bitmask = entityInfo.GetBitmask();
 
-        var decompressedBitmask = entityInfo.DecompressBitmask(bitmask);
+        var decompressedBitmask = EntityHelper.DecompressBitmask(bitmask);
         Assert.AreEqual(entityInfo.bitFlags, decompressedBitmask);
 
         // Decompress the bitmask back into a boolean array
-        var decompressedBitFlags = entityInfo.DecompressBitmask(bitmask);
+        var decompressedBitFlags = EntityHelper.DecompressBitmask(bitmask);
         // Assert that the decompressed bitFlags array matches the original bitFlags array
         Assert.AreEqual(entityInfo.bitFlags, decompressedBitFlags);
     }
@@ -319,8 +320,8 @@ public class BitmaskTests
         // Assert
         
         string expectedMask = "0100100000000000000000000000000000000000000000000000000000000000;0000100000000000000000000000000000000000000000000000000000000000;";
-        var actualMask = bitmask.CompressBitmask(expectedMask);
-        var result = bitmask.DecompressBitmask(actualMask);
+        var actualMask = EntityHelper.CompressBitmask(expectedMask);
+        var result = EntityHelper.DecompressBitmask(actualMask);
 
         // Assert that the decompressed bitmask matches the expected boolean array
         bool[] expectedBits = new bool[]
@@ -340,7 +341,7 @@ public class BitmaskTests
         Assert.AreEqual(expectedBits, result);
         
         string badMask = "0100100000000000000000000000000000000000000000000000000000000000;0000;";
-        Should.Throw<ArgumentException>(() => bitmask.CompressBitmask(badMask));
+        Should.Throw<ArgumentException>(() => EntityHelper.CompressBitmask(badMask));
     }
 
 }

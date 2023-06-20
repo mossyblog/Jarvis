@@ -18,12 +18,15 @@ public static class Jarvis
         builder.RegisterInstance(logger).As<ILogger>();
 
         // Register the Entity class
-        builder.RegisterType<EntityInfo>().AsSelf().InstancePerLifetimeScope();
+        builder.RegisterType<EntityInfo>().AsSelf();
+        builder.RegisterType<JournalInfo>().AsSelf().SingleInstance();
         builder.RegisterInstance(journalLogger).AsSelf().SingleInstance();
         builder.RegisterType<EntityManager>().AsSelf().SingleInstance();
 
         // Register the Journal class
         builder.RegisterType<Journal>().AsSelf().SingleInstance();
+        
+        builder.RegisterType<ServiceBus>().AsSelf().SingleInstance();
 
         // Build the container
         container = builder.Build();
@@ -39,5 +42,10 @@ public static class Jarvis
     public static EntityManager EntityManager()
     {
         return container.Resolve<EntityManager>();
+    }
+
+    public static ServiceBus ServiceBus()
+    {
+        return container.Resolve<ServiceBus>();
     }
 }

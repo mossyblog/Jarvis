@@ -23,5 +23,6 @@ public enum FCBitmaskIndex
     Train  = 3,
     Coupon = 4,
     Customer = 5,
-    YourTrait = 6
+    YourTrait = 6,
+    Tax = 7,
 }

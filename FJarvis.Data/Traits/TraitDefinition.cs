@@ -1,6 +1,6 @@
 ﻿namespace FJarvis.Data.Traits;
 
-public struct Archetype
+public struct TraitDefinition
 {
     public EntityInfo[] TraitDatas;
 }
