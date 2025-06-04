@@ -8,7 +8,7 @@ These scripts allow you to sync markdown documentation files to Confluence pages
 2. **dotnet-script** - Will be installed automatically if not present
 3. **Confluence API Token** - Generate at https://id.atlassian.com/manage-profile/security/api-tokens
 
-## Setup
+## Setup 
 
 ### 1. Set Environment Variables
 
