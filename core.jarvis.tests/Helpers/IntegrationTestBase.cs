@@ -75,6 +75,9 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddTransient<IDataContext, DataContext>();
         services.AddScoped<EventSubscriptionManager>();
         services.AddScoped<IAuditService, AuditService>();
+        
+        // Register default event emitter for tests
+        services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.NoOpEventEmitter>();
 
         // Register the DataContext with the service provider
         services.AddTransient<TestHandler>();

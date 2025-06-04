@@ -255,6 +255,8 @@ public class FakeDataContext : IDataContext {
     public Task UnlinkRelationship(Guid parentId, Guid childId) => Task.CompletedTask;
     public Task<List<Guid>> Ancestors(Guid entityId) => Task.FromResult(new List<Guid>());
     public Task<List<Guid>> Descendants(Guid entityId) => Task.FromResult(new List<Guid>());
+    public Task Emit<TEvent>(TEvent @event) where TEvent : core.jarvis.Events.IEvent => Task.CompletedTask;
+    public Task EmitBatch<TEvent>(IEnumerable<TEvent> events) where TEvent : core.jarvis.Events.IEvent => Task.CompletedTask;
 }
 
 public class FakeLogger<T> : ILogger<T> {

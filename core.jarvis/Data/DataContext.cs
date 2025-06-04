@@ -20,19 +20,22 @@ public class DataContext : IDataContext
     private readonly ILogger<DataContext> _logger;
     private readonly IServiceProvider _serviceProvider;
     private readonly IAuditService _auditService;
+    private readonly Events.IEventEmitter _eventEmitter;
     
     public DataContext(
         IServiceProvider serviceProvider,
         IComponentQueryHandlerRegistry queryRegistry,
         IPgClient pgClient,
         ILogger<DataContext> logger,
-        IAuditService auditService)
+        IAuditService auditService,
+        Events.IEventEmitter eventEmitter)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _queryRegistry = queryRegistry ?? throw new ArgumentNullException(nameof(queryRegistry));
         _pgClient = pgClient ?? throw new ArgumentNullException(nameof(pgClient));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
+        _eventEmitter = eventEmitter ?? throw new ArgumentNullException(nameof(eventEmitter));
     }
 
     public IComponentHandler For(Type componentType, Guid entityId)
@@ -937,6 +940,76 @@ public class DataContext : IDataContext
                 $"Failed to get descendants for entity {entityId}",
                 new { EntityId = entityId });
             return new List<Guid>(); // This line will never be reached but satisfies the compiler
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task Emit<TEvent>(TEvent @event) where TEvent : Events.IEvent
+    {
+        try
+        {
+            // Add context metadata
+            @event.Metadata["EmittedFrom"] = "DataContext";
+            @event.Metadata["EmittedAt"] = DateTime.UtcNow.ToString("O");
+            
+            await _eventEmitter.Emit(@event);
+            
+            // Audit the event emission
+            await _auditService.LogEvent(
+                AuditEventTypes.EventEmitted,
+                Guid.Empty,
+                new { 
+                    EventId = @event.Id, 
+                    EventType = @event.Type,
+                    EventMetadata = @event.Metadata
+                });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogError(
+                AuditEventTypes.EventEmissionFailed,
+                Guid.Empty,
+                ex,
+                new { EventId = @event.Id, EventType = @event.Type });
+                
+            throw new EventEmissionException($"Failed to emit event {@event.Type}", ex);
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task EmitBatch<TEvent>(IEnumerable<TEvent> events) where TEvent : Events.IEvent
+    {
+        try
+        {
+            var eventsList = events.ToList();
+            
+            // Add context metadata to each event
+            foreach (var @event in eventsList)
+            {
+                @event.Metadata["EmittedFrom"] = "DataContext";
+                @event.Metadata["EmittedAt"] = DateTime.UtcNow.ToString("O");
+            }
+            
+            await _eventEmitter.EmitBatch(eventsList);
+            
+            // Audit the batch emission
+            await _auditService.LogEvent(
+                AuditEventTypes.EventBatchEmitted,
+                Guid.Empty,
+                new { 
+                    EventCount = eventsList.Count, 
+                    EventTypes = eventsList.Select(e => e.Type).Distinct().ToList()
+                });
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogError(
+                AuditEventTypes.EventEmissionFailed,
+                Guid.Empty,
+                ex,
+                new { EventCount = events.Count() });
+                
+            throw new EventEmissionException("Failed to emit event batch", ex);
         }
     }
 }

@@ -19,3 +19,5 @@ CLAUDE.md
 .env.*.local
 
 scripts/
+
+memory/

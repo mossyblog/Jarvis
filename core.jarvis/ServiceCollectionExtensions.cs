@@ -1,7 +1,10 @@
 using System.Reflection;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
+using core.jarvis.Events;
+using core.jarvis.Events.Emitters;
 using core.jarvis.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -19,10 +22,12 @@ public static class JarvisServiceCollectionExtensions
     /// </summary>
     /// <param name="services">The <see cref="IServiceCollection" /> to add services to.</param>
     /// <param name="minimumLogLevel">The minimum log level to configure for the Console logger (default: Information).</param>
+    /// <param name="configuration">Optional configuration for event emission and other services.</param>
     /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
     public static IServiceCollection RegisterJarvis(
         this IServiceCollection services,
-        LogLevel minimumLogLevel = LogLevel.Information)
+        LogLevel minimumLogLevel = LogLevel.Information,
+        IConfiguration? configuration = null)
     {
         if (services == null) throw new ArgumentNullException(nameof(services));
 
@@ -70,6 +75,9 @@ public static class JarvisServiceCollectionExtensions
         
         // 10. Register Event Subscription Manager
         services.TryAddScoped<EventSubscriptionManager>();
+
+        // 11. Configure Event Emission
+        services.AddEventEmission(configuration);
 
         return services;
     }
@@ -182,5 +190,28 @@ public static class JarvisServiceCollectionExtensions
             LogLevel.None => Serilog.Events.LogEventLevel.Fatal,
             _ => Serilog.Events.LogEventLevel.Information
         };
+    }
+
+    /// <summary>
+    /// Configures event emission based on configuration.
+    /// </summary>
+    private static IServiceCollection AddEventEmission(this IServiceCollection services, IConfiguration? configuration)
+    {
+        var eventEmitterType = configuration?["Jarvis:EventEmitter:Type"] ?? "NoOp";
+        
+        switch (eventEmitterType.ToLower())
+        {
+            case "inmemory":
+                services.AddSingleton<InMemoryEventEmitter>();
+                services.AddSingleton<IEventEmitter>(provider => provider.GetRequiredService<InMemoryEventEmitter>());
+                break;
+                
+            case "noop":
+            default:
+                services.AddSingleton<IEventEmitter, NoOpEventEmitter>();
+                break;
+        }
+        
+        return services;
     }
 }

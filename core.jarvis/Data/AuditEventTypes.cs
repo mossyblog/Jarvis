@@ -57,6 +57,11 @@ public static class AuditEventTypes
     public const string HandlerExecuted = "HANDLER_EXECUTED";
     public const string HandlerFailed = "HANDLER_FAILED";
     public const string HandlerValidationFailed = "HANDLER_VALIDATION_FAILED";
+    
+    // Event emission events
+    public const string EventEmitted = "EVENT_EMITTED";
+    public const string EventBatchEmitted = "EVENT_BATCH_EMITTED";
+    public const string EventEmissionFailed = "EVENT_EMISSION_FAILED";
 
     /// <summary>
     /// Creates a component-specific event type.

@@ -143,4 +143,20 @@ public interface IDataContext
     /// <param name="entityId">The entity to get descendants for.</param>
     /// <returns>List of all descendant entity IDs.</returns>
     Task<List<Guid>> Descendants(Guid entityId);
+
+    /// <summary>
+    /// Emit a single event through the configured event emitter.
+    /// </summary>
+    /// <typeparam name="TEvent">The event type.</typeparam>
+    /// <param name="event">The event to emit.</param>
+    /// <returns>Task representing the emission operation.</returns>
+    Task Emit<TEvent>(TEvent @event) where TEvent : Events.IEvent;
+
+    /// <summary>
+    /// Emit multiple events as a batch through the configured event emitter.
+    /// </summary>
+    /// <typeparam name="TEvent">The event type.</typeparam>
+    /// <param name="events">The events to emit.</param>
+    /// <returns>Task representing the batch emission operation.</returns>
+    Task EmitBatch<TEvent>(IEnumerable<TEvent> events) where TEvent : Events.IEvent;
 }
