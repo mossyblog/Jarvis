@@ -1,8 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
-	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003ADiscordSocketClient_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FUsers_003Fscbarnes_003FAppData_003FRoaming_003FJetBrains_003FRider2022_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F382049698ae94833a7769d39460acfd7bf200_003F5f_003F2e03a521_003FDiscordSocketClient_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
-	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
-  &lt;Assembly Path="C:\Users\scbarnes\.nuget\packages\azure.messaging.servicebus\7.13.1\lib\netstandard2.0\Azure.Messaging.ServiceBus.dll" /&gt;&#xD;
-&lt;/AssemblyExplorer&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=1c7945fd_002D5d53_002D49e9_002D89ee_002D4a4fb93500b8/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="JarvisBot_Should_ConnectToDiscord" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Solution /&gt;&#xD;
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=9066eb49_002D37dd_002D4b41_002D86ff_002Dc717b4cfa16a/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="All tests from &amp;lt;core.jarvis.data.tests&amp;gt;" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Or&gt;&#xD;
+    &lt;Project Location="C:\Code\github\Jarvis\core.jarvis.data.tests" Presentation="&amp;lt;core.jarvis.data.tests&amp;gt;" /&gt;&#xD;
+    &lt;Project Location="C:\Code\github\Jarvis\core.jarvis.tests" Presentation="&amp;lt;core.jarvis.tests&amp;gt;" /&gt;&#xD;
+  &lt;/Or&gt;&#xD;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

@@ -3,3 +3,13 @@ obj/
 /packages/
 riderModule.iml
 /_ReSharper.Caches/
+.cursor/
+.idea/
+.vscode/
+/CoverageReport/
+
+/.vs
+
+# Environment files
+.env.local
+.env.*.local

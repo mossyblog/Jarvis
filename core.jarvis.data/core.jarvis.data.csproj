@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <AssemblyName>core.jarvis.data</AssemblyName>
+        <RootNamespace>core.jarvis.data</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+      <PackageReference Include="Dapper" Version="2.1.66" />
+      <PackageReference Include="Npgsql" Version="9.0.3" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="7.7.1" />
+    </ItemGroup>
+
+</Project>
