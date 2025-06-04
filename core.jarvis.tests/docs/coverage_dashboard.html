@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Coverage Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #2e2e2e;
+            --panel-bg: #3c3c3c;
+            --text-color: #ccc;
+            --header-color: #eee;
+            --border-color: #555;
+            --hover-bg: #4a4a4a;
+            --low-cov: #d9534f;
+            --med-cov: #f0ad4e;
+            --high-cov: #5cb85c;
+            --na-cov: #777;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+            line-height: 1.5;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        #main-container { /* Reinstated two-panel layout */
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        #left-panel, #right-panel {
+            padding: 15px;
+            overflow-y: auto;
+             /* Adjust height based on header + summary */
+            height: calc(100vh - 180px); /* Increased top margin */
+        }
+        #left-panel {
+            width: 35%;
+            min-width: 300px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border-color);
+        }
+        #right-panel {
+            width: 65%;
+            background-color: #333; /* Slightly different background */
+        }
+        h1, h2, h3 {
+            color: var(--header-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 5px;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        h1 { margin: 10px 20px; }
+        #summary-container { /* Keep enhanced summary */
+            margin: 0 20px 10px 20px;
+            padding: 15px;
+            background-color: var(--panel-bg);
+            border-radius: 5px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+        .summary-box {
+            background-color: #4a4a4a;
+            padding: 15px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+        .summary-box h3 { margin-top: 0; color: #ddd; font-size: 1.0em; border-bottom: 1px solid #666; padding-bottom: 5px; margin-bottom: 10px; font-weight: normal; }
+        .summary-box p { margin: 2px 0; font-size: 0.85em; display: flex; justify-content: space-between; color: #bbb; }
+         .summary-box p span:last-child { font-weight: bold; color: #eee; }
+         .summary-box .percentage-display { display: flex; align-items: center; margin-bottom: 10px; }
+         .summary-box .percentage { font-size: 2.2em; font-weight: bold; color: var(--header-color); margin-right: 10px; line-height: 1; }
+        .summary-box .percentage.low { color: var(--low-cov); }
+        .summary-box .percentage.medium { color: var(--med-cov); }
+        .summary-box .percentage.high { color: var(--high-cov); }
+        .summary-box .percentage.na { color: var(--na-cov); }
+        .summary-box .mini-bar-container { width: 8px; height: 30px; background-color: #555; border-radius: 2px; overflow: hidden; margin-right: 15px; }
+         .summary-box .mini-bar { height: 100%; width: 100%; display: block; }
+
+        ul { list-style-type: none; padding-left: 0; }
+        li { margin-bottom: 5px; }
+
+        /* Domain Summary (Left Panel) */
+        #domain-summary li { padding: 8px; border-radius: 4px; cursor: pointer; border-bottom: 1px solid var(--border-color); }
+        #domain-summary li:hover, #domain-summary li.selected { background-color: var(--hover-bg); }
+        .domain-item { display: flex; justify-content: space-between; align-items: center; }
+        .domain-name { font-weight: bold; flex-grow: 1; margin-right: 10px; }
+
+        /* Details View (Right Panel) */
+        #details-view ul { padding-left: 0; }
+        #details-view li { border-bottom: 1px solid #4a4a4a; padding: 5px 0; }
+        #details-view details { margin-left: 20px; }
+        #details-view summary { cursor: pointer; display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+        #details-view summary:hover { background-color: var(--hover-bg); }
+        #details-view summary::before { content: '► '; font-size: 0.8em; margin-right: 8px; display: inline-block; width: 1em; }
+        #details-view details[open] > summary::before { content: '▼ '; }
+        #details-view summary::-webkit-details-marker { display: none; }
+        #details-view summary { list-style-type: none; }
+
+        .item-row { display: flex; justify-content: space-between; align-items: center; padding: 3px 0; }
+        .item-row:hover { background-color: var(--hover-bg); }
+        .symbol-name { flex-grow: 1; padding-right: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .coverage-stats { display: flex; align-items: center; flex-shrink: 0; min-width: 250px; justify-content: flex-end; }
+        .coverage-bar-container { width: 100px; height: 18px; background-color: #555; border-radius: 3px; margin-right: 10px; overflow: hidden; position: relative; }
+        .coverage-bar { display: block; height: 100%; border-radius: 3px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.2); transition: width 0.3s ease-in-out; color: white; font-size: 0.8em; line-height: 18px; text-align: center; white-space: nowrap; overflow: hidden; }
+        .coverage-text { font-size: 0.9em; color: #bbb; min-width: 100px; text-align: right; }
+
+        .coverage-low { background-color: var(--low-cov); }
+        .coverage-medium { background-color: var(--med-cov); }
+        .coverage-high { background-color: var(--high-cov); }
+        .coverage-na { background-color: var(--na-cov); }
+
+        label[for="coverageFileInput"] { /* Style the label */
+            font-weight: bold;
+            margin: 10px 20px 0;
+            display: inline-block;
+        }
+        input[type="file"] {
+            margin: 10px 20px 15px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #555;
+            color: #eee;
+            display: inline-block; /* Make it visible again */
+        }
+        .filename { font-style: italic; color: #999; font-size: 0.9em; margin-left: 10px; }
+        #details-view details ul { padding-left: 25px; }
+        #details-view details li { border-bottom: none; padding: 0; }
+        #details-view .method-item .item-row { margin-left: 25px; }
+        #details-view .placeholder { color: #888; text-align: center; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <h1>Code Coverage Dashboard</h1>
+    <label for="coverageFileInput">Load Cobertura XML (coverage.xml):</label>
+    <input type="file" id="coverageFileInput" accept=".xml">
+
+    <div id="summary-container">
+         <div class="summary-box"><h3>Information</h3><div id="info-summary"><p>Load coverage.xml...</p></div></div>
+         <div class="summary-box"><h3>Line Coverage</h3><div id="line-summary"><p>...</p></div></div>
+         <div class="summary-box"><h3>Branch Coverage</h3><div id="branch-summary"><p>...</p></div></div>
+         <div class="summary-box"><h3>Totals</h3><div id="totals-summary"><p>...</p></div></div>
+    </div>
+
+    <div id="main-container">
+        <div id="left-panel">
+            <h2>Domains</h2>
+            <ul id="domain-summary">
+                <!-- Domain summaries will be rendered here -->
+            </ul>
+        </div>
+        <div id="right-panel">
+            <h2 id="details-title">Details</h2>
+            <div id="details-view">
+                 <p class="placeholder">Load coverage.xml using the button above, then select a domain.</p>
+                <!-- Class/Method details will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+<script>
+    const fileInput = document.getElementById('coverageFileInput');
+    const infoSummaryDiv = document.getElementById('info-summary');
+    const lineSummaryDiv = document.getElementById('line-summary');
+    const branchSummaryDiv = document.getElementById('branch-summary');
+    const totalsSummaryDiv = document.getElementById('totals-summary');
+    const domainSummaryUl = document.getElementById('domain-summary');
+    const detailsViewDiv = document.getElementById('details-view');
+    const detailsTitle = document.getElementById('details-title');
+
+    let coverageData = null;
+
+    fileInput.addEventListener('change', handleFileSelect, false);
+
+    function handleFileSelect(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Display loading status
+        infoSummaryDiv.innerHTML = '<p>Loading...</p>';
+        lineSummaryDiv.innerHTML = '<p>...</p>';
+        branchSummaryDiv.innerHTML = '<p>...</p>';
+        totalsSummaryDiv.innerHTML = '<p>...</p>';
+        domainSummaryUl.innerHTML = '';
+        detailsViewDiv.innerHTML = '<p class="placeholder">Processing coverage data...</p>';
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const xmlContent = e.target.result;
+            try {
+                parseAndDisplayCoverage(xmlContent);
+            } catch (error) {
+                console.error("Error processing coverage file:", error);
+                infoSummaryDiv.innerHTML = '<p>Error processing XML file.</p>';
+                lineSummaryDiv.innerHTML = ''; branchSummaryDiv.innerHTML = ''; totalsSummaryDiv.innerHTML = '';
+                domainSummaryUl.innerHTML = '';
+                detailsViewDiv.innerHTML = '<p class="placeholder">Could not display details due to error.</p>';
+            }
+        };
+        reader.readAsText(file);
+    }
+
+     function parseAndDisplayCoverage(xmlContent) {
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlContent, "text/xml");
+        const coverageEl = xmlDoc.getElementsByTagName('coverage')[0];
+        if (!coverageEl) {
+             infoSummaryDiv.innerHTML = '<p>Error: Invalid Cobertura format.</p>';
+             return;
+        }
+
+        coverageData = processCoverageData(xmlDoc);
+
+        const overallLineRate = parseFloat(coverageEl.getAttribute('line-rate') || '0');
+        const linesCovered = parseInt(coverageEl.getAttribute('lines-covered') || '0');
+        const linesValid = parseInt(coverageEl.getAttribute('lines-valid') || '0');
+        const overallBranchRate = parseFloat(coverageEl.getAttribute('branch-rate') || '0');
+        const branchesCovered = parseInt(coverageEl.getAttribute('branches-covered') || '0');
+        const branchesValid = parseInt(coverageEl.getAttribute('branches-valid') || '0');
+        renderSummary(overallLineRate, linesCovered, linesValid, overallBranchRate, branchesCovered, branchesValid, coverageData.totalClasses, coverageData.totalMethods, coverageEl);
+
+        renderDomainSummary(coverageData.domains);
+
+        detailsTitle.textContent = 'Details';
+        detailsViewDiv.innerHTML = '<p class="placeholder">Select a domain from the left panel to view details.</p>';
+    }
+
+    function processCoverageData(xmlDoc) {
+        const data = { domains: {}, totalClasses: 0, totalMethods: 0 };
+        const packages = xmlDoc.getElementsByTagName('package');
+
+        for (const pkg of packages) {
+            const classes = pkg.getElementsByTagName('class');
+            for (const cls of classes) {
+                const className = cls.getAttribute('name');
+                const filename = cls.getAttribute('filename');
+
+                if (className.includes('<') || className.includes('>')) continue;
+
+                let classLinesCovered = 0;
+                let classLinesValid = 0;
+                const linesElements = cls.getElementsByTagName('lines');
+                if (linesElements.length > 0) {
+                    const lines = linesElements[0].getElementsByTagName('line');
+                    for(const line of lines) {
+                        classLinesValid++;
+                        if (parseInt(line.getAttribute('hits') || '0') > 0) {
+                            classLinesCovered++;
+                        }
+                    }
+                }
+                 if (classLinesValid === 0 && cls.hasAttribute('lines-valid')) {
+                     classLinesCovered = parseInt(cls.getAttribute('lines-covered') || '0');
+                     classLinesValid = parseInt(cls.getAttribute('lines-valid') || '0');
+                 }
+                const classLineRate = classLinesValid > 0 ? (classLinesCovered / classLinesValid) : 0;
+
+                const namespaceParts = className.split('.');
+                let domainName = namespaceParts.length > 2 ? namespaceParts.slice(0, -1).join('.') : className;
+                 if (domainName.startsWith("core.jarvis.Data.Storage")) domainName = "Domain: Storage";
+                 else if (domainName.startsWith("core.jarvis.Data.Query")) domainName = "Domain: Query";
+                 else if (domainName.startsWith("core.jarvis.Data")) domainName = "Domain: Data";
+                 else if (domainName.startsWith("core.jarvis")) domainName = "Domain: Core";
+                 else domainName = "Domain: Other";
+
+                if (!data.domains[domainName]) {
+                    data.domains[domainName] = { linesCovered: 0, linesValid: 0, classes: [] };
+                }
+
+                data.domains[domainName].linesCovered += classLinesCovered;
+                data.domains[domainName].linesValid += classLinesValid;
+
+                const classData = {
+                    name: className,
+                    filename: filename,
+                    lineRate: classLineRate,
+                    linesCovered: classLinesCovered,
+                    linesValid: classLinesValid,
+                    methods: []
+                };
+
+                let classHasRelevantMethods = false;
+                const methods = cls.getElementsByTagName('method');
+                for (const method of methods) {
+                    const methodName = method.getAttribute('name');
+                    if (methodName.includes('<') || methodName.includes('>') || methodName.includes('b__') || methodName.startsWith('get_') || methodName.startsWith('set_') || methodName === '.ctor' || methodName === '.cctor') continue;
+
+                    let methodLinesCovered = 0;
+                    let methodLinesValid = 0;
+                    const methodLinesElements = method.getElementsByTagName('lines');
+                     if (methodLinesElements.length > 0) {
+                        const lines = methodLinesElements[0].getElementsByTagName('line');
+                        for(const line of lines) {
+                            methodLinesValid++;
+                            if (parseInt(line.getAttribute('hits') || '0') > 0) {
+                                methodLinesCovered++;
+                            }
+                        }
+                    }
+                     if (methodLinesValid === 0 && method.hasAttribute('lines-valid')) {
+                        methodLinesCovered = parseInt(method.getAttribute('lines-covered') || '0');
+                        methodLinesValid = parseInt(method.getAttribute('lines-valid') || '0');
+                    }
+                    const methodLineRate = methodLinesValid > 0 ? (methodLinesCovered / methodLinesValid) : 0;
+
+                    classData.methods.push({
+                        name: methodName,
+                        signature: method.getAttribute('signature'),
+                        lineRate: methodLineRate,
+                        linesCovered: methodLinesCovered,
+                        linesValid: methodLinesValid
+                    });
+                    classHasRelevantMethods = true;
+                    data.totalMethods++;
+                }
+                 if(classLinesValid > 0 || classHasRelevantMethods) {
+                    data.domains[domainName].classes.push(classData);
+                    data.totalClasses++;
+                 }
+            }
+        }
+        return data;
+    }
+
+     function renderSummary(lineRate, linesCovered, linesValid, branchRate, branchesCovered, branchesValid, classCount, methodCount, coverageEl) {
+         const linesUncovered = linesValid - linesCovered;
+         const branchesUncovered = branchesValid - branchesCovered;
+         const timestamp = coverageEl.getAttribute('timestamp') ? new Date(parseInt(coverageEl.getAttribute('timestamp') || '0') * 1000).toLocaleString() : 'N/A';
+         const assemblyCount = coverageEl.getElementsByTagName('package').length;
+
+         infoSummaryDiv.innerHTML = `
+            <p><span>Parser:</span> <span>Cobertura</span></p>
+            <p><span>Assemblies:</span> <span>${assemblyCount}</span></p>
+            <p><span>Classes:</span> <span>${classCount}</span></p>
+            <p><span>Coverage date:</span> <span>${timestamp}</span></p>
+         `;
+
+         lineSummaryDiv.innerHTML = `
+            <div class="percentage-display">
+                 <div class="mini-bar-container"><span class="mini-bar ${getCoverageClass(lineRate)}" style="height: ${lineRate*100}%;"></span></div>
+                 <span class="percentage ${getCoverageClass(lineRate)}">${(lineRate * 100).toFixed(1)}%</span>
+            </div>
+            <p><span>Covered lines:</span> <span>${linesCovered}</span></p>
+            <p><span>Uncovered lines:</span> <span>${linesUncovered}</span></p>
+            <p><span>Coverable lines:</span> <span>${linesValid}</span></p>
+         `;
+
+         branchSummaryDiv.innerHTML = `
+             <div class="percentage-display">
+                 <div class="mini-bar-container"><span class="mini-bar ${getCoverageClass(branchRate)}" style="height: ${branchRate*100}%;"></span></div>
+                 <span class="percentage ${getCoverageClass(branchRate)}">${(branchRate * 100).toFixed(1)}%</span>
+             </div>
+            <p><span>Covered branches:</span> <span>${branchesCovered}</span></p>
+            <p><span>Total branches:</span> <span>${branchesValid}</span></p>
+         `;
+         totalsSummaryDiv.innerHTML = `
+             <p><span>Total Classes:</span> <span>${classCount}</span></p>
+             <p><span>Total Methods:</span> <span>${methodCount}</span></p>
+         `;
+    }
+
+    function renderDomainSummary(domains) {
+        domainSummaryUl.innerHTML = ''; // Clear previous
+        Object.keys(domains).sort().forEach(domainName => {
+            const domain = domains[domainName];
+            const domainLineRate = domain.linesValid > 0 ? (domain.linesCovered / domain.linesValid) : 0;
+            const domainLinesUncovered = domain.linesValid - domain.linesCovered;
+
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="domain-item">
+                    <span class="domain-name">${domainName}</span>
+                    <span class="coverage-stats">
+                        ${createCoverageBar(domainLineRate)}
+                        <span class="coverage-text">${domainLinesUncovered} / ${domain.linesValid} Stmts</span>
+                    </span>
+                </div>
+            `;
+            li.addEventListener('click', () => {
+                renderDetailsView(domainName, domain.classes);
+                document.querySelectorAll('#domain-summary li').forEach(el => el.classList.remove('selected'));
+                li.classList.add('selected');
+            });
+            domainSummaryUl.appendChild(li);
+        });
+    }
+
+    function renderDetailsView(domainName, classes) {
+        detailsTitle.textContent = `Details: ${domainName}`;
+        detailsViewDiv.innerHTML = ''; // Clear previous
+        if (!classes || classes.length === 0) {
+            detailsViewDiv.innerHTML = '<p class="placeholder">No classes with coverage data found in this domain.</p>';
+            return;
+        }
+
+        const detailsList = document.createElement('ul');
+        classes.sort((a, b) => a.name.localeCompare(b.name)).forEach(cls => {
+            const classLinesUncovered = cls.linesValid - cls.linesCovered;
+
+            const classLi = document.createElement('li');
+            const classDetails = document.createElement('details');
+            classDetails.className = 'class';
+            const classSummary = document.createElement('summary');
+            classSummary.innerHTML = `
+                <span class="symbol-name">📄 Class: ${cls.name} <span class="filename">(${cls.filename})</span></span>
+                <span class="coverage-stats">
+                     ${createCoverageBar(cls.lineRate)}
+                     <span class="coverage-text">${classLinesUncovered} / ${cls.linesValid} Stmts</span>
+                </span>
+            `;
+            classDetails.appendChild(classSummary);
+
+            const methodsList = document.createElement('ul');
+            cls.methods.sort((a, b) => a.name.localeCompare(b.name)).forEach(method => {
+                const methodLinesUncovered = method.linesValid - method.linesCovered;
+                const methodLi = document.createElement('li');
+                methodLi.className = 'method-item';
+                methodLi.innerHTML = `
+                    <div class="item-row">
+                        <span class="symbol-name">🔧 Method: ${method.name}</span>
+                         <span class="coverage-stats">
+                            ${createCoverageBar(method.lineRate)}
+                            <span class="coverage-text">${methodLinesUncovered} / ${method.linesValid} Stmts</span>
+                        </span>
+                    </div>
+                `;
+                methodsList.appendChild(methodLi);
+            });
+
+            if (methodsList.hasChildNodes()) {
+                classDetails.appendChild(methodsList);
+            }
+            classLi.appendChild(classDetails);
+            detailsList.appendChild(classLi);
+        });
+        detailsViewDiv.appendChild(detailsList);
+    }
+
+    // Helper functions
+    function getCoverageClass(rate) { const percent = rate * 100; if (isNaN(percent)) return 'coverage-na'; if (percent === 0) return 'coverage-na'; if (percent < 30) return 'coverage-low'; if (percent < 70) return 'coverage-medium'; return 'coverage-high'; }
+    function createCoverageBar(rate) {
+        const percent = isNaN(rate) ? 0 : (rate * 100);
+        const cssClass = getCoverageClass(rate);
+        return `<div class="coverage-bar-container"><span class="coverage-bar ${cssClass}" style="width: ${percent}%;">${percent.toFixed(0)}%</span></div>`;
+    }
+
+</script>
+
+</body>
+</html>

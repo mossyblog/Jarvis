@@ -1,0 +1,1 @@
+- Always follow @core.jarvis.tests/Guidelines.md when writing tests for this project
