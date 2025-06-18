@@ -21,6 +21,8 @@ export function Dashboard() {
     setActiveItem(itemId);
     if (itemId === 'table-editor') {
       navigate('/editor');
+    } else if (itemId === 'schema-visualizer') {
+      navigate('/SchemaVisualizer');
     }
   };
 
@@ -29,52 +31,52 @@ export function Dashboard() {
       <div className="@container">
         {/* Header */}
         <DashboardHeader
-        projectName="Blog"
-        projectStatus="active"
-        tables={1}
-        functions={0}
-        replicas={0}
-      />
+          projectName="Nano Project"
+          projectStatus="active"
+          tables={5}
+          functions={0}
+          replicas={0}
+        />
 
-      {/* Metrics Grid */}
-      <div className="px-8 py-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <MetricCard
-            title="Database"
-            type="database"
-            requests={12}
-            data={generateChartData(12, 0.5)}
-            timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
-          />
-          <MetricCard
-            title="Auth"
-            type="auth"
-            requests={10}
-            data={generateChartData(10, 0.4)}
-            timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
-          />
-          <MetricCard
-            title="Storage"
-            type="storage"
-            requests={0}
-            data={generateChartData(0)}
-            timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
-          />
-          <MetricCard
-            title="Realtime"
-            type="realtime"
-            requests={0}
-            data={generateChartData(0)}
-            timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
-          />
+        {/* Metrics Grid */}
+        <div className="px-8 py-8">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <MetricCard
+              title="Database"
+              type="database"
+              requests={12}
+              data={generateChartData(12, 0.5)}
+              timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
+            />
+            <MetricCard
+              title="Auth"
+              type="auth"
+              requests={10}
+              data={generateChartData(10, 0.4)}
+              timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
+            />
+            <MetricCard
+              title="Storage"
+              type="storage"
+              requests={0}
+              data={generateChartData(0)}
+              timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
+            />
+            <MetricCard
+              title="Realtime"
+              type="realtime"
+              requests={0}
+              data={generateChartData(0)}
+              timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
+            />
+          </div>
         </div>
-      </div>
 
-      {/* Issues Section */}
-      <IssuesSection />
+        {/* Issues Section */}
+        <IssuesSection />
 
-      {/* Slow Queries */}
-      <SlowQueriesTable />
+        {/* Slow Queries */}
+        <SlowQueriesTable />
       </div>
     </DashboardLayout>
   );

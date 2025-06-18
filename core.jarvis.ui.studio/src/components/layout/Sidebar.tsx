@@ -24,9 +24,10 @@ interface SidebarItem {
   href: string;
 }
 
-const sidebarItems: SidebarItem[] = [
+export const sidebarItems: SidebarItem[] = [
   { id: 'home', label: 'Project overview', icon: <Home size={18} />, href: '/' },
   { id: 'table-editor', label: 'Table Editor', icon: <Table size={18} />, href: '/editor' },
+  { id: 'schema-visualizer', label: 'Schema Visualizer', icon: <Database size={18} />, href: '/SchemaVisualizer' },
   { id: 'sql-editor', label: 'SQL Editor', icon: <FileCode2 size={18} />, href: '/sql' },
   { id: 'database', label: 'Database', icon: <Database size={18} />, href: '/database' },
   { id: 'auth', label: 'Authentication', icon: <Shield size={18} />, href: '/auth' },
