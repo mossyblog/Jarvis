@@ -1,10 +1,17 @@
 using Microsoft.Azure.Functions.Worker;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using core.jarvis.api.Extensions;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
+    .ConfigureAppConfiguration((context, config) =>
+    {
+        // Ensure local.settings.json is loaded
+        config.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true)
+              .AddEnvironmentVariables();
+    })
     .ConfigureServices(services =>
     {
         services.AddApplicationInsightsTelemetryWorkerService();

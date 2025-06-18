@@ -22,6 +22,13 @@ public static class ServiceCollectionExtensions
         // Get configuration
         var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
 
+        // Set the connection string as environment variable for core Jarvis services
+        var connectionString = configuration.GetConnectionString("JarvisDb");
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            Environment.SetEnvironmentVariable("TEST_DATABASE_URL", connectionString);
+        }
+
         // Add core Jarvis services
         services.RegisterJarvis();
 

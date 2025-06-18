@@ -10,7 +10,7 @@
     "Jwt:RefreshTokenExpirationDays": "30"
   },
   "ConnectionStrings": {
-    "JarvisDb": "Host=127.0.0.1;Port=54322;Database=postgres;Username=postgres;Password=postgres"
+    "JarvisDb": "Host=localhost;Port=5432;Database=jarvis;Username=postgres;Password=postgres"
   },
   "Host": {
     "LocalHttpPort": 7071,
