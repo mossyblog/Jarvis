@@ -1,14 +1,36 @@
 # Jarvis
 
-A modern Entity Component System (ECS) framework for .NET 8 that provides flexible data orchestration with a plugin-based handler architecture. The framework consists of two complementary SDKs designed for different levels of data access and orchestration.
+A modern Entity Component System (ECS) framework for .NET 8 that provides flexible data orchestration with a plugin-based handler architecture. The framework consists of three complementary SDKs designed for different levels of data access and orchestration.
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/jarvis.git
+cd jarvis
+
+# Start PostgreSQL with Docker
+docker-compose up -d
+
+# Build the solution
+dotnet build
+
+# Run tests
+dotnet test
+
+# Start the API (optional)
+cd core.jarvis.api
+func start
+```
 
 ## Features
 
 - **Plugin-Based Handler Architecture**: Modular business logic encapsulation through handlers
 - **Entity Component System**: Clean separation of data (components) from logic (handlers)
-- **Dual SDK Architecture**: 
+- **Triple SDK Architecture**: 
   - `core.jarvis` - High-level ECS orchestration with handler pattern
   - `core.jarvis.data` - Low-level PostgreSQL data access with JWT-based security
+  - `core.jarvis.api` - Azure Functions API layer for authentication endpoints
 - **Type-Safe Query System**: Fluent API for cross-component entity queries
 - **Built-in Audit Trail**: Comprehensive event sourcing and audit capabilities
 - **Row Level Security**: SDK-enforced access control with JWT authentication
@@ -35,9 +57,18 @@ Low-level PostgreSQL data access with security features:
 - **RLS Policies**: SDK-enforced Row Level Security
 - **Direct SQL Access**: When you need raw performance
 
+### core.jarvis.api - API Layer
+
+Azure Functions-based REST API for authentication and security:
+
+- **Authentication Endpoints**: Login, logout, refresh tokens, and validation
+- **JWT Token Management**: Secure token generation and validation
+- **Swagger/OpenAPI**: Auto-generated API documentation
+- **Component Validation**: Middleware for validating component payloads
+
 ## Installation
 
-### Install both SDKs:
+### Install the SDKs:
 
 ```bash
 # ECS Framework
@@ -45,6 +76,9 @@ dotnet add reference path/to/core.jarvis/core.jarvis.csproj
 
 # Data Access SDK
 dotnet add reference path/to/core.jarvis.data/core.jarvis.data.csproj
+
+# API Layer (optional)
+dotnet add reference path/to/core.jarvis.api/core.jarvis.api.csproj
 ```
 
 Or via NuGet (when published):
@@ -52,6 +86,7 @@ Or via NuGet (when published):
 ```bash
 dotnet add package core.jarvis
 dotnet add package core.jarvis.data
+dotnet add package core.jarvis.api
 ```
 
 ## Configuration
@@ -85,6 +120,38 @@ var factory = new PgClientFactory(
 var client = factory.Create();
 var jwt = await client.Authenticate("user@example.com", "password");
 client.JWT(jwt);
+```
+
+### API Layer Setup (Azure Functions)
+
+Configure in `local.settings.json`:
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "Jwt:Secret": "your-secret-key-min-32-chars",
+    "Jwt:Issuer": "jarvis-api",
+    "Jwt:Audience": "jarvis-client",
+    "Jwt:ExpirationMinutes": "15"
+  },
+  "ConnectionStrings": {
+    "JarvisDb": "Host=localhost;Port=5432;Database=jarvis;Username=postgres;Password=postgres"
+  }
+}
+```
+
+Run the API locally:
+
+```bash
+cd core.jarvis.api
+func start
+
+# API endpoints available at:
+# http://localhost:7071/api/security/auth
+# http://localhost:7071/api/swagger/ui
 ```
 
 ## Usage Examples
@@ -233,6 +300,71 @@ public class InvoiceHandlerTests : IntegrationTestBase
     }
 }
 ```
+
+### Running Tests Locally
+
+```bash
+# Run all tests
+dotnet test
+
+# Run only integration tests
+dotnet test --filter "FullyQualifiedName~Integration"
+
+# Run with coverage
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+### Test Database Setup
+
+Integration tests require a PostgreSQL database. You can use either:
+
+1. **Docker Compose** (Recommended):
+```bash
+# Start Supabase PostgreSQL container
+docker-compose up -d
+
+# Database will be available at localhost:5432
+# Default credentials: postgres/postgres
+```
+
+2. **Manual PostgreSQL Setup**:
+```bash
+# Create test database
+createdb jarvis_test
+
+# Run setup script
+psql -d jarvis_test -f core.jarvis.tests/Scripts/setup-test-database.sql
+```
+
+Set the connection string via environment variable:
+```bash
+export TEST_DATABASE_URL="Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres"
+```
+
+## CI/CD with GitHub Actions
+
+The project uses GitHub Actions for continuous integration with full database integration tests:
+
+### Build Status
+[![.NET](https://github.com/yourusername/jarvis/actions/workflows/dotnet.yml/badge.svg)](https://github.com/yourusername/jarvis/actions/workflows/dotnet.yml)
+
+### CI Pipeline Features
+
+- **Automated Testing**: All tests run on every push and pull request
+- **Real Database Tests**: Uses Supabase PostgreSQL container (supabase/postgres:15.1.0.155)
+- **Database Initialization**: Automatically sets up test schema and data
+- **Code Coverage**: Reports coverage metrics to Codecov
+- **No Mocks**: All integration tests use real database connections
+
+### GitHub Actions Workflow
+
+The CI pipeline automatically:
+1. Spins up a Supabase PostgreSQL container
+2. Initializes the database with test schema
+3. Runs all unit and integration tests
+4. Reports test results and code coverage
+
+See [.github/workflows/dotnet.yml](.github/workflows/dotnet.yml) for the complete workflow configuration.
 
 ## Documentation
 
