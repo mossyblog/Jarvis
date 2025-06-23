@@ -16,6 +16,9 @@ CREATE SCHEMA IF NOT EXISTS graphql;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS security_token CASCADE;
 DROP TABLE IF EXISTS audit_event CASCADE;
+DROP TABLE IF EXISTS user_profile CASCADE;
+DROP TABLE IF EXISTS role CASCADE;
+DROP TABLE IF EXISTS permission CASCADE;
 DROP TABLE IF EXISTS test_component CASCADE;
 DROP TABLE IF EXISTS position_component CASCADE;
 DROP TABLE IF EXISTS velocity_component CASCADE;
@@ -66,6 +69,53 @@ CREATE INDEX idx_security_token_owner_entity_id ON security_token(owner_entity_i
 CREATE INDEX idx_security_token_user_id ON security_token(user_id);
 CREATE INDEX idx_security_token_session_id ON security_token(session_id);
 CREATE INDEX idx_security_token_refresh_expires_at ON security_token(refresh_expires_at) WHERE is_revoked = FALSE;
+
+-- Create user_profile table
+CREATE TABLE user_profile (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    avatar VARCHAR(500),
+    role_ids TEXT[] DEFAULT '{}',
+    preferences JSONB DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version INTEGER DEFAULT 1
+);
+
+-- Create indexes for user_profile
+CREATE INDEX idx_user_profile_owner_entity_id ON user_profile(owner_entity_id);
+
+-- Create role table
+CREATE TABLE role (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    permission_ids TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version INTEGER DEFAULT 1
+);
+
+-- Create indexes for role
+CREATE INDEX idx_role_owner_entity_id ON role(owner_entity_id);
+CREATE INDEX idx_role_name ON role(name);
+
+-- Create permission table
+CREATE TABLE permission (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    resource VARCHAR(100) NOT NULL,
+    actions TEXT[] DEFAULT '{}',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version INTEGER DEFAULT 1
+);
+
+-- Create indexes for permission
+CREATE INDEX idx_permission_owner_entity_id ON permission(owner_entity_id);
+CREATE INDEX idx_permission_resource ON permission(resource);
 
 -- Create audit_event table
 CREATE TABLE audit_event (
@@ -300,6 +350,9 @@ BEGIN
     RAISE NOTICE 'Tables created:';
     RAISE NOTICE '  - users (with test user: test@example.com / test123)';
     RAISE NOTICE '  - security_token';
+    RAISE NOTICE '  - user_profile';
+    RAISE NOTICE '  - role';
+    RAISE NOTICE '  - permission';
     RAISE NOTICE '  - audit_event';
     RAISE NOTICE '  - test_component';
     RAISE NOTICE '  - position_component';

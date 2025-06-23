@@ -18,11 +18,9 @@ namespace core.jarvis.api.tests.Helpers;
 /// </summary>
 public abstract class ApiIntegrationTestBase : IntegrationTestBase
 {
-    private IAuthenticationService? _authenticationService;
     private ITokenService? _tokenService;
     private IConfiguration? _configuration;
     
-    protected IAuthenticationService AuthenticationService => _authenticationService ?? throw new InvalidOperationException("AuthenticationService not initialized");
     protected ITokenService TokenService => _tokenService ?? throw new InvalidOperationException("TokenService not initialized");
     protected IConfiguration Configuration => _configuration ?? throw new InvalidOperationException("Configuration not initialized");
     
@@ -52,27 +50,14 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
         var expirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");
         
         _tokenService = new TokenService(issuer, audience, secretKey, expirationMinutes);
-        
-        // Create authentication service
-        var dataContext = _serviceProvider.GetRequiredService<IDataContext>();
-        var logger = _serviceProvider.GetRequiredService<ILogger<AuthenticationService>>();
-        
-        // Create Npgsql connection for PgClient
-        var connectionString = _configuration.GetConnectionString("JarvisDb") 
-            ?? throw new InvalidOperationException("Connection string not configured");
-        var connection = new NpgsqlConnection(connectionString);
-        
-        var refreshTokenDays = int.Parse(_configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
-        
-        _authenticationService = new AuthenticationService(dataContext, _tokenService, connection, logger, refreshTokenDays);
     }
     
     /// <summary>
     /// Helper method to create test authentication request
     /// </summary>
-    protected static core.jarvis.api.Models.AuthRequest CreateTestAuthRequest(string email = "test@example.com", string password = "test123")
+    protected static core.jarvis.api.Models.User CreateTestAuthRequest(string email = "test@example.com", string password = "test123")
     {
-        return new core.jarvis.api.Models.AuthRequest
+        return new core.jarvis.api.Models.User
         {
             Email = email,
             Password = password,
@@ -83,9 +68,9 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
     /// <summary>
     /// Helper method to create test refresh token request
     /// </summary>
-    protected static core.jarvis.api.Models.RefreshTokenRequest CreateTestRefreshTokenRequest(string refreshToken, string? clientId = null)
+    protected static core.jarvis.api.Models.AuthToken CreateTestRefreshTokenRequest(string refreshToken, string? clientId = null)
     {
-        return new core.jarvis.api.Models.RefreshTokenRequest
+        return new core.jarvis.api.Models.AuthToken
         {
             RefreshToken = refreshToken,
             ClientId = clientId
@@ -99,7 +84,7 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
         {
             try
             {
-                await TestDataContext().Remove<SecurityToken>(entityId);
+                await TestDataContext().Remove<AuthToken>(entityId);
             }
             catch
             {

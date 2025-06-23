@@ -1,0 +1,214 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="3cab8039-32a1-4971-8c99-a8f2a12b29d5" name="@MAIN-HOME-PC 2025-06-24 03:19:41" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2025-06-24T03:19:41.7184266+10:00" queuing="2025-06-24T03:19:41.7184267+10:00" start="2025-06-24T03:19:41.0246135+10:00" finish="2025-06-24T03:19:41.7635748+10:00" />
+  <TestSettings name="default" id="4152725b-d2ee-4fd4-b831-9a6e2b252846">
+    <Deployment runDeploymentRoot="_MAIN-HOME-PC_2025-06-24_03_19_41" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="62b7a291-a8f0-4025-abb2-0b76648a9767" testId="61bb5a14-f326-f7ab-2b7f-8fb8cdf29470" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldReturnCorrectContentType(extension: &quot;yml&quot;, expectedContentType: &quot;text/yaml&quot;)" computerName="MAIN-HOME-PC" duration="00:00:00.0018391" startTime="2025-06-24T03:19:41.7101209+10:00" endTime="2025-06-24T03:19:41.7101209+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="62b7a291-a8f0-4025-abb2-0b76648a9767" />
+    <UnitTestResult executionId="69f6e87d-1a1b-4df1-83d1-40176c6c53d1" testId="4182e745-861a-3cda-deb6-702f086d1f7d" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderSwaggerUI_ShouldReturnHtmlContent" computerName="MAIN-HOME-PC" duration="00:00:00.0017137" startTime="2025-06-24T03:19:41.7126479+10:00" endTime="2025-06-24T03:19:41.7126480+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="69f6e87d-1a1b-4df1-83d1-40176c6c53d1" />
+    <UnitTestResult executionId="5c93d469-e4df-4c9c-9a5f-bea5f269de24" testId="a1605c0e-87e0-c542-f692-ab0d83e0780a" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Plain_String_Should_Return_False" computerName="MAIN-HOME-PC" duration="00:00:00.0022179" startTime="2025-06-24T03:19:41.6627401+10:00" endTime="2025-06-24T03:19:41.6627401+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5c93d469-e4df-4c9c-9a5f-bea5f269de24" />
+    <UnitTestResult executionId="5e66c909-1b5a-4901-972d-e17fbe8cc408" testId="3ae5048f-a732-b14c-c213-cfe50e23f3a0" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Component_Missing_Id_Should_Return_False" computerName="MAIN-HOME-PC" duration="00:00:00.0015858" startTime="2025-06-24T03:19:41.6631860+10:00" endTime="2025-06-24T03:19:41.6631860+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5e66c909-1b5a-4901-972d-e17fbe8cc408" />
+    <UnitTestResult executionId="7c203583-2ea3-4096-8baa-f065799b2579" testId="2f775ddc-70d7-92b7-3647-546b58ec57a8" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.HashRefreshToken_Should_Create_Consistent_Hash" computerName="MAIN-HOME-PC" duration="00:00:00.0001954" startTime="2025-06-24T03:19:41.6941156+10:00" endTime="2025-06-24T03:19:41.6941157+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7c203583-2ea3-4096-8baa-f065799b2579" />
+    <UnitTestResult executionId="81649f53-fd4e-4604-b3d8-e95968da78d6" testId="e0ff652c-b0bf-8b63-ef97-1e503e5cffc3" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.GenerateAccessToken_With_Additional_Claims_Should_Include_Claims" computerName="MAIN-HOME-PC" duration="00:00:00.0008324" startTime="2025-06-24T03:19:41.6941384+10:00" endTime="2025-06-24T03:19:41.6941384+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="81649f53-fd4e-4604-b3d8-e95968da78d6" />
+    <UnitTestResult executionId="c3dd36a1-c1fa-471a-a3eb-cf297d9d32c1" testId="46ef6f2b-b5f8-f07d-5e66-c94cd87ca722" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldIncludeAllSchemas" computerName="MAIN-HOME-PC" duration="00:00:00.0010000" startTime="2025-06-24T03:19:41.7144086+10:00" endTime="2025-06-24T03:19:41.7144086+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="NotExecuted" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c3dd36a1-c1fa-471a-a3eb-cf297d9d32c1">
+      <Output>
+        <ErrorInfo>
+          <Message>Schema validation needs update after ECS refactoring</Message>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0638d2ff-6f31-40c1-9a67-5caff36fc3f1" testId="04071e69-285b-f7fd-ec67-e22c8b57ebe0" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Component_Missing_UpdatedAt_Should_Return_False" computerName="MAIN-HOME-PC" duration="00:00:00.0798265" startTime="2025-06-24T03:19:41.6595846+10:00" endTime="2025-06-24T03:19:41.6595976+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0638d2ff-6f31-40c1-9a67-5caff36fc3f1" />
+    <UnitTestResult executionId="29a76392-bd0b-408c-a76e-973fe134a3e4" testId="02893a9f-d308-a689-7ffb-c8591dba5b6a" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Invalid_Json_Should_Return_False" computerName="MAIN-HOME-PC" duration="00:00:00.0006398" startTime="2025-06-24T03:19:41.6641887+10:00" endTime="2025-06-24T03:19:41.6641888+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="29a76392-bd0b-408c-a76e-973fe134a3e4" />
+    <UnitTestResult executionId="0fe26215-502f-4fff-a628-da4eb38fd411" testId="925daedb-9b80-5dc3-c0fb-70f7105d46d8" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Component_Missing_OwnerEntityId_Should_Return_False" computerName="MAIN-HOME-PC" duration="00:00:00.0001494" startTime="2025-06-24T03:19:41.6937290+10:00" endTime="2025-06-24T03:19:41.6937290+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0fe26215-502f-4fff-a628-da4eb38fd411" />
+    <UnitTestResult executionId="39d8b09a-e809-4652-893e-cb2f377bb14a" testId="24d64ae6-bb30-4277-89b8-bbf37abe6ba1" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Valid_Token_Should_Return_Claims" computerName="MAIN-HOME-PC" duration="00:00:00.1043867" startTime="2025-06-24T03:19:41.6940333+10:00" endTime="2025-06-24T03:19:41.6940333+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="39d8b09a-e809-4652-893e-cb2f377bb14a" />
+    <UnitTestResult executionId="4448bec3-ebdb-4254-9143-aa7f21f1d8c7" testId="d79fed56-affa-14da-8ec4-5102cba1b4a6" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Invalid_Token_Should_Return_Null" computerName="MAIN-HOME-PC" duration="00:00:00.0019634" startTime="2025-06-24T03:19:41.6940659+10:00" endTime="2025-06-24T03:19:41.6940659+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4448bec3-ebdb-4254-9143-aa7f21f1d8c7" />
+    <UnitTestResult executionId="6aa6cfa4-9c3f-4e03-87e1-304f25306a70" testId="f652a3f5-c6c9-49d2-2f43-6608fddd893f" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Case_Insensitive_Properties_Should_Return_True" computerName="MAIN-HOME-PC" duration="00:00:00.0003432" startTime="2025-06-24T03:19:41.6632128+10:00" endTime="2025-06-24T03:19:41.6632129+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6aa6cfa4-9c3f-4e03-87e1-304f25306a70" />
+    <UnitTestResult executionId="c5ae547d-ca18-4094-8a9e-fe1a42f98db0" testId="3ce850d2-2081-da81-fd0f-ced7dbea3fc3" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Valid_Guid_Should_Return_True" computerName="MAIN-HOME-PC" duration="00:00:00.0004668" startTime="2025-06-24T03:19:41.6633777+10:00" endTime="2025-06-24T03:19:41.6633777+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="c5ae547d-ca18-4094-8a9e-fe1a42f98db0" />
+    <UnitTestResult executionId="dccb8ffa-61c6-4415-82c9-fd456dcfa602" testId="58ee0ad8-ac78-fad4-76ff-56558e3c72b4" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.VerifyRefreshToken_With_Incorrect_Token_Should_Return_False" computerName="MAIN-HOME-PC" duration="00:00:00.0001595" startTime="2025-06-24T03:19:41.6986765+10:00" endTime="2025-06-24T03:19:41.6986766+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="dccb8ffa-61c6-4415-82c9-fd456dcfa602" />
+    <UnitTestResult executionId="45386c31-0004-4aac-86b1-e327a49491ff" testId="a513eda7-ec6c-a2c9-575d-00ecb9f6ce35" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.GenerateAccessToken_Should_Create_Valid_JWT_Token" computerName="MAIN-HOME-PC" duration="00:00:00.0088012" startTime="2025-06-24T03:19:41.6964261+10:00" endTime="2025-06-24T03:19:41.6964261+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="45386c31-0004-4aac-86b1-e327a49491ff" />
+    <UnitTestResult executionId="a245e4da-e036-4215-8b59-2c2e1f634e06" testId="cd4bea3e-8c6c-5933-752c-085581bebeb0" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Wrong_Issuer_Should_Return_Null" computerName="MAIN-HOME-PC" duration="00:00:00.0007905" startTime="2025-06-24T03:19:41.7005805+10:00" endTime="2025-06-24T03:19:41.7005805+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="a245e4da-e036-4215-8b59-2c2e1f634e06" />
+    <UnitTestResult executionId="35515a03-fef3-49ad-ba4b-4f4b59a80f13" testId="192f29e1-c40b-fe30-f755-fd7248f17f4c" testName="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Valid_Component_Should_Return_True" computerName="MAIN-HOME-PC" duration="00:00:00.0115287" startTime="2025-06-24T03:19:41.6757352+10:00" endTime="2025-06-24T03:19:41.6757353+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="35515a03-fef3-49ad-ba4b-4f4b59a80f13" />
+    <UnitTestResult executionId="040965f8-1515-4fe8-a8a4-e4d9ef9315ac" testId="08991b98-c9ed-ca60-8a47-4fd02fc24cd5" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_Json_ShouldReturnValidOpenApiDocument" computerName="MAIN-HOME-PC" duration="00:00:00.0009461" startTime="2025-06-24T03:19:41.7148625+10:00" endTime="2025-06-24T03:19:41.7148625+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="040965f8-1515-4fe8-a8a4-e4d9ef9315ac" />
+    <UnitTestResult executionId="8d81464e-5915-4ddd-95c8-3cb7546d898e" testId="b74b8f75-aa42-a557-4cb0-debd86a998ff" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldReturnCorrectContentType(extension: &quot;json&quot;, expectedContentType: &quot;application/json&quot;)" computerName="MAIN-HOME-PC" duration="00:00:00.1255199" startTime="2025-06-24T03:19:41.7023521+10:00" endTime="2025-06-24T03:19:41.7023522+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8d81464e-5915-4ddd-95c8-3cb7546d898e" />
+    <UnitTestResult executionId="bb9dc59e-a835-464e-b7ab-eccb0c69e0e9" testId="3635a21e-2d2a-2ef6-589e-3ec47a022923" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Expired_Token_Should_Return_Null" computerName="MAIN-HOME-PC" duration="00:00:00.0010000" startTime="2025-06-24T03:19:41.6973002+10:00" endTime="2025-06-24T03:19:41.6973003+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="NotExecuted" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="bb9dc59e-a835-464e-b7ab-eccb0c69e0e9">
+      <Output>
+        <ErrorInfo>
+          <Message>JWT library doesn't allow creating tokens with expiration in the past</Message>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6ee6a157-bbbd-45d8-83bc-fdaa0e48e691" testId="22d5a959-925c-daeb-eea8-4e9dc99a2d3f" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.GenerateRefreshToken_Should_Create_Unique_Tokens" computerName="MAIN-HOME-PC" duration="00:00:00.0017559" startTime="2025-06-24T03:19:41.6996748+10:00" endTime="2025-06-24T03:19:41.6996749+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6ee6a157-bbbd-45d8-83bc-fdaa0e48e691" />
+    <UnitTestResult executionId="8f037b47-7305-4d7f-87e0-6f6d83071307" testId="b0674ab9-1af4-1db0-b669-52756008cffa" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Wrong_Audience_Should_Return_Null" computerName="MAIN-HOME-PC" duration="00:00:00.0009641" startTime="2025-06-24T03:19:41.6975615+10:00" endTime="2025-06-24T03:19:41.6975616+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f037b47-7305-4d7f-87e0-6f6d83071307" />
+    <UnitTestResult executionId="9251182f-8faf-4b6f-a579-9ebb6b83a36b" testId="6ccd858a-848b-7c06-8a81-bdff7c720780" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_Yaml_ShouldReturnValidYamlDocument" computerName="MAIN-HOME-PC" duration="00:00:00.0010832" startTime="2025-06-24T03:19:41.7138146+10:00" endTime="2025-06-24T03:19:41.7138146+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="9251182f-8faf-4b6f-a579-9ebb6b83a36b" />
+    <UnitTestResult executionId="aa4ba9fe-cada-41fd-85c1-6bd734c5fc67" testId="f58477e8-0346-be6d-14f8-d9167f605aba" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldReturnCorrectContentType(extension: &quot;yaml&quot;, expectedContentType: &quot;text/yaml&quot;)" computerName="MAIN-HOME-PC" duration="00:00:00.0056372" startTime="2025-06-24T03:19:41.7081202+10:00" endTime="2025-06-24T03:19:41.7081202+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="aa4ba9fe-cada-41fd-85c1-6bd734c5fc67" />
+    <UnitTestResult executionId="557b1854-3cb9-4d7c-8417-efa19f4be99c" testId="09b235ae-290c-448c-aaf1-dcb9c8299697" testName="core.jarvis.api.tests.Unit.Services.TokenServiceTests.VerifyRefreshToken_With_Correct_Token_Should_Return_True" computerName="MAIN-HOME-PC" duration="00:00:00.0009450" startTime="2025-06-24T03:19:41.6940878+10:00" endTime="2025-06-24T03:19:41.6940879+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="557b1854-3cb9-4d7c-8417-efa19f4be99c" />
+    <UnitTestResult executionId="032444c6-04b8-469a-ab0b-f392a5adeef5" testId="c3b2ba51-3af3-22bc-15c2-0b04342ca0cb" testName="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldHandleUnknownExtension" computerName="MAIN-HOME-PC" duration="00:00:00.0007651" startTime="2025-06-24T03:19:41.7108582+10:00" endTime="2025-06-24T03:19:41.7108583+10:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="032444c6-04b8-469a-ab0b-f392a5adeef5" />
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.VerifyRefreshToken_With_Correct_Token_Should_Return_True" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="09b235ae-290c-448c-aaf1-dcb9c8299697">
+      <Execution id="557b1854-3cb9-4d7c-8417-efa19f4be99c" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="VerifyRefreshToken_With_Correct_Token_Should_Return_True" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldReturnCorrectContentType(extension: &quot;yml&quot;, expectedContentType: &quot;text/yaml&quot;)" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="61bb5a14-f326-f7ab-2b7f-8fb8cdf29470">
+      <Execution id="62b7a291-a8f0-4025-abb2-0b76648a9767" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_ShouldReturnCorrectContentType" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.GenerateAccessToken_With_Additional_Claims_Should_Include_Claims" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="e0ff652c-b0bf-8b63-ef97-1e503e5cffc3">
+      <Execution id="81649f53-fd4e-4604-b3d8-e95968da78d6" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="GenerateAccessToken_With_Additional_Claims_Should_Include_Claims" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Valid_Component_Should_Return_True" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="192f29e1-c40b-fe30-f755-fd7248f17f4c">
+      <Execution id="35515a03-fef3-49ad-ba4b-4f4b59a80f13" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Valid_Component_Should_Return_True" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldHandleUnknownExtension" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="c3b2ba51-3af3-22bc-15c2-0b04342ca0cb">
+      <Execution id="032444c6-04b8-469a-ab0b-f392a5adeef5" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_ShouldHandleUnknownExtension" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.VerifyRefreshToken_With_Incorrect_Token_Should_Return_False" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="58ee0ad8-ac78-fad4-76ff-56558e3c72b4">
+      <Execution id="dccb8ffa-61c6-4415-82c9-fd456dcfa602" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="VerifyRefreshToken_With_Incorrect_Token_Should_Return_False" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.HashRefreshToken_Should_Create_Consistent_Hash" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="2f775ddc-70d7-92b7-3647-546b58ec57a8">
+      <Execution id="7c203583-2ea3-4096-8baa-f065799b2579" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="HashRefreshToken_Should_Create_Consistent_Hash" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldReturnCorrectContentType(extension: &quot;json&quot;, expectedContentType: &quot;application/json&quot;)" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="b74b8f75-aa42-a557-4cb0-debd86a998ff">
+      <Execution id="8d81464e-5915-4ddd-95c8-3cb7546d898e" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_ShouldReturnCorrectContentType" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_Json_ShouldReturnValidOpenApiDocument" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="08991b98-c9ed-ca60-8a47-4fd02fc24cd5">
+      <Execution id="040965f8-1515-4fe8-a8a4-e4d9ef9315ac" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_Json_ShouldReturnValidOpenApiDocument" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Component_Missing_UpdatedAt_Should_Return_False" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="04071e69-285b-f7fd-ec67-e22c8b57ebe0">
+      <Execution id="0638d2ff-6f31-40c1-9a67-5caff36fc3f1" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Component_Missing_UpdatedAt_Should_Return_False" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Valid_Guid_Should_Return_True" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="3ce850d2-2081-da81-fd0f-ced7dbea3fc3">
+      <Execution id="c5ae547d-ca18-4094-8a9e-fe1a42f98db0" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Valid_Guid_Should_Return_True" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderSwaggerUI_ShouldReturnHtmlContent" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="4182e745-861a-3cda-deb6-702f086d1f7d">
+      <Execution id="69f6e87d-1a1b-4df1-83d1-40176c6c53d1" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderSwaggerUI_ShouldReturnHtmlContent" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_Yaml_ShouldReturnValidYamlDocument" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="6ccd858a-848b-7c06-8a81-bdff7c720780">
+      <Execution id="9251182f-8faf-4b6f-a579-9ebb6b83a36b" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_Yaml_ShouldReturnValidYamlDocument" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldIncludeAllSchemas" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="46ef6f2b-b5f8-f07d-5e66-c94cd87ca722">
+      <Execution id="c3dd36a1-c1fa-471a-a3eb-cf297d9d32c1" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_ShouldIncludeAllSchemas" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldReturnCorrectContentType(extension: &quot;yaml&quot;, expectedContentType: &quot;text/yaml&quot;)" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="f58477e8-0346-be6d-14f8-d9167f605aba">
+      <Execution id="aa4ba9fe-cada-41fd-85c1-6bd734c5fc67" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Functions.SwaggerFunctionsTests" name="RenderOpenApiDocument_ShouldReturnCorrectContentType" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.GenerateAccessToken_Should_Create_Valid_JWT_Token" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="a513eda7-ec6c-a2c9-575d-00ecb9f6ce35">
+      <Execution id="45386c31-0004-4aac-86b1-e327a49491ff" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="GenerateAccessToken_Should_Create_Valid_JWT_Token" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Expired_Token_Should_Return_Null" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="3635a21e-2d2a-2ef6-589e-3ec47a022923">
+      <Execution id="bb9dc59e-a835-464e-b7ab-eccb0c69e0e9" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="ValidateToken_With_Expired_Token_Should_Return_Null" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Invalid_Json_Should_Return_False" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="02893a9f-d308-a689-7ffb-c8591dba5b6a">
+      <Execution id="29a76392-bd0b-408c-a76e-973fe134a3e4" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Invalid_Json_Should_Return_False" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Case_Insensitive_Properties_Should_Return_True" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="f652a3f5-c6c9-49d2-2f43-6608fddd893f">
+      <Execution id="6aa6cfa4-9c3f-4e03-87e1-304f25306a70" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Case_Insensitive_Properties_Should_Return_True" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.GenerateRefreshToken_Should_Create_Unique_Tokens" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="22d5a959-925c-daeb-eea8-4e9dc99a2d3f">
+      <Execution id="6ee6a157-bbbd-45d8-83bc-fdaa0e48e691" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="GenerateRefreshToken_Should_Create_Unique_Tokens" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Wrong_Audience_Should_Return_Null" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="b0674ab9-1af4-1db0-b669-52756008cffa">
+      <Execution id="8f037b47-7305-4d7f-87e0-6f6d83071307" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="ValidateToken_With_Wrong_Audience_Should_Return_Null" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Wrong_Issuer_Should_Return_Null" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="cd4bea3e-8c6c-5933-752c-085581bebeb0">
+      <Execution id="a245e4da-e036-4215-8b59-2c2e1f634e06" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="ValidateToken_With_Wrong_Issuer_Should_Return_Null" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Valid_Token_Should_Return_Claims" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="24d64ae6-bb30-4277-89b8-bbf37abe6ba1">
+      <Execution id="39d8b09a-e809-4652-893e-cb2f377bb14a" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="ValidateToken_With_Valid_Token_Should_Return_Claims" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Component_Missing_OwnerEntityId_Should_Return_False" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="925daedb-9b80-5dc3-c0fb-70f7105d46d8">
+      <Execution id="0fe26215-502f-4fff-a628-da4eb38fd411" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Component_Missing_OwnerEntityId_Should_Return_False" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Component_Missing_Id_Should_Return_False" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="3ae5048f-a732-b14c-c213-cfe50e23f3a0">
+      <Execution id="5e66c909-1b5a-4901-972d-e17fbe8cc408" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Component_Missing_Id_Should_Return_False" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Invalid_Token_Should_Return_Null" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="d79fed56-affa-14da-8ec4-5102cba1b4a6">
+      <Execution id="4448bec3-ebdb-4254-9143-aa7f21f1d8c7" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Unit.Services.TokenServiceTests" name="ValidateToken_With_Invalid_Token_Should_Return_Null" />
+    </UnitTest>
+    <UnitTest name="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests.IsValidComponentOrGuid_With_Plain_String_Should_Return_False" storage="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/debug/net8.0/core.jarvis.api.tests.dll" id="a1605c0e-87e0-c542-f692-ab0d83e0780a">
+      <Execution id="5c93d469-e4df-4c9c-9a5f-bea5f269de24" />
+      <TestMethod codeBase="/mnt/c/code/github/jarvis/core.jarvis.api.tests/bin/Debug/net8.0/core.jarvis.api.tests.dll" adapterTypeName="executor://xunit/VsTestRunner2/netcoreapp" className="core.jarvis.api.tests.Integration.Functions.ComponentValidationMiddlewareTests" name="IsValidComponentOrGuid_With_Plain_String_Should_Return_False" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="61bb5a14-f326-f7ab-2b7f-8fb8cdf29470" executionId="62b7a291-a8f0-4025-abb2-0b76648a9767" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="4182e745-861a-3cda-deb6-702f086d1f7d" executionId="69f6e87d-1a1b-4df1-83d1-40176c6c53d1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a1605c0e-87e0-c542-f692-ab0d83e0780a" executionId="5c93d469-e4df-4c9c-9a5f-bea5f269de24" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ae5048f-a732-b14c-c213-cfe50e23f3a0" executionId="5e66c909-1b5a-4901-972d-e17fbe8cc408" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="2f775ddc-70d7-92b7-3647-546b58ec57a8" executionId="7c203583-2ea3-4096-8baa-f065799b2579" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e0ff652c-b0bf-8b63-ef97-1e503e5cffc3" executionId="81649f53-fd4e-4604-b3d8-e95968da78d6" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="46ef6f2b-b5f8-f07d-5e66-c94cd87ca722" executionId="c3dd36a1-c1fa-471a-a3eb-cf297d9d32c1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="04071e69-285b-f7fd-ec67-e22c8b57ebe0" executionId="0638d2ff-6f31-40c1-9a67-5caff36fc3f1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="02893a9f-d308-a689-7ffb-c8591dba5b6a" executionId="29a76392-bd0b-408c-a76e-973fe134a3e4" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="925daedb-9b80-5dc3-c0fb-70f7105d46d8" executionId="0fe26215-502f-4fff-a628-da4eb38fd411" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="24d64ae6-bb30-4277-89b8-bbf37abe6ba1" executionId="39d8b09a-e809-4652-893e-cb2f377bb14a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="d79fed56-affa-14da-8ec4-5102cba1b4a6" executionId="4448bec3-ebdb-4254-9143-aa7f21f1d8c7" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f652a3f5-c6c9-49d2-2f43-6608fddd893f" executionId="6aa6cfa4-9c3f-4e03-87e1-304f25306a70" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3ce850d2-2081-da81-fd0f-ced7dbea3fc3" executionId="c5ae547d-ca18-4094-8a9e-fe1a42f98db0" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="58ee0ad8-ac78-fad4-76ff-56558e3c72b4" executionId="dccb8ffa-61c6-4415-82c9-fd456dcfa602" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="a513eda7-ec6c-a2c9-575d-00ecb9f6ce35" executionId="45386c31-0004-4aac-86b1-e327a49491ff" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="cd4bea3e-8c6c-5933-752c-085581bebeb0" executionId="a245e4da-e036-4215-8b59-2c2e1f634e06" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="192f29e1-c40b-fe30-f755-fd7248f17f4c" executionId="35515a03-fef3-49ad-ba4b-4f4b59a80f13" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="08991b98-c9ed-ca60-8a47-4fd02fc24cd5" executionId="040965f8-1515-4fe8-a8a4-e4d9ef9315ac" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b74b8f75-aa42-a557-4cb0-debd86a998ff" executionId="8d81464e-5915-4ddd-95c8-3cb7546d898e" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="3635a21e-2d2a-2ef6-589e-3ec47a022923" executionId="bb9dc59e-a835-464e-b7ab-eccb0c69e0e9" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="22d5a959-925c-daeb-eea8-4e9dc99a2d3f" executionId="6ee6a157-bbbd-45d8-83bc-fdaa0e48e691" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="b0674ab9-1af4-1db0-b669-52756008cffa" executionId="8f037b47-7305-4d7f-87e0-6f6d83071307" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6ccd858a-848b-7c06-8a81-bdff7c720780" executionId="9251182f-8faf-4b6f-a579-9ebb6b83a36b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f58477e8-0346-be6d-14f8-d9167f605aba" executionId="aa4ba9fe-cada-41fd-85c1-6bd734c5fc67" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="09b235ae-290c-448c-aaf1-dcb9c8299697" executionId="557b1854-3cb9-4d7c-8417-efa19f4be99c" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="c3b2ba51-3af3-22bc-15c2-0b04342ca0cb" executionId="032444c6-04b8-469a-ab0b-f392a5adeef5" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Completed">
+    <Counters total="27" executed="25" passed="25" failed="0" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+    <Output>
+      <StdOut>[xUnit.net 00:00:00.00] xUnit.net VSTest Adapter v2.8.2+699d445a1a (64-bit .NET 8.0.17)
+[xUnit.net 00:00:00.13]   Discovering: core.jarvis.api.tests
+[xUnit.net 00:00:00.16]   Discovered:  core.jarvis.api.tests
+[xUnit.net 00:00:00.16]   Starting:    core.jarvis.api.tests
+[xUnit.net 00:00:00.31]       JWT library doesn't allow creating tokens with expiration in the past
+Test 'core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Expired_Token_Should_Return_Null' was skipped in the test run.
+[xUnit.net 00:00:00.33]       Schema validation needs update after ECS refactoring
+[xUnit.net 00:00:00.33]   Finished:    core.jarvis.api.tests
+Test 'core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldIncludeAllSchemas' was skipped in the test run.
+</StdOut>
+    </Output>
+    <RunInfos>
+      <RunInfo computerName="MAIN-HOME-PC" outcome="Warning" timestamp="2025-06-24T03:19:41.7238603+10:00">
+        <Text>[xUnit.net 00:00:00.31]     core.jarvis.api.tests.Unit.Services.TokenServiceTests.ValidateToken_With_Expired_Token_Should_Return_Null [SKIP]</Text>
+      </RunInfo>
+      <RunInfo computerName="MAIN-HOME-PC" outcome="Warning" timestamp="2025-06-24T03:19:41.7242883+10:00">
+        <Text>[xUnit.net 00:00:00.33]     core.jarvis.api.tests.Functions.SwaggerFunctionsTests.RenderOpenApiDocument_ShouldIncludeAllSchemas [SKIP]</Text>
+      </RunInfo>
+    </RunInfos>
+  </ResultSummary>
+</TestRun>

@@ -16,7 +16,7 @@ var host = new HostBuilder()
     {
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
-        
+
         // Add Jarvis services
         services.AddJarvisApiServices();
     })

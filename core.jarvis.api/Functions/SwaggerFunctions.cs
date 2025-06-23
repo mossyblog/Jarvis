@@ -33,10 +33,10 @@ public class SwaggerFunctions
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "swagger/ui")] HttpRequestData req)
     {
         _logger.LogInformation("Swagger UI requested");
-        
+
         var response = req.CreateResponse(HttpStatusCode.OK);
         response.Headers.Add("Content-Type", "text/html; charset=utf-8");
-        
+
         var html = """
             <!DOCTYPE html>
             <html lang="en">
@@ -74,7 +74,7 @@ public class SwaggerFunctions
             </body>
             </html>
             """;
-        
+
         await response.WriteStringAsync(html);
         return response;
     }
@@ -89,9 +89,9 @@ public class SwaggerFunctions
         string extension)
     {
         _logger.LogInformation("OpenAPI document requested: {Extension}", extension);
-        
+
         var response = req.CreateResponse(HttpStatusCode.OK);
-        
+
         var contentType = extension.ToLowerInvariant() switch
         {
             "json" => "application/json",
@@ -99,15 +99,15 @@ public class SwaggerFunctions
             "yml" => "text/yaml",
             _ => "application/json"
         };
-        
+
         response.Headers.Add("Content-Type", contentType);
-        
+
         try
         {
             var document = GenerateOpenApiDocument();
-            
+
             await using var writer = new StringWriter();
-            
+
             if (extension.ToLowerInvariant() == "yaml" || extension.ToLowerInvariant() == "yml")
             {
                 document.SerializeAsV3(new OpenApiYamlWriter(writer));
@@ -116,7 +116,7 @@ public class SwaggerFunctions
             {
                 document.SerializeAsV3(new OpenApiJsonWriter(writer));
             }
-            
+
             await response.WriteStringAsync(writer.ToString());
         }
         catch (Exception ex)
@@ -125,7 +125,7 @@ public class SwaggerFunctions
             response.StatusCode = HttpStatusCode.InternalServerError;
             await response.WriteStringAsync($"Error generating OpenAPI document: {ex.Message}");
         }
-        
+
         return response;
     }
 
@@ -179,7 +179,7 @@ public class SwaggerFunctions
                                             Reference = new OpenApiReference
                                             {
                                                 Type = ReferenceType.Schema,
-                                                Id = "AuthRequest"
+                                                Id = "Auth"
                                             }
                                         }
                                     }
@@ -199,7 +199,7 @@ public class SwaggerFunctions
                                                 Reference = new OpenApiReference
                                                 {
                                                     Type = ReferenceType.Schema,
-                                                    Id = "AuthResponse"
+                                                    Id = "Auth"
                                                 }
                                             }
                                         }
@@ -243,7 +243,7 @@ public class SwaggerFunctions
                             },
                             RequestBody = new OpenApiRequestBody
                             {
-                                Description = "Session to deauthenticate",
+                                Description = "Session ID to deauthenticate",
                                 Required = true,
                                 Content = new Dictionary<string, OpenApiMediaType>
                                 {
@@ -251,11 +251,9 @@ public class SwaggerFunctions
                                     {
                                         Schema = new OpenApiSchema
                                         {
-                                            Reference = new OpenApiReference
-                                            {
-                                                Type = ReferenceType.Schema,
-                                                Id = "DeauthRequest"
-                                            }
+                                            Type = "string",
+                                            Format = "uuid",
+                                            Example = new OpenApiString("550e8400-e29b-41d4-a716-446655440000")
                                         }
                                     }
                                 }
@@ -297,7 +295,7 @@ public class SwaggerFunctions
                                             Reference = new OpenApiReference
                                             {
                                                 Type = ReferenceType.Schema,
-                                                Id = "RefreshRequest"
+                                                Id = "Auth"
                                             }
                                         }
                                     }
@@ -317,7 +315,7 @@ public class SwaggerFunctions
                                                 Reference = new OpenApiReference
                                                 {
                                                     Type = ReferenceType.Schema,
-                                                    Id = "TokenResponse"
+                                                    Id = "Auth"
                                                 }
                                             }
                                         }
@@ -369,7 +367,7 @@ public class SwaggerFunctions
                                                 Reference = new OpenApiReference
                                                 {
                                                     Type = ReferenceType.Schema,
-                                                    Id = "ValidationResponse"
+                                                    Id = "TokenValidation"
                                                 }
                                             }
                                         }
@@ -388,12 +386,9 @@ public class SwaggerFunctions
             {
                 Schemas = new Dictionary<string, OpenApiSchema>
                 {
-                    ["AuthRequest"] = GenerateSchemaForType(typeof(Models.AuthRequest)),
-                    ["AuthResponse"] = GenerateSchemaForType(typeof(Models.AuthResponse)),
-                    ["DeauthRequest"] = GenerateSchemaForType(typeof(Models.DeauthRequest)),
-                    ["RefreshRequest"] = GenerateSchemaForType(typeof(Models.RefreshTokenRequest)),
-                    ["TokenResponse"] = GenerateSchemaForType(typeof(Models.TokenResponse)),
-                    ["ValidationResponse"] = GenerateSchemaForType(typeof(Models.ValidationResponse))
+                    ["User"] = GenerateSchemaForType(typeof(Models.User)),
+                    ["AuthToken"] = GenerateSchemaForType(typeof(Models.AuthToken)),
+                    ["TokenValidation"] = GenerateSchemaForType(typeof(Models.TokenValidation))
                 }
             }
         };

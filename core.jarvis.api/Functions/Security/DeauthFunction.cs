@@ -6,9 +6,11 @@ using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Resolvers;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
-using Newtonsoft.Json;
+using System.Text.Json;
+using core.jarvis.api.Handlers;
+using core.jarvis.api.Models;
+using core.jarvis.Data;
 using Newtonsoft.Json.Serialization;
-using core.jarvis.api.Services;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -17,13 +19,19 @@ namespace core.jarvis.api.Functions.Security;
 /// </summary>
 public class DeauthFunction
 {
-    private readonly IAuthenticationService _authService;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<DeauthFunction> _logger;
+    private readonly JsonSerializerOptions _jsonOptions;
 
-    public DeauthFunction(IAuthenticationService authService, ILogger<DeauthFunction> logger)
+    public DeauthFunction(IDataContext dataContext, ILogger<DeauthFunction> logger)
     {
-        _authService = authService;
+        _dataContext = dataContext;
         _logger = logger;
+        _jsonOptions = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+            WriteIndented = false
+        };
     }
 
     /// <summary>
@@ -32,84 +40,114 @@ public class DeauthFunction
     /// </summary>
     [Function("deauth")]
     [OpenApiOperation(operationId: "deauthenticate", tags: new[] { "Security" }, Summary = "Deauthenticate session", Description = "Revokes a user session by session ID.")]
-    [OpenApiRequestBody("application/json", typeof(string), Required = true, Description = "Session ID as a GUID string", Example = typeof(DeauthRequestExample))]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(Guid), Summary = "Deauthentication successful", Description = "Returns a confirmation GUID")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(object), Summary = "Session not found", Description = "Session ID not found or already revoked")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(object), Summary = "Bad request", Description = "Invalid GUID format")]
+    [OpenApiRequestBody("application/json", typeof(AuthToken), Required = true, Description = "AuthToken component with SessionId to deauthenticate")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AuthToken), Summary = "Deauthentication result", Description = "Returns AuthToken component with deauthentication status")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(Error), Summary = "Session not found", Description = "Session ID not found or already revoked")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(Error), Summary = "Bad request", Description = "Invalid request format")]
     public async Task<HttpResponseData> Run(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/deauth")] HttpRequestData req)
     {
         try
         {
-            // Parse request body - expecting a GUID
+            // Parse request body as Auth component
             var requestBody = await req.ReadAsStringAsync();
             if (string.IsNullOrEmpty(requestBody))
             {
-                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request body is required");
-            }
-
-            // Try to parse as GUID directly or from JSON
-            Guid sessionId;
-            if (Guid.TryParse(requestBody.Trim('"'), out sessionId))
-            {
-                // Direct GUID string
-            }
-            else
-            {
-                // Try parsing from JSON object
-                try
+                var emptyError = new Error
                 {
-                    var requestObj = JsonConvert.DeserializeObject<dynamic>(requestBody);
-                    if (requestObj?.sessionId != null)
-                    {
-                        sessionId = Guid.Parse(requestObj.sessionId.ToString());
-                    }
-                    else
-                    {
-                        return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format - expected GUID or {sessionId: GUID}");
-                    }
-                }
-                catch
+                    Code = "INVALID_REQUEST",
+                    Message = "Request body is required",
+                    StatusCode = 400
+                };
+                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(emptyError, _jsonOptions));
+                return errorResponse;
+            }
+
+            AuthToken? deauthRequest;
+            try
+            {
+                deauthRequest = JsonSerializer.Deserialize<AuthToken>(requestBody, _jsonOptions);
+            }
+            catch (JsonException)
+            {
+                var parseError = new Error
                 {
-                    return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid GUID format");
-                }
-            }
-            
-            // Validate session ID is not empty
-            if (sessionId == Guid.Empty)
-            {
-                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Session ID cannot be empty");
-            }
-
-            // Deauthenticate
-            var success = await _authService.DeauthenticateAsync(sessionId);
-            
-            if (!success)
-            {
-                return await CreateErrorResponse(req, HttpStatusCode.NotFound, "Session not found or already revoked");
+                    Code = "INVALID_JSON",
+                    Message = "Invalid JSON format",
+                    StatusCode = 400
+                };
+                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(parseError, _jsonOptions));
+                return errorResponse;
             }
 
-            // Return success response with confirmation GUID
+            if (deauthRequest == null || deauthRequest.SessionId == Guid.Empty)
+            {
+                var invalidError = new Error
+                {
+                    Code = "INVALID_SESSION",
+                    Message = "Valid SessionId is required",
+                    StatusCode = 400
+                };
+                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(invalidError, _jsonOptions));
+                return errorResponse;
+            }
+
+            // Create entity for the deauth request
+            var deauthEntityId = Guid.NewGuid();
+            deauthRequest.OwnerEntityId = deauthEntityId;
+            await _dataContext.Commit(deauthRequest);
+
+            // Get entity-bound handler and deauthenticate
+            var authTokenHandler = _dataContext.For<AuthTokenHandler>(deauthEntityId);
+            var result = await authTokenHandler.Deauthenticate();
+
+            // Return the result component
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
-            var confirmationId = Guid.NewGuid();
-            await response.WriteStringAsync(JsonConvert.SerializeObject(confirmationId));
-            
-            _logger.LogInformation("Session deauthenticated successfully: {SessionId}", sessionId);
+            await response.WriteStringAsync(JsonSerializer.Serialize(result, _jsonOptions));
+
+            _logger.LogInformation("Session deauthentication processed: {SessionId}", deauthRequest.SessionId);
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in deauth function");
-            return await CreateErrorResponse(req, HttpStatusCode.InternalServerError, "An error occurred during deauthentication");
+            return await req.CreateErrorResponse(HttpStatusCode.InternalServerError, "An error occurred during deauthentication");
         }
     }
 
-    private static async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode statusCode, string message)
+}
+
+/// <summary>
+/// Extension method for creating error responses.
+/// </summary>
+public static partial class HttpRequestDataExtensions
+{
+    public static async Task<HttpResponseData> CreateErrorResponse(
+        this HttpRequestData request,
+        HttpStatusCode statusCode,
+        string message,
+        string code = "ERROR")
     {
-        var response = req.CreateResponse(statusCode);
+        var error = new Error
+        {
+            Code = code,
+            Message = message,
+            StatusCode = (int)statusCode
+        };
+        
+        var response = request.CreateResponse(statusCode);
         response.Headers.Add("Content-Type", "application/json");
-        await response.WriteStringAsync(JsonConvert.SerializeObject(new { error = message }));
+        await response.WriteStringAsync(JsonSerializer.Serialize(error, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        }));
         return response;
     }
 }
@@ -117,11 +155,14 @@ public class DeauthFunction
 /// <summary>
 /// Example for deauth request in OpenAPI documentation.
 /// </summary>
-public class DeauthRequestExample : OpenApiExample<string>
+public class DeauthRequestExample : OpenApiExample<AuthToken>
 {
-    public override IOpenApiExample<string> Build(NamingStrategy? namingStrategy = null)
+    public override IOpenApiExample<AuthToken> Build(NamingStrategy? namingStrategy = null)
     {
-        Examples.Add(OpenApiExampleResolver.Resolve("Session ID GUID", "550e8400-e29b-41d4-a716-446655440000", namingStrategy));
+        Examples.Add(OpenApiExampleResolver.Resolve("Deauth Request", new AuthToken 
+        { 
+            SessionId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
+        }, namingStrategy));
         return this;
     }
 }

@@ -36,7 +36,7 @@ public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
                     if (!string.IsNullOrEmpty(body) && !IsValidComponentOrGuid(body))
                     {
                         _logger.LogWarning("Invalid request body - not an IComponent or GUID");
-                        await WriteErrorResponse(context, HttpStatusCode.BadRequest, 
+                        await WriteErrorResponse(context, HttpStatusCode.BadRequest,
                             "Request body must be an IComponent implementation or a GUID");
                         return;
                     }
@@ -49,7 +49,7 @@ public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in component validation middleware");
-            await WriteErrorResponse(context, HttpStatusCode.InternalServerError, 
+            await WriteErrorResponse(context, HttpStatusCode.InternalServerError,
                 "An error occurred during request validation");
         }
     }
@@ -92,7 +92,7 @@ public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
             var response = httpRequestData.CreateResponse(statusCode);
             response.Headers.Add("Content-Type", "application/json");
             await response.WriteStringAsync(JsonConvert.SerializeObject(new { error = message }));
-            
+
             // Set the response in the context
             context.GetInvocationResult().Value = response;
         }

@@ -1,178 +1,80 @@
 using core.jarvis.api.Models;
+using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace core.jarvis.api.Handlers;
 
 /// <summary>
-/// Handler for managing security tokens in the database.
+/// Handler for managing authentication tokens in the database.
 /// </summary>
-public class SecurityTokenHandler : ComponentHandler<SecurityToken>
+public class SecurityTokenHandler : ComponentHandler<AuthToken>
 {
-    private readonly IEntityQuery _entityQuery;
-    
+    private readonly IServiceProvider _serviceProvider;
+    private readonly int _refreshTokenExpirationDays;
+
     public SecurityTokenHandler(
         IDataContext dataContext,
-        IEntityQuery entityQuery,
-        ILogger<SecurityTokenHandler> logger) 
+        ILogger<SecurityTokenHandler> logger,
+        IServiceProvider serviceProvider)
         : base(dataContext, logger)
     {
-        _entityQuery = entityQuery;
+        _serviceProvider = serviceProvider;
+        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+        _refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
     }
-    
+
     /// <summary>
-    /// Create a new security token.
+    /// Creates a new session token for the specified user.
     /// </summary>
-    public async Task<SecurityToken> CreateAsync(SecurityToken token)
+    public async Task<AuthToken> CreateSession(Guid authenticatedEntityId, Guid sessionId, string refreshToken, string? clientId = null)
     {
-        await DataContext.Commit(token);
-        return token;
+        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+
+        var authToken = new AuthToken
+        {
+            OwnerEntityId = authenticatedEntityId,
+            SessionId = sessionId,
+            RefreshToken = refreshToken,
+            RefreshTokenHash = tokenService.HashRefreshToken(refreshToken),
+            RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
+            ClientId = clientId,
+            IpAddress = null, // Could be added later if needed
+            UserAgent = null, // Could be added later if needed
+            IsRevoked = false,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await DataContext.Commit(authToken);
+        Logger.LogInformation("Created session {SessionId} for entity {EntityId}", sessionId, authenticatedEntityId);
+        return authToken;
     }
-    
+
     /// <summary>
-    /// Update an existing security token.
+    /// Revokes this security token.
     /// </summary>
-    public async Task UpdateAsync(SecurityToken token)
+    public async Task<AuthToken> Revoke()
     {
-        await DataContext.Commit(token);
-    }
-    
-    /// <summary>
-    /// Get a security token by its entity ID.
-    /// </summary>
-    public async Task<SecurityToken?> GetAsync(Guid entityId)
-    {
-        try
+        var token = await GetOrDefault() ?? throw new InvalidOperationException("AuthToken component not found");
+        
+        if (token.IsRevoked)
         {
-            InitializeContext(entityId);
-            return await GetOrDefault();
+            Logger.LogWarning("Token {TokenId} is already revoked", OwnerEntityId);
+            return token;
         }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting security token: {EntityId}", entityId);
-            return null;
-        }
-    }
-    
-    /// <summary>
-    /// Find a security token by session ID.
-    /// </summary>
-    public async Task<SecurityToken?> GetBySessionIdAsync(Guid sessionId)
-    {
-        try
-        {
-            // Query for entities that have SecurityToken components
-            var entityIds = await _entityQuery
-                .WithAll<SecurityToken>(t => true) // Get all security tokens
-                .ToEntityIds();
-            
-            foreach (var entityId in entityIds)
-            {
-                InitializeContext(entityId);
-                var token = await GetOrDefault();
-                if (token != null && token.SessionId == sessionId)
-                {
-                    return token;
-                }
-            }
-            
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting security token by session ID: {SessionId}", sessionId);
-            return null;
-        }
-    }
-    
-    /// <summary>
-    /// Find a security token by user ID.
-    /// </summary>
-    public async Task<SecurityToken?> GetByUserIdAsync(Guid userId)
-    {
-        try
-        {
-            // Query for entities that have SecurityToken components
-            var entityIds = await _entityQuery
-                .WithAll<SecurityToken>(t => true) // Get all security tokens
-                .ToEntityIds();
-            
-            foreach (var entityId in entityIds)
-            {
-                InitializeContext(entityId);
-                var token = await GetOrDefault();
-                if (token != null && token.UserId == userId && !token.IsRevoked)
-                {
-                    return token;
-                }
-            }
-            
-            return null;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting security token by user ID: {UserId}", userId);
-            return null;
-        }
-    }
-    
-    /// <summary>
-    /// Get all active (non-revoked) security tokens.
-    /// </summary>
-    public async Task<IEnumerable<SecurityToken>> GetActiveTokensAsync()
-    {
-        try
-        {
-            var entityIds = await _entityQuery
-                .WithAll<SecurityToken>(t => true) // Get all security tokens
-                .ToEntityIds();
-            
-            var activeTokens = new List<SecurityToken>();
-            
-            foreach (var entityId in entityIds)
-            {
-                InitializeContext(entityId);
-                var token = await GetOrDefault();
-                if (token != null && !token.IsRevoked && token.RefreshExpiresAt > DateTime.UtcNow)
-                {
-                    activeTokens.Add(token);
-                }
-            }
-            
-            return activeTokens;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error getting active security tokens");
-            return Enumerable.Empty<SecurityToken>();
-        }
-    }
-    
-    /// <summary>
-    /// Revoke a security token.
-    /// </summary>
-    public async Task<bool> RevokeTokenAsync(Guid tokenId)
-    {
-        try
-        {
-            InitializeContext(tokenId);
-            var token = await GetOrDefault();
-            if (token == null)
-            {
-                return false;
-            }
-            
-            token.IsRevoked = true;
-            token.RevokedAt = DateTime.UtcNow;
-            
-            await UpdateAsync(token);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error revoking security token: {TokenId}", tokenId);
-            return false;
-        }
+
+        var revoked = token with 
+        { 
+            IsRevoked = true, 
+            RevokedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await DataContext.Commit(revoked);
+        Logger.LogInformation("Token {TokenId} has been revoked", OwnerEntityId);
+        return revoked;
     }
 }

@@ -3,10 +3,10 @@ using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
+using core.jarvis.data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Npgsql;
 
 namespace core.jarvis.api.Extensions;
 
@@ -32,9 +32,20 @@ public static class ServiceCollectionExtensions
 
         // Add core Jarvis services
         services.RegisterJarvis();
-        
+
         // Register API-specific handlers
+        services.AddScoped<IComponentHandler, SystemSetupHandler>();
+        services.AddScoped<IComponentHandler, AuthHandler>();
+        services.AddScoped<IComponentHandler, AuthTokenHandler>();
         services.AddScoped<IComponentHandler, SecurityTokenHandler>();
+        services.AddScoped<IComponentHandler, UserHandler>();
+        services.AddScoped<IComponentHandler, UserProfileHandler>();
+        services.AddScoped<IComponentHandler, RoleHandler>();
+        services.AddScoped<IComponentHandler, PermissionHandler>();
+        services.AddScoped<IComponentHandler, NavigationItemHandler>();
+
+        // Register background services
+        services.AddHostedService<TokenCleanupService>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>
@@ -43,25 +54,11 @@ public static class ServiceCollectionExtensions
             var audience = configuration["Jwt:Audience"] ?? "jarvis-clients";
             var secretKey = configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT secret key not configured");
             var expirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");
-            
+
             return new TokenService(issuer, audience, secretKey, expirationMinutes);
         });
 
-        services.AddScoped<IAuthenticationService>(provider =>
-        {
-            var dataContext = provider.GetRequiredService<IDataContext>();
-            var tokenService = provider.GetRequiredService<ITokenService>();
-            var logger = provider.GetRequiredService<ILogger<AuthenticationService>>();
-            
-            // Create Npgsql connection for PgClient
-            var connectionString = configuration.GetConnectionString("JarvisDb") 
-                ?? throw new InvalidOperationException("Connection string not configured");
-            var connection = new NpgsqlConnection(connectionString);
-            
-            var refreshTokenDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
-            
-            return new AuthenticationService(dataContext, tokenService, connection, logger, refreshTokenDays);
-        });
+        // AuthHandler will get refresh token days from configuration directly
 
         // Add middleware
         services.AddSingleton<ComponentValidationMiddleware>();

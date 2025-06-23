@@ -1,6 +1,7 @@
 using System.Net;
 using core.jarvis.api.Models;
-using core.jarvis.api.Services;
+using core.jarvis.api.Handlers;
+using core.jarvis.Data;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
@@ -15,12 +16,12 @@ namespace core.jarvis.api.Functions.Security;
 /// </summary>
 public class RefreshFunction
 {
-    private readonly IAuthenticationService _authService;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<RefreshFunction> _logger;
 
-    public RefreshFunction(IAuthenticationService authService, ILogger<RefreshFunction> logger)
+    public RefreshFunction(IDataContext dataContext, ILogger<RefreshFunction> logger)
     {
-        _authService = authService;
+        _dataContext = dataContext;
         _logger = logger;
     }
 
@@ -30,8 +31,8 @@ public class RefreshFunction
     /// </summary>
     [Function("refresh")]
     [OpenApiOperation(operationId: "refreshToken", tags: new[] { "Security" }, Summary = "Refresh authentication tokens", Description = "Exchange a refresh token for new access and refresh tokens.")]
-    [OpenApiRequestBody("application/json", typeof(RefreshTokenRequest), Required = true, Description = "Refresh token request as an IComponent object")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AuthResponse), Summary = "Token refresh successful", Description = "Returns new JWT access token, refresh token, and session information")]
+    [OpenApiRequestBody("application/json", typeof(AuthToken), Required = true, Description = "AuthToken component with refresh token")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AuthToken), Summary = "Token refresh successful", Description = "Returns new JWT access token, refresh token, and session information")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(object), Summary = "Refresh failed", Description = "Invalid or expired refresh token")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(object), Summary = "Bad request", Description = "Request validation failed")]
     public async Task<HttpResponseData> Run(
@@ -46,32 +47,52 @@ public class RefreshFunction
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request body is required");
             }
 
-            var refreshRequest = JsonConvert.DeserializeObject<RefreshTokenRequest>(requestBody);
-            if (refreshRequest == null)
+            var refreshAuth = JsonConvert.DeserializeObject<AuthToken>(requestBody);
+            if (refreshAuth == null)
             {
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format");
             }
 
             // Validate required fields
-            if (string.IsNullOrEmpty(refreshRequest.RefreshToken))
+            if (string.IsNullOrEmpty(refreshAuth.RefreshToken))
             {
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Refresh token is required");
             }
 
-            // Refresh tokens
-            var authResponse = await _authService.RefreshTokenAsync(refreshRequest);
+            // Create entity for the AuthToken component
+            var tokenEntityId = Guid.NewGuid();
+            refreshAuth.OwnerEntityId = tokenEntityId;
+            await _dataContext.Commit(refreshAuth);
             
-            if (authResponse == null)
+            // Get entity-bound handler
+            var authTokenHandler = _dataContext.For<AuthTokenHandler>(tokenEntityId);
+            
+            // Refresh tokens
+            var authResponse = await authTokenHandler.RefreshToken();
+
+            // Check if refresh succeeded by looking for new tokens
+            if (string.IsNullOrEmpty(authResponse.AccessToken))
             {
-                return await CreateErrorResponse(req, HttpStatusCode.Unauthorized, "Invalid or expired refresh token");
+                var error = new Error
+                {
+                    OwnerEntityId = Guid.NewGuid(),
+                    Code = "REFRESH_FAILED",
+                    Message = "Invalid or expired refresh token",
+                    StatusCode = 401
+                };
+                
+                var errorResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonConvert.SerializeObject(error));
+                return errorResponse;
             }
 
             // Return success response
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
             await response.WriteStringAsync(JsonConvert.SerializeObject(authResponse));
-            
-            _logger.LogInformation("Tokens refreshed successfully for user: {UserId}", authResponse.UserId);
+
+            _logger.LogInformation("Tokens refreshed successfully for entity: {EntityId}", authResponse.OwnerEntityId);
             return response;
         }
         catch (Exception ex)
@@ -83,9 +104,17 @@ public class RefreshFunction
 
     private static async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode statusCode, string message)
     {
+        var error = new Error
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Code = statusCode.ToString(),
+            Message = message,
+            StatusCode = (int)statusCode
+        };
+        
         var response = req.CreateResponse(statusCode);
         response.Headers.Add("Content-Type", "application/json");
-        await response.WriteStringAsync(JsonConvert.SerializeObject(new { error = message }));
+        await response.WriteStringAsync(JsonConvert.SerializeObject(error));
         return response;
     }
 }
