@@ -16,6 +16,8 @@ public class AuthHandler : ComponentHandler<User>
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly int _refreshTokenExpirationDays;
+    private readonly IPasswordPolicyService _passwordPolicy;
+    private readonly ISecurityAuditService _securityAudit;
 
     public AuthHandler(
         IDataContext dataContext,
@@ -26,6 +28,8 @@ public class AuthHandler : ComponentHandler<User>
         _serviceProvider = serviceProvider;
         var configuration = serviceProvider.GetRequiredService<IConfiguration>();
         _refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
+        _passwordPolicy = serviceProvider.GetRequiredService<IPasswordPolicyService>();
+        _securityAudit = serviceProvider.GetRequiredService<ISecurityAuditService>();
     }
 
     /// <summary>
@@ -47,6 +51,15 @@ public class AuthHandler : ComponentHandler<User>
             if (string.IsNullOrEmpty(authResult))
             {
                 Logger.LogWarning("Authentication failed for email: {Email}", userCredentials.Email);
+                
+                // Log failed authentication attempt
+                await _securityAudit.LogFailedAuthentication(
+                    userCredentials.Email, 
+                    userCredentials.IpAddress ?? "unknown",
+                    userCredentials.UserAgent,
+                    "Invalid credentials"
+                );
+                
                 return new AuthToken(); // Return empty token to indicate failure
             }
 
@@ -99,6 +112,14 @@ public class AuthHandler : ComponentHandler<User>
                 ClientId = userCredentials.ClientId,
                 UpdatedAt = DateTime.UtcNow
             };
+
+            // Log successful authentication
+            await _securityAudit.LogSuccessfulAuthentication(
+                authenticatedEntityId,
+                userCredentials.Email,
+                userCredentials.IpAddress ?? "unknown",
+                userCredentials.UserAgent
+            );
 
             return authToken;
         }

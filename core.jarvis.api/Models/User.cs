@@ -50,4 +50,14 @@ public record User : IComponent
     /// When the user was created.
     /// </summary>
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// IP address for authentication request tracking.
+    /// </summary>
+    public string? IpAddress { get; init; }
+
+    /// <summary>
+    /// User agent for authentication request tracking.
+    /// </summary>
+    public string? UserAgent { get; init; }
 }

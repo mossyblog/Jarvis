@@ -5,7 +5,14 @@ using Microsoft.Extensions.Hosting;
 using core.jarvis.api.Extensions;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
+    .ConfigureFunctionsWorkerDefaults(workerApplication =>
+    {
+        // Configure middleware pipeline in order
+        workerApplication.UseMiddleware<core.jarvis.api.Middleware.SecurityHeadersMiddleware>();
+        workerApplication.UseMiddleware<core.jarvis.api.Middleware.RateLimitingMiddleware>();
+        workerApplication.UseMiddleware<core.jarvis.api.Middleware.InputValidationMiddleware>();
+        workerApplication.UseMiddleware<core.jarvis.api.Middleware.ComponentValidationMiddleware>();
+    })
     .ConfigureAppConfiguration((context, config) =>
     {
         // Ensure local.settings.json is loaded

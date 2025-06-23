@@ -1,6 +1,7 @@
 using System.Net;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
+using core.jarvis.api.Services;
 using core.jarvis.Data;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -75,7 +76,11 @@ public class AuthFunction
 
             if (req.Headers.TryGetValues("X-Forwarded-For", out var forwardedFor))
             {
-                ipAddress = forwardedFor.FirstOrDefault();
+                ipAddress = forwardedFor.FirstOrDefault()?.Split(',').FirstOrDefault()?.Trim();
+            }
+            else if (req.Headers.TryGetValues("X-Real-IP", out var realIp))
+            {
+                ipAddress = realIp.FirstOrDefault();
             }
             else if (req.Headers.TryGetValues("REMOTE_ADDR", out var remoteAddr))
             {
@@ -87,6 +92,13 @@ public class AuthFunction
                 userAgent = userAgentValues.FirstOrDefault();
             }
 
+            // Add IP and User-Agent to the request
+            userRequest = userRequest with 
+            { 
+                IpAddress = ipAddress ?? "unknown",
+                UserAgent = userAgent
+            };
+
             // Ultra-thin function: create entity, get handler, call single method
             var authEntityId = Guid.NewGuid();
             var authHandler = _dataContext.For<AuthHandler>(authEntityId);
@@ -95,13 +107,7 @@ public class AuthFunction
             // Check if authentication succeeded using handler method
             if (!authHandler.IsAuthenticated(authToken))
             {
-                var error = new Error
-                {
-                    OwnerEntityId = Guid.NewGuid(),
-                    Code = "AUTH_FAILED",
-                    Message = "Invalid credentials",
-                    StatusCode = 401
-                };
+                var error = ErrorResponseService.CreateAuthenticationError();
                 
                 var errorResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
                 errorResponse.Headers.Add("Content-Type", "application/json");
@@ -129,13 +135,18 @@ public class AuthFunction
 
     private static async Task<HttpResponseData> CreateErrorResponse(HttpRequestData req, HttpStatusCode statusCode, string message)
     {
-        var error = new Error
+        // Use standardized error messages
+        var errorCode = statusCode switch
         {
-            OwnerEntityId = Guid.NewGuid(),
-            Code = statusCode.ToString(),
-            Message = message,
-            StatusCode = (int)statusCode
+            HttpStatusCode.BadRequest => "BAD_REQUEST",
+            HttpStatusCode.Unauthorized => "AUTH_FAILED",
+            HttpStatusCode.Forbidden => "ACCESS_DENIED",
+            HttpStatusCode.NotFound => "NOT_FOUND",
+            HttpStatusCode.TooManyRequests => "RATE_LIMIT_EXCEEDED",
+            _ => "SERVER_ERROR"
         };
+        
+        var error = ErrorResponseService.CreateError(errorCode);
         
         var response = req.CreateResponse(statusCode);
         response.Headers.Add("Content-Type", "application/json");

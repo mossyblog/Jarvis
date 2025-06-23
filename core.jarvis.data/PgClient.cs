@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using core.jarvis.data.RLS;
 using Dapper;
 using Npgsql;
+using Microsoft.IdentityModel.Tokens;
 
 namespace core.jarvis.data
 {
@@ -16,6 +17,11 @@ namespace core.jarvis.data
         private string? _jwt;
         private Dictionary<string, string>? _jwtClaims;
         private readonly RLSPolicyRegistry _rlsPolicies;
+        
+        /// <summary>
+        /// Gets the current user ID extracted from the JWT token.
+        /// </summary>
+        public Guid CurrentUserId { get; private set; }
 
         /// <summary>
         /// Initializes a new PgClient with the given Npgsql connection.
@@ -130,22 +136,59 @@ namespace core.jarvis.data
         }
 
         /// <summary>
-        /// Parses JWT claims without validation (for RLS purposes).
-        /// In production, you should validate the JWT signature.
+        /// Parses and validates JWT claims for RLS purposes.
+        /// SECURITY: Always validates JWT signature to prevent token forgery.
         /// </summary>
         private Dictionary<string, string> ParseJWTClaims(string jwt)
         {
             var handler = new JwtSecurityTokenHandler();
-            var jsonToken = handler.ReadJwtToken(jwt);
             
-            var claims = new Dictionary<string, string>();
-            foreach (var claim in jsonToken.Claims)
+            // Get JWT secret from environment or config
+            var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? 
+                           throw new InvalidOperationException("JWT_SECRET_KEY not configured");
+            
+            var validationParameters = new TokenValidationParameters
             {
-                // Store the last value if there are duplicates
-                claims[claim.Type] = claim.Value;
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecret)),
+                ValidateIssuer = true,
+                ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "jarvis-api",
+                ValidateAudience = true,
+                ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "jarvis-clients",
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero,
+                RequireExpirationTime = true,
+                RequireSignedTokens = true
+            };
+
+            try
+            {
+                // Validate token and extract principal
+                var principal = handler.ValidateToken(jwt, validationParameters, out SecurityToken validatedToken);
+                
+                var claims = new Dictionary<string, string>();
+                foreach (var claim in principal.Claims)
+                {
+                    // Store the last value if there are duplicates
+                    claims[claim.Type] = claim.Value;
+                }
+                
+                // Extract and set CurrentUserId if available
+                if (claims.TryGetValue("sub", out var userId) && Guid.TryParse(userId, out var parsedUserId))
+                {
+                    CurrentUserId = parsedUserId;
+                }
+                
+                return claims;
             }
-            
-            return claims;
+            catch (SecurityTokenValidationException ex)
+            {
+                throw new UnauthorizedAccessException($"Invalid JWT token: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                throw new UnauthorizedAccessException($"Token validation failed: {ex.Message}");
+            }
         }
 
         /// <summary>

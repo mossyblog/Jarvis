@@ -62,6 +62,13 @@ public static class ServiceCollectionExtensions
 
         // Add middleware
         services.AddSingleton<ComponentValidationMiddleware>();
+        services.AddSingleton<RateLimitingMiddleware>();
+        services.AddSingleton<SecurityHeadersMiddleware>();
+        services.AddSingleton<InputValidationMiddleware>();
+
+        // Add security services
+        services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
+        services.AddScoped<ISecurityAuditService, SecurityAuditService>();
 
         return services;
     }

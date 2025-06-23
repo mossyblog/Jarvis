@@ -67,6 +67,11 @@ public class TokenService : ITokenService
 
     public ClaimsPrincipal? ValidateToken(string token)
     {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new UnauthorizedAccessException("Token is required");
+        }
+
         try
         {
             var key = Encoding.ASCII.GetBytes(_secretKey);
@@ -79,15 +84,34 @@ public class TokenService : ITokenService
                 ValidateAudience = true,
                 ValidAudience = _audience,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ClockSkew = TimeSpan.Zero,
+                RequireExpirationTime = true,
+                RequireSignedTokens = true
             };
 
-            var principal = _tokenHandler.ValidateToken(token, validationParameters, out _);
+            var principal = _tokenHandler.ValidateToken(token, validationParameters, out SecurityToken validatedToken);
+            
+            // Additional validation to ensure it's a JWT
+            if (!(validatedToken is JwtSecurityToken jwtToken))
+            {
+                throw new UnauthorizedAccessException("Invalid token format");
+            }
+
+            // Verify the signing algorithm
+            if (!jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new UnauthorizedAccessException("Invalid token signing algorithm");
+            }
+
             return principal;
         }
-        catch
+        catch (SecurityTokenException ex)
         {
-            return null;
+            throw new UnauthorizedAccessException($"Invalid token: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            throw new UnauthorizedAccessException($"Token validation failed: {ex.Message}");
         }
     }
 
