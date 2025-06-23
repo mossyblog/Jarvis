@@ -1,4 +1,5 @@
 using core.jarvis;
+using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
@@ -31,6 +32,9 @@ public static class ServiceCollectionExtensions
 
         // Add core Jarvis services
         services.RegisterJarvis();
+        
+        // Register API-specific handlers
+        services.AddScoped<IComponentHandler, SecurityTokenHandler>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>

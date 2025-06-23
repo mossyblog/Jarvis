@@ -74,24 +74,42 @@ namespace core.jarvis.data
         /// <returns>JWT string if authentication succeeds, otherwise null.</returns>
         public async Task<string?> Authenticate(string email, string password)
         {
+            // Ensure connection is open
+            if (_conn.State != System.Data.ConnectionState.Open)
+                await _conn.OpenAsync();
+                
             // Example: Query user by email
-            var sql = "SELECT id, password_hash FROM users WHERE email = @email";
-            var user = await _conn.QueryFirstOrDefaultAsync<UserAuthRecord>(sql, new { email });
+            var sql = "SELECT id, password_hash AS PasswordHash FROM users WHERE email = @email";
+            try
+            {
+                var user = await _conn.QueryFirstOrDefaultAsync<UserAuthRecord>(sql, new { email });
 
-            if (user == null)
-                return null;
+                if (user == null)
+                {
+                    return null;
+                }
+                
+                // Check if password hash is null or empty before verification
+                if (string.IsNullOrEmpty(user.PasswordHash))
+                {
+                    return null;
+                }
 
-            // Check if password hash is null or empty before verification
-            if (string.IsNullOrEmpty(user.PasswordHash))
-                return null;
+                // Verify password using BCrypt
+                var isValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+                
+                if (!isValid)
+                    return null;
 
-            // Verify password using BCrypt
-            if (!BCrypt.Net.BCrypt.Verify(password, user.PasswordHash))
-                return null;
-
-            // TODO: Issue JWT (replace with your JWT generation logic)
-            // For demonstration, return a placeholder string
-            return "GENERATED_JWT_TOKEN";
+                // Return a simple JWT-like token that indicates successful authentication
+                // The actual JWT generation should be done by the consuming application
+                // This is just to indicate that authentication was successful
+                return $"auth.success.{user.Id}";
+            }
+            catch (Exception)
+            {
+                throw;
+            }
         }
 
         private class UserAuthRecord

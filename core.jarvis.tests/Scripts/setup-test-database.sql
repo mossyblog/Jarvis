@@ -4,6 +4,7 @@
 
 -- Drop existing tables (CASCADE will drop dependent objects)
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS security_token CASCADE;
 DROP TABLE IF EXISTS audit_event CASCADE;
 DROP TABLE IF EXISTS test_component CASCADE;
 DROP TABLE IF EXISTS position_component CASCADE;
@@ -27,9 +28,34 @@ CREATE TABLE users (
 );
 
 -- Create test user with hashed password
--- Password: 'test123' (bcrypt hash)
+-- Password: 'test123' (bcrypt hash with cost factor 12)
 INSERT INTO users (email, password_hash) VALUES 
-    ('test@example.com', '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyNiGdG7T4HMwm');
+    ('test@example.com', '$2a$12$QnOKnn.PumrtVscPkO3C.ONHR/5NANzEbqMoLQOyUFhQMhynyVoe.');
+
+-- Create security_token table for JWT refresh tokens
+CREATE TABLE security_token (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    user_id UUID NOT NULL REFERENCES users(id),
+    session_id UUID NOT NULL,
+    refresh_token_hash TEXT NOT NULL,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    refresh_expires_at TIMESTAMPTZ NOT NULL,
+    client_id TEXT,
+    ip_address TEXT,
+    user_agent TEXT,
+    is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
+    revoked_at TIMESTAMPTZ,
+    version INTEGER DEFAULT 1,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for security_token
+CREATE INDEX idx_security_token_owner_entity_id ON security_token(owner_entity_id);
+CREATE INDEX idx_security_token_user_id ON security_token(user_id);
+CREATE INDEX idx_security_token_session_id ON security_token(session_id);
+CREATE INDEX idx_security_token_refresh_expires_at ON security_token(refresh_expires_at) WHERE is_revoked = FALSE;
 
 -- Create audit_event table
 CREATE TABLE audit_event (
@@ -260,6 +286,7 @@ BEGIN
     RAISE NOTICE 'Test database setup complete!';
     RAISE NOTICE 'Tables created:';
     RAISE NOTICE '  - users (with test user: test@example.com / test123)';
+    RAISE NOTICE '  - security_token';
     RAISE NOTICE '  - audit_event';
     RAISE NOTICE '  - test_component';
     RAISE NOTICE '  - position_component';

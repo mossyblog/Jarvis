@@ -140,6 +140,8 @@ public static class JarvisServiceCollectionExtensions
             foreach (var handlerInterface in componentHandlerInterfaces)
             {
                 services.AddTransient(handlerInterface, type);
+                // Also register the concrete type for DataContext.For<THandler>()
+                services.AddTransient(type);
             }
             
             // Register IComponentQueryHandler<T> implementations

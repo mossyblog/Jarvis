@@ -74,6 +74,12 @@ public class DeauthFunction
                     return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid GUID format");
                 }
             }
+            
+            // Validate session ID is not empty
+            if (sessionId == Guid.Empty)
+            {
+                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Session ID cannot be empty");
+            }
 
             // Deauthenticate
             var success = await _authService.DeauthenticateAsync(sessionId);

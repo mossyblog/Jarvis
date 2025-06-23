@@ -47,7 +47,16 @@ public class AuthFunction
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request body is required");
             }
 
-            var authRequest = JsonConvert.DeserializeObject<AuthRequest>(requestBody);
+            AuthRequest? authRequest;
+            try
+            {
+                authRequest = JsonConvert.DeserializeObject<AuthRequest>(requestBody);
+            }
+            catch (JsonException)
+            {
+                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format");
+            }
+            
             if (authRequest == null)
             {
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format");
@@ -60,9 +69,22 @@ public class AuthFunction
             }
 
             // Get client info
-            var ipAddress = req.Headers.GetValues("X-Forwarded-For")?.FirstOrDefault() 
-                         ?? req.Headers.GetValues("REMOTE_ADDR")?.FirstOrDefault();
-            var userAgent = req.Headers.GetValues("User-Agent")?.FirstOrDefault();
+            string? ipAddress = null;
+            string? userAgent = null;
+            
+            if (req.Headers.TryGetValues("X-Forwarded-For", out var forwardedFor))
+            {
+                ipAddress = forwardedFor.FirstOrDefault();
+            }
+            else if (req.Headers.TryGetValues("REMOTE_ADDR", out var remoteAddr))
+            {
+                ipAddress = remoteAddr.FirstOrDefault();
+            }
+            
+            if (req.Headers.TryGetValues("User-Agent", out var userAgentValues))
+            {
+                userAgent = userAgentValues.FirstOrDefault();
+            }
 
             // Authenticate
             var authResponse = await _authService.AuthenticateAsync(authRequest, ipAddress, userAgent);

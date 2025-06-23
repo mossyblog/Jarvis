@@ -56,7 +56,8 @@ public static class TestDatabaseSetup
             "velocity_component",
             "position_component",
             "test_component",
-            "audit_event"
+            "audit_event",
+            "security_token"
             // Note: We don't clean the users table as it contains test users
         };
         

@@ -1,3 +1,5 @@
+using System.Linq;
+using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.Data;
 using core.jarvis.data;
@@ -14,6 +16,7 @@ public class AuthenticationService : IAuthenticationService
     private readonly IDataContext _dataContext;
     private readonly ITokenService _tokenService;
     private readonly PgClient _pgClient;
+    private readonly NpgsqlConnection _connection;
     private readonly ILogger<AuthenticationService> _logger;
     private readonly int _refreshTokenExpirationDays;
 
@@ -26,6 +29,7 @@ public class AuthenticationService : IAuthenticationService
     {
         _dataContext = dataContext;
         _tokenService = tokenService;
+        _connection = connection;
         _pgClient = new PgClient(connection);
         _logger = logger;
         _refreshTokenExpirationDays = refreshTokenExpirationDays;
@@ -36,32 +40,44 @@ public class AuthenticationService : IAuthenticationService
         try
         {
             // Validate credentials using PgClient
-            var jwt = await _pgClient.Authenticate(request.Email, request.Password);
-            if (string.IsNullOrEmpty(jwt))
+            var authResult = await _pgClient.Authenticate(request.Email, request.Password);
+            _logger.LogInformation("PgClient.Authenticate returned: {Result} for email: {Email}", authResult, request.Email);
+            if (string.IsNullOrEmpty(authResult))
             {
                 _logger.LogWarning("Authentication failed for email: {Email}", request.Email);
                 return null;
             }
 
-            // Get user ID from the database
-            var userId = await GetUserIdByEmail(request.Email);
-            if (!userId.HasValue)
+            // Extract user ID from auth result (format: "auth.success.{userId}")
+            Guid userId;
+            if (authResult.StartsWith("auth.success."))
             {
-                _logger.LogError("User ID not found for authenticated email: {Email}", request.Email);
+                var userIdStr = authResult.Substring("auth.success.".Length);
+                if (!Guid.TryParse(userIdStr, out userId))
+                {
+                    _logger.LogError("Failed to parse user ID from auth result: {Result}", authResult);
+                    return null;
+                }
+            }
+            else
+            {
+                _logger.LogError("Unexpected auth result format: {Result}", authResult);
                 return null;
             }
 
             // Generate tokens
-            var accessToken = _tokenService.GenerateAccessToken(userId.Value, request.Email);
+            var accessToken = _tokenService.GenerateAccessToken(userId, request.Email);
             var refreshToken = _tokenService.GenerateRefreshToken();
             var sessionId = Guid.NewGuid();
             var expiresAt = DateTime.UtcNow.AddMinutes(15); // Match token service default
 
             // Store the session as a SecurityToken component
+            // Use a new entity ID for each session to allow multiple sessions per user
+            var tokenEntityId = Guid.NewGuid();
             var securityToken = new SecurityToken
             {
-                OwnerEntityId = userId.Value,
-                UserId = userId.Value,
+                OwnerEntityId = tokenEntityId,
+                UserId = userId,
                 SessionId = sessionId,
                 RefreshTokenHash = _tokenService.HashRefreshToken(refreshToken),
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
@@ -71,16 +87,17 @@ public class AuthenticationService : IAuthenticationService
                 IsRevoked = false
             };
 
-            // Store via handler pattern (would need SecurityTokenHandler)
-            await StoreSecurityToken(securityToken);
+            // Store via handler pattern
+            var tokenHandler = _dataContext.For<SecurityTokenHandler>(tokenEntityId);
+            await tokenHandler.CreateAsync(securityToken);
 
             return new AuthResponse
             {
-                OwnerEntityId = userId.Value,
+                OwnerEntityId = tokenEntityId,
                 AccessToken = accessToken,
                 RefreshToken = refreshToken,
                 ExpiresAt = expiresAt,
-                UserId = userId.Value,
+                UserId = userId,
                 SessionId = sessionId
             };
         }
@@ -95,18 +112,39 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            // Find and revoke the security token
-            var token = await GetSecurityTokenBySessionId(sessionId);
+            // Use EntityQuery to find the token by session ID
+            var entityComponents = await _dataContext.Query()
+                .WithAll<SecurityToken>(t => t.SessionId == sessionId)
+                .ToEntityComponents();
+            
+            var tokenEntry = entityComponents.FirstOrDefault();
+            SecurityToken? token = null;
+            if (tokenEntry.Key != Guid.Empty)
+            {
+                token = tokenEntry.Value?.Get<SecurityToken>();
+            }
+            
             if (token == null)
             {
                 _logger.LogWarning("Session not found for deauth: {SessionId}", sessionId);
                 return false;
             }
-
-            token.IsRevoked = true;
-            token.RevokedAt = DateTime.UtcNow;
             
-            await UpdateSecurityToken(token);
+            // Check if already revoked
+            if (token.IsRevoked)
+            {
+                _logger.LogWarning("Session already revoked: {SessionId}", sessionId);
+                return false;
+            }
+
+            // Revoke the token
+            var updatedToken = token with 
+            { 
+                IsRevoked = true,
+                RevokedAt = DateTime.UtcNow 
+            };
+            
+            await _dataContext.Commit(updatedToken);
             
             _logger.LogInformation("Session revoked: {SessionId}", sessionId);
             return true;
@@ -122,13 +160,17 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            // Find the security token by refresh token
-            var securityTokens = await GetActiveSecurityTokens();
+            // Find all active security tokens
+            var entityComponents = await _dataContext.Query()
+                .WithAll<SecurityToken>(t => !t.IsRevoked && t.RefreshExpiresAt > DateTime.UtcNow)
+                .ToEntityComponents();
+            
             SecurityToken? matchingToken = null;
 
-            foreach (var token in securityTokens)
+            foreach (var kvp in entityComponents)
             {
-                if (_tokenService.VerifyRefreshToken(request.RefreshToken, token.RefreshTokenHash))
+                var token = kvp.Value.Get<SecurityToken>();
+                if (token != null && _tokenService.VerifyRefreshToken(request.RefreshToken, token.RefreshTokenHash))
                 {
                     matchingToken = token;
                     break;
@@ -162,14 +204,17 @@ public class AuthenticationService : IAuthenticationService
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
 
             // Update the security token with new refresh token
-            matchingToken.RefreshTokenHash = _tokenService.HashRefreshToken(newRefreshToken);
-            matchingToken.UpdatedAt = DateTime.UtcNow;
+            var updatedToken = matchingToken with 
+            {
+                RefreshTokenHash = _tokenService.HashRefreshToken(newRefreshToken),
+                UpdatedAt = DateTime.UtcNow
+            };
             
-            await UpdateSecurityToken(matchingToken);
+            await _dataContext.Commit(updatedToken);
 
             return new AuthResponse
             {
-                OwnerEntityId = matchingToken.UserId,
+                OwnerEntityId = matchingToken.OwnerEntityId,
                 AccessToken = newAccessToken,
                 RefreshToken = newRefreshToken,
                 ExpiresAt = expiresAt,
@@ -188,7 +233,11 @@ public class AuthenticationService : IAuthenticationService
     {
         try
         {
-            var token = await GetSecurityTokenById(tokenId);
+            // Get the security token by entity ID - we need to find the token where its entity ID matches
+            // Since we don't have a direct way to query by entity ID in the query system,
+            // we'll need to get the token using the handler pattern for read operations
+            var tokenHandler = _dataContext.For<SecurityTokenHandler>(tokenId);
+            var token = await tokenHandler.GetAsync(tokenId);
             
             if (token == null)
             {
@@ -231,52 +280,57 @@ public class AuthenticationService : IAuthenticationService
         }
     }
 
-    // Helper methods - these would typically use handlers in a real implementation
+    // Helper methods to interact with users table
     private async Task<Guid?> GetUserIdByEmail(string email)
     {
-        // This would use a UserHandler or similar
-        // For now, returning a placeholder
-        await Task.CompletedTask;
-        return Guid.NewGuid(); // Placeholder
+        try
+        {
+            // Query the users table directly
+            var sql = "SELECT id FROM users WHERE email = @email LIMIT 1";
+            
+            // Ensure connection is open
+            if (_connection.State != System.Data.ConnectionState.Open)
+                await _connection.OpenAsync();
+            
+            using var command = new NpgsqlCommand(sql, _connection);
+            command.Parameters.AddWithValue("@email", email);
+            
+            var result = await command.ExecuteScalarAsync();
+            if (result != null && result != DBNull.Value)
+            {
+                return (Guid)result;
+            }
+            
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user ID by email: {Email}", email);
+            return null;
+        }
     }
 
     private async Task<string?> GetUserEmailById(Guid userId)
     {
-        // This would use a UserHandler or similar
-        await Task.CompletedTask;
-        return "user@example.com"; // Placeholder
-    }
-
-    private async Task StoreSecurityToken(SecurityToken token)
-    {
-        // This would use a SecurityTokenHandler
-        await Task.CompletedTask;
-    }
-
-    private async Task UpdateSecurityToken(SecurityToken token)
-    {
-        // This would use a SecurityTokenHandler
-        await Task.CompletedTask;
-    }
-
-    private async Task<SecurityToken?> GetSecurityTokenBySessionId(Guid sessionId)
-    {
-        // This would use a SecurityTokenHandler or query
-        await Task.CompletedTask;
-        return null; // Placeholder
-    }
-
-    private async Task<SecurityToken?> GetSecurityTokenById(Guid id)
-    {
-        // This would use a SecurityTokenHandler
-        await Task.CompletedTask;
-        return null; // Placeholder
-    }
-
-    private async Task<IEnumerable<SecurityToken>> GetActiveSecurityTokens()
-    {
-        // This would use a query to get non-revoked tokens
-        await Task.CompletedTask;
-        return Enumerable.Empty<SecurityToken>(); // Placeholder
+        try
+        {
+            // Query the users table directly
+            var sql = "SELECT email FROM users WHERE id = @userId LIMIT 1";
+            
+            // Ensure connection is open
+            if (_connection.State != System.Data.ConnectionState.Open)
+                await _connection.OpenAsync();
+            
+            using var command = new NpgsqlCommand(sql, _connection);
+            command.Parameters.AddWithValue("@userId", userId);
+            
+            var result = await command.ExecuteScalarAsync();
+            return result?.ToString();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error getting user email by ID: {UserId}", userId);
+            return null;
+        }
     }
 }

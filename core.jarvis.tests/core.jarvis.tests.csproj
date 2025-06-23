@@ -41,6 +41,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\core.jarvis\core.jarvis.csproj" />
+      <ProjectReference Include="..\core.jarvis.api\core.jarvis.api.csproj" />
     </ItemGroup>
 
 </Project>

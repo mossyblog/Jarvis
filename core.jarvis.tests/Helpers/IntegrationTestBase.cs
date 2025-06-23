@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Linq;
 using core.jarvis.Data;
 using core.jarvis.Data.Components;
 using core.jarvis.Data.Query;
@@ -62,12 +63,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             var connection = new NpgsqlConnection(_connectionString);
             var pgClientWrapper = new PgClientWrapper(connection);
             
-            // Authenticate with test user
-            var jwt = pgClientWrapper.Client.Authenticate("test@example.com", "test123").GetAwaiter().GetResult();
-            if (!string.IsNullOrEmpty(jwt))
-            {
-                pgClientWrapper.SetJwt(jwt);
-            }
+            // For API tests, don't authenticate during setup as we're testing the auth service itself
+            // Other tests can authenticate if needed
             
             return pgClientWrapper;
         });
@@ -75,6 +72,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddTransient<IDataContext, DataContext>();
         services.AddScoped<EventSubscriptionManager>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IEntityQuery, EntityQuery>();
         
         // Register default event emitter for tests
         services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.NoOpEventEmitter>();
@@ -94,6 +92,14 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddTransient<BlogComponentHandler>();
         services.AddTransient<BlogPostComponentHandler>();
         services.AddTransient<BlogHandler>();
+        
+        // Register API handlers if available (for API tests)
+        var apiAssembly = AppDomain.CurrentDomain.GetAssemblies()
+            .FirstOrDefault(a => a.GetName().Name == "core.jarvis.api");
+        if (apiAssembly != null)
+        {
+            services.RegisterAllComponentHandlersAndQueriesFromAssembly(apiAssembly);
+        }
 
         _serviceProvider = services.BuildServiceProvider();
         _logger = _serviceProvider.GetRequiredService<ILogger<TestHandler>>();
