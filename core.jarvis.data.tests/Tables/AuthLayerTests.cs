@@ -50,20 +50,23 @@ namespace core.jarvis.data.tests.Tables
             var password = "SuperSecret123!";
             var hash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            var insertSql = "DELETE FROM users WHERE email = @email; INSERT INTO users (email, password_hash) VALUES (@email, @hash);";
+            // First insert the user
+            var insertSql = "DELETE FROM users WHERE email = @email; INSERT INTO users (email, password_hash) VALUES (@email, @hash) RETURNING id;";
+            Guid userId;
             using (var cmd = new NpgsqlCommand(insertSql, _conn))
             {
                 cmd.Parameters.AddWithValue("email", email);
                 cmd.Parameters.AddWithValue("hash", hash);
-                await cmd.ExecuteNonQueryAsync();
+                userId = (Guid)(await cmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("Failed to insert user"));
             }
 
             // Act
-            var jwt = await _client.Authenticate(email, password);
+            var result = await _client.Authenticate(email, password);
 
             // Assert
-            jwt.ShouldNotBeNull();
-            jwt.ShouldBe("GENERATED_JWT_TOKEN");
+            result.ShouldNotBeNull();
+            // PgClient.Authenticate returns "auth.success.{userId}" on success
+            result.ShouldBe($"auth.success.{userId}");
         }
 
         /// <summary>

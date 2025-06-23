@@ -9,7 +9,7 @@ set -e  # Exit on error
 SERVER="${JARVIS_DB_SERVER:-localhost}"
 PORT="${JARVIS_DB_PORT:-5432}"
 USERNAME="${JARVIS_DB_USERNAME:-postgres}"
-DATABASE="${JARVIS_DB_NAME:-jarvis}"
+DATABASE="${JARVIS_DB_NAME:-jarvis_test}"
 CREATE_TEST_USER=false
 
 # Color codes for output

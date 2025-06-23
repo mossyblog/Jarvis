@@ -38,7 +38,7 @@ param(
     [int]$Port = 5432,
     [string]$Username = "postgres",
     [SecureString]$Password,
-    [string]$Database = "jarvis",
+    [string]$Database = "jarvis_test",
     [switch]$CreateTestUser
 )
 

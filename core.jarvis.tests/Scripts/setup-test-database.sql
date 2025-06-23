@@ -2,6 +2,16 @@
 -- Run this against your local PostgreSQL test instance
 -- WARNING: This script DROPS and recreates tables - only use in test environments!
 
+-- Enable required extensions for Supabase compatibility
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pg_graphql";
+
+-- Create graphql schema if it doesn't exist
+CREATE SCHEMA IF NOT EXISTS graphql;
+
+-- Note: GraphQL wrapper function is created separately in setup-graphql-wrapper.sql
+-- as it needs to be run as supabase_admin user
+
 -- Drop existing tables (CASCADE will drop dependent objects)
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS security_token CASCADE;
@@ -191,6 +201,7 @@ CREATE INDEX idx_order_component_owner_entity_id ON order_component(owner_entity
 CREATE TABLE invoice_test_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
+    work_order_id UUID,
     invoice_number VARCHAR(255) NOT NULL,
     amount INTEGER NOT NULL DEFAULT 0,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
@@ -225,10 +236,12 @@ CREATE INDEX idx_payment_test_component_owner_entity_id ON payment_test_componen
 CREATE TABLE work_order_test_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
+    work_order_id VARCHAR(255),
     work_order_number VARCHAR(255) NOT NULL,
     description TEXT,
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     assigned_to VARCHAR(255),
+    is_pre_payment_required BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,

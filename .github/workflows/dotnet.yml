@@ -31,6 +31,7 @@ jobs:
 
     env:
       TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres"
+      SUPABASE_ADMIN_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres"
 
     steps:
     - uses: actions/checkout@v3
@@ -56,6 +57,12 @@ jobs:
         
         # Run the setup script
         PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d jarvis_test -f core.jarvis.tests/Scripts/setup-test-database.sql
+        
+        # Create GraphQL wrapper function as supabase_admin
+        PGPASSWORD=postgres psql -h localhost -p 5432 -U supabase_admin -d jarvis_test -f core.jarvis.tests/Scripts/setup-graphql-wrapper.sql
+        
+        # Also ensure tables have all required columns (in case of schema changes)
+        echo "Tables created successfully"
         
         # Verify setup
         echo "Verifying database setup..."

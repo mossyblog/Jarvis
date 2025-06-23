@@ -9,7 +9,7 @@ public static class TestDatabaseSetup
 {
     private static readonly string DefaultConnectionString = 
         Environment.GetEnvironmentVariable("TEST_DATABASE_URL") ?? 
-        "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres";
+        "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres";
 
     /// <summary>
     /// Sets up the test database by running the setup script.

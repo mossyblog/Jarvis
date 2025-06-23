@@ -29,6 +29,21 @@ public class DataContextHandlerTests : IntegrationTestBase
         handler.ShouldBeOfType<TestHandler>();
     }
 
+    private class UnregisteredTestHandler : IComponentHandler
+    {
+        public Guid EntityId { get; private set; }
+        
+        public void InitializeContext(Guid entityId)
+        {
+            EntityId = entityId;
+        }
+        
+        public Task<IComponent> Get()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
     [Fact]
     public void DataContext_For_WithUnregisteredHandler_ShouldThrowComponentNotFoundException()
     {
@@ -38,7 +53,7 @@ public class DataContextHandlerTests : IntegrationTestBase
 
         // Act & Assert
         Should.Throw<ComponentNotFoundException>(() => 
-            TestDataContext().For<ConcreteTestHandler>(entityId));
+            TestDataContext().For<UnregisteredTestHandler>(entityId));
     }
 
     [Fact]

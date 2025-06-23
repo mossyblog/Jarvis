@@ -203,12 +203,27 @@ namespace core.jarvis.Data.GraphQL
             {
                 // Execute via pg_graphql - it expects just the query string
                 using var conn = await _pgClient.GetConnectionAsync();
-                using var cmd = new NpgsqlCommand("SELECT graphql.resolve($1::text)", conn);
                 
-                // pg_graphql.resolve expects the query string directly, not a JSON object
-                cmd.Parameters.AddWithValue(_query);
+                // Try to use the wrapper function first (for test environments where postgres user doesn't have graphql access)
+                string? resultJson = null;
+                try
+                {
+                    using var cmd = new NpgsqlCommand("SELECT public.graphql_resolve($1::text)", conn);
+                    cmd.Parameters.AddWithValue(_query);
+                    resultJson = await cmd.ExecuteScalarAsync() as string;
+                }
+                catch (PostgresException ex) when (ex.SqlState == "42883") // function does not exist
+                {
+                    // Fall back to direct graphql.resolve
+                }
                 
-                var resultJson = await cmd.ExecuteScalarAsync() as string;
+                // Fall back to direct graphql.resolve if wrapper doesn't exist or didn't return a result
+                if (resultJson == null)
+                {
+                    using var cmd2 = new NpgsqlCommand("SELECT graphql.resolve($1::text)", conn);
+                    cmd2.Parameters.AddWithValue(_query);
+                    resultJson = await cmd2.ExecuteScalarAsync() as string;
+                }
                 
                 if (string.IsNullOrEmpty(resultJson))
                 {
@@ -225,6 +240,7 @@ namespace core.jarvis.Data.GraphQL
                 if (result.Errors?.Any() == true)
                 {
                     var errorMessages = string.Join(", ", result.Errors.Select(e => e.Message));
+                    _logger.LogWarning("GraphQL query returned errors: {Errors}", errorMessages);
                     
                     // Audit the GraphQL errors
                     if (_auditService != null)
