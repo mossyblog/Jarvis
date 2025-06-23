@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { IssuesSection } from '../components/dashboard/IssuesSection';
 import { SlowQueriesTable } from '../components/dashboard/SlowQueriesTable';
+import { useNavigation } from '../hooks/useNavigation';
 
 // Generate mock chart data
 const generateChartData = (baseValue: number, variance: number = 0.3) => {
@@ -14,15 +14,14 @@ const generateChartData = (baseValue: number, variance: number = 0.3) => {
 };
 
 export function Dashboard() {
-  const navigate = useNavigate();
+  const { navigateToItem, navigation } = useNavigation();
   const [activeItem, setActiveItem] = React.useState('home');
 
   const handleItemClick = (itemId: string) => {
     setActiveItem(itemId);
-    if (itemId === 'table-editor') {
-      navigate('/editor');
-    } else if (itemId === 'schema-visualizer') {
-      navigate('/SchemaVisualizer');
+    const item = navigation.find(nav => nav.id === itemId);
+    if (item) {
+      navigateToItem(item);
     }
   };
 

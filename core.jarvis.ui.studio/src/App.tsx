@@ -2,6 +2,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import TableEditor from './pages/TableEditor';
 import SchemaVisualizer from './pages/SchemaVisualizer';
+import { Login } from './pages/Login';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { useEffect } from 'react';
 
 function App() {
@@ -12,11 +15,35 @@ function App() {
 
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/editor" element={<TableEditor />} />
-        <Route path="/SchemaVisualizer" element={<SchemaVisualizer />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/editor" 
+            element={
+              <ProtectedRoute requiredPermission="table-editor">
+                <TableEditor />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/SchemaVisualizer" 
+            element={
+              <ProtectedRoute requiredPermission="schema-visualizer">
+                <SchemaVisualizer />
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
+      </AuthProvider>
     </Router>
   );
 }

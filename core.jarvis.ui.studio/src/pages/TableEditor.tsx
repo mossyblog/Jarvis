@@ -1,19 +1,18 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { TablesList } from '../components/table-editor/TablesList';
 import { TableToolbar } from '../components/table-editor/TableToolbar';
 import { TableDataGrid } from '../components/table-editor/TableDataGrid';
 import { TableStatusBar } from '../components/table-editor/TableStatusBar';
 import { Button } from '../components/ui/button';
-import { sidebarItems } from '../components/layout/Sidebar';
+import { useNavigation } from '../hooks/useNavigation';
 
 interface SchemaData {
   [key: string]: string[];
 }
 
 const TableEditor = () => {
-  const navigate = useNavigate();
+  const { navigateToItem, navigation } = useNavigation();
   const [selectedTable, setSelectedTable] = useState('accounts');
   const [selectedSchema] = useState('public');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -53,9 +52,9 @@ const TableEditor = () => {
   ];
 
   const handleSidebarItemClick = (itemId: string) => {
-    const item = sidebarItems.find(i => i.id === itemId);
-    if (item && item.href) {
-      navigate(item.href);
+    const item = navigation.find(i => i.id === itemId);
+    if (item) {
+      navigateToItem(item);
     }
   };
 

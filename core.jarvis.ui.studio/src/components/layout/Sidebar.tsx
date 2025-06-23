@@ -1,21 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Home, 
-  Database, 
-  FileCode2, 
-  Shield, 
-  HardDrive, 
-  Radio, 
-  AlertTriangle,
   FileText,
-  ScrollText,
-  Plug,
-  Settings,
   Menu,
-  Table,
   PanelLeftClose
 } from 'lucide-react';
+import * as Icons from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface SidebarItem {
   id: string;
@@ -24,23 +15,11 @@ interface SidebarItem {
   href: string;
 }
 
-export const sidebarItems: SidebarItem[] = [
-  { id: 'home', label: 'Project overview', icon: <Home size={18} />, href: '/' },
-  { id: 'table-editor', label: 'Table Editor', icon: <Table size={18} />, href: '/editor' },
-  { id: 'schema-visualizer', label: 'Schema Visualizer', icon: <Database size={18} />, href: '/SchemaVisualizer' },
-  { id: 'sql-editor', label: 'SQL Editor', icon: <FileCode2 size={18} />, href: '/sql' },
-  { id: 'database', label: 'Database', icon: <Database size={18} />, href: '/database' },
-  { id: 'auth', label: 'Authentication', icon: <Shield size={18} />, href: '/auth' },
-  { id: 'storage', label: 'Storage', icon: <HardDrive size={18} />, href: '/storage' },
-  { id: 'functions', label: 'Edge Functions', icon: <FileText size={18} />, href: '/functions' },
-  { id: 'realtime', label: 'Realtime', icon: <Radio size={18} />, href: '/realtime' },
-  { id: 'advisors', label: 'Advisors', icon: <AlertTriangle size={18} />, href: '/advisors' },
-  { id: 'reports', label: 'Reports', icon: <ScrollText size={18} />, href: '/reports' },
-  { id: 'logs', label: 'Logs', icon: <FileText size={18} />, href: '/logs' },
-  { id: 'api', label: 'API Docs', icon: <FileCode2 size={18} />, href: '/api' },
-  { id: 'integrations', label: 'Integrations', icon: <Plug size={18} />, href: '/integrations' },
-  { id: 'settings', label: 'Project Settings', icon: <Settings size={18} />, href: '/settings' },
-];
+// Icon mapping function
+const getIcon = (iconName: string, size: number = 18) => {
+  const IconComponent = Icons[iconName as keyof typeof Icons] as any;
+  return IconComponent ? <IconComponent size={size} /> : <FileText size={size} />;
+};
 
 type SidebarBehavior = 'expandable' | 'open' | 'closed';
 const DEFAULT_SIDEBAR_BEHAVIOR: SidebarBehavior = 'expandable';
@@ -56,6 +35,15 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const { navigation } = useAuth();
+
+  // Convert navigation items to sidebar items
+  const sidebarItems: SidebarItem[] = navigation.map(item => ({
+    id: item.id,
+    label: item.label,
+    icon: getIcon(item.icon),
+    href: item.href
+  }));
 
   // Load sidebar behavior from localStorage
   useEffect(() => {

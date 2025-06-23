@@ -13,8 +13,7 @@ import {
 } from '@xyflow/react';
 import type { Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useNavigate } from 'react-router-dom';
-import { sidebarItems } from '../components/layout/Sidebar';
+import { useNavigation } from '../hooks/useNavigation';
 
 // Fake async fetch for schema data
 function fetchFakeSchema() {
@@ -89,14 +88,14 @@ const SchemaVisualizer = () => {
   const [loading, setLoading] = useState(true);
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
-  const navigate = useNavigate();
+  const { navigateToItem, navigation } = useNavigation();
 
   const nodeTypes = { tableNode: TableNode };
 
   const handleSidebarItemClick = (itemId: string) => {
-    const item = sidebarItems.find(i => i.id === itemId);
-    if (item && item.href) {
-      navigate(item.href);
+    const item = navigation.find(i => i.id === itemId);
+    if (item) {
+      navigateToItem(item);
     }
   };
 

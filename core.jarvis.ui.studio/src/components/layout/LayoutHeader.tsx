@@ -16,9 +16,6 @@ import {
   HelpCircle, 
   MessageSquare,
   Bell,
-  User,
-  LogOut,
-  Settings,
   Plug,
   FileEdit,
   Sparkles,
@@ -27,6 +24,7 @@ import {
 import { OrganizationDropdown } from './dropdowns/OrganizationDropdown'
 import { ProjectDropdown } from './dropdowns/ProjectDropdown'
 import { BranchDropdown } from './dropdowns/BranchDropdown'
+import { UserMenu } from './UserMenu'
 
 // Component implementations
 const HomeIcon = () => (
@@ -115,30 +113,7 @@ const HelpPopover = () => (
   </DropdownMenu>
 )
 
-const UserDropdown = () => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="icon">
-        <User className="h-4 w-4" />
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      <DropdownMenuLabel>{HARDCODED_DATA.user.name}</DropdownMenuLabel>
-      <DropdownMenuItem className="text-xs text-muted-foreground">
-        {HARDCODED_DATA.user.email}
-      </DropdownMenuItem>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem>
-        <Settings className="mr-2 h-4 w-4" />
-        Settings
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <LogOut className="mr-2 h-4 w-4" />
-        Sign out
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-)
+// Replaced with UserMenu component
 
 const InlineEditorButton = () => (
   <Button variant="ghost" size="icon">
@@ -322,7 +297,7 @@ const LayoutHeader = ({
             <FeedbackDropdown />
             <NotificationsPopoverV2 />
             <HelpPopover />
-            <UserDropdown />
+            <UserMenu />
           </>
         </div>
       </div>
