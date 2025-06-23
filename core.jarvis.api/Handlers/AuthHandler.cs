@@ -18,6 +18,7 @@ public class AuthHandler : ComponentHandler<User>
     private readonly int _refreshTokenExpirationDays;
     private readonly IPasswordPolicyService _passwordPolicy;
     private readonly ISecurityAuditService _securityAudit;
+    private readonly IConstantTimeService _constantTimeService;
 
     public AuthHandler(
         IDataContext dataContext,
@@ -30,6 +31,7 @@ public class AuthHandler : ComponentHandler<User>
         _refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
         _passwordPolicy = serviceProvider.GetRequiredService<IPasswordPolicyService>();
         _securityAudit = serviceProvider.GetRequiredService<ISecurityAuditService>();
+        _constantTimeService = serviceProvider.GetRequiredService<IConstantTimeService>();
     }
 
     /// <summary>
@@ -38,6 +40,14 @@ public class AuthHandler : ComponentHandler<User>
     /// Does NOT persist anything - authentication is read-only validation.
     /// </summary>
     public async Task<AuthToken> Authenticate(User userCredentials)
+    {
+        // Wrap authentication in constant-time execution to prevent timing attacks
+        return await _constantTimeService.ExecuteWithMinimumTime(async () => 
+            await AuthenticateInternal(userCredentials), 
+            minimumMilliseconds: 100);
+    }
+
+    private async Task<AuthToken> AuthenticateInternal(User userCredentials)
     {
         try
         {

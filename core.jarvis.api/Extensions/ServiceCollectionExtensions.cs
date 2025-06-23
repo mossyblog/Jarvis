@@ -69,6 +69,7 @@ public static class ServiceCollectionExtensions
         // Add security services
         services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
         services.AddScoped<ISecurityAuditService, SecurityAuditService>();
+        services.AddScoped<IConstantTimeService, ConstantTimeService>();
 
         return services;
     }
