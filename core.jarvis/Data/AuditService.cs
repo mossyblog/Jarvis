@@ -36,19 +36,27 @@ public class AuditService : IAuditService
     public async Task LogEvent(string eventType, Guid entityId, object? metadata = null)
     {
         // Defensive checks for invalid input - audit should never cause application failures
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+        
         if (string.IsNullOrEmpty(eventType))
         {
-            ErrorHandlingPolicy.LogExpectedError(
-                "Attempted to log audit event with null or empty eventType",
-                new { EntityId = entityId });
+            if (!isTestEnvironment)
+            {
+                ErrorHandlingPolicy.LogExpectedError(
+                    "Attempted to log audit event with null or empty eventType",
+                    new { EntityId = entityId });
+            }
             eventType = "UNKNOWN_EVENT";
         }
         
         if (entityId == Guid.Empty)
         {
-            ErrorHandlingPolicy.LogExpectedError(
-                "Attempted to log audit event with empty entity ID",
-                new { EventType = eventType });
+            if (!isTestEnvironment)
+            {
+                ErrorHandlingPolicy.LogExpectedError(
+                    "Attempted to log audit event with empty entity ID",
+                    new { EventType = eventType });
+            }
             // Continue anyway - some events might be system-wide
         }
         
@@ -228,7 +236,11 @@ public class AuditService : IAuditService
         catch (Exception ex)
         {
             // If serialization fails, try a simpler approach
-            _logger.LogWarning(ex, "Failed to serialize metadata, using ToString instead");
+            var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+            if (!isTestEnvironment)
+            {
+                _logger.LogWarning(ex, "Failed to serialize metadata, using ToString instead");
+            }
             try
             {
                 return metadata.ToString();

@@ -65,10 +65,8 @@ public class AuthHandler : ComponentHandler<User>
             
             // Validate credentials using PgClient - it uses parameterized queries for SQL injection protection
             var authResult = await pgClient.Client.Authenticate(userCredentials.Email, userCredentials.Password);
-            Logger.LogInformation("PgClient.Authenticate returned: {Result} for email: {Email}", authResult, userCredentials.Email);
             if (string.IsNullOrEmpty(authResult))
             {
-                Logger.LogWarning("Authentication failed for email: {Email}", userCredentials.Email);
                 
                 // Log failed authentication attempt
                 await _securityAudit.LogFailedAuthentication(
@@ -192,7 +190,6 @@ public class AuthHandler : ComponentHandler<User>
             };
 
             await DataContext.Commit(sessionEntity);
-            Logger.LogInformation("Persisted session {SessionId} for entity {EntityId}", authToken.SessionId, authToken.OwnerEntityId);
             return true;
         }
         catch (Exception ex)

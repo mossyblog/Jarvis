@@ -49,8 +49,6 @@ public class SecurityAuditService : ISecurityAuditService
             };
 
             await _dataContext.Commit(auditEvent);
-            
-            _logger.LogWarning("Failed authentication attempt for {Email} from {IpAddress}", email, ipAddress);
         }
         catch (Exception ex)
         {
@@ -74,8 +72,6 @@ public class SecurityAuditService : ISecurityAuditService
             };
 
             await _dataContext.Commit(auditEvent);
-            
-            _logger.LogInformation("Successful authentication for {Email} from {IpAddress}", email, ipAddress);
         }
         catch (Exception ex)
         {
@@ -121,9 +117,6 @@ public class SecurityAuditService : ISecurityAuditService
             };
 
             await _dataContext.Commit(auditEvent);
-            
-            _logger.LogWarning("Account {Email} locked until {LockedUntil} after {Attempts} failed attempts", 
-                email, lockedUntil, failedAttempts);
         }
         catch (Exception ex)
         {

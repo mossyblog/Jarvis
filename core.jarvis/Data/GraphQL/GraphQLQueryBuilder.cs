@@ -172,9 +172,8 @@ namespace core.jarvis.Data.GraphQL
                 }
             }
 
-            // Log the query attempt
+            // Get user ID for audit
             var userId = claims.TryGetValue("sub", out var userIdClaim) ? userIdClaim : "unknown";
-            _logger.LogInformation("GraphQL query by user {UserId}: {Query}", userId, _query.Substring(0, Math.Min(100, _query.Length)));
 
             // Audit if service available
             if (_auditService != null)
@@ -233,14 +232,10 @@ namespace core.jarvis.Data.GraphQL
                 var result = JsonSerializer.Deserialize<GraphQLResult>(resultJson) 
                     ?? throw new GraphQLException("Failed to parse GraphQL response");
                 
-                // Log the result for debugging
-                _logger.LogDebug("GraphQL response: {Response}", resultJson);
-                
                 // Check for GraphQL errors
                 if (result.Errors?.Any() == true)
                 {
                     var errorMessages = string.Join(", ", result.Errors.Select(e => e.Message));
-                    _logger.LogWarning("GraphQL query returned errors: {Errors}", errorMessages);
                     
                     // Audit the GraphQL errors
                     if (_auditService != null)

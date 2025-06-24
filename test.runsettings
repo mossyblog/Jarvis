@@ -30,6 +30,10 @@
     
     <!-- Maximum threads for parallel execution -->
     <MaxParallelThreads>4</MaxParallelThreads>
+    
+    <!-- Reduce diagnostic output -->
+    <DiagnosticMessages>false</DiagnosticMessages>
+    <InternalDiagnosticMessages>false</InternalDiagnosticMessages>
   </xUnit>
   
   <!-- Data collector settings -->

@@ -45,6 +45,14 @@ public static class ErrorHandlingPolicy
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
     {
+        // Reduce logging noise in test environments
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+        if (isTestEnvironment)
+        {
+            // In test environments, only log errors, not warnings
+            return;
+        }
+        
         using (LogContext.PushProperty("ErrorContext", context))
         using (LogContext.PushProperty("Method", memberName))
         using (LogContext.PushProperty("SourceFile", sourceFilePath))
@@ -68,14 +76,19 @@ public static class ErrorHandlingPolicy
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
     {
-        using (LogContext.PushProperty("ErrorContext", context))
-        using (LogContext.PushProperty("Method", memberName))
-        using (LogContext.PushProperty("SourceFile", sourceFilePath))
-        using (LogContext.PushProperty("Line", sourceLineNumber))
-        using (LogContext.PushProperty("ErrorHandling", "ReturnedDefault"))
-        using (LogContext.PushProperty("DefaultValue", defaultValue))
+        // Reduce logging noise in test environments
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+        if (!isTestEnvironment)
         {
-            Log.Warning(exception, message + " (Returning default value)");
+            using (LogContext.PushProperty("ErrorContext", context))
+            using (LogContext.PushProperty("Method", memberName))
+            using (LogContext.PushProperty("SourceFile", sourceFilePath))
+            using (LogContext.PushProperty("Line", sourceLineNumber))
+            using (LogContext.PushProperty("ErrorHandling", "ReturnedDefault"))
+            using (LogContext.PushProperty("DefaultValue", defaultValue))
+            {
+                Log.Warning(exception, message + " (Returning default value)");
+            }
         }
         
         return defaultValue;
@@ -118,6 +131,14 @@ public static class ErrorHandlingPolicy
         [CallerFilePath] string sourceFilePath = "",
         [CallerLineNumber] int sourceLineNumber = 0)
     {
+        // Reduce logging noise in test environments
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+        if (isTestEnvironment)
+        {
+            // In test environments, suppress expected error warnings
+            return;
+        }
+        
         using (LogContext.PushProperty("ErrorContext", context))
         using (LogContext.PushProperty("Method", memberName))
         using (LogContext.PushProperty("SourceFile", sourceFilePath))

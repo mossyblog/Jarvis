@@ -76,12 +76,18 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
-      timeout-minutes: 15  # Add step timeout for tests
+      timeout-minutes: 8  # Hard timeout for entire step
       run: |
-        dotnet test --no-build --verbosity normal --settings test.runsettings --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
-        EXIT_CODE=$?
-        echo "Test command exited with code: $EXIT_CODE"
-        exit $EXIT_CODE
+        # Run tests with timeout and force exit
+        timeout 420 dotnet test --no-build --verbosity minimal --settings test.runsettings --logger "console;verbosity=minimal" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" || EXIT_CODE=$?
+        
+        # Kill any lingering dotnet processes
+        pkill -f "dotnet" || true
+        sleep 1
+        pgrep -f "dotnet" | xargs -r kill -9 || true
+        
+        echo "Tests completed with exit code: ${EXIT_CODE:-0}"
+        exit ${EXIT_CODE:-0}
       env:
         TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres;Command Timeout=30;Timeout=30;MaxPoolSize=50"
         ASPNETCORE_ENVIRONMENT: "Test"
