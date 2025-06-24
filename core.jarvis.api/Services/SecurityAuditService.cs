@@ -41,16 +41,11 @@ public class SecurityAuditService : ISecurityAuditService
             {
                 EventType = "AUTHENTICATION_FAILED",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    email,
-                    ipAddress,
-                    userAgent,
-                    reason = reason ?? "Invalid credentials"
-                },
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "MEDIUM"
+                Severity = "MEDIUM",
+                TargetEmail = email,
+                Reason = reason ?? "Invalid credentials"
             };
 
             await _dataContext.Commit(auditEvent);
@@ -72,15 +67,10 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId,
                 EventType = "AUTHENTICATION_SUCCESS",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    email,
-                    ipAddress,
-                    userAgent
-                },
                 IpAddress = ipAddress,
                 UserAgent = userAgent,
-                Severity = "INFO"
+                Severity = "INFO",
+                TargetEmail = email
             };
 
             await _dataContext.Commit(auditEvent);
@@ -102,10 +92,6 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId,
                 EventType = "PASSWORD_CHANGED",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    ipAddress
-                },
                 IpAddress = ipAddress,
                 Severity = "HIGH"
             };
@@ -128,13 +114,10 @@ public class SecurityAuditService : ISecurityAuditService
             {
                 EventType = "ACCOUNT_LOCKED",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    email,
-                    failedAttempts,
-                    lockedUntil
-                },
-                Severity = "HIGH"
+                Severity = "HIGH",
+                TargetEmail = email,
+                FailedAttempts = failedAttempts,
+                LockedUntil = lockedUntil
             };
 
             await _dataContext.Commit(auditEvent);
@@ -157,13 +140,9 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId,
                 EventType = "TOKEN_REFRESHED",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    sessionId,
-                    ipAddress
-                },
                 IpAddress = ipAddress,
-                Severity = "INFO"
+                Severity = "INFO",
+                SessionId = sessionId
             };
 
             await _dataContext.Commit(auditEvent);
@@ -183,12 +162,9 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId,
                 EventType = "TOKEN_REVOKED",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    sessionId,
-                    reason
-                },
-                Severity = "MEDIUM"
+                Severity = "MEDIUM",
+                SessionId = sessionId,
+                Reason = reason
             };
 
             await _dataContext.Commit(auditEvent);
@@ -211,14 +187,9 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId ?? Guid.Empty,
                 EventType = $"SUSPICIOUS_{activityType.ToUpperInvariant()}",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    activityType,
-                    details,
-                    ipAddress
-                },
                 IpAddress = ipAddress,
-                Severity = "CRITICAL"
+                Severity = "CRITICAL",
+                Reason = $"{activityType}: {details}"
             };
 
             await _dataContext.Commit(auditEvent);
@@ -241,13 +212,9 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId,
                 EventType = $"ROLE_{action.ToUpperInvariant()}",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    targetUserId,
-                    action,
-                    roleId
-                },
-                Severity = "HIGH"
+                Severity = "HIGH",
+                TargetUserId = targetUserId,
+                RoleId = roleId
             };
 
             await _dataContext.Commit(auditEvent);
@@ -270,14 +237,10 @@ public class SecurityAuditService : ISecurityAuditService
                 OwnerEntityId = userId,
                 EventType = $"PERMISSION_{action.ToUpperInvariant()}",
                 EventTime = DateTime.UtcNow,
-                Details = new
-                {
-                    action,
-                    permissionId,
-                    targetType,
-                    targetId
-                },
-                Severity = "HIGH"
+                Severity = "HIGH",
+                PermissionId = permissionId,
+                TargetUserId = targetId,
+                Reason = $"{action} on {targetType}"
             };
 
             await _dataContext.Commit(auditEvent);
@@ -303,8 +266,15 @@ public record SecurityAuditEvent : IComponent
     
     public string EventType { get; init; } = string.Empty;
     public DateTime EventTime { get; init; }
-    public object? Details { get; init; }
     public string? IpAddress { get; init; }
     public string? UserAgent { get; init; }
     public string Severity { get; init; } = "INFO"; // INFO, MEDIUM, HIGH, CRITICAL
+    public string? Reason { get; init; } // For failed auth or other events
+    public string? TargetEmail { get; init; } // Email being accessed
+    public Guid? SessionId { get; init; } // For token operations
+    public Guid? TargetUserId { get; init; } // For role/permission changes
+    public string? RoleId { get; init; } // For role changes
+    public string? PermissionId { get; init; } // For permission changes
+    public int? FailedAttempts { get; init; } // For account lock events
+    public DateTime? LockedUntil { get; init; } // For account lock events
 }

@@ -147,10 +147,17 @@ CREATE TABLE security_audit_event (
     owner_entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
     event_type VARCHAR(255) NOT NULL,
     event_time TIMESTAMPTZ NOT NULL,
-    details JSONB,
     ip_address VARCHAR(45),
     user_agent TEXT,
     severity VARCHAR(20) NOT NULL DEFAULT 'INFO',
+    reason TEXT,
+    target_email VARCHAR(255),
+    session_id UUID,
+    target_user_id UUID,
+    role_id VARCHAR(255),
+    permission_id VARCHAR(255),
+    failed_attempts INTEGER,
+    locked_until TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
