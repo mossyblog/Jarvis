@@ -26,72 +26,10 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
     private const int MaxFailedAttemptsBeforeLock = 5;
     private const int LockoutMinutes = 30;
     private const int ProgressiveDelayMilliseconds = 1000; // Add 1 second per failed attempt
-    
-    // Cleanup task management
-    private static CancellationTokenSource? _cleanupCancellation;
-    private static Task? _cleanupTask;
-    private static readonly object _cleanupLock = new();
-    private static bool _disableCleanup = false;
 
     public RateLimitingMiddleware(ILogger<RateLimitingMiddleware> logger)
     {
         _logger = logger;
-        
-        // Skip cleanup in test environments or if disabled
-        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test" ||
-                               Environment.GetEnvironmentVariable("TEST_DATABASE_URL") != null;
-        
-        if (_disableCleanup || isTestEnvironment)
-        {
-            _logger.LogInformation("Rate limiting cleanup task disabled in test environment");
-            return;
-        }
-        
-        // Start cleanup task only once (for the first instance)
-        lock (_cleanupLock)
-        {
-            if (_cleanupTask == null || _cleanupTask.IsCompleted)
-            {
-                _cleanupCancellation?.Cancel();
-                _cleanupCancellation?.Dispose();
-                _cleanupCancellation = new CancellationTokenSource();
-                _cleanupTask = Task.Run(async () => await CleanupOldEntries(_cleanupCancellation.Token));
-            }
-        }
-    }
-    
-    /// <summary>
-    /// Disables the cleanup task. Useful for testing.
-    /// </summary>
-    public static void DisableCleanup()
-    {
-        _disableCleanup = true;
-        StopCleanup();
-    }
-    
-    /// <summary>
-    /// Stops the cleanup task. Should be called when shutting down.
-    /// </summary>
-    public static void StopCleanup()
-    {
-        lock (_cleanupLock)
-        {
-            _cleanupCancellation?.Cancel();
-            try
-            {
-                _cleanupTask?.Wait(TimeSpan.FromSeconds(5));
-            }
-            catch (Exception)
-            {
-                // Ignore cancellation exceptions
-            }
-            finally
-            {
-                _cleanupCancellation?.Dispose();
-                _cleanupCancellation = null;
-                _cleanupTask = null;
-            }
-        }
     }
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
@@ -326,49 +264,6 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
         }
     }
 
-    private async Task CleanupOldEntries(CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await Task.Delay(TimeSpan.FromMinutes(5), cancellationToken);
-
-                // Clean up rate limit entries older than 1 hour
-                var cutoff = DateTime.UtcNow.AddHours(-1);
-                var keysToRemove = _rateLimitStore
-                    .Where(kvp => kvp.Value.Attempts.All(a => a < cutoff))
-                    .Select(kvp => kvp.Key)
-                    .ToList();
-
-                foreach (var key in keysToRemove)
-                {
-                    _rateLimitStore.TryRemove(key, out _);
-                }
-
-                // Clean up expired account locks
-                var locksToRemove = _accountLockStore
-                    .Where(kvp => kvp.Value.LockedUntil < DateTime.UtcNow && 
-                                  kvp.Value.LastAttempt < DateTime.UtcNow.AddHours(-1))
-                    .Select(kvp => kvp.Key)
-                    .ToList();
-
-                foreach (var key in locksToRemove)
-                {
-                    _accountLockStore.TryRemove(key, out _);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                // Expected when cancellation is requested
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error during rate limit cleanup");
-            }
-        }
-    }
 
     private class RateLimitInfo
     {
