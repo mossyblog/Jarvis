@@ -24,7 +24,19 @@ public static class TestFactory
         
         context.Setup(c => c.InstanceServices).Returns(serviceProvider.Object);
         
-        var request = new MockHttpRequestData(context.Object, new Uri(url), method);
+        // Handle relative URLs by prepending a base URL
+        Uri uri;
+        if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
+        {
+            uri = new Uri(url);
+        }
+        else
+        {
+            // For relative URLs, create a full URI with a dummy host
+            uri = new Uri("http://localhost" + (url.StartsWith("/") ? url : "/" + url));
+        }
+        
+        var request = new MockHttpRequestData(context.Object, uri, method);
         
         if (body != null)
         {

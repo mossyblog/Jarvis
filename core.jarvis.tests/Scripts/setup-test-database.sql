@@ -162,6 +162,19 @@ CREATE TABLE security_audit_event (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Ensure reason column exists (for backward compatibility)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'security_audit_event' 
+        AND column_name = 'reason'
+    ) THEN
+        ALTER TABLE security_audit_event ADD COLUMN reason TEXT;
+    END IF;
+END $$;
+
 -- Create indexes for security_audit_event
 CREATE INDEX idx_security_audit_event_owner ON security_audit_event(owner_entity_id);
 CREATE INDEX idx_security_audit_event_type ON security_audit_event(event_type);
