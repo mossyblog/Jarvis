@@ -36,7 +36,8 @@ public class RefreshFunction
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(object), Summary = "Refresh failed", Description = "Invalid or expired refresh token")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(object), Summary = "Bad request", Description = "Request validation failed")]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/refresh")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/refresh")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {

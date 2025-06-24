@@ -51,12 +51,20 @@ public class AuthHandler : ComponentHandler<User>
     {
         try
         {
+            // Basic input validation
+            if (string.IsNullOrWhiteSpace(userCredentials.Email) || 
+                string.IsNullOrWhiteSpace(userCredentials.Password))
+            {
+                Logger.LogWarning("Invalid input: empty email or password");
+                return new AuthToken(); // Return empty token to indicate failure
+            }
+
             // Get services
             var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-            var pgClient = _serviceProvider.GetRequiredService<PgClient>();
+            var pgClient = _serviceProvider.GetRequiredService<IPgClient>();
             
-            // Validate credentials using PgClient
-            var authResult = await pgClient.Authenticate(userCredentials.Email, userCredentials.Password);
+            // Validate credentials using PgClient - it uses parameterized queries for SQL injection protection
+            var authResult = await pgClient.Client.Authenticate(userCredentials.Email, userCredentials.Password);
             Logger.LogInformation("PgClient.Authenticate returned: {Result} for email: {Email}", authResult, userCredentials.Email);
             if (string.IsNullOrEmpty(authResult))
             {
@@ -190,6 +198,47 @@ public class AuthHandler : ComponentHandler<User>
         catch (Exception ex)
         {
             Logger.LogError(ex, "Error persisting session for entity {EntityId}", authToken.OwnerEntityId);
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Validates email format.
+    /// </summary>
+    private bool IsValidEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return false;
+
+        try
+        {
+            // Basic email validation
+            var emailParts = email.Split('@');
+            if (emailParts.Length != 2)
+                return false;
+
+            var localPart = emailParts[0];
+            var domainPart = emailParts[1];
+
+            if (string.IsNullOrWhiteSpace(localPart) || string.IsNullOrWhiteSpace(domainPart))
+                return false;
+
+            // Domain must have at least one dot
+            if (!domainPart.Contains('.'))
+                return false;
+
+            // Check for valid characters
+            var validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_@+";
+            foreach (char c in email)
+            {
+                if (!validChars.Contains(c))
+                    return false;
+            }
+
+            return true;
+        }
+        catch
+        {
             return false;
         }
     }

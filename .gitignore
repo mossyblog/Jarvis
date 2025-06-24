@@ -17,6 +17,7 @@ CLAUDE.md
 # Environment files
 .env.local
 .env.*.local
+*.env
 
 scripts/
 

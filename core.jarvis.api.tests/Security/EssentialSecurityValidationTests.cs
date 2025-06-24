@@ -56,18 +56,18 @@ public class EssentialSecurityValidationTests
         
         // Test 1: Modified payload
         var tamperedToken = parts[0] + ".TAMPERED." + parts[2];
-        var exception1 = Should.Throw<UnauthorizedAccessException>(() => tokenService.ValidateToken(tamperedToken));
-        exception1.Message.ShouldContain("token");
+        var result1 = tokenService.ValidateToken(tamperedToken);
+        result1.ShouldBeNull("Tampered token must be rejected");
         
         // Test 2: Wrong signature
         var wrongSigToken = parts[0] + "." + parts[1] + ".WRONGSIGNATURE";
-        var exception2 = Should.Throw<UnauthorizedAccessException>(() => tokenService.ValidateToken(wrongSigToken));
-        exception2.Message.ShouldContain("token");
+        var result2 = tokenService.ValidateToken(wrongSigToken);
+        result2.ShouldBeNull("Wrong signature token must be rejected");
         
         // Test 3: No signature
         var noSigToken = parts[0] + "." + parts[1];
-        var exception3 = Should.Throw<UnauthorizedAccessException>(() => tokenService.ValidateToken(noSigToken));
-        exception3.Message.ShouldContain("token");
+        var result3 = tokenService.ValidateToken(noSigToken);
+        result3.ShouldBeNull("Token without signature must be rejected");
         
         // If we got here, JWT validation is SECURE! 🔒
     }

@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
+using core.jarvis.api.Middleware;
 using core.jarvis.Data;
 
 namespace core.jarvis.api.Functions.Security;
@@ -36,7 +37,8 @@ public class NavigationFunction
     /// </summary>
     [Function("EnsureDefaultNavigation")]
     public async Task<HttpResponseData> EnsureDefaultNavigation(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/navigation/ensure-defaults")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/navigation/ensure-defaults")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
@@ -72,13 +74,14 @@ public class NavigationFunction
     /// </summary>
     [Function("GetNavigationItems")]
     public async Task<HttpResponseData> GetNavigationItems(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "security/navigation")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "security/navigation")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Get user ID
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Get user ID from context
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 var authError = new Error
                 {
@@ -133,13 +136,14 @@ public class NavigationFunction
     /// </summary>
     [Function("CreateNavigationItem")]
     public async Task<HttpResponseData> CreateNavigationItem(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/navigation")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/navigation")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Get user ID
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Get user ID from context
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 var authError = new Error
                 {

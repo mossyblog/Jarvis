@@ -1,10 +1,14 @@
 using System.Collections.Concurrent;
+using core.jarvis.api.Extensions;
+using core.jarvis.api.Functions.Security;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
 using core.jarvis.tests.Helpers;
+using core.jarvis.tests.Fixtures.Handlers;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -20,36 +24,86 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
 {
     private ITokenService? _tokenService;
     private IConfiguration? _configuration;
+    private ServiceProvider? _apiServiceProvider;
+    private bool _apiServicesInitialized = false;
     
-    protected ITokenService TokenService => _tokenService ?? throw new InvalidOperationException("TokenService not initialized");
-    protected IConfiguration Configuration => _configuration ?? throw new InvalidOperationException("Configuration not initialized");
-    
-    public new async Task InitializeAsync()
+    protected ITokenService TokenService
     {
-        // First call base initialization
-        await base.InitializeAsync();
+        get
+        {
+            EnsureApiServicesInitialized();
+            return _tokenService ?? throw new InvalidOperationException("TokenService not initialized");
+        }
+    }
+    
+    protected IConfiguration Configuration
+    {
+        get
+        {
+            EnsureApiServicesInitialized();
+            return _configuration ?? throw new InvalidOperationException("Configuration not initialized");
+        }
+    }
+    
+    // Override the base _serviceProvider to return our API-configured one
+    protected new ServiceProvider _serviceProvider
+    {
+        get
+        {
+            EnsureApiServicesInitialized();
+            return _apiServiceProvider ?? throw new InvalidOperationException("API service provider not initialized");
+        }
+    }
+    
+    private void EnsureApiServicesInitialized()
+    {
+        if (!_apiServicesInitialized)
+        {
+            InitializeApiServices();
+            _apiServicesInitialized = true;
+        }
+    }
+    
+    private void InitializeApiServices()
+    {
+        // Get the test connection string
+        var testConnectionString = TestDatabaseSetup.GetConnectionString();
         
         // Build configuration for API services
         var configBuilder = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["ConnectionStrings:JarvisDb"] = TestDatabaseSetup.GetConnectionString(),
+                ["ConnectionStrings:JarvisDb"] = testConnectionString,
                 ["Jwt:Issuer"] = "jarvis-api-test",
                 ["Jwt:Audience"] = "jarvis-test-clients",
-                ["Jwt:SecretKey"] = "TEST_SECRET_KEY_FOR_TESTING_ONLY_MINIMUM_256_BITS_LONG_TO_MEET_REQUIREMENTS",
+                ["Jwt:SecretKey"] = "TEST_JARVIS_KEY_FOR_UNIT_TESTING_PURPOSES_ONLY_MINIMUM_256_BITS_LONG_TO_MEET_ALL_REQUIREMENTS",
                 ["Jwt:AccessTokenExpirationMinutes"] = "15",
                 ["Jwt:RefreshTokenExpirationDays"] = "30"
             });
         
         _configuration = configBuilder.Build();
         
-        // Create token service
-        var issuer = _configuration["Jwt:Issuer"] ?? "jarvis-api-test";
-        var audience = _configuration["Jwt:Audience"] ?? "jarvis-test-clients";
-        var secretKey = _configuration["Jwt:SecretKey"] ?? throw new InvalidOperationException("JWT secret key not configured");
-        var expirationMinutes = int.Parse(_configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");
+        // Create a new service collection with API services
+        var services = new ServiceCollection();
         
-        _tokenService = new TokenService(issuer, audience, secretKey, expirationMinutes);
+        // Add configuration FIRST so AddJarvisApiServices can access it
+        services.AddSingleton<IConfiguration>(_configuration);
+        
+        // Register API services (this will build a service provider internally to get IConfiguration)
+        // This will also register all core Jarvis services including IDataContext
+        services.AddJarvisApiServices();
+        
+        // Register Azure Functions
+        services.AddScoped<AuthFunction>();
+        services.AddScoped<DeauthFunction>();
+        services.AddScoped<RefreshFunction>();
+        services.AddScoped<ValidateFunction>();
+        
+        // Build the API service provider
+        _apiServiceProvider = services.BuildServiceProvider();
+        
+        // Store token service reference for convenience
+        _tokenService = _apiServiceProvider.GetRequiredService<ITokenService>();
     }
     
     /// <summary>
@@ -91,6 +145,9 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
                 // Ignore errors for entities that might not exist
             }
         }
+        
+        // Dispose API service provider
+        _apiServiceProvider?.Dispose();
         
         // The base class handles cleanup of all other tracked entities
         await base.DisposeAsync();

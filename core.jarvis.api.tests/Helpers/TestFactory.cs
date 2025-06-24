@@ -53,7 +53,7 @@ public class MockHttpRequestData : HttpRequestData
 {
     private readonly string _method;
     private readonly Uri _url;
-    private HttpHeadersCollection? _headers;
+    private MockHttpHeadersCollection _headers;
     private Stream _body;
 
     public MockHttpRequestData(FunctionContext functionContext, Uri url, string method) 
@@ -61,7 +61,7 @@ public class MockHttpRequestData : HttpRequestData
     {
         _url = url;
         _method = method;
-        _headers = new HttpHeadersCollection();
+        _headers = new MockHttpHeadersCollection();
         _body = new MemoryStream();
     }
 
@@ -72,7 +72,7 @@ public class MockHttpRequestData : HttpRequestData
         _body = body;
     }
 
-    public override HttpHeadersCollection Headers => _headers ??= new HttpHeadersCollection();
+    public override HttpHeadersCollection Headers => _headers;
 
     public override IReadOnlyCollection<IHttpCookie> Cookies => new List<IHttpCookie>();
 
@@ -85,6 +85,19 @@ public class MockHttpRequestData : HttpRequestData
     public override HttpResponseData CreateResponse()
     {
         return new MockHttpResponseData(FunctionContext);
+    }
+}
+
+/// <summary>
+/// Mock implementation of HttpHeadersCollection for testing.
+/// </summary>
+public class MockHttpHeadersCollection : HttpHeadersCollection
+{
+    private readonly Dictionary<string, List<string>> _headers = new(StringComparer.OrdinalIgnoreCase);
+
+    public new void Add(string name, string value)
+    {
+        base.Add(name, value);
     }
 }
 

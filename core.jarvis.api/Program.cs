@@ -3,6 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using core.jarvis.api.Extensions;
+using DotNetEnv;
+
+// Load environment variables from .env.local if it exists (for local development)
+if (File.Exists(".env.local"))
+{
+    Env.Load(".env.local");
+}
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(workerApplication =>
@@ -10,6 +17,7 @@ var host = new HostBuilder()
         // Configure middleware pipeline in order
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.SecurityHeadersMiddleware>();
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.RateLimitingMiddleware>();
+        workerApplication.UseMiddleware<core.jarvis.api.Middleware.AuthorizationMiddleware>();
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.InputValidationMiddleware>();
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.ComponentValidationMiddleware>();
     })

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
@@ -38,7 +39,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         // Password hashing should use bcrypt, scrypt, or Argon2
         // Never MD5, SHA1, or plain SHA256
         
-        var passwordService = ServiceProvider.GetRequiredService<IPasswordPolicyService>();
+        var passwordService = _serviceProvider.GetRequiredService<IPasswordPolicyService>();
         var testPassword = "TestPassword123!";
         
         // If the service has a hash method, test it
@@ -76,7 +77,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     public async Task Authentication_MustResistTimingAttacks()
     {
         // Arrange
-        var authFunction = ServiceProvider.GetRequiredService<AuthFunction>();
+        var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
         var iterations = 10;
         var validUserTimes = new List<long>();
         var invalidUserTimes = new List<long>();
@@ -86,12 +87,13 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         {
             // Test with potentially valid email format
             var validReq = TestFactory.CreateHttpRequestData(
-                method: "POST",
-                body: new
+                "POST",
+                "/api/security/auth",
+                JsonConvert.SerializeObject(new
                 {
                     email = "admin@test.com",
                     password = "wrongpassword"
-                }
+                })
             );
 
             var sw1 = Stopwatch.StartNew();
@@ -101,12 +103,13 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
 
             // Test with clearly invalid email
             var invalidReq = TestFactory.CreateHttpRequestData(
-                method: "POST",
-                body: new
+                "POST",
+                "/api/security/auth",
+                JsonConvert.SerializeObject(new
                 {
                     email = $"nonexistent{Guid.NewGuid()}@test.com",
                     password = "wrongpassword"
-                }
+                })
             );
 
             var sw2 = Stopwatch.StartNew();
@@ -137,7 +140,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     public void TokenGeneration_MustUseCryptoRandom()
     {
         // Arrange
-        var tokenService = ServiceProvider.GetRequiredService<ITokenService>();
+        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
         var tokenCount = 100;
         var tokens = new List<string>();
 
@@ -181,7 +184,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     public void JWT_SecretKey_MustBeStrong()
     {
         // Get configuration
-        var config = ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+        var config = _serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
         var jwtSecret = config["Jwt:SecretKey"];
         
         // Assert key strength
@@ -201,8 +204,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         
         foreach (var weak in weakSecrets)
         {
-            jwtSecret.ToLower().ShouldNotContain(weak,
-                $"JWT secret must not contain weak phrase: {weak}");
+            jwtSecret.ToLower().ShouldNotContain(weak); // JWT secret must not contain weak phrase
         }
     }
 
@@ -218,7 +220,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     public void TokenExpiration_MustBeSecure()
     {
         // Arrange
-        var config = ServiceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+        var config = _serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
         var accessExpiry = int.Parse(config["Jwt:AccessTokenExpirationMinutes"] ?? "15");
         var refreshExpiry = int.Parse(config["Jwt:RefreshTokenExpirationDays"] ?? "30");
 
@@ -263,9 +265,9 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         var headerJson = Encoding.UTF8.GetString(
             Convert.FromBase64String(parts[0].PadRight(parts[0].Length + (4 - parts[0].Length % 4) % 4, '=')));
         
-        headerJson.ShouldContain("HS256", "Should use HMAC-SHA256");
-        headerJson.ShouldNotContain("none", "Must not use 'none' algorithm");
-        headerJson.ShouldNotContain("HS1", "Must not use SHA1");
+        headerJson.ShouldContain("HS256"); // Should use HMAC-SHA256
+        headerJson.ShouldNotContain("none"); // Must not use 'none' algorithm
+        headerJson.ShouldNotContain("HS1"); // Must not use SHA1
     }
 
     /// <summary>
@@ -280,7 +282,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     public void Hashing_MustUseSalts()
     {
         // Test refresh token hashing uses different results for same input
-        var tokenService = ServiceProvider.GetRequiredService<ITokenService>();
+        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
         var sampleToken = "SampleRefreshToken123";
         
         // Hash same token multiple times
@@ -307,7 +309,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     [Fact]
     public void SecureComparison_MustBeConstantTime()
     {
-        var tokenService = ServiceProvider.GetRequiredService<ITokenService>();
+        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
         var token = "TestRefreshToken123";
         var hash = tokenService.HashRefreshToken(token);
         

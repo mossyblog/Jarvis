@@ -5,6 +5,7 @@ using Dapper;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Shouldly;
+using Xunit;
 
 namespace core.jarvis.data.tests.Tables
 {
@@ -16,6 +17,7 @@ namespace core.jarvis.data.tests.Tables
     /// ARCHITECTURAL SIGNIFICANCE: Database-level security is the last line of defense.
     /// FUTURE RESILIENCE: Protects against application-level security bypasses.
     /// </summary>
+    [Collection("JWT Tests")]
     public class RowLevelSecurityTests : IAsyncLifetime
     {
         private NpgsqlConnection _conn = null!;
@@ -24,6 +26,11 @@ namespace core.jarvis.data.tests.Tables
 
         public async Task InitializeAsync()
         {
+            // Set up JWT environment variables for testing
+            Environment.SetEnvironmentVariable("Jwt__SecretKey", _jwtSecret);
+            Environment.SetEnvironmentVariable("Jwt__Issuer", "jarvis-api-test");
+            Environment.SetEnvironmentVariable("Jwt__Audience", "jarvis-clients-test");
+            
             var connString = TestHelpers.GetConnectionStringFromEnv();
             _conn = new NpgsqlConnection(connString);
             _adminClient = await PgClientFactory.Create(_conn);
@@ -232,6 +239,8 @@ namespace core.jarvis.data.tests.Tables
 
         public async Task DisposeAsync()
         {
+            // Note: Environment variables are restored by JwtTestFixture
+            
             // Cleanup
             var dropSql = @"
                 DROP POLICY IF EXISTS tenant_isolation ON tenant_data;
@@ -277,6 +286,8 @@ namespace core.jarvis.data.tests.Tables
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = "jarvis-api-test",
+                Audience = "jarvis-clients-test",
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

@@ -44,8 +44,10 @@ public class DeauthFunction
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AuthToken), Summary = "Deauthentication result", Description = "Returns AuthToken component with deauthentication status")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(Error), Summary = "Session not found", Description = "Session ID not found or already revoked")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(Error), Summary = "Bad request", Description = "Invalid request format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(Error), Summary = "Unauthorized", Description = "Authentication required")]
     public async Task<HttpResponseData> Run(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/deauth")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/deauth")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {

@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
+using core.jarvis.api.Middleware;
 using core.jarvis.Data;
 
 namespace core.jarvis.api.Functions.Security;
@@ -36,13 +37,14 @@ public class RoleFunction
     /// </summary>
     [Function("GetRoles")]
     public async Task<HttpResponseData> GetRoles(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "security/roles")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "security/roles")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Get user ID
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Get user ID from context
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 return await req.CreateErrorResponse(HttpStatusCode.Unauthorized, "User not authenticated");
             }
@@ -69,13 +71,14 @@ public class RoleFunction
     /// </summary>
     [Function("CreateRole")]
     public async Task<HttpResponseData> CreateRole(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/roles")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/roles")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Get user ID
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Get user ID from context
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 return await req.CreateErrorResponse(HttpStatusCode.Unauthorized, "User not authenticated");
             }
@@ -114,14 +117,15 @@ public class RoleFunction
     /// </summary>
     [Function("UpdateRole")]
     public async Task<HttpResponseData> UpdateRole(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "security/roles/{roleId}")] HttpRequestData req,
-        string roleId)
+        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "security/roles/{roleId}")] HttpRequestData req,
+        string roleId,
+        FunctionContext executionContext)
     {
         try
         {
-            // Get user ID
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Get user ID from context
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 return await req.CreateErrorResponse(HttpStatusCode.Unauthorized, "User not authenticated");
             }
@@ -164,7 +168,8 @@ public class RoleFunction
     /// </summary>
     [Function("EnsureDefaultRoles")]
     public async Task<HttpResponseData> EnsureDefaultRoles(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "security/roles/ensure-defaults")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/roles/ensure-defaults")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {

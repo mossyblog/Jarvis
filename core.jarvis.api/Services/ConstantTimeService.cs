@@ -46,27 +46,48 @@ public class ConstantTimeService : IConstantTimeService
     /// </summary>
     public bool ConstantTimeEquals(string? a, string? b)
     {
-        // Handle null cases
-        if (a == null && b == null) return true;
-        if (a == null || b == null) return false;
+        // Handle null cases in constant time
+        var aIsNull = a == null ? 1 : 0;
+        var bIsNull = b == null ? 1 : 0;
+        
+        // If both are null or both are not null, continue; otherwise return false
+        if ((aIsNull ^ bIsNull) != 0) return false;
+        if (aIsNull == 1) return true; // Both are null
 
-        // Convert to byte arrays for comparison
+        // Use a fixed comparison length to prevent timing leaks
+        const int MAX_COMPARISON_LENGTH = 256;
+        
+        // Get lengths without branching
+        var aLen = a!.Length;
+        var bLen = b!.Length;
+        var lengthsEqual = aLen == bLen ? 1 : 0;
+
+        // Convert to byte arrays
         var aBytes = System.Text.Encoding.UTF8.GetBytes(a);
         var bBytes = System.Text.Encoding.UTF8.GetBytes(b);
 
-        // Make both arrays the same length to ensure constant time
-        var maxLength = Math.Max(aBytes.Length, bBytes.Length);
-        Array.Resize(ref aBytes, maxLength);
-        Array.Resize(ref bBytes, maxLength);
-
-        // Compare in constant time
-        var result = 0;
-        for (int i = 0; i < maxLength; i++)
+        // Compare up to MAX_COMPARISON_LENGTH bytes
+        var compareLength = Math.Min(MAX_COMPARISON_LENGTH, Math.Max(aBytes.Length, bBytes.Length));
+        
+        // Ensure both arrays have at least compareLength bytes
+        if (aBytes.Length < compareLength)
         {
-            result |= aBytes[i] ^ bBytes[i];
+            Array.Resize(ref aBytes, compareLength);
+        }
+        if (bBytes.Length < compareLength)
+        {
+            Array.Resize(ref bBytes, compareLength);
         }
 
-        return result == 0 && a.Length == b.Length;
+        // Compare in constant time
+        var differences = 0;
+        for (int i = 0; i < compareLength; i++)
+        {
+            differences |= aBytes[i] ^ bBytes[i];
+        }
+
+        // Return true only if no differences AND lengths are equal
+        return (differences == 0) & (lengthsEqual == 1);
     }
 
     /// <summary>

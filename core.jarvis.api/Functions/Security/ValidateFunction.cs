@@ -1,13 +1,13 @@
 using System.Net;
 using core.jarvis.api.Models;
-using core.jarvis.api.Handlers;
-using core.jarvis.Data;
+using core.jarvis.api.Services;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using System.Text.Json;
+using System.Security.Claims;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -16,13 +16,13 @@ namespace core.jarvis.api.Functions.Security;
 /// </summary>
 public class ValidateFunction
 {
-    private readonly IDataContext _dataContext;
+    private readonly ITokenService _tokenService;
     private readonly ILogger<ValidateFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public ValidateFunction(IDataContext dataContext, ILogger<ValidateFunction> logger)
+    public ValidateFunction(ITokenService tokenService, ILogger<ValidateFunction> logger)
     {
-        _dataContext = dataContext;
+        _tokenService = tokenService;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -45,66 +45,123 @@ public class ValidateFunction
     {
         try
         {
-            // Parse request body as TokenValidation component
-            var requestBody = await req.ReadAsStringAsync();
-            if (string.IsNullOrEmpty(requestBody))
+            // Try to get token from Authorization header first
+            string? authHeader = null;
+            try
+            {
+                authHeader = req.Headers.GetValues("Authorization")?.FirstOrDefault();
+            }
+            catch
+            {
+                // Header doesn't exist
+            }
+            
+            string? token = null;
+            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            {
+                token = authHeader.Substring(7);
+                _logger.LogDebug("Extracted token from Authorization header: {TokenLength} chars", token?.Length ?? 0);
+            }
+
+            // If no authorization header, check request body
+            if (string.IsNullOrEmpty(token))
+            {
+                var requestBody = await req.ReadAsStringAsync();
+                if (!string.IsNullOrEmpty(requestBody))
+                {
+                    try
+                    {
+                        var tokenRequest = JsonSerializer.Deserialize<TokenValidation>(requestBody, _jsonOptions);
+                        if (tokenRequest?.Claims?.TryGetValue("token", out var bodyToken) == true)
+                        {
+                            token = bodyToken;
+                        }
+                    }
+                    catch (JsonException)
+                    {
+                        // Invalid JSON, but we'll continue without a token
+                    }
+                }
+            }
+
+            // If still no token, return Unauthorized
+            if (string.IsNullOrEmpty(token))
             {
                 var emptyError = new Error
                 {
-                    Code = "INVALID_REQUEST",
-                    Message = "Request body is required",
-                    StatusCode = 400
+                    Code = "AUTH_REQUIRED",
+                    Message = "Authentication required",
+                    StatusCode = 401
                 };
-                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                var errorResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
                 errorResponse.Headers.Add("Content-Type", "application/json");
                 await errorResponse.WriteStringAsync(JsonSerializer.Serialize(emptyError, _jsonOptions));
                 return errorResponse;
             }
 
-            // Try to get token from Authorization header first
-            var authHeader = req.Headers.GetValues("Authorization")?.FirstOrDefault();
-            string? token = null;
-            if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+            // Validate the token using TokenService
+            var principal = _tokenService.ValidateToken(token);
+            
+            if (principal == null)
             {
-                token = authHeader.Substring(7);
+                // Token is invalid
+                var invalidError = new Error
+                {
+                    Code = "INVALID_TOKEN",
+                    Message = "Invalid or expired token",
+                    StatusCode = 401
+                };
+                var invalidResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+                invalidResponse.Headers.Add("Content-Type", "application/json");
+                await invalidResponse.WriteStringAsync(JsonSerializer.Serialize(invalidError, _jsonOptions));
+                _logger.LogWarning("Token validation failed");
+                return invalidResponse;
             }
 
-            // Create a validation request component
-            var validationRequest = new TokenValidation
+            // Token is valid - extract claims
+            var validationResult = new TokenValidation
             {
-                // Store the token in Claims for processing
-                Claims = new Dictionary<string, string> { { "token", token ?? string.Empty } }
+                IsValid = true,
+                Claims = new Dictionary<string, string>()
             };
 
-            // Create entity for the validation request
-            var validationEntityId = Guid.NewGuid();
-            validationRequest.OwnerEntityId = validationEntityId;
-            await _dataContext.Commit(validationRequest);
+            // Extract standard claims
+            foreach (var claim in principal.Claims)
+            {
+                validationResult.Claims[claim.Type] = claim.Value;
+            }
 
-            // Get entity-bound handler and validate
-            var validationHandler = _dataContext.For<TokenValidationHandler>(validationEntityId);
-            var validationResult = await validationHandler.ValidateToken();
+            // Add specific extracted values for convenience
+            var userId = principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+            var roles = principal.FindFirst("roles")?.Value;
 
-            // Return the result
+            if (userId != null) validationResult.Claims["userId"] = userId;
+            if (email != null) validationResult.Claims["email"] = email;
+            if (roles != null) validationResult.Claims["roles"] = roles;
+
+            // Return success
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
             await response.WriteStringAsync(JsonSerializer.Serialize(validationResult, _jsonOptions));
 
-            if (validationResult.IsValid)
-            {
-                _logger.LogInformation("Token validated successfully");
-            }
-            else
-            {
-                _logger.LogWarning("Token validation failed: {Reason}", validationResult.ErrorMessage);
-            }
-
+            _logger.LogInformation("Token validated successfully for user {UserId}", userId);
             return response;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error in validate function");
-            return await req.CreateErrorResponse(HttpStatusCode.InternalServerError, "An error occurred during token validation");
+            
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            errorResponse.Headers.Add("Content-Type", "application/json");
+            var error = new Error
+            {
+                Code = "SERVER_ERROR",
+                Message = "An error occurred during token validation",
+                StatusCode = 500
+            };
+            await errorResponse.WriteStringAsync(JsonSerializer.Serialize(error, _jsonOptions));
+            return errorResponse;
         }
     }
 

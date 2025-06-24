@@ -3,14 +3,8 @@
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
-    "Jwt:Issuer": "jarvis-api",
-    "Jwt:Audience": "jarvis-clients",
-    "Jwt:SecretKey": "DEVELOPMENT_SECRET_KEY_CHANGE_IN_PRODUCTION_TO_SOMETHING_SECURE_WITH_AT_LEAST_256_BITS",
     "Jwt:AccessTokenExpirationMinutes": "15",
     "Jwt:RefreshTokenExpirationDays": "30"
-  },
-  "ConnectionStrings": {
-    "JarvisDb": "Host=localhost;Port=5432;Database=jarvis;Username=postgres;Password=postgres"
   },
   "Host": {
     "LocalHttpPort": 7071,

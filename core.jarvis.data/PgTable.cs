@@ -165,6 +165,7 @@ public class PgTable<T> where T : class, new()
         {
             sql += $" WHERE {string.Join(" AND ", allWhereClauses)}";
         }
+        
 
         await EnsureConnectionOpen();
 

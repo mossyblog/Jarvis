@@ -69,7 +69,7 @@ public class TokenService : ITokenService
     {
         if (string.IsNullOrWhiteSpace(token))
         {
-            throw new UnauthorizedAccessException("Token is required");
+            return null;
         }
 
         try
@@ -94,24 +94,26 @@ public class TokenService : ITokenService
             // Additional validation to ensure it's a JWT
             if (!(validatedToken is JwtSecurityToken jwtToken))
             {
-                throw new UnauthorizedAccessException("Invalid token format");
+                return null;
             }
 
             // Verify the signing algorithm
             if (!jwtToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new UnauthorizedAccessException("Invalid token signing algorithm");
+                return null;
             }
 
             return principal;
         }
-        catch (SecurityTokenException ex)
+        catch (SecurityTokenException)
         {
-            throw new UnauthorizedAccessException($"Invalid token: {ex.Message}");
+            // Invalid token - return null instead of throwing
+            return null;
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            throw new UnauthorizedAccessException($"Token validation failed: {ex.Message}");
+            // Token validation failed - return null instead of throwing
+            return null;
         }
     }
 

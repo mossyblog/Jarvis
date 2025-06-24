@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
+using core.jarvis.api.Middleware;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
 
@@ -37,13 +38,14 @@ public class UserFunction
     /// </summary>
     [Function("GetCurrentUser")]
     public async Task<HttpResponseData> GetCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/me")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/me")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Extract user ID from JWT claims
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Extract user ID from context (set by AuthorizationMiddleware)
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 var authError = new Error
                 {
@@ -103,13 +105,14 @@ public class UserFunction
     /// </summary>
     [Function("GetUserNavigation")]
     public async Task<HttpResponseData> GetUserNavigation(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "users/navigation")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/navigation")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Extract user ID from JWT claims
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Extract user ID from context (set by AuthorizationMiddleware)
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 var authError = new Error
                 {
@@ -186,13 +189,14 @@ public class UserFunction
     /// </summary>
     [Function("UpdateUserProfile")]
     public async Task<HttpResponseData> UpdateUserProfile(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "users/me")] HttpRequestData req)
+        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "users/me")] HttpRequestData req,
+        FunctionContext executionContext)
     {
         try
         {
-            // Extract user ID from JWT claims
-            var userIdClaim = req.GetClaimValue("sub");
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            // Extract user ID from context (set by AuthorizationMiddleware)
+            var userIdStr = executionContext.GetUserId();
+            if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId))
             {
                 var authError = new Error
                 {
@@ -250,22 +254,5 @@ public class UserFunction
             await errorResponse.WriteStringAsync(JsonSerializer.Serialize(serverError, _jsonOptions));
             return errorResponse;
         }
-    }
-}
-
-/// <summary>
-/// Extension methods for HttpRequestData.
-/// </summary>
-public static partial class HttpRequestDataExtensions
-{
-    public static string? GetClaimValue(this HttpRequestData request, string claimType)
-    {
-        // In a real implementation, this would extract claims from the JWT token
-        // For now, return a mock value for testing
-        if (claimType == "sub")
-            return request.Headers.GetValues("X-User-Id")?.FirstOrDefault();
-        if (claimType == "email")
-            return request.Headers.GetValues("X-User-Email")?.FirstOrDefault();
-        return null;
     }
 }

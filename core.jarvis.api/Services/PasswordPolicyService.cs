@@ -28,7 +28,8 @@ public class PasswordPolicyService : IPasswordPolicyService
         "password", "password123", "123456", "12345678", "qwerty", "abc123",
         "monkey", "letmein", "trustno1", "dragon", "baseball", "111111",
         "iloveyou", "master", "sunshine", "ashley", "bailey", "shadow",
-        "123123", "654321", "superman", "qazwsx", "michael", "football"
+        "123123", "654321", "superman", "qazwsx", "michael", "football",
+        "p@ssw0rd", "passw0rd", "p@ssword", "pa$$w0rd", "pa$$word"
     };
 
     // Regex patterns for character requirements
@@ -38,7 +39,7 @@ public class PasswordPolicyService : IPasswordPolicyService
     private static readonly Regex SpecialCharPattern = new(@"[!@#$%^&*()_+\-=\[\]{};':""\\|,.<>\/?]", RegexOptions.Compiled);
     private static readonly Regex RepeatingCharPattern = new(@"(.)\1{2,}", RegexOptions.Compiled);
     // Only check for longer sequential patterns (4+ characters) to avoid being too strict
-    private static readonly Regex SequentialPattern = new(@"(0123|1234|2345|3456|4567|5678|6789|7890|abcd|bcde|cdef|defg|efgh|fghi|ghij|hijk|ijkl|jklm|klmn|lmno|mnop|nopq|opqr|pqrs|qrst|rstu|stuv|tuvw|uvwx|vwxy|wxyz)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    private static readonly Regex SequentialPattern = new(@"(0123|1234|2345|3456|4567|5678|6789|7890|abcd|bcde|cdef|defg|efgh|fghi|ghij|hijk|ijkl|jklm|klmn|lmno|mnop|nopq|opqr|pqrs|qrst|rstu|stuv|tuvw|uvwx|vwxy|wxyz|qwerty|asdf|zxcv)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     public PasswordValidationResult ValidatePassword(string password, string? email = null)
     {

@@ -143,18 +143,18 @@ namespace core.jarvis.data
         {
             var handler = new JwtSecurityTokenHandler();
             
-            // Get JWT secret from environment or config
-            var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ?? 
-                           throw new InvalidOperationException("JWT_SECRET_KEY not configured");
+            // Get JWT secret from environment or config (using double underscore for nested config)
+            var jwtSecret = Environment.GetEnvironmentVariable("Jwt__SecretKey") ?? 
+                           throw new InvalidOperationException("Jwt__SecretKey not configured");
             
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwtSecret)),
                 ValidateIssuer = true,
-                ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "jarvis-api",
+                ValidIssuer = Environment.GetEnvironmentVariable("Jwt__Issuer") ?? "jarvis-api",
                 ValidateAudience = true,
-                ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "jarvis-clients",
+                ValidAudience = Environment.GetEnvironmentVariable("Jwt__Audience") ?? "jarvis-clients",
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero,
                 RequireExpirationTime = true,
@@ -171,6 +171,17 @@ namespace core.jarvis.data
                 {
                     // Store the last value if there are duplicates
                     claims[claim.Type] = claim.Value;
+                }
+                
+                // Also check for standard JWT claims and add them with expected names
+                // This ensures RLS policies work with common claim names
+                if (claims.TryGetValue("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier", out var nameId))
+                {
+                    claims["sub"] = nameId;
+                }
+                if (claims.TryGetValue("http://schemas.microsoft.com/ws/2008/06/identity/claims/role", out var roleValue))
+                {
+                    claims["role"] = roleValue;
                 }
                 
                 // Extract and set CurrentUserId if available
@@ -204,15 +215,63 @@ namespace core.jarvis.data
             // Set each claim as a session variable
             foreach (var claim in _jwtClaims)
             {
+                // PostgreSQL has a 63-character limit for identifiers
+                // Some JWT claims (like Microsoft's) have very long names
+                // We need to sanitize the claim key to be a valid PostgreSQL identifier
+                var sanitizedKey = SanitizeClaimKey(claim.Key);
+                var variableName = $"jwt.claims.{sanitizedKey}";
+                
                 // PostgreSQL custom variables need to be set with literal values
                 // We escape single quotes to prevent SQL injection
-                var variableName = $"jwt.claims.{claim.Key}";
                 var escapedValue = claim.Value.Replace("'", "''");
                 var sql = $"SET SESSION \"{variableName}\" = '{escapedValue}';";
                 
                 using var cmd = new NpgsqlCommand(sql, _conn);
                 await cmd.ExecuteNonQueryAsync();
             }
+        }
+
+        /// <summary>
+        /// Sanitizes a JWT claim key to be a valid PostgreSQL identifier.
+        /// Handles common JWT claim types and shortens long names.
+        /// </summary>
+        private string SanitizeClaimKey(string claimKey)
+        {
+            // Handle common JWT claim types with long URIs
+            var commonMappings = new Dictionary<string, string>
+            {
+                ["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] = "role",
+                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] = "sub",
+                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] = "name",
+                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] = "email",
+                ["http://schemas.microsoft.com/identity/claims/objectidentifier"] = "oid",
+                ["http://schemas.microsoft.com/identity/claims/tenantid"] = "tid"
+            };
+            
+            if (commonMappings.TryGetValue(claimKey, out var shortName))
+                return shortName;
+            
+            // For other claims, sanitize the key
+            // Remove URI prefixes
+            if (claimKey.StartsWith("http://") || claimKey.StartsWith("https://"))
+            {
+                var lastSlash = claimKey.LastIndexOf('/');
+                if (lastSlash >= 0 && lastSlash < claimKey.Length - 1)
+                    claimKey = claimKey.Substring(lastSlash + 1);
+            }
+            
+            // Replace invalid characters with underscores
+            var sanitized = System.Text.RegularExpressions.Regex.Replace(claimKey, @"[^a-zA-Z0-9_]", "_");
+            
+            // Ensure it doesn't start with a number
+            if (sanitized.Length > 0 && char.IsDigit(sanitized[0]))
+                sanitized = "_" + sanitized;
+            
+            // Truncate to 63 characters minus "jwt.claims." prefix (11 chars)
+            if (sanitized.Length > 52)
+                sanitized = sanitized.Substring(0, 52);
+            
+            return string.IsNullOrEmpty(sanitized) ? "claim" : sanitized;
         }
 
         /// <summary>

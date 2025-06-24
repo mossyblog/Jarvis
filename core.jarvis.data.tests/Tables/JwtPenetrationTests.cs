@@ -5,6 +5,7 @@ using core.jarvis.data.RLS;
 using Microsoft.IdentityModel.Tokens;
 using Npgsql;
 using Shouldly;
+using Xunit;
 
 namespace core.jarvis.data.tests.Tables
 {
@@ -16,6 +17,7 @@ namespace core.jarvis.data.tests.Tables
     /// ARCHITECTURAL SIGNIFICANCE: Validates JWT security in the data access layer.
     /// FUTURE RESILIENCE: Protects against regressions in JWT handling.
     /// </summary>
+    [Collection("JWT Tests")]
     public class JwtPenetrationTests : IAsyncLifetime
     {
         private NpgsqlConnection _conn = null!;
@@ -24,9 +26,21 @@ namespace core.jarvis.data.tests.Tables
 
         public async Task InitializeAsync()
         {
+            // Set up JWT environment variables for testing
+            Environment.SetEnvironmentVariable("Jwt__SecretKey", _secretKey);
+            Environment.SetEnvironmentVariable("Jwt__Issuer", "jarvis-api-test");
+            Environment.SetEnvironmentVariable("Jwt__Audience", "jarvis-clients-test");
+            
+            // Verify environment variables are set
+            var verifyKey = Environment.GetEnvironmentVariable("Jwt__SecretKey");
+            if (string.IsNullOrEmpty(verifyKey))
+            {
+                throw new InvalidOperationException("Failed to set Jwt__SecretKey environment variable");
+            }
+            
             var connString = TestHelpers.GetConnectionStringFromEnv();
             _conn = new NpgsqlConnection(connString);
-            _client = await PgClientFactory.Create(_conn);
+            await _conn.OpenAsync();
 
             // Create test tables for JWT security testing
             var createTablesSql = @"
@@ -115,11 +129,15 @@ namespace core.jarvis.data.tests.Tables
                 }
             });
 
+            // Create client but don't set it yet - we'll use it after ensuring RLS policies work
+            await PgClientFactory.EnsureMinimumSchema(_conn);
             _client = new PgClient(_conn, policies);
         }
 
         public async Task DisposeAsync()
         {
+            // Note: Environment variables are restored by JwtTestFixture
+            
             var dropSql = @"
                 DROP TABLE IF EXISTS jwt_test_sensitive_data;
                 DROP TABLE IF EXISTS jwt_test_users;";
@@ -184,24 +202,20 @@ namespace core.jarvis.data.tests.Tables
                 }),
                 Expires = DateTime.UtcNow.AddHours(-1), // Expired 1 hour ago
                 NotBefore = DateTime.UtcNow.AddHours(-2), // Valid from 2 hours ago
+                Issuer = "jarvis-api-test",
+                Audience = "jarvis-clients-test",
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            // PgClient currently doesn't validate expiration (as noted in comments)
-            // But the JWT can still be parsed for claims
-            _client.JWT(tokenString);
-
-            // This demonstrates that expiration validation should be added
-            var results = await _client.From<JwtTestSensitiveData>().Get();
+            // With proper JWT validation, setting an expired token should throw
+            var exception = Should.Throw<UnauthorizedAccessException>(() => 
+                _client.JWT(tokenString)
+            );
             
-            // Currently, expired tokens still work (this is a security issue to address)
-            // In a secure implementation, this should return 0
-            results.Count.ShouldBeGreaterThan(0);
-            
-            // TODO: This test documents that JWT expiration validation needs to be implemented
+            exception.Message.ShouldContain("expired");
         }
 
         /// <summary>
@@ -227,6 +241,8 @@ namespace core.jarvis.data.tests.Tables
                     new Claim("role", "user")
                 }),
                 Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = "jarvis-api-test",
+                Audience = "jarvis-clients-test",
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -237,18 +253,12 @@ namespace core.jarvis.data.tests.Tables
             var parts = tokenString.Split('.');
             var tamperedToken = $"{parts[0]}.{parts[1]}.tampered_signature";
 
-            // The current implementation doesn't validate signatures (as noted in PgClient comments)
-            // So tampered tokens are accepted - this is a security issue
-            _client.JWT(tamperedToken);
-
-            // Currently the tampered token works because signature isn't validated
-            // This demonstrates a security vulnerability that should be fixed
-            var results = await _client.From<JwtTestSensitiveData>().Get();
+            // With proper JWT validation, tampered tokens should be rejected
+            var exception = Should.Throw<UnauthorizedAccessException>(() => 
+                _client.JWT(tamperedToken)
+            );
             
-            // This should be 0 with proper signature validation
-            results.Count.ShouldBeGreaterThan(0);
-            
-            // TODO: This test documents that JWT signature validation needs to be implemented
+            exception.Message.ShouldContain("Invalid JWT token");
         }
 
         /// <summary>
@@ -270,12 +280,13 @@ namespace core.jarvis.data.tests.Tables
                 { "role", "admin" } // User trying to escalate to admin
             });
 
+            // With proper JWT validation, the token works because it's properly signed
+            // The test now validates that RLS policies properly control access
             _client.JWT(maliciousToken);
             var results1 = await _client.From<JwtTestSensitiveData>().Get();
             
-            // With proper signature validation, this would be 0
-            // Currently shows that signature validation is needed
-            results1.Count.ShouldBeGreaterThan(0);
+            // Even with admin role, RLS policies control access based on tenant
+            results1.Count.ShouldBe(2); // Admin sees all data for their tenant
 
             // Test 2: User trying to access different tenant
             var crossTenantToken = CreateTestJWT(new Dictionary<string, string>
@@ -414,6 +425,8 @@ namespace core.jarvis.data.tests.Tables
             {
                 Subject = new ClaimsIdentity(claims),
                 Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = "jarvis-api-test",
+                Audience = "jarvis-clients-test",
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
@@ -448,6 +461,7 @@ namespace core.jarvis.data.tests.Tables
             });
 
             _client.JWT(adminToken);
+            
             var adminResults = await _client.From<JwtTestSensitiveData>().Get();
             adminResults.Count.ShouldBe(2); // Admin sees all tenant data
             adminResults.ShouldContain(r => r.AccessLevel == "confidential");
@@ -482,6 +496,8 @@ namespace core.jarvis.data.tests.Tables
             {
                 Subject = new ClaimsIdentity(claimsList),
                 Expires = DateTime.UtcNow.AddHours(1),
+                Issuer = "jarvis-api-test",
+                Audience = "jarvis-clients-test",
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
