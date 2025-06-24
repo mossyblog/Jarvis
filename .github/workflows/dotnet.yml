@@ -78,9 +78,13 @@ jobs:
     - name: Test
       timeout-minutes: 15  # Add step timeout for tests
       run: |
-        dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" -- RunConfiguration.TestSessionTimeout=600000
+        dotnet test --no-build --verbosity normal --settings test.runsettings --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        EXIT_CODE=$?
+        echo "Test command exited with code: $EXIT_CODE"
+        exit $EXIT_CODE
       env:
         TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres;Command Timeout=30;Timeout=30;MaxPoolSize=50"
+        ASPNETCORE_ENVIRONMENT: "Test"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       with:

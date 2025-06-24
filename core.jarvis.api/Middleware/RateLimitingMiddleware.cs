@@ -31,10 +31,21 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
     private static CancellationTokenSource? _cleanupCancellation;
     private static Task? _cleanupTask;
     private static readonly object _cleanupLock = new();
+    private static bool _disableCleanup = false;
 
     public RateLimitingMiddleware(ILogger<RateLimitingMiddleware> logger)
     {
         _logger = logger;
+        
+        // Skip cleanup in test environments or if disabled
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test" ||
+                               Environment.GetEnvironmentVariable("TEST_DATABASE_URL") != null;
+        
+        if (_disableCleanup || isTestEnvironment)
+        {
+            _logger.LogInformation("Rate limiting cleanup task disabled in test environment");
+            return;
+        }
         
         // Start cleanup task only once (for the first instance)
         lock (_cleanupLock)
@@ -47,6 +58,15 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
                 _cleanupTask = Task.Run(async () => await CleanupOldEntries(_cleanupCancellation.Token));
             }
         }
+    }
+    
+    /// <summary>
+    /// Disables the cleanup task. Useful for testing.
+    /// </summary>
+    public static void DisableCleanup()
+    {
+        _disableCleanup = true;
+        StopCleanup();
     }
     
     /// <summary>

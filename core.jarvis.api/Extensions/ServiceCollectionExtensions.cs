@@ -88,8 +88,14 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, NavigationItemHandler>();
         services.AddScoped<NavigationItemHandler>();
 
-        // Register background services
-        services.AddHostedService<TokenCleanupService>();
+        // Register background services (skip in test environment)
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test" ||
+                               Environment.GetEnvironmentVariable("TEST_DATABASE_URL") != null;
+        
+        if (!isTestEnvironment)
+        {
+            services.AddHostedService<TokenCleanupService>();
+        }
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>

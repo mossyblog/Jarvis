@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <!-- Timeout for test run in milliseconds -->
+    <TestSessionTimeout>300000</TestSessionTimeout>
+    
+    <!-- Force exit after tests complete -->
+    <ForceTestRunFinish>true</ForceTestRunFinish>
+    
+    <!-- Disable parallel execution to ensure clean shutdown -->
+    <MaxCpuCount>1</MaxCpuCount>
+    
+    <!-- Result directory -->
+    <ResultsDirectory>./TestResults</ResultsDirectory>
+    
+    <!-- Target framework -->
+    <TargetFramework>net8.0</TargetFramework>
+  </RunConfiguration>
+  
+  <!-- Test adapter settings -->
+  <xUnit>
+    <!-- Don't shadow copy assemblies -->
+    <ShadowCopy>false</ShadowCopy>
+    
+    <!-- Disable app domain isolation -->
+    <AppDomain>denied</AppDomain>
+    
+    <!-- Run tests in parallel -->
+    <ParallelizeTestCollections>true</ParallelizeTestCollections>
+    
+    <!-- Maximum threads for parallel execution -->
+    <MaxParallelThreads>4</MaxParallelThreads>
+  </xUnit>
+  
+  <!-- Data collector settings -->
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="Code Coverage" uri="datacollector://Microsoft/CodeCoverage/2.0">
+        <Configuration>
+          <CodeCoverage>
+            <ModulePaths>
+              <Include>
+                <ModulePath>.*\.dll$</ModulePath>
+              </Include>
+              <Exclude>
+                <ModulePath>.*\.Tests\.dll$</ModulePath>
+                <ModulePath>.*\.tests\.dll$</ModulePath>
+              </Exclude>
+            </ModulePaths>
+          </CodeCoverage>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>
