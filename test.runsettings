@@ -25,11 +25,11 @@
     <!-- Disable app domain isolation -->
     <AppDomain>denied</AppDomain>
     
-    <!-- Run tests in parallel -->
-    <ParallelizeTestCollections>true</ParallelizeTestCollections>
+    <!-- Disable parallel test execution to avoid hanging in CI -->
+    <ParallelizeTestCollections>false</ParallelizeTestCollections>
     
     <!-- Maximum threads for parallel execution -->
-    <MaxParallelThreads>4</MaxParallelThreads>
+    <MaxParallelThreads>1</MaxParallelThreads>
     
     <!-- Reduce diagnostic output -->
     <DiagnosticMessages>false</DiagnosticMessages>
