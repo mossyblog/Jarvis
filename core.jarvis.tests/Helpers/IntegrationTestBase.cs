@@ -40,6 +40,15 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        // For GraphQL tests, ensure JWT environment variables are set
+        // This is needed because PgClient validates JWT signatures
+        if (this.GetType().Namespace?.Contains("GraphQL") == true)
+        {
+            Environment.SetEnvironmentVariable("Jwt__SecretKey", "GraphQL-Test-Secret-Key-Must-Be-At-Least-256-Bits-For-Security");
+            Environment.SetEnvironmentVariable("Jwt__Issuer", "graphql-test-issuer");
+            Environment.SetEnvironmentVariable("Jwt__Audience", "graphql-test-audience");
+        }
+        
         // Setup test database
         _connectionString = TestDatabaseSetup.GetConnectionString();
         await TestDatabaseSetup.EnsureSetupAsync(_connectionString);

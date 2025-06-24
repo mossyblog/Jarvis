@@ -16,6 +16,7 @@ CREATE SCHEMA IF NOT EXISTS graphql;
 DROP TABLE IF EXISTS users CASCADE;
 DROP TABLE IF EXISTS security_token CASCADE;
 DROP TABLE IF EXISTS audit_event CASCADE;
+DROP TABLE IF EXISTS security_audit_event CASCADE;
 DROP TABLE IF EXISTS user_profile CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS permission CASCADE;
@@ -139,6 +140,25 @@ CREATE INDEX idx_audit_event_entity_id ON audit_event(owner_entity_id);
 CREATE INDEX idx_audit_event_event_type ON audit_event(event_type);
 CREATE INDEX idx_audit_event_timestamp ON audit_event(timestamp);
 CREATE INDEX idx_audit_event_transaction_id ON audit_event(transaction_id);
+
+-- Create security_audit_event table for API security auditing
+CREATE TABLE security_audit_event (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
+    event_type VARCHAR(255) NOT NULL,
+    event_time TIMESTAMPTZ NOT NULL,
+    details JSONB,
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    severity VARCHAR(20) NOT NULL DEFAULT 'INFO',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for security_audit_event
+CREATE INDEX idx_security_audit_event_owner ON security_audit_event(owner_entity_id);
+CREATE INDEX idx_security_audit_event_type ON security_audit_event(event_type);
+CREATE INDEX idx_security_audit_event_time ON security_audit_event(event_time);
 
 -- Create test_component table for integration tests
 CREATE TABLE test_component (
