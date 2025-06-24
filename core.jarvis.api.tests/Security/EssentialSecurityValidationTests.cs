@@ -27,7 +27,7 @@ public class EssentialSecurityValidationTests
     /// FUTURE RESILIENCE: Prevents all token attacks
     /// </summary>
     [Fact]
-    public void JWT_MustValidateSignatures_OrKittensWillBeHarmed()
+    public void JWT_MustValidateSignatures()
     {
         // Arrange
         var tokenService = new TokenService(
@@ -69,7 +69,7 @@ public class EssentialSecurityValidationTests
         var result3 = tokenService.ValidateToken(noSigToken);
         result3.ShouldBeNull("Token without signature must be rejected");
         
-        // If we got here, JWT validation is SECURE! 🔒
+        // If we got here, JWT validation is SECURE!
     }
 
     /// <summary>
@@ -81,7 +81,7 @@ public class EssentialSecurityValidationTests
     /// FUTURE RESILIENCE: Maintains security standards
     /// </summary>
     [Fact]
-    public void PasswordPolicy_MustEnforceStrength_ToProtectKittens()
+    public void PasswordPolicy_MustEnforceStrength()
     {
         // Arrange
         var policy = new PasswordPolicyService();
@@ -131,7 +131,7 @@ public class EssentialSecurityValidationTests
     /// FUTURE RESILIENCE: Prevents reconnaissance
     /// </summary>
     [Fact]
-    public void ErrorMessages_MustBeGeneric_ToHideFromAttackers()
+    public void ErrorMessages_MustBeGeneric()
     {
         // Act - Get all error types
         var authError = ErrorResponseService.CreateAuthenticationError();
@@ -184,7 +184,7 @@ public class EssentialSecurityValidationTests
     /// FUTURE RESILIENCE: Prevents token database breaches
     /// </summary>
     [Fact]
-    public void RefreshTokens_MustBeHashed_NotPlainText()
+    public void RefreshTokens_MustBeHashed()
     {
         // Arrange
         var tokenService = new TokenService(
@@ -227,7 +227,7 @@ public class EssentialSecurityValidationTests
     /// FUTURE RESILIENCE: No security gaps allowed
     /// </summary>
     [Fact]
-    public void SecuritySummary_AllKittensAreSafe()
+    public void SecuritySummary_AllChecksPass()
     {
         // This test summarizes all security validations
         
@@ -248,7 +248,7 @@ public class EssentialSecurityValidationTests
         typeof(IPasswordPolicyService).ShouldNotBeNull();
         typeof(ISecurityAuditService).ShouldNotBeNull();
         
-        // If all tests pass, the kittens are SAFE! 🐱✅
-        true.ShouldBeTrue("All security measures validated - NO KITTENS HARMED!");
+        // If all tests pass, security is validated
+        true.ShouldBeTrue("All security measures validated");
     }
 }
