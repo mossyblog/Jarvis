@@ -13,6 +13,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    timeout-minutes: 30  # Add overall job timeout
 
     services:
       postgres:
@@ -30,8 +31,8 @@ jobs:
           --health-retries 5
 
     env:
-      TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres"
-      SUPABASE_ADMIN_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres"
+      TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres;Command Timeout=30;Timeout=30;MaxPoolSize=50"
+      SUPABASE_ADMIN_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres;Command Timeout=30;Timeout=30;MaxPoolSize=50"
 
     steps:
     - uses: actions/checkout@v3
@@ -75,10 +76,11 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Test
+      timeout-minutes: 15  # Add step timeout for tests
       run: |
-        dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        dotnet test --no-build --verbosity normal --logger "console;verbosity=detailed" --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage" -- RunConfiguration.TestSessionTimeout=600000
       env:
-        TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres"
+        TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres;Command Timeout=30;Timeout=30;MaxPoolSize=50"
     - name: Upload coverage reports to Codecov
       uses: codecov/codecov-action@v3
       with:

@@ -133,6 +133,9 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
     
     public new async Task DisposeAsync()
     {
+        // Stop the rate limiting middleware cleanup task
+        core.jarvis.api.Middleware.RateLimitingMiddleware.StopCleanup();
+        
         // Clean up SecurityTokens for tracked entities
         foreach (var entityId in _testEntities.Keys)
         {

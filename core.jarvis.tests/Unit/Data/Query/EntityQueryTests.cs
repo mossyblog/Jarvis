@@ -165,7 +165,7 @@ public class EntityQueryTests
         
         var handler1 = new FakeComponentQueryHandler(typeof(TestComponent));
         handler1.SetEntityIds(new[] { entityId });
-        var testComponent = new TestComponent { Id = Guid.NewGuid(), OwnerEntityId = entityId };
+        var testComponent = new TestComponent { Id = Guid.NewGuid(), OwnerEntityId = entityId, Name = "QueryTest" };
         handler1.SetComponents(new[] { testComponent });
         registry.AddHandler(typeof(TestComponent), handler1);
         

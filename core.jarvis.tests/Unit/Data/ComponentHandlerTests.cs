@@ -202,7 +202,7 @@ public class ComponentHandlerTests
     /// </remarks>
     private TestComponent CreateComponent(Guid ownerEntityId)
     {
-        var component = new TestComponent();
+        var component = new TestComponent { Name = "HandlerTest" };
         var ownerEntityIdProp = typeof(TestComponent).GetProperty("OwnerEntityId");
         if (ownerEntityIdProp != null && ownerEntityIdProp.CanWrite)
         {
