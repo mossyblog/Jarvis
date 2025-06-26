@@ -53,6 +53,7 @@ public static class TestDatabaseSetup
             "invoice_test_component",
             "payment_test_component",
             "work_order_test_component",
+            "work_order_component",
             "velocity_component",
             "position_component",
             "test_component",

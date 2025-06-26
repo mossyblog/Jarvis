@@ -7,6 +7,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
 using core.jarvis.Data;
+using core.jarvis.Systems;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -16,14 +17,17 @@ namespace core.jarvis.api.Functions.Security;
 public class NavigationFunction
 {
     private readonly IDataContext _dataContext;
+    private readonly ISystem _system;
     private readonly ILogger<NavigationFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public NavigationFunction(
         IDataContext dataContext,
+        ISystem system,
         ILogger<NavigationFunction> logger)
     {
         _dataContext = dataContext;
+        _system = system;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -42,14 +46,14 @@ public class NavigationFunction
     {
         try
         {
-            // Get system setup handler
+            // Get system setup handler using System
             var systemId = Guid.Parse("00000000-0000-0000-0000-000000000001"); // Well-known system entity ID
-            var systemHandler = _dataContext.For<SystemSetupHandler>(systemId);
-            await systemHandler.EnsureDefaultNavigation();
+            var result = await _system.ExecuteHandlerWithResult<SystemSetupHandler, List<NavigationItem>>(
+                systemId,
+                handler => handler.EnsureDefaultNavigation());
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
-            var result = await systemHandler.EnsureDefaultNavigation();
             await response.WriteStringAsync(JsonSerializer.Serialize(result, _jsonOptions));
             return response;
         }
@@ -174,14 +178,13 @@ public class NavigationFunction
                 return errorResponse;
             }
 
-            // Create entity and commit component
-            var navId = Guid.NewGuid();
-            navItem.OwnerEntityId = navId;
-            await _dataContext.Commit(navItem);
+            // Create new navigation item using System
+            var navId = await _system.CreateComponent(navItem);
             
-            // Let handler process it
-            var navHandler = _dataContext.For<NavigationItemHandler>(navId);
-            var result = await navHandler.Save();
+            // Save using handler through System
+            var result = await _system.ExecuteHandler<NavigationItemHandler, NavigationItem>(
+                navId,
+                handler => handler.Save());
 
             var response = req.CreateResponse(HttpStatusCode.Created);
             response.Headers.Add("Content-Type", "application/json");

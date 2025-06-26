@@ -104,12 +104,18 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddTransient<BlogPostComponentHandler>();
         services.AddTransient<BlogHandler>();
         
+        // Register WorkOrder example handler
+        services.AddTransient<Examples.WorkOrder.WorkOrderHandler>();
+        
         // Register API handlers if available (for API tests)
         _apiAssembly = AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(a => a.GetName().Name == "core.jarvis.api");
         if (_apiAssembly != null)
         {
             services.RegisterAllComponentHandlersAndQueriesFromAssembly(_apiAssembly);
+            
+            // Manually register handlers that implement non-generic IComponentHandler
+            services.AddTransient<core.jarvis.api.Handlers.RegistrationHandler>();
             
             // Register API services for authentication tests
             services.AddTransient<core.jarvis.api.Services.IPasswordPolicyService, core.jarvis.api.Services.PasswordPolicyService>();
@@ -159,6 +165,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                 await TestDataContext().Remove<InvoiceTestComponent>(entityId);
                 await TestDataContext().Remove<PaymentTestComponent>(entityId);
                 await TestDataContext().Remove<WorkOrderTestComponent>(entityId);
+                await TestDataContext().Remove<Examples.WorkOrder.WorkOrderComponent>(entityId);
                 await TestDataContext().Remove<AuditEvent>(entityId);
                 
                 // Clean up API components if available

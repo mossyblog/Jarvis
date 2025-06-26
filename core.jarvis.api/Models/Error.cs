@@ -30,7 +30,7 @@ public record Error : IComponent
     /// <summary>
     /// Additional error details if available.
     /// </summary>
-    public Dictionary<string, string> Details { get; init; } = new();
+    public Dictionary<string, string[]>? Details { get; init; }
 
     /// <summary>
     /// HTTP status code associated with this error.

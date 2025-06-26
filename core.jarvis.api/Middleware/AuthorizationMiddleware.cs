@@ -30,6 +30,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
     private static readonly HashSet<string> PublicEndpoints = new()
     {
         "/api/security/auth",      // Login endpoint
+        "/api/auth/register",      // Registration endpoint
         "/api/security/validate",  // Token validation endpoint
         "/api/swagger",           // Swagger documentation
         "/api/swagger/ui"         // Swagger UI

@@ -2,7 +2,7 @@ namespace core.jarvis.Data.Components;
 
 /// <summary>
 /// Component that tracks parent-child relationships between entities.
-/// Supports hierarchical structures like WorkOrder -> Invoices.
+/// Supports hierarchical structures like Parent -> Children.
 /// </summary>
 public class EntityRelationship : BaseComponent, IVersionedComponent
 {
@@ -19,7 +19,7 @@ public class EntityRelationship : BaseComponent, IVersionedComponent
     public Guid[] ChildrenIds { get; set; } = Array.Empty<Guid>();
     
     /// <summary>
-    /// The type of the parent entity (e.g., "WorkOrder").
+    /// The type of the parent entity (e.g., "Order", "Blog").
     /// Helps with type-safe queries and relationship validation.
     /// </summary>
     public string? ParentType { get; set; }

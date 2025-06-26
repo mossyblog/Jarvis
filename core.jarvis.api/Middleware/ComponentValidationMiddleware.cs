@@ -8,9 +8,53 @@ using Newtonsoft.Json;
 
 namespace core.jarvis.api.Middleware;
 
-/// <summary>
-/// Middleware to validate that request/response bodies contain valid IComponent implementations.
-/// </summary>
+/*
+ * ================================================================================
+ *  ComponentValidationMiddleware
+ * ================================================================================
+ *  Purpose:
+ *      This middleware is designed for Azure Functions projects that utilize domain
+ *      "component" models (objects implementing IComponent). Its primary role is
+ *      to validate incoming HTTP request bodies for POST and PUT operations before
+ *      passing them to function handlers.
+ *
+ *      The middleware ensures that only requests containing either:
+ *         1) A valid GUID (representing a component identifier), or
+ *         2) A JSON object matching the structure of IComponent
+ *            (must have "id", "ownerEntityId", and "updatedAt" properties)
+ *      are processed. This helps enforce data integrity and provides fast feedback
+ *      to clients on badly-formed input, reducing error-prone downstream processing.
+ *
+ *  Where and How Used:
+ *      - Plugged into the Azure Functions Worker pipeline.
+ *      - Invoked for every HTTP-triggered function request (when enabled).
+ *      - Mostly relevant for API endpoints dealing with domain data creation or modification.
+ *
+ *  Key Behaviors:
+ *      - Intercepts each request.
+ *      - For POST/PUT, reads the body and checks:
+ *          * If it's a stringified GUID → OK.
+ *          * If it's a JSON object, checks for minimally required component properties.
+ *          * If neither, returns a 400 Bad Request and halts further processing.
+ *      - For non-HTTP triggers or other methods, or for valid requests, execution passes to the next middleware/function.
+ *      - Any errors during validation result in a 500 Internal Server Error.
+ *
+ *  Benefits:
+ *      - Prevents malformed or incomplete "component" data from reaching business logic.
+ *      - Improves security and reliability by failing fast on bad input.
+ *      - Centralizes validation logic, ensuring consistent enforcement across endpoints.
+ *
+ *  Customization Notes:
+ *      - To adjust what constitutes a valid component, modify IsValidComponentOrGuid.
+ *      - To extend validation to other HTTP verbs, update the method checks.
+ *      - This middleware can be stacked/composed alongside other validation/auth logic.
+ *
+ *  Example Error Responses:
+ *      - 400 Bad Request: "Request body must be an IComponent implementation or a GUID"
+ *      - 500 Internal Server Error: "An error occurred during request validation"
+ *
+ * ================================================================================
+ */
 public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly ILogger<ComponentValidationMiddleware> _logger;

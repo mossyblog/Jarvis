@@ -179,4 +179,64 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         return updated;
     }
 
+    /// <summary>
+    /// Gets navigation items filtered by user permissions.
+    /// </summary>
+    public async Task<List<NavigationItem>> GetUserNavigation()
+    {
+        var profile = await GetOrDefault();
+        if (profile == null)
+        {
+            Logger.LogWarning("No SecurityProfile found for user {UserId}", OwnerEntityId);
+            return new List<NavigationItem>();
+        }
+
+        // Get all navigation items
+        var allNavItems = await DataContext.Query()
+            .WithAll<NavigationItem>(n => true)
+            .ToEntityComponents();
+            
+        var userPermissions = profile.PermissionIds;
+        var navigation = new List<NavigationItem>();
+        
+        foreach (var entity in allNavItems)
+        {
+            var navItem = entity.Value.Get<NavigationItem>();
+            if (navItem != null && 
+                (!navItem.RequiredPermissionId.HasValue || 
+                 userPermissions.Contains(navItem.RequiredPermissionId.Value.ToString())))
+            {
+                navigation.Add(navItem);
+            }
+        }
+
+        Logger.LogInformation("Retrieved {Count} navigation items for user {UserId}", navigation.Count, OwnerEntityId);
+        return navigation;
+    }
+
+    /// <summary>
+    /// Updates the user profile with new data.
+    /// </summary>
+    public async Task<SecurityProfile> UpdateProfile(SecurityProfile updateRequest)
+    {
+        var profile = await GetOrDefault();
+        if (profile == null)
+        {
+            throw new InvalidOperationException($"SecurityProfile not found for user {OwnerEntityId}");
+        }
+
+        var updated = profile with
+        {
+            Name = !string.IsNullOrEmpty(updateRequest.Name) ? updateRequest.Name : profile.Name,
+            Avatar = updateRequest.Avatar, // Allow null to clear avatar
+            Preferences = updateRequest.Preferences ?? profile.Preferences,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        await DataContext.Commit(updated);
+        Logger.LogInformation("Updated profile for user {UserId}", OwnerEntityId);
+        
+        return updated;
+    }
+
 }

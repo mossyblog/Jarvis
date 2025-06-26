@@ -6,8 +6,7 @@ using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
-using core.jarvis.Data;
-using core.jarvis.Data.Query;
+using core.jarvis.Systems;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -16,15 +15,15 @@ namespace core.jarvis.api.Functions.Security;
 /// </summary>
 public class AccountFunction
 {
-    private readonly IDataContext _dataContext;
+    private readonly ISystem _system;
     private readonly ILogger<AccountFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public AccountFunction(
-        IDataContext dataContext,
+        ISystem system,
         ILogger<AccountFunction> logger)
     {
-        _dataContext = dataContext;
+        _system = system;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -59,11 +58,10 @@ public class AccountFunction
                 return errorResponse;
             }
 
-            // Get user profile handler for this user entity
-            var userProfileHandler = _dataContext.For<AccountProfileHandler>(userId);
-            
-            // Get user profile
-            var userProfile = await userProfileHandler.Get();
+            // Get user profile using System
+            var userProfile = await _system.ExecuteHandler<AccountProfileHandler, SecurityProfile>(
+                userId,
+                handler => handler.Get());
             if (userProfile == null)
             {
                 var notFoundError = new Error
@@ -126,42 +124,10 @@ public class AccountFunction
                 return errorResponse;
             }
 
-            // Get user profile to check permissions
-            var userProfileHandler = _dataContext.For<AccountProfileHandler>(userId);
-            var userProfile = await userProfileHandler.Get();
-            
-            if (userProfile == null)
-            {
-                var notFoundError = new Error
-                {
-                    Code = "USER_NOT_FOUND",
-                    Message = "User profile not found",
-                    StatusCode = 404
-                };
-                var errorResponse = req.CreateResponse(HttpStatusCode.NotFound);
-                errorResponse.Headers.Add("Content-Type", "application/json");
-                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(notFoundError, _jsonOptions));
-                return errorResponse;
-            }
-            
-            // Get all navigation items and filter by user permissions
-            var allNavItems = await _dataContext.Query()
-                .WithAll<NavigationItem>(n => true)
-                .ToEntityComponents();
-                
-            var userPermissions = userProfile.PermissionIds;
-            var navigation = new List<NavigationItem>();
-            
-            foreach (var entity in allNavItems)
-            {
-                var navItem = entity.Value.Get<NavigationItem>();
-                if (navItem != null && 
-                    (!navItem.RequiredPermissionId.HasValue || 
-                     userPermissions.Contains(navItem.RequiredPermissionId.Value.ToString())))
-                {
-                    navigation.Add(navItem);
-                }
-            }
+            // Get user navigation using System - ALL logic in handler
+            var navigation = await _system.ExecuteHandlerWithResult<AccountProfileHandler, List<NavigationItem>>(
+                userId,
+                handler => handler.GetUserNavigation());
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
@@ -227,13 +193,10 @@ public class AccountFunction
                 return errorResponse;
             }
 
-            // Get handler and update profile
-            updateProfile.OwnerEntityId = userId;
-            var userProfileHandler = _dataContext.For<AccountProfileHandler>(userId);
-            
-            // Handler owns the update operation
-            await _dataContext.Commit(updateProfile);
-            var updated = await userProfileHandler.Get();
+            // Update profile using System - ALL logic in handler
+            var updated = await _system.ExecuteHandler<AccountProfileHandler, SecurityProfile>(
+                userId,
+                handler => handler.UpdateProfile(updateProfile));
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");

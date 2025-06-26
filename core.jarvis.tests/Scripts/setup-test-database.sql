@@ -16,6 +16,12 @@ CREATE EXTENSION IF NOT EXISTS "pg_graphql";
 -- Create graphql schema if it doesn't exist
 CREATE SCHEMA IF NOT EXISTS graphql;
 
+-- Grant permissions on graphql schema to current user
+GRANT USAGE ON SCHEMA graphql TO CURRENT_USER;
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA graphql TO CURRENT_USER;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA graphql TO CURRENT_USER;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA graphql TO CURRENT_USER;
+
 -- Note: GraphQL wrapper function is created separately in setup-graphql-wrapper.sql
 -- as it needs to be run as supabase_admin user
 
@@ -39,6 +45,7 @@ DROP TABLE IF EXISTS invoice_test_component CASCADE;
 DROP TABLE IF EXISTS payment_test_component CASCADE;
 DROP TABLE IF EXISTS work_order_test_component CASCADE;
 DROP TABLE IF EXISTS entity_relationship CASCADE;
+DROP TABLE IF EXISTS navigation_item CASCADE;
 
 -- Create account table (component)
 CREATE TABLE IF NOT EXISTS "account" (
@@ -63,8 +70,8 @@ CREATE INDEX IF NOT EXISTS idx_account_email ON "account"(email);
 
 -- Create test account with hashed password
 -- Password: 'test123' (bcrypt hash with cost factor 12)
-INSERT INTO "account" (owner_entity_id, email, password_hash, password, auth_method, is_active) VALUES 
-    (gen_random_uuid(), 'test@example.com', '$2a$12$QnOKnn.PumrtVscPkO3C.ONHR/5NANzEbqMoLQOyUFhQMhynyVoe.', '', 'password', true);
+-- We'll use a fixed UUID for the test user so we can create the security profile
+-- Note: The security profile will be created after the security_profile table is created
 
 -- Create auth_token table (component)
 CREATE TABLE IF NOT EXISTS auth_token (
@@ -140,6 +147,27 @@ CREATE TABLE IF NOT EXISTS permission (
 -- Create indexes for permission
 CREATE INDEX IF NOT EXISTS idx_permission_owner_entity_id ON permission(owner_entity_id);
 CREATE INDEX IF NOT EXISTS idx_permission_resource ON permission(resource);
+
+-- Create navigation_item table
+CREATE TABLE IF NOT EXISTS navigation_item (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    path VARCHAR(500) NOT NULL,
+    icon VARCHAR(100),
+    parent_id UUID,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    permission_required VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    version INTEGER DEFAULT 1
+);
+
+-- Create indexes for navigation_item
+CREATE INDEX IF NOT EXISTS idx_navigation_item_owner_entity_id ON navigation_item(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_navigation_item_parent_id ON navigation_item(parent_id);
+CREATE INDEX IF NOT EXISTS idx_navigation_item_sort_order ON navigation_item(sort_order);
 
 -- Create audit_event table
 CREATE TABLE IF NOT EXISTS audit_event (
@@ -364,6 +392,30 @@ CREATE TABLE IF NOT EXISTS work_order_test_component (
 -- Create index for owner_entity_id queries
 CREATE INDEX IF NOT EXISTS idx_work_order_test_component_owner_entity_id ON work_order_test_component(owner_entity_id);
 
+-- Create work_order_component table (for WorkOrderHandler)
+CREATE TABLE IF NOT EXISTS work_order_component (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    owner_entity_id UUID NOT NULL,
+    work_order_number VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    priority VARCHAR(50) NOT NULL,
+    assigned_to_account_id UUID,
+    scheduled_date TIMESTAMP,
+    completed_date TIMESTAMP,
+    estimated_hours DECIMAL(10,2) NOT NULL,
+    actual_hours DECIMAL(10,2) NOT NULL DEFAULT 0,
+    notes TEXT,
+    approved_by_account_id UUID,
+    approved_date TIMESTAMP,
+    cancellation_reason TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Create index on owner_entity_id for performance
+CREATE INDEX IF NOT EXISTS idx_work_order_component_owner_entity_id ON work_order_component(owner_entity_id);
+
 -- Create component_snapshots table for versioning support
 CREATE TABLE IF NOT EXISTS component_snapshots (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -411,6 +463,20 @@ BEGIN
     END IF;
 END $$;
 
+-- Insert test data now that all tables exist
+DO $$
+DECLARE
+    test_user_id UUID := '11111111-1111-1111-1111-111111111111';
+BEGIN
+    -- Create test account
+    INSERT INTO "account" (owner_entity_id, email, password_hash, password, auth_method, is_active) VALUES 
+        (test_user_id, 'test@example.com', '$2a$12$QnOKnn.PumrtVscPkO3C.ONHR/5NANzEbqMoLQOyUFhQMhynyVoe.', '', 'password', true);
+    
+    -- Create security profile for the test account
+    INSERT INTO security_profile (owner_entity_id, name, avatar, role_ids, permission_ids, preferences) VALUES
+        (test_user_id, 'Test User', NULL, '{}', '{}', '{}');
+END $$;
+
 -- Display confirmation
 DO $$
 BEGIN
@@ -431,6 +497,7 @@ BEGIN
     RAISE NOTICE '  - invoice_test_component';
     RAISE NOTICE '  - payment_test_component';
     RAISE NOTICE '  - work_order_test_component';
+    RAISE NOTICE '  - work_order_component';
     RAISE NOTICE '  - component_snapshots';
     RAISE NOTICE '  - entity_relationship';
 END $$;

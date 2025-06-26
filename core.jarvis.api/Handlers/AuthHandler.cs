@@ -208,6 +208,81 @@ public class AuthHandler : ComponentHandler<Account>
     }
 
     /// <summary>
+    /// Authenticates a user from JSON request and returns the auth token.
+    /// This method handles all authentication logic to keep the API layer thin.
+    /// </summary>
+    public async Task<AuthToken> AuthenticateFromJson(string requestBody, string? ipAddress, string? userAgent)
+    {
+        try
+        {
+            // Parse request body
+            if (string.IsNullOrEmpty(requestBody))
+            {
+                Logger.LogInformation("Auth request body is empty");
+                return new AuthToken(); // Empty token indicates failure
+            }
+
+            Account? accountRequest;
+            try
+            {
+                // First try with default (PascalCase) deserialization
+                accountRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<Account>(requestBody);
+            }
+            catch (Newtonsoft.Json.JsonException)
+            {
+                try
+                {
+                    // If that fails, try with camelCase
+                    var camelCaseSettings = new Newtonsoft.Json.JsonSerializerSettings
+                    {
+                        ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
+                    };
+                    accountRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<Account>(requestBody, camelCaseSettings);
+                }
+                catch (Newtonsoft.Json.JsonException ex)
+                {
+                    Logger.LogWarning("JSON deserialization failed: {Message}. Request body: {Body}", ex.Message, requestBody);
+                    return new AuthToken();
+                }
+            }
+
+            if (accountRequest == null)
+            {
+                return new AuthToken();
+            }
+
+            // Validate required fields
+            if (string.IsNullOrEmpty(accountRequest.Email) || string.IsNullOrEmpty(accountRequest.Password))
+            {
+                return new AuthToken();
+            }
+
+            // Add IP and User-Agent to the request
+            accountRequest = accountRequest with 
+            { 
+                IpAddress = ipAddress ?? "unknown",
+                UserAgent = userAgent
+            };
+
+            // Authenticate and return result
+            var authToken = await Authenticate(accountRequest);
+            
+            // If authentication succeeded, persist the session
+            if (IsAuthenticated(authToken))
+            {
+                await PersistSession(authToken);
+            }
+            
+            return authToken;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error in authentication from JSON");
+            return new AuthToken();
+        }
+    }
+
+    /// <summary>
     /// Validates email format.
     /// </summary>
     private bool IsValidEmail(string email)
@@ -245,6 +320,122 @@ public class AuthHandler : ComponentHandler<Account>
         catch
         {
             return false;
+        }
+    }
+    
+    /// <summary>
+    /// Refreshes an authentication token using a valid refresh token.
+    /// </summary>
+    public async Task<AuthToken> RefreshToken(string refreshToken)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                Logger.LogWarning("Refresh token is empty");
+                return new AuthToken();
+            }
+
+            var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+            var entityQuery = _serviceProvider.GetRequiredService<IEntityQuery>();
+            
+            // Hash the refresh token for lookup
+            var refreshTokenHash = tokenService.HashRefreshToken(refreshToken);
+            
+            // Find the auth token by refresh token hash
+            var entityIds = await entityQuery
+                .WithAll<AuthToken>(t => t.RefreshTokenHash == refreshTokenHash && !t.IsRevoked)
+                .ToEntityIds();
+                
+            if (!entityIds.Any())
+            {
+                Logger.LogWarning("Invalid or expired refresh token");
+                return new AuthToken();
+            }
+            
+            // Get the first auth token
+            var entityId = entityIds.First();
+            var components = await DataContext.Query()
+                .With<AuthToken>(t => t.OwnerEntityId == entityId)
+                .ToEntityComponents();
+                
+            if (!components.TryGetValue(entityId, out var entityComponents))
+            {
+                Logger.LogWarning("Auth token not found for entity {EntityId}", entityId);
+                return new AuthToken();
+            }
+            
+            var existingToken = entityComponents.Get<AuthToken>();
+            if (existingToken == null)
+            {
+                Logger.LogWarning("Auth token not found");
+                return new AuthToken();
+            }
+            
+            // Check if refresh token is expired
+            if (existingToken.RefreshExpiresAt < DateTime.UtcNow)
+            {
+                Logger.LogWarning("Refresh token expired for entity {EntityId}", existingToken.OwnerEntityId);
+                return new AuthToken();
+            }
+            
+            // Get the account associated with the token
+            var accountComponents = await DataContext.Query()
+                .With<Account>(a => a.OwnerEntityId == existingToken.OwnerEntityId)
+                .ToEntityComponents();
+                
+            if (!accountComponents.TryGetValue(existingToken.OwnerEntityId, out var accountEntityComponents))
+            {
+                Logger.LogWarning("Account not found for entity {EntityId}", existingToken.OwnerEntityId);
+                return new AuthToken();
+            }
+            
+            var account = accountEntityComponents.Get<Account>();
+            if (account == null)
+            {
+                Logger.LogWarning("Account not found for entity {EntityId}", existingToken.OwnerEntityId);
+                return new AuthToken();
+            }
+            
+            // Generate new tokens
+            var newAccessToken = tokenService.GenerateAccessToken(account.Id, account.Email);
+            var newRefreshToken = tokenService.GenerateRefreshToken();
+            
+            // Revoke the old token
+            var revokedToken = existingToken with 
+            { 
+                IsRevoked = true, 
+                RevokedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
+            };
+            await DataContext.Commit(revokedToken);
+            
+            // Create new auth token
+            var newAuthToken = new AuthToken
+            {
+                Id = Guid.NewGuid(),
+                OwnerEntityId = account.Id,
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken,
+                RefreshTokenHash = tokenService.HashRefreshToken(newRefreshToken),
+                SessionId = existingToken.SessionId, // Keep the same session
+                RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
+                ClientId = existingToken.ClientId,
+                IpAddress = existingToken.IpAddress,
+                UserAgent = existingToken.UserAgent,
+                IsRevoked = false,
+                UpdatedAt = DateTime.UtcNow
+            };
+            
+            await DataContext.Commit(newAuthToken);
+            
+            Logger.LogInformation("Token refreshed for entity {EntityId}", account.Id);
+            return newAuthToken;
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing token");
+            return new AuthToken();
         }
     }
 }

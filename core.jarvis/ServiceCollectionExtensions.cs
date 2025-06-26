@@ -4,6 +4,7 @@ using core.jarvis.Data.Query;
 using core.jarvis.Events;
 using core.jarvis.Events.Emitters;
 using core.jarvis.Logging;
+using core.jarvis.Systems;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -78,6 +79,9 @@ public static class JarvisServiceCollectionExtensions
 
         // 11. Configure Event Emission
         services.AddEventEmission(configuration);
+
+        // 12. Add System layer for handler orchestration
+        services.AddJarvisSystem();
 
         return services;
     }
