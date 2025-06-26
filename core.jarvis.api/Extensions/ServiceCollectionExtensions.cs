@@ -99,8 +99,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, NavigationItemHandler>();
         services.AddScoped<NavigationItemHandler>();
         
-        services.AddScoped<IComponentHandler, RegistrationHandler>();
-        services.AddScoped<RegistrationHandler>();
+        // Add System services
+        services.AddScoped<Systems.RegistrationSystem>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>

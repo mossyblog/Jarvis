@@ -114,8 +114,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         {
             services.RegisterAllComponentHandlersAndQueriesFromAssembly(_apiAssembly);
             
-            // Manually register handlers that implement non-generic IComponentHandler
-            services.AddTransient<core.jarvis.api.Handlers.RegistrationHandler>();
+            // Register System services
+            services.AddTransient<core.jarvis.api.Systems.RegistrationSystem>();
             
             // Register API services for authentication tests
             services.AddTransient<core.jarvis.api.Services.IPasswordPolicyService, core.jarvis.api.Services.PasswordPolicyService>();

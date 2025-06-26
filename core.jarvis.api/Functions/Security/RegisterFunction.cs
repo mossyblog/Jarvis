@@ -4,8 +4,9 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
-using core.jarvis.api.Handlers;
-using core.jarvis.Systems;
+using core.jarvis.api.Systems;
+using core.jarvis.Data;
+using core.jarvis.Exceptions;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -14,15 +15,15 @@ namespace core.jarvis.api.Functions.Security;
 /// </summary>
 public class RegisterFunction
 {
-    private readonly ISystem _system;
+    private readonly RegistrationSystem _registrationSystem;
     private readonly ILogger<RegisterFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RegisterFunction(
-        ISystem system,
+        RegistrationSystem registrationSystem,
         ILogger<RegisterFunction> logger)
     {
-        _system = system;
+        _registrationSystem = registrationSystem;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -69,40 +70,50 @@ public class RegisterFunction
             }
             ipAddress ??= "unknown";
 
-            // Execute registration through System - ALL logic in handler
-            var result = await _system.ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-                Guid.Empty, // No owner entity for registration
-                handler => handler.RegisterFromJson(requestBody, ipAddress));
+            // Execute registration through System - returns [Account, SecurityProfile]
+            var components = await _registrationSystem.RegisterUser(requestBody, ipAddress);
 
-            // Handle registration result
-            if (!result.Success)
+            // The first component is Account, second is SecurityProfile
+            var account = components[0] as Account;
+            var profile = components[1] as SecurityProfile;
+            
+            if (account == null || profile == null)
             {
-                var error = new Error
-                {
-                    Code = "REGISTRATION_FAILED",
-                    Message = result.Message,
-                    StatusCode = 400,
-                    Details = result.Errors
-                };
-                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                errorResponse.Headers.Add("Content-Type", "application/json");
-                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(error, _jsonOptions));
-                return errorResponse;
+                throw new InvalidOperationException("Registration did not return expected components");
             }
 
-            // Success response
-            var successResponse = new
-            {
-                success = true,
-                message = result.Message,
-                accountId = result.AccountId,
-                email = result.Email
-            };
-
+            // Return the created components
             var response = req.CreateResponse(HttpStatusCode.Created);
             response.Headers.Add("Content-Type", "application/json");
-            await response.WriteStringAsync(JsonSerializer.Serialize(successResponse, _jsonOptions));
+            await response.WriteStringAsync(JsonSerializer.Serialize(components, _jsonOptions));
             return response;
+        }
+        catch (ValidationException vex)
+        {
+            var error = new Error
+            {
+                Code = "VALIDATION_ERROR",
+                Message = "Registration validation failed",
+                StatusCode = 400,
+                Details = vex.Errors
+            };
+            var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            errorResponse.Headers.Add("Content-Type", "application/json");
+            await errorResponse.WriteStringAsync(JsonSerializer.Serialize(error, _jsonOptions));
+            return errorResponse;
+        }
+        catch (BusinessRuleException brex)
+        {
+            var error = new Error
+            {
+                Code = brex.Code,
+                Message = brex.Message,
+                StatusCode = 400
+            };
+            var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            errorResponse.Headers.Add("Content-Type", "application/json");
+            await errorResponse.WriteStringAsync(JsonSerializer.Serialize(error, _jsonOptions));
+            return errorResponse;
         }
         catch (Exception ex)
         {
