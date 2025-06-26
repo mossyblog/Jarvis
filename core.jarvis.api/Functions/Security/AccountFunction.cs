@@ -12,17 +12,17 @@ using core.jarvis.Data.Query;
 namespace core.jarvis.api.Functions.Security;
 
 /// <summary>
-/// Function for user profile and navigation endpoints.
+/// Function for account profile and navigation endpoints.
 /// </summary>
-public class UserFunction
+public class AccountFunction
 {
     private readonly IDataContext _dataContext;
-    private readonly ILogger<UserFunction> _logger;
+    private readonly ILogger<AccountFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
-    public UserFunction(
+    public AccountFunction(
         IDataContext dataContext,
-        ILogger<UserFunction> logger)
+        ILogger<AccountFunction> logger)
     {
         _dataContext = dataContext;
         _logger = logger;
@@ -38,7 +38,7 @@ public class UserFunction
     /// </summary>
     [Function("GetCurrentUser")]
     public async Task<HttpResponseData> GetCurrentUser(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/me")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "accounts/me")] HttpRequestData req,
         FunctionContext executionContext)
     {
         try
@@ -60,7 +60,7 @@ public class UserFunction
             }
 
             // Get user profile handler for this user entity
-            var userProfileHandler = _dataContext.For<UserProfileHandler>(userId);
+            var userProfileHandler = _dataContext.For<AccountProfileHandler>(userId);
             
             // Get user profile
             var userProfile = await userProfileHandler.Get();
@@ -105,7 +105,7 @@ public class UserFunction
     /// </summary>
     [Function("GetUserNavigation")]
     public async Task<HttpResponseData> GetUserNavigation(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "users/navigation")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "accounts/navigation")] HttpRequestData req,
         FunctionContext executionContext)
     {
         try
@@ -127,7 +127,7 @@ public class UserFunction
             }
 
             // Get user profile to check permissions
-            var userProfileHandler = _dataContext.For<UserProfileHandler>(userId);
+            var userProfileHandler = _dataContext.For<AccountProfileHandler>(userId);
             var userProfile = await userProfileHandler.Get();
             
             if (userProfile == null)
@@ -189,7 +189,7 @@ public class UserFunction
     /// </summary>
     [Function("UpdateUserProfile")]
     public async Task<HttpResponseData> UpdateUserProfile(
-        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "users/me")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Function, "put", Route = "accounts/me")] HttpRequestData req,
         FunctionContext executionContext)
     {
         try
@@ -229,7 +229,7 @@ public class UserFunction
 
             // Get handler and update profile
             updateProfile.OwnerEntityId = userId;
-            var userProfileHandler = _dataContext.For<UserProfileHandler>(userId);
+            var userProfileHandler = _dataContext.For<AccountProfileHandler>(userId);
             
             // Handler owns the update operation
             await _dataContext.Commit(updateProfile);

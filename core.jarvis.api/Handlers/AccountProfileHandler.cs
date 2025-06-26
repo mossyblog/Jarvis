@@ -7,11 +7,11 @@ namespace core.jarvis.api.Handlers;
 /// <summary>
 /// Handler for managing SecurityProfile components.
 /// </summary>
-public class UserProfileHandler : ComponentHandler<SecurityProfile>
+public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 {
-    public UserProfileHandler(
+    public AccountProfileHandler(
         IDataContext dataContext,
-        ILogger<UserProfileHandler> logger)
+        ILogger<AccountProfileHandler> logger)
         : base(dataContext, logger)
     {
     }

@@ -1,8 +1,10 @@
 using core.jarvis;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
+using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.data;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -59,6 +61,14 @@ public static class ServiceCollectionExtensions
         // Add core Jarvis services
         services.RegisterJarvis();
 
+        // Register query handlers for API-specific components
+        services.AddScoped<IComponentQueryHandler<SecurityProfile>, ComponentQueryHandler<SecurityProfile>>();
+        services.AddScoped<IComponentQueryHandler<Account>, ComponentQueryHandler<Account>>();
+        services.AddScoped<IComponentQueryHandler<AuthToken>, ComponentQueryHandler<AuthToken>>();
+        services.AddScoped<IComponentQueryHandler<Role>, ComponentQueryHandler<Role>>();
+        services.AddScoped<IComponentQueryHandler<Permission>, ComponentQueryHandler<Permission>>();
+        services.AddScoped<IComponentQueryHandler<NavigationItem>, ComponentQueryHandler<NavigationItem>>();
+
         // Register API-specific handlers - both as interface and concrete type
         // This allows DataContext.For<THandler> to resolve them by concrete type
         services.AddScoped<IComponentHandler, SystemSetupHandler>();
@@ -73,11 +83,11 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, SecurityTokenHandler>();
         services.AddScoped<SecurityTokenHandler>();
         
-        services.AddScoped<IComponentHandler, UserHandler>();
-        services.AddScoped<UserHandler>();
+        services.AddScoped<IComponentHandler, AccountHandler>();
+        services.AddScoped<AccountHandler>();
         
-        services.AddScoped<IComponentHandler, UserProfileHandler>();
-        services.AddScoped<UserProfileHandler>();
+        services.AddScoped<IComponentHandler, AccountProfileHandler>();
+        services.AddScoped<AccountProfileHandler>();
         
         services.AddScoped<IComponentHandler, RoleHandler>();
         services.AddScoped<RoleHandler>();

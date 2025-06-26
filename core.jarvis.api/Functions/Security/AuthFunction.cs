@@ -10,6 +10,7 @@ using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -33,7 +34,7 @@ public class AuthFunction
     /// </summary>
     [Function("auth")]
     [OpenApiOperation(operationId: "authenticate", tags: new[] { "Security" }, Summary = "Authenticate user", Description = "Authenticates a user with email and password, returning JWT tokens for API access.")]
-    [OpenApiRequestBody("application/json", typeof(User), Required = true, Description = "Authentication credentials as an IComponent object")]
+    [OpenApiRequestBody("application/json", typeof(Account), Required = true, Description = "Authentication credentials as an IComponent object")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AuthToken), Summary = "Authentication successful", Description = "Returns JWT access token, refresh token, and session information")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(object), Summary = "Authentication failed", Description = "Invalid credentials provided")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(object), Summary = "Bad request", Description = "Request validation failed")]
@@ -44,28 +45,45 @@ public class AuthFunction
         {
             // Parse request body
             var requestBody = await req.ReadAsStringAsync();
+            _logger.LogInformation("Auth request body: {Body}", requestBody);
             if (string.IsNullOrEmpty(requestBody))
             {
+                _logger.LogInformation("Auth request body is empty");
+
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Request body is required");
             }
 
-            User? userRequest;
+            Account? accountRequest;
             try
             {
-                userRequest = JsonConvert.DeserializeObject<User>(requestBody);
+                // First try with default (PascalCase) deserialization
+                accountRequest = JsonConvert.DeserializeObject<Account>(requestBody);
             }
             catch (JsonException)
             {
-                return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format");
+                try
+                {
+                    // If that fails, try with camelCase
+                    var camelCaseSettings = new JsonSerializerSettings
+                    {
+                        ContractResolver = new CamelCasePropertyNamesContractResolver()
+                    };
+                    accountRequest = JsonConvert.DeserializeObject<Account>(requestBody, camelCaseSettings);
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogWarning("JSON deserialization failed: {Message}. Request body: {Body}", ex.Message, requestBody);
+                    return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format");
+                }
             }
 
-            if (userRequest == null)
+            if (accountRequest == null)
             {
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Invalid request format");
             }
 
             // Validate required fields
-            if (string.IsNullOrEmpty(userRequest.Email) || string.IsNullOrEmpty(userRequest.Password))
+            if (string.IsNullOrEmpty(accountRequest.Email) || string.IsNullOrEmpty(accountRequest.Password))
             {
                 return await CreateErrorResponse(req, HttpStatusCode.BadRequest, "Email and password are required");
             }
@@ -93,7 +111,7 @@ public class AuthFunction
             }
 
             // Add IP and User-Agent to the request
-            userRequest = userRequest with 
+            accountRequest = accountRequest with 
             { 
                 IpAddress = ipAddress ?? "unknown",
                 UserAgent = userAgent
@@ -102,7 +120,7 @@ public class AuthFunction
             // Ultra-thin function: create entity, get handler, call single method
             var authEntityId = Guid.NewGuid();
             var authHandler = _dataContext.For<AuthHandler>(authEntityId);
-            var authToken = await authHandler.Authenticate(userRequest);
+            var authToken = await authHandler.Authenticate(accountRequest);
 
             // Check if authentication succeeded using handler method
             if (!authHandler.IsAuthenticated(authToken))

@@ -14,7 +14,7 @@ namespace core.jarvis.data
             Dapper.DefaultTypeMap.MatchNamesWithUnderscores = true;
         }
         /// <summary>
-        /// Ensures the minimum schema (users table, password_hash column, RLS policy) exists and is up-to-date.
+        /// Ensures the minimum schema (user table, password_hash column, RLS policy) exists and is up-to-date.
         /// Creates or alters as needed.
         /// </summary>
         /// <param name="conn">The Npgsql database connection.</param>
@@ -23,12 +23,14 @@ namespace core.jarvis.data
             if (conn.State != System.Data.ConnectionState.Open)
                 await conn.OpenAsync();
 
-            // Create users table if not exists
+            // Create account table if not exists
             var createTableSql = @"
-                CREATE TABLE IF NOT EXISTS users (
+                CREATE TABLE IF NOT EXISTS ""account"" (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    owner_entity_id UUID NOT NULL,
                     email TEXT UNIQUE NOT NULL,
                     password_hash TEXT NOT NULL,
+                    is_active BOOLEAN NOT NULL DEFAULT true,
                     created_at TIMESTAMPTZ DEFAULT now()
                 );";
             await new NpgsqlCommand(createTableSql, conn).ExecuteNonQueryAsync();
@@ -39,25 +41,25 @@ namespace core.jarvis.data
                 BEGIN
                     IF NOT EXISTS (
                         SELECT 1 FROM information_schema.columns 
-                        WHERE table_name='users' AND column_name='password_hash'
+                        WHERE table_name='account' AND column_name='password_hash'
                     ) THEN
-                        ALTER TABLE users ADD COLUMN password_hash TEXT NOT NULL;
+                        ALTER TABLE ""account"" ADD COLUMN password_hash TEXT NOT NULL;
                     END IF;
                 END
                 $$;";
             await new NpgsqlCommand(addColumnSql, conn).ExecuteNonQueryAsync();
 
             // Enable RLS if not already enabled
-            var enableRlsSql = "ALTER TABLE users ENABLE ROW LEVEL SECURITY;";
+            var enableRlsSql = @"ALTER TABLE ""account"" ENABLE ROW LEVEL SECURITY;";
             await new NpgsqlCommand(enableRlsSql, conn).ExecuteNonQueryAsync();
 
             // Create a default RLS policy if none exists
-            var policyExistsSql = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users')";
+            var policyExistsSql = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'account')";
             var hasPolicy = (bool)(await new NpgsqlCommand(policyExistsSql, conn).ExecuteScalarAsync() ?? false);
             if (!hasPolicy)
             {
                 var createPolicySql = @"
-                    CREATE POLICY users_select_policy ON users
+                    CREATE POLICY account_select_policy ON ""account""
                     FOR SELECT
                     USING (true);";
                 await new NpgsqlCommand(createPolicySql, conn).ExecuteNonQueryAsync();

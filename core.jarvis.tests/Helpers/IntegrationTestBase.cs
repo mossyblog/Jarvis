@@ -11,6 +11,7 @@ using core.jarvis.tests.Fixtures.Components;
 using core.jarvis.tests.Fixtures.Handlers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
 using Serilog;
 using Serilog.Events;
@@ -29,6 +30,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     private IDataContext _dataContext;
     private readonly ConcurrentDictionary<Guid, byte> _testEntities = new();
     private string _connectionString;
+    private System.Reflection.Assembly? _apiAssembly;
 
     protected ILogger<TestHandler> Logger() => _logger;
     protected IDataContext TestDataContext() => _dataContext;
@@ -103,11 +105,35 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddTransient<BlogHandler>();
         
         // Register API handlers if available (for API tests)
-        var apiAssembly = AppDomain.CurrentDomain.GetAssemblies()
+        _apiAssembly = AppDomain.CurrentDomain.GetAssemblies()
             .FirstOrDefault(a => a.GetName().Name == "core.jarvis.api");
-        if (apiAssembly != null)
+        if (_apiAssembly != null)
         {
-            services.RegisterAllComponentHandlersAndQueriesFromAssembly(apiAssembly);
+            services.RegisterAllComponentHandlersAndQueriesFromAssembly(_apiAssembly);
+            
+            // Register API services for authentication tests
+            services.AddTransient<core.jarvis.api.Services.IPasswordPolicyService, core.jarvis.api.Services.PasswordPolicyService>();
+            
+            // TokenService needs specific constructor parameters
+            services.AddTransient<core.jarvis.api.Services.ITokenService>(sp =>
+            {
+                var config = sp.GetRequiredService<IConfiguration>();
+                return new core.jarvis.api.Services.TokenService(
+                    issuer: config["Jwt:Issuer"] ?? "test-issuer",
+                    audience: config["Jwt:Audience"] ?? "test-audience",
+                    secretKey: config["Jwt:SecretKey"] ?? "Test-Secret-Key-Must-Be-At-Least-256-Bits-For-Security-Testing",
+                    accessTokenExpirationMinutes: int.Parse(config["Jwt:AccessTokenExpirationMinutes"] ?? "15")
+                );
+            });
+            
+            services.AddTransient<core.jarvis.api.Services.ISecurityAuditService, core.jarvis.api.Services.SecurityAuditService>();
+            services.AddTransient<core.jarvis.api.Services.IConstantTimeService, core.jarvis.api.Services.ConstantTimeService>();
+            services.AddSingleton<IConfiguration>(sp =>
+            {
+                var configBuilder = new ConfigurationBuilder();
+                configBuilder.AddEnvironmentVariables();
+                return configBuilder.Build();
+            });
         }
 
         _serviceProvider = services.BuildServiceProvider();
@@ -134,6 +160,41 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                 await TestDataContext().Remove<PaymentTestComponent>(entityId);
                 await TestDataContext().Remove<WorkOrderTestComponent>(entityId);
                 await TestDataContext().Remove<AuditEvent>(entityId);
+                
+                // Clean up API components if available
+                if (_apiAssembly != null)
+                {
+                    // For Account, we need to check if the entity actually owns an Account component
+                    try
+                    {
+                        await TestDataContext().Remove<core.jarvis.api.Models.Account>(entityId);
+                    }
+                    catch { }
+                    
+                    try
+                    {
+                        await TestDataContext().Remove<core.jarvis.api.Models.AuthToken>(entityId);
+                    }
+                    catch { }
+                    
+                    try
+                    {
+                        await TestDataContext().Remove<core.jarvis.api.Models.SecurityProfile>(entityId);
+                    }
+                    catch { }
+                    
+                    try
+                    {
+                        await TestDataContext().Remove<core.jarvis.api.Models.Role>(entityId);
+                    }
+                    catch { }
+                    
+                    try
+                    {
+                        await TestDataContext().Remove<core.jarvis.api.Models.Permission>(entityId);
+                    }
+                    catch { }
+                }
             }
             catch (Exception ex)
             {

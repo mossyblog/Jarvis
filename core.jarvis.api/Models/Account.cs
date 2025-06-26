@@ -3,21 +3,21 @@ using core.jarvis.Data;
 namespace core.jarvis.api.Models;
 
 /// <summary>
-/// Component representing user account and authentication data.
+/// Component representing account and authentication data.
 /// </summary>
-public record User : IComponent
+public record Account : IComponent
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid OwnerEntityId { get; set; }
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// User's email address.
+    /// Account's email address.
     /// </summary>
     public string Email { get; init; } = string.Empty;
 
     /// <summary>
-    /// Hashed password (from users table) - for persistent storage.
+    /// Hashed password (from account table) - for persistent storage.
     /// </summary>
     public string PasswordHash { get; init; } = string.Empty;
 
@@ -42,12 +42,12 @@ public record User : IComponent
     public string? ClientId { get; init; }
 
     /// <summary>
-    /// Whether the user account is active.
+    /// Whether the account is active.
     /// </summary>
     public bool IsActive { get; init; } = true;
 
     /// <summary>
-    /// When the user was created.
+    /// When the account was created.
     /// </summary>
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
 

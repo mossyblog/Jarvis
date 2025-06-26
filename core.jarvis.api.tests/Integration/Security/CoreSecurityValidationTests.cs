@@ -221,7 +221,7 @@ public class CoreSecurityValidationTests : ApiIntegrationTestBase
         var passwordResult = passwordPolicy.ValidatePassword(strongPassword, "secure@example.com");
         passwordResult.IsValid.ShouldBeTrue("Test password should meet policy");
         
-        var requestBody = JsonConvert.SerializeObject(new User 
+        var requestBody = JsonConvert.SerializeObject(new Account 
         { 
             Email = "secure@example.com", 
             Password = strongPassword

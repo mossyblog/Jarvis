@@ -1,6 +1,13 @@
 -- Setup script for Jarvis integration tests
 -- Run this against your local PostgreSQL test instance
--- WARNING: This script DROPS and recreates tables - only use in test environments!
+-- WARNING: This script DROPS and recreates the entire database - only use in test environments!
+
+-- Drop the test database if it exists and recreate it
+DROP DATABASE IF EXISTS jarvis_test;
+CREATE DATABASE jarvis_test;
+
+-- Connect to the new database
+\c jarvis_test;
 
 -- Enable required extensions for Supabase compatibility
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -13,18 +20,19 @@ CREATE SCHEMA IF NOT EXISTS graphql;
 -- as it needs to be run as supabase_admin user
 
 -- Drop existing tables (CASCADE will drop dependent objects)
-DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS "account" CASCADE;
+DROP TABLE IF EXISTS auth_token CASCADE;
 DROP TABLE IF EXISTS security_token CASCADE;
 DROP TABLE IF EXISTS audit_event CASCADE;
 DROP TABLE IF EXISTS security_audit_event CASCADE;
-DROP TABLE IF EXISTS user_profile CASCADE;
+DROP TABLE IF EXISTS security_profile CASCADE;
 DROP TABLE IF EXISTS role CASCADE;
 DROP TABLE IF EXISTS permission CASCADE;
 DROP TABLE IF EXISTS test_component CASCADE;
 DROP TABLE IF EXISTS position_component CASCADE;
 DROP TABLE IF EXISTS velocity_component CASCADE;
-DROP TABLE IF EXISTS blog CASCADE;
-DROP TABLE IF EXISTS blog_post CASCADE;
+DROP TABLE IF EXISTS blog_component CASCADE;
+DROP TABLE IF EXISTS blog_post_component CASCADE;
 DROP TABLE IF EXISTS component_snapshots CASCADE;
 DROP TABLE IF EXISTS order_component CASCADE;
 DROP TABLE IF EXISTS invoice_test_component CASCADE;
@@ -32,63 +40,78 @@ DROP TABLE IF EXISTS payment_test_component CASCADE;
 DROP TABLE IF EXISTS work_order_test_component CASCADE;
 DROP TABLE IF EXISTS entity_relationship CASCADE;
 
--- Create users table for PgClient authentication
-CREATE TABLE users (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Create test user with hashed password
--- Password: 'test123' (bcrypt hash with cost factor 12)
-INSERT INTO users (email, password_hash) VALUES 
-    ('test@example.com', '$2a$12$QnOKnn.PumrtVscPkO3C.ONHR/5NANzEbqMoLQOyUFhQMhynyVoe.');
-
--- Create security_token table for JWT refresh tokens
-CREATE TABLE security_token (
+-- Create account table (component)
+CREATE TABLE IF NOT EXISTS "account" (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL UNIQUE,
-    user_id UUID NOT NULL REFERENCES users(id),
-    session_id UUID NOT NULL,
-    refresh_token_hash TEXT NOT NULL,
-    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL DEFAULT '',
+    two_factor_code VARCHAR(10),
+    auth_method VARCHAR(50) NOT NULL DEFAULT 'password',
+    client_id VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ip_address VARCHAR(45),
+    user_agent TEXT
+);
+
+-- Create indexes for account table
+CREATE INDEX IF NOT EXISTS idx_account_owner_entity_id ON "account"(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_account_email ON "account"(email);
+
+-- Create test account with hashed password
+-- Password: 'test123' (bcrypt hash with cost factor 12)
+INSERT INTO "account" (owner_entity_id, email, password_hash, password, auth_method, is_active) VALUES 
+    (gen_random_uuid(), 'test@example.com', '$2a$12$QnOKnn.PumrtVscPkO3C.ONHR/5NANzEbqMoLQOyUFhQMhynyVoe.', '', 'password', true);
+
+-- Create auth_token table (component)
+CREATE TABLE IF NOT EXISTS auth_token (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    access_token TEXT NOT NULL DEFAULT '',
+    refresh_token TEXT NOT NULL DEFAULT '',
+    refresh_token_hash TEXT NOT NULL DEFAULT '',
+    expires_at TIMESTAMPTZ NOT NULL,
     refresh_expires_at TIMESTAMPTZ NOT NULL,
+    token_type TEXT NOT NULL DEFAULT 'Bearer',
+    session_id UUID NOT NULL,
+    scope TEXT NOT NULL DEFAULT '',
     client_id TEXT,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ip_address TEXT,
     user_agent TEXT,
     is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
     revoked_at TIMESTAMPTZ,
-    version INTEGER DEFAULT 1,
+    version INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create indexes for security_token
-CREATE INDEX idx_security_token_owner_entity_id ON security_token(owner_entity_id);
-CREATE INDEX idx_security_token_user_id ON security_token(user_id);
-CREATE INDEX idx_security_token_session_id ON security_token(session_id);
-CREATE INDEX idx_security_token_refresh_expires_at ON security_token(refresh_expires_at) WHERE is_revoked = FALSE;
+-- Create indexes for auth_token
+CREATE INDEX IF NOT EXISTS idx_auth_token_owner_entity_id ON auth_token(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_auth_token_session_id ON auth_token(session_id);
+CREATE INDEX IF NOT EXISTS idx_auth_token_refresh_expires_at ON auth_token(refresh_expires_at) WHERE is_revoked = FALSE;
 
--- Create user_profile table
-CREATE TABLE user_profile (
+-- Create security_profile table (component)
+CREATE TABLE IF NOT EXISTS security_profile (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL UNIQUE,
-    name VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL DEFAULT '',
     avatar VARCHAR(500),
     role_ids TEXT[] DEFAULT '{}',
+    permission_ids TEXT[] DEFAULT '{}',
     preferences JSONB DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    version INTEGER DEFAULT 1
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create indexes for user_profile
-CREATE INDEX idx_user_profile_owner_entity_id ON user_profile(owner_entity_id);
+-- Create indexes for security_profile
+CREATE INDEX IF NOT EXISTS idx_security_profile_owner_entity_id ON security_profile(owner_entity_id);
 
 -- Create role table
-CREATE TABLE role (
+CREATE TABLE IF NOT EXISTS role (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL UNIQUE,
     name VARCHAR(100) NOT NULL,
@@ -100,11 +123,11 @@ CREATE TABLE role (
 );
 
 -- Create indexes for role
-CREATE INDEX idx_role_owner_entity_id ON role(owner_entity_id);
-CREATE INDEX idx_role_name ON role(name);
+CREATE INDEX IF NOT EXISTS idx_role_owner_entity_id ON role(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_role_name ON role(name);
 
 -- Create permission table
-CREATE TABLE permission (
+CREATE TABLE IF NOT EXISTS permission (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL UNIQUE,
     resource VARCHAR(100) NOT NULL,
@@ -115,11 +138,11 @@ CREATE TABLE permission (
 );
 
 -- Create indexes for permission
-CREATE INDEX idx_permission_owner_entity_id ON permission(owner_entity_id);
-CREATE INDEX idx_permission_resource ON permission(resource);
+CREATE INDEX IF NOT EXISTS idx_permission_owner_entity_id ON permission(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_permission_resource ON permission(resource);
 
 -- Create audit_event table
-CREATE TABLE audit_event (
+CREATE TABLE IF NOT EXISTS audit_event (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     entity_type VARCHAR(100) NOT NULL,
@@ -136,13 +159,13 @@ CREATE TABLE audit_event (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_audit_event_entity_id ON audit_event(owner_entity_id);
-CREATE INDEX idx_audit_event_event_type ON audit_event(event_type);
-CREATE INDEX idx_audit_event_timestamp ON audit_event(timestamp);
-CREATE INDEX idx_audit_event_transaction_id ON audit_event(transaction_id);
+CREATE INDEX IF NOT EXISTS idx_audit_event_entity_id ON audit_event(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_audit_event_event_type ON audit_event(event_type);
+CREATE INDEX IF NOT EXISTS idx_audit_event_timestamp ON audit_event(timestamp);
+CREATE INDEX IF NOT EXISTS idx_audit_event_transaction_id ON audit_event(transaction_id);
 
 -- Create security_audit_event table for API security auditing
-CREATE TABLE security_audit_event (
+CREATE TABLE IF NOT EXISTS security_audit_event (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000',
     event_type VARCHAR(255) NOT NULL,
@@ -176,12 +199,12 @@ BEGIN
 END $$;
 
 -- Create indexes for security_audit_event
-CREATE INDEX idx_security_audit_event_owner ON security_audit_event(owner_entity_id);
-CREATE INDEX idx_security_audit_event_type ON security_audit_event(event_type);
-CREATE INDEX idx_security_audit_event_time ON security_audit_event(event_time);
+CREATE INDEX IF NOT EXISTS idx_security_audit_event_owner ON security_audit_event(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_security_audit_event_type ON security_audit_event(event_type);
+CREATE INDEX IF NOT EXISTS idx_security_audit_event_time ON security_audit_event(event_time);
 
 -- Create test_component table for integration tests
-CREATE TABLE test_component (
+CREATE TABLE IF NOT EXISTS test_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -194,10 +217,10 @@ CREATE TABLE test_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_test_component_owner_entity_id ON test_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_test_component_owner_entity_id ON test_component(owner_entity_id);
 
 -- Create position_component table for integration tests
-CREATE TABLE position_component (
+CREATE TABLE IF NOT EXISTS position_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     x REAL NOT NULL DEFAULT 0,
@@ -209,10 +232,10 @@ CREATE TABLE position_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_position_component_owner_entity_id ON position_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_position_component_owner_entity_id ON position_component(owner_entity_id);
 
 -- Create velocity_component table for integration tests
-CREATE TABLE velocity_component (
+CREATE TABLE IF NOT EXISTS velocity_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     delta_x REAL NOT NULL DEFAULT 0,
@@ -224,10 +247,10 @@ CREATE TABLE velocity_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_velocity_component_owner_entity_id ON velocity_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_velocity_component_owner_entity_id ON velocity_component(owner_entity_id);
 
 -- Create blog table for blog example
-CREATE TABLE blog_component (
+CREATE TABLE IF NOT EXISTS blog_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     name VARCHAR(255) NOT NULL,
@@ -243,10 +266,10 @@ CREATE TABLE blog_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_blog_component_owner_entity_id ON blog_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_blog_component_owner_entity_id ON blog_component(owner_entity_id);
 
 -- Create blog_post table for blog example
-CREATE TABLE blog_post_component (
+CREATE TABLE IF NOT EXISTS blog_post_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -264,10 +287,10 @@ CREATE TABLE blog_post_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_blog_post_component_owner_entity_id ON blog_post_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_blog_post_component_owner_entity_id ON blog_post_component(owner_entity_id);
 
 -- Create order_component table for order example
-CREATE TABLE order_component (
+CREATE TABLE IF NOT EXISTS order_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     order_number VARCHAR(255) NOT NULL,
@@ -285,10 +308,10 @@ CREATE TABLE order_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_order_component_owner_entity_id ON order_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_order_component_owner_entity_id ON order_component(owner_entity_id);
 
 -- Create invoice_test_component table
-CREATE TABLE invoice_test_component (
+CREATE TABLE IF NOT EXISTS invoice_test_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     work_order_id UUID,
@@ -303,10 +326,10 @@ CREATE TABLE invoice_test_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_invoice_test_component_owner_entity_id ON invoice_test_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_invoice_test_component_owner_entity_id ON invoice_test_component(owner_entity_id);
 
 -- Create payment_test_component table
-CREATE TABLE payment_test_component (
+CREATE TABLE IF NOT EXISTS payment_test_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     payment_method VARCHAR(50) NOT NULL,
@@ -320,10 +343,10 @@ CREATE TABLE payment_test_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_payment_test_component_owner_entity_id ON payment_test_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_payment_test_component_owner_entity_id ON payment_test_component(owner_entity_id);
 
 -- Create work_order_test_component table
-CREATE TABLE work_order_test_component (
+CREATE TABLE IF NOT EXISTS work_order_test_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL,
     work_order_id VARCHAR(255),
@@ -339,10 +362,10 @@ CREATE TABLE work_order_test_component (
 );
 
 -- Create index for owner_entity_id queries
-CREATE INDEX idx_work_order_test_component_owner_entity_id ON work_order_test_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_work_order_test_component_owner_entity_id ON work_order_test_component(owner_entity_id);
 
 -- Create component_snapshots table for versioning support
-CREATE TABLE component_snapshots (
+CREATE TABLE IF NOT EXISTS component_snapshots (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     entity_id UUID NOT NULL,
     component_type VARCHAR(255) NOT NULL,
@@ -353,12 +376,12 @@ CREATE TABLE component_snapshots (
 );
 
 -- Create indexes for component_snapshots
-CREATE INDEX idx_snapshots_entity ON component_snapshots(entity_id);
-CREATE INDEX idx_snapshots_component ON component_snapshots(component_id);
-CREATE INDEX idx_snapshots_type ON component_snapshots(component_type);
+CREATE INDEX IF NOT EXISTS idx_snapshots_entity ON component_snapshots(entity_id);
+CREATE INDEX IF NOT EXISTS idx_snapshots_component ON component_snapshots(component_id);
+CREATE INDEX IF NOT EXISTS idx_snapshots_type ON component_snapshots(component_type);
 
 -- Create entity_relationship table for tracking parent-child relationships
-CREATE TABLE entity_relationship (
+CREATE TABLE IF NOT EXISTS entity_relationship (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID NOT NULL UNIQUE,
     parent_id UUID,
@@ -373,24 +396,29 @@ CREATE TABLE entity_relationship (
 );
 
 -- Create indexes for performance
-CREATE INDEX idx_entity_relationship_parent_id ON entity_relationship(parent_id);
-CREATE INDEX idx_entity_relationship_updated_at ON entity_relationship(updated_at);
+CREATE INDEX IF NOT EXISTS idx_entity_relationship_parent_id ON entity_relationship(parent_id);
+CREATE INDEX IF NOT EXISTS idx_entity_relationship_updated_at ON entity_relationship(updated_at);
 
--- Enable RLS on users table (required by PgClient)
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+-- Enable RLS on account table (required by PgClient)
+ALTER TABLE "account" ENABLE ROW LEVEL SECURITY;
 
--- Create a simple RLS policy for users table
-CREATE POLICY "Users can view their own data" ON users
-    FOR SELECT USING (true);
+-- Create a simple RLS policy for account table (if not exists)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'account' AND policyname = 'Enable all for development') THEN
+        CREATE POLICY "Enable all for development" ON "account"
+            FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+END $$;
 
 -- Display confirmation
 DO $$
 BEGIN
     RAISE NOTICE 'Test database setup complete!';
     RAISE NOTICE 'Tables created:';
-    RAISE NOTICE '  - users (with test user: test@example.com / test123)';
-    RAISE NOTICE '  - security_token';
-    RAISE NOTICE '  - user_profile';
+    RAISE NOTICE '  - account (with test account: test@example.com / test123)';
+    RAISE NOTICE '  - auth_token';
+    RAISE NOTICE '  - security_profile';
     RAISE NOTICE '  - role';
     RAISE NOTICE '  - permission';
     RAISE NOTICE '  - audit_event';

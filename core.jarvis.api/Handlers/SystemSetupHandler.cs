@@ -45,10 +45,10 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
             },
             new NavigationItem
             {
-                MenuId = "users",
-                Label = "Users",
-                Href = "/users",
-                Icon = "users",
+                MenuId = "accounts",
+                Label = "Accounts",
+                Href = "/accounts",
+                Icon = "accounts",
                 SortOrder = 2,
                 IsActive = true,
                 RequiredPermissionId = null // Will be set to actual permission ID later

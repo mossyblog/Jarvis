@@ -68,15 +68,15 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
             {
                 try
                 {
-                    var user = JsonConvert.DeserializeObject<User>(requestBody);
-                    if (!string.IsNullOrEmpty(user?.Email))
+                    var account = JsonConvert.DeserializeObject<Account>(requestBody);
+                    if (!string.IsNullOrEmpty(account?.Email))
                     {
-                        if (IsAccountLocked(user.Email))
+                        if (IsAccountLocked(account.Email))
                         {
-                            _logger.LogWarning("Account locked due to failed attempts: {Email}", user.Email);
+                            _logger.LogWarning("Account locked due to failed attempts: {Email}", account.Email);
                             
                             // Add progressive delay to prevent timing attacks
-                            var lockInfo = _accountLockStore.GetValueOrDefault(user.Email.ToLowerInvariant());
+                            var lockInfo = _accountLockStore.GetValueOrDefault(account.Email.ToLowerInvariant());
                             if (lockInfo != null)
                             {
                                 var delay = lockInfo.FailedAttempts * ProgressiveDelayMilliseconds;
@@ -201,10 +201,10 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
 
         try
         {
-            var user = JsonConvert.DeserializeObject<User>(requestBody);
-            if (!string.IsNullOrEmpty(user?.Email))
+            var account = JsonConvert.DeserializeObject<Account>(requestBody);
+            if (!string.IsNullOrEmpty(account?.Email))
             {
-                TrackFailedAttempt(user.Email);
+                TrackFailedAttempt(account.Email);
             }
         }
         catch

@@ -58,8 +58,9 @@ public static class TestDatabaseSetup
             "test_component",
             "audit_event",
             "security_audit_event",
-            "security_token"
-            // Note: We don't clean the users table as it contains test users
+            "auth_token",
+            "security_profile"
+            // Note: We don't clean the account table as it contains test accounts
         };
         
         await using var connection = new NpgsqlConnection(connectionString);
@@ -85,10 +86,10 @@ public static class TestDatabaseSetup
             await using var connection = new NpgsqlConnection(connectionString);
             await connection.OpenAsync();
             
-            // Check if users table exists and has test user
+            // Check if account table exists and has test account
             var sql = @"
                 SELECT COUNT(*) 
-                FROM users 
+                FROM ""account"" 
                 WHERE email = 'test@example.com'";
                 
             await using var command = new NpgsqlCommand(sql, connection);

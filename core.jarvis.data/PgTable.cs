@@ -42,7 +42,8 @@ public class PgTable<T> where T : class, new()
         _client = client;
         _rlsPolicies = rlsPolicies ?? new RLSPolicyRegistry();
         _jwtClaims = jwtClaims ?? new Dictionary<string, string>();
-        _tableName = typeof(T).Name.ToSnakeCase();
+        // Quote table name to handle reserved words like "user"
+        _tableName = $"\"{typeof(T).Name.ToSnakeCase()}\"";
     }
 
     /// <summary>
@@ -64,8 +65,9 @@ public class PgTable<T> where T : class, new()
             }
         }
 
-        // Check if insert is allowed by RLS policies
-        if (!_rlsPolicies.CheckOperation(_tableName, PolicyType.Insert, _jwtClaims, entityData))
+        // Check if insert is allowed by RLS policies (use unquoted table name)
+        var unquotedTableName = typeof(T).Name.ToSnakeCase();
+        if (!_rlsPolicies.CheckOperation(unquotedTableName, PolicyType.Insert, _jwtClaims, entityData))
         {
             // Silently fail like PostgreSQL RLS would
             return;
@@ -94,7 +96,7 @@ public class PgTable<T> where T : class, new()
         var values = string.Join(", ", props.Select(p => 
         {
             // Special handling for properties that map to JSONB columns
-            if ((p.Name == "Metadata" || p.Name == "Snapshots" || p.Name == "ChildTypes") && p.PropertyType == typeof(string))
+            if ((p.Name == "Metadata" || p.Name == "Snapshots" || p.Name == "ChildTypes" || p.Name == "Preferences") && p.PropertyType == typeof(string))
                 return $"@{p.Name}::jsonb";
             return $"@{p.Name}";
         }));
@@ -154,8 +156,9 @@ public class PgTable<T> where T : class, new()
         var sql = $"SELECT {columns} FROM {_tableName}";
         var allWhereClauses = new List<string>(_whereClauses);
         
-        // Add RLS policy WHERE clauses
-        var rlsWhereClause = _rlsPolicies.BuildWhereClause(_tableName, _jwtClaims);
+        // Add RLS policy WHERE clauses (use unquoted table name for policy lookup)
+        var unquotedTableName = typeof(T).Name.ToSnakeCase();
+        var rlsWhereClause = _rlsPolicies.BuildWhereClause(unquotedTableName, _jwtClaims);
         if (!string.IsNullOrEmpty(rlsWhereClause))
         {
             allWhereClauses.Add(rlsWhereClause);
@@ -230,8 +233,9 @@ public class PgTable<T> where T : class, new()
             }
         }
 
-        // Check if update is allowed by RLS policies
-        if (!_rlsPolicies.CheckOperation(_tableName, PolicyType.Update, _jwtClaims, entityData))
+        // Check if update is allowed by RLS policies (use unquoted table name)
+        var unquotedTableName = typeof(T).Name.ToSnakeCase();
+        if (!_rlsPolicies.CheckOperation(unquotedTableName, PolicyType.Update, _jwtClaims, entityData))
         {
             // Silently fail like PostgreSQL RLS would
             return;
@@ -243,7 +247,7 @@ public class PgTable<T> where T : class, new()
         var setClauses = string.Join(", ", props.Select(p => 
         {
             // Special handling for properties that map to JSONB columns
-            if ((p.Name == "Metadata" || p.Name == "Snapshots" || p.Name == "ChildTypes") && p.PropertyType == typeof(string))
+            if ((p.Name == "Metadata" || p.Name == "Snapshots" || p.Name == "ChildTypes" || p.Name == "Preferences") && p.PropertyType == typeof(string))
                 return $"{p.Name.ToSnakeCase()} = @{p.Name}::jsonb";
             return $"{p.Name.ToSnakeCase()} = @{p.Name}";
         }));
@@ -288,8 +292,11 @@ public class PgTable<T> where T : class, new()
         object queryParams;
         
         // Tables with unique constraint on owner_entity_id (one component per entity)
-        var hasUniqueOwnerEntityId = _tableName.EndsWith("_component") && 
-            !_tableName.Equals("blog_post_component"); // blog_post allows multiple per entity
+        // Include core tables like 'account', 'role', 'permission' that follow component pattern
+        var coreComponentTables = new[] { "account", "role", "permission", "auth_token", "security_profile" };
+        var unquotedTableName = typeof(T).Name.ToSnakeCase();
+        var hasUniqueOwnerEntityId = (unquotedTableName.EndsWith("_component") && !unquotedTableName.Equals("blog_post_component")) ||
+            coreComponentTables.Contains(unquotedTableName);
         
         if (ownerEntityIdProperty != null && hasUniqueOwnerEntityId)
         {
@@ -328,8 +335,9 @@ public class PgTable<T> where T : class, new()
         var sql = $"DELETE FROM {_tableName}";
         var allWhereClauses = new List<string>(_whereClauses);
         
-        // Add RLS policy WHERE clauses
-        var rlsWhereClause = _rlsPolicies.BuildWhereClause(_tableName, _jwtClaims);
+        // Add RLS policy WHERE clauses (use unquoted table name for policy lookup)
+        var unquotedTableName = typeof(T).Name.ToSnakeCase();
+        var rlsWhereClause = _rlsPolicies.BuildWhereClause(unquotedTableName, _jwtClaims);
         if (!string.IsNullOrEmpty(rlsWhereClause))
         {
             allWhereClauses.Add(rlsWhereClause);
@@ -340,8 +348,8 @@ public class PgTable<T> where T : class, new()
             sql += $" WHERE {string.Join(" AND ", allWhereClauses)}";
         }
 
-        // Check if delete is allowed by RLS policies
-        if (!_rlsPolicies.CheckOperation(_tableName, PolicyType.Delete, _jwtClaims, new Dictionary<string, object>()))
+        // Check if delete is allowed by RLS policies (use unquoted table name)
+        if (!_rlsPolicies.CheckOperation(unquotedTableName, PolicyType.Delete, _jwtClaims, new Dictionary<string, object>()))
         {
             // Silently fail like PostgreSQL RLS would
             return 0;

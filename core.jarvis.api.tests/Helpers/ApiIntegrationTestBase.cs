@@ -109,9 +109,9 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
     /// <summary>
     /// Helper method to create test authentication request
     /// </summary>
-    protected static core.jarvis.api.Models.User CreateTestAuthRequest(string email = "test@example.com", string password = "test123")
+    protected static core.jarvis.api.Models.Account CreateTestAuthRequest(string email = "test@example.com", string password = "test123")
     {
-        return new core.jarvis.api.Models.User
+        return new core.jarvis.api.Models.Account
         {
             Email = email,
             Password = password,

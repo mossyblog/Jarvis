@@ -130,7 +130,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         var roleRequirements = new Dictionary<string, string[]>
         {
             { "/api/security/roles", new[] { "admin" } },           // Role management requires admin
-            { "/api/security/users", new[] { "admin" } },           // User management requires admin
+            { "/api/security/accounts", new[] { "admin" } },        // Account management requires admin
             { "/api/security/permissions", new[] { "admin" } },     // Permission management requires admin
             { "/api/security/navigation", new[] { "admin", "user" } } // Navigation available to all authenticated users
         };

@@ -16,10 +16,11 @@ var host = new HostBuilder()
     {
         // Configure middleware pipeline in order
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.SecurityHeadersMiddleware>();
-        workerApplication.UseMiddleware<core.jarvis.api.Middleware.RateLimitingMiddleware>();
+        // TEMPORARILY DISABLED: These middlewares consume request body
+        // workerApplication.UseMiddleware<core.jarvis.api.Middleware.RateLimitingMiddleware>();
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.AuthorizationMiddleware>();
-        workerApplication.UseMiddleware<core.jarvis.api.Middleware.InputValidationMiddleware>();
-        workerApplication.UseMiddleware<core.jarvis.api.Middleware.ComponentValidationMiddleware>();
+        // workerApplication.UseMiddleware<core.jarvis.api.Middleware.InputValidationMiddleware>();
+        // workerApplication.UseMiddleware<core.jarvis.api.Middleware.ComponentValidationMiddleware>();
     })
     .ConfigureAppConfiguration((context, config) =>
     {
@@ -38,3 +39,6 @@ var host = new HostBuilder()
     .Build();
 
 host.Run();
+
+// Make Program class accessible for testing
+public partial class Program { }

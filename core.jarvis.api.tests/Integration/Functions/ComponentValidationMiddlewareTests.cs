@@ -43,7 +43,7 @@ public class ComponentValidationMiddlewareTests
     public void IsValidComponentOrGuid_With_Valid_Component_Should_Return_True()
     {
         // Arrange
-        var component = new User
+        var component = new Account
         {
             Id = Guid.NewGuid(),
             OwnerEntityId = Guid.NewGuid(),

@@ -3,6 +3,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.data;
+using core.jarvis.Exceptions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
@@ -10,9 +11,9 @@ using Microsoft.Extensions.Configuration;
 namespace core.jarvis.api.Handlers;
 
 /// <summary>
-/// Handler for authentication operations on User components.
+/// Handler for authentication operations on Account components.
 /// </summary>
-public class AuthHandler : ComponentHandler<User>
+public class AuthHandler : ComponentHandler<Account>
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly int _refreshTokenExpirationDays;
@@ -35,25 +36,25 @@ public class AuthHandler : ComponentHandler<User>
     }
 
     /// <summary>
-    /// Authenticates user credentials and generates tokens.
-    /// Takes User (credentials), validates against existing data, and returns AuthToken with session data.
+    /// Authenticates account credentials and generates tokens.
+    /// Takes Account (credentials), validates against existing data, and returns AuthToken with session data.
     /// Does NOT persist anything - authentication is read-only validation.
     /// </summary>
-    public async Task<AuthToken> Authenticate(User userCredentials)
+    public async Task<AuthToken> Authenticate(Account accountCredentials)
     {
         // Wrap authentication in constant-time execution to prevent timing attacks
         return await _constantTimeService.ExecuteWithMinimumTime(async () => 
-            await AuthenticateInternal(userCredentials), 
+            await AuthenticateInternal(accountCredentials), 
             minimumMilliseconds: 100);
     }
 
-    private async Task<AuthToken> AuthenticateInternal(User userCredentials)
+    private async Task<AuthToken> AuthenticateInternal(Account accountCredentials)
     {
         try
         {
             // Basic input validation
-            if (string.IsNullOrWhiteSpace(userCredentials.Email) || 
-                string.IsNullOrWhiteSpace(userCredentials.Password))
+            if (string.IsNullOrWhiteSpace(accountCredentials.Email) || 
+                string.IsNullOrWhiteSpace(accountCredentials.Password))
             {
                 Logger.LogWarning("Invalid input: empty email or password");
                 return new AuthToken(); // Return empty token to indicate failure
@@ -64,15 +65,15 @@ public class AuthHandler : ComponentHandler<User>
             var pgClient = _serviceProvider.GetRequiredService<IPgClient>();
             
             // Validate credentials using PgClient - it uses parameterized queries for SQL injection protection
-            var authResult = await pgClient.Client.Authenticate(userCredentials.Email, userCredentials.Password);
+            var authResult = await pgClient.Client.Authenticate(accountCredentials.Email, accountCredentials.Password);
             if (string.IsNullOrEmpty(authResult))
             {
                 
                 // Log failed authentication attempt
                 await _securityAudit.LogFailedAuthentication(
-                    userCredentials.Email, 
-                    userCredentials.IpAddress ?? "unknown",
-                    userCredentials.UserAgent,
+                    accountCredentials.Email, 
+                    accountCredentials.IpAddress ?? "unknown",
+                    accountCredentials.UserAgent,
                     "Invalid credentials"
                 );
                 
@@ -97,23 +98,30 @@ public class AuthHandler : ComponentHandler<User>
             }
 
             // Generate tokens
-            var accessToken = tokenService.GenerateAccessToken(authenticatedEntityId, userCredentials.Email);
+            var accessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email);
             var refreshToken = tokenService.GenerateRefreshToken();
             var sessionId = Guid.NewGuid();
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
 
-            // Get existing security profile for role claims
-            var profileHandler = DataContext.For<UserProfileHandler>(authenticatedEntityId);
-            var securityProfile = await profileHandler.Get();
-            
-            // Generate access token with role claims if profile exists
+            // Try to get existing security profile for role claims
             var additionalClaims = new Dictionary<string, string>();
-            if (securityProfile?.RoleIds.Any() == true)
+            try
             {
-                additionalClaims["roles"] = string.Join(",", securityProfile.RoleIds);
+                var profileHandler = DataContext.For<AccountProfileHandler>(authenticatedEntityId);
+                var securityProfile = await profileHandler.Get();
+                
+                if (securityProfile?.RoleIds?.Any() == true)
+                {
+                    additionalClaims["roles"] = string.Join(",", securityProfile.RoleIds);
+                }
+            }
+            catch (Exception ex)
+            {
+                // User doesn't have a security profile yet, which is fine for new users
+                Logger.LogDebug(ex, "No security profile found for user {UserId}, proceeding without roles", authenticatedEntityId);
             }
 
-            var finalAccessToken = tokenService.GenerateAccessToken(authenticatedEntityId, userCredentials.Email, additionalClaims);
+            var finalAccessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
 
             // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
             var authToken = new AuthToken
@@ -125,23 +133,23 @@ public class AuthHandler : ComponentHandler<User>
                 ExpiresAt = expiresAt,
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
                 SessionId = sessionId,
-                ClientId = userCredentials.ClientId,
+                ClientId = accountCredentials.ClientId,
                 UpdatedAt = DateTime.UtcNow
             };
 
             // Log successful authentication
             await _securityAudit.LogSuccessfulAuthentication(
                 authenticatedEntityId,
-                userCredentials.Email,
-                userCredentials.IpAddress ?? "unknown",
-                userCredentials.UserAgent
+                accountCredentials.Email,
+                accountCredentials.IpAddress ?? "unknown",
+                accountCredentials.UserAgent
             );
 
             return authToken;
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "Error during authentication for email: {Email}", userCredentials.Email);
+            Logger.LogError(ex, "Error during authentication for email: {Email}", accountCredentials.Email);
             return new AuthToken();
         }
     }

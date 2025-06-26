@@ -33,7 +33,7 @@ public record SecurityProfile : IComponent
     public string[] PermissionIds { get; init; } = Array.Empty<string>();
 
     /// <summary>
-    /// User preferences as key-value pairs.
+    /// User preferences as JSON string (stored as JSONB in database).
     /// </summary>
-    public Dictionary<string, object> Preferences { get; init; } = new();
+    public string Preferences { get; init; } = "{}";
 }

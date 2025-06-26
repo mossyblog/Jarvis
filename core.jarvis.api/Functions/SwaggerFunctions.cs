@@ -386,7 +386,7 @@ public class SwaggerFunctions
             {
                 Schemas = new Dictionary<string, OpenApiSchema>
                 {
-                    ["User"] = GenerateSchemaForType(typeof(Models.User)),
+                    ["Account"] = GenerateSchemaForType(typeof(Models.Account)),
                     ["AuthToken"] = GenerateSchemaForType(typeof(Models.AuthToken)),
                     ["TokenValidation"] = GenerateSchemaForType(typeof(Models.TokenValidation))
                 }

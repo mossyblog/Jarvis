@@ -144,9 +144,9 @@ public class InputValidationMiddleware : IFunctionsWorkerMiddleware
             {
                 ValidateRoleRequest(token, result);
             }
-            else if (endpoint.Contains("/users", StringComparison.OrdinalIgnoreCase))
+            else if (endpoint.Contains("/accounts", StringComparison.OrdinalIgnoreCase))
             {
-                ValidateUserRequest(token, result);
+                ValidateAccountRequest(token, result);
             }
             else
             {
@@ -249,7 +249,7 @@ public class InputValidationMiddleware : IFunctionsWorkerMiddleware
         }
     }
 
-    private void ValidateUserRequest(JToken token, ValidationResult result)
+    private void ValidateAccountRequest(JToken token, ValidationResult result)
     {
         var email = token["email"]?.ToString();
         

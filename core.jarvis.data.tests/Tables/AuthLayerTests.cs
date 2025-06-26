@@ -23,16 +23,16 @@ namespace core.jarvis.data.tests.Tables
             // Ensure schema and create PgClient
             _client = await PgClientFactory.Create(_conn);
 
-            // Clean up test users before each test for isolation
-            var cleanupSql = "DELETE FROM users WHERE email LIKE 'testuser_%@example.com';";
+            // Clean up test accounts before each test for isolation
+            var cleanupSql = "DELETE FROM \"account\" WHERE email LIKE 'testuser_%@example.com';";
             using var cmd = new NpgsqlCommand(cleanupSql, _conn);
             await cmd.ExecuteNonQueryAsync();
         }
 
         public async Task DisposeAsync()
         {
-            // Clean up test users after each test
-            var cleanupSql = "DELETE FROM users WHERE email LIKE 'testuser_%@example.com';";
+            // Clean up test accounts after each test
+            var cleanupSql = "DELETE FROM \"account\" WHERE email LIKE 'testuser_%@example.com';";
             using var cmd = new NpgsqlCommand(cleanupSql, _conn);
             await cmd.ExecuteNonQueryAsync();
             await _conn.CloseAsync();
@@ -50,23 +50,25 @@ namespace core.jarvis.data.tests.Tables
             var password = "SuperSecret123!";
             var hash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            // First insert the user
-            var insertSql = "DELETE FROM users WHERE email = @email; INSERT INTO users (email, password_hash) VALUES (@email, @hash) RETURNING id;";
-            Guid userId;
+            // First insert the account (account table requires owner_entity_id and is_active)
+            var userId = Guid.NewGuid();
+            var insertSql = "DELETE FROM \"account\" WHERE email = @email; INSERT INTO \"account\" (owner_entity_id, email, password_hash, is_active) VALUES (@userId, @email, @hash, true) RETURNING owner_entity_id;";
             using (var cmd = new NpgsqlCommand(insertSql, _conn))
             {
+                cmd.Parameters.AddWithValue("userId", userId);
                 cmd.Parameters.AddWithValue("email", email);
                 cmd.Parameters.AddWithValue("hash", hash);
-                userId = (Guid)(await cmd.ExecuteScalarAsync() ?? throw new InvalidOperationException("Failed to insert user"));
+                var result = await cmd.ExecuteScalarAsync();
+                userId = (Guid)(result ?? throw new InvalidOperationException("Failed to insert account"));
             }
 
             // Act
-            var result = await _client.Authenticate(email, password);
+            var authResult = await _client.Authenticate(email, password);
 
             // Assert
-            result.ShouldNotBeNull();
+            authResult.ShouldNotBeNull();
             // PgClient.Authenticate returns "auth.success.{userId}" on success
-            result.ShouldBe($"auth.success.{userId}");
+            authResult.ShouldBe($"auth.success.{userId}");
         }
 
         /// <summary>
@@ -82,9 +84,11 @@ namespace core.jarvis.data.tests.Tables
             var wrongPassword = "WrongPassword!";
             var hash = BCrypt.Net.BCrypt.HashPassword(password);
 
-            var insertSql = "DELETE FROM users WHERE email = @email; INSERT INTO users (email, password_hash) VALUES (@email, @hash);";
+            var userId = Guid.NewGuid();
+            var insertSql = "DELETE FROM \"account\" WHERE email = @email; INSERT INTO \"account\" (owner_entity_id, email, password_hash, is_active) VALUES (@userId, @email, @hash, true);";
             using (var cmd = new NpgsqlCommand(insertSql, _conn))
             {
+                cmd.Parameters.AddWithValue("userId", userId);
                 cmd.Parameters.AddWithValue("email", email);
                 cmd.Parameters.AddWithValue("hash", hash);
                 await cmd.ExecuteNonQueryAsync();
@@ -124,15 +128,15 @@ namespace core.jarvis.data.tests.Tables
         {
             // Act
             // (Initialization already ensures schema and policy)
-            var tableCheck = "SELECT to_regclass('public.users') IS NOT NULL";
-            var hasUsersTable = (bool)(await new NpgsqlCommand(tableCheck, _conn).ExecuteScalarAsync() ?? false);
-            var colCheck = "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash')";
+            var tableCheck = "SELECT to_regclass('public.account') IS NOT NULL";
+            var hasAccountTable = (bool)(await new NpgsqlCommand(tableCheck, _conn).ExecuteScalarAsync() ?? false);
+            var colCheck = "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='account' AND column_name='password_hash')";
             var hasPasswordHash = (bool)(await new NpgsqlCommand(colCheck, _conn).ExecuteScalarAsync() ?? false);
-            var policyCheck = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users')";
+            var policyCheck = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'account')";
             var hasPolicy = (bool)(await new NpgsqlCommand(policyCheck, _conn).ExecuteScalarAsync() ?? false);
 
             // Assert
-            hasUsersTable.ShouldBeTrue();
+            hasAccountTable.ShouldBeTrue();
             hasPasswordHash.ShouldBeTrue();
             hasPolicy.ShouldBeTrue();
         }

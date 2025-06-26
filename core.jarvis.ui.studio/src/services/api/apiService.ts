@@ -2,6 +2,7 @@ import type {
   User, 
   LoginCredentials, 
   AuthResponse, 
+  AuthToken,
   NavigationItem,
   ApiResponse
 } from './types';
@@ -151,54 +152,239 @@ class MockApiService implements IApiService {
   }
 }
 
-// Real API service implementation (to be implemented later)
+// Real API service implementation
 class RealApiService implements IApiService {
-  // private apiUrl: string;
+  private apiUrl: string;
 
-  constructor(_apiUrl: string = import.meta.env.VITE_API_URL || '/api') {
-    // this.apiUrl = apiUrl;
-    // TODO: Store API URL when implementing real API
+  constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:7071/api') {
+    this.apiUrl = apiUrl;
   }
 
-  async login(_credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
-    // TODO: Implement real API call
-    throw new Error('Real API not implemented yet');
+  private getAuthHeaders(): HeadersInit {
+    const token = localStorage.getItem(TOKEN_KEY);
+    return {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+  }
+
+  private async handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+      return {
+        error: {
+          message: errorData.message || `Error: ${response.status}`,
+          code: errorData.code || `HTTP_${response.status}`
+        }
+      };
+    }
+
+    const data = await response.json();
+    return { data };
+  }
+
+  async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
+    try {
+      // The API expects a User object but only cares about Email and Password for auth
+      const requestBody = {
+        Email: credentials.email,
+        Password: credentials.password
+      };
+      
+      console.log('Sending login request:', requestBody);
+      
+      const response = await fetch(`${this.apiUrl}/security/auth`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      const result = await this.handleResponse<AuthToken>(response);
+      
+      if (result.error) {
+        return { error: result.error };
+      }
+
+      if (result.data) {
+        // The API returns PascalCase properties
+        const authToken = result.data as any;
+        const accessToken = authToken.AccessToken || authToken.accessToken;
+        const refreshToken = authToken.RefreshToken || authToken.refreshToken;
+        
+        if (accessToken) {
+          // Store tokens
+          localStorage.setItem(TOKEN_KEY, accessToken);
+          
+          // Get user info from the token
+          const userInfo = await this.getCurrentUser();
+          
+          if (userInfo.data) {
+            localStorage.setItem(USER_KEY, JSON.stringify(userInfo.data));
+            
+            return {
+              data: {
+                user: userInfo.data,
+                accessToken: accessToken,
+                refreshToken: refreshToken,
+                expiresIn: 3600 // Default to 1 hour
+              }
+            };
+          }
+        }
+      }
+
+      return { error: { message: 'Authentication failed', code: 'AUTH_FAILED' } };
+    } catch (error) {
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Network error',
+          code: 'NETWORK_ERROR'
+        }
+      };
+    }
   }
 
   async logout(): Promise<void> {
-    // TODO: Implement real API call
-    throw new Error('Real API not implemented yet');
+    const token = localStorage.getItem(TOKEN_KEY);
+    
+    if (token) {
+      try {
+        await fetch(`${this.apiUrl}/security/deauth`, {
+          method: 'POST',
+          headers: this.getAuthHeaders()
+        });
+      } catch {
+        // Ignore errors during logout
+      }
+    }
+    
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
   }
 
   async getCurrentUser(): Promise<ApiResponse<User | null>> {
-    // TODO: Implement real API call
-    throw new Error('Real API not implemented yet');
+    const token = localStorage.getItem(TOKEN_KEY);
+    
+    if (!token) {
+      return { data: null };
+    }
+
+    try {
+      const response = await fetch(`${this.apiUrl}/security/user`, {
+        headers: this.getAuthHeaders()
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired or invalid
+          localStorage.removeItem(TOKEN_KEY);
+          localStorage.removeItem(USER_KEY);
+        }
+        return { data: null };
+      }
+
+      const result = await this.handleResponse<User>(response);
+      return result.data ? result : { data: null };
+    } catch {
+      return { data: null };
+    }
   }
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
-    // TODO: Implement real API call
-    throw new Error('Real API not implemented yet');
+    try {
+      const response = await fetch(`${this.apiUrl}/security/navigation`, {
+        headers: this.getAuthHeaders()
+      });
+
+      return await this.handleResponse<NavigationItem[]>(response);
+    } catch (error) {
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to load navigation',
+          code: 'NAVIGATION_ERROR'
+        }
+      };
+    }
   }
 
-  async refreshToken(_token: string): Promise<ApiResponse<AuthResponse>> {
-    // TODO: Implement real API call
-    throw new Error('Real API not implemented yet');
+  async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
+    try {
+      const response = await fetch(`${this.apiUrl}/security/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken })
+      });
+
+      const result = await this.handleResponse<AuthToken>(response);
+      
+      if (result.error) {
+        return { error: result.error };
+      }
+
+      if (result.data) {
+        // Update stored tokens
+        localStorage.setItem(TOKEN_KEY, result.data.accessToken);
+        
+        // Get updated user info
+        const userInfo = await this.getCurrentUser();
+        
+        if (userInfo.data) {
+          return {
+            data: {
+              user: userInfo.data,
+              accessToken: result.data.accessToken,
+              refreshToken: result.data.refreshToken,
+              expiresIn: 3600
+            }
+          };
+        }
+      }
+
+      return { error: { message: 'Token refresh failed', code: 'REFRESH_FAILED' } };
+    } catch (error) {
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Network error',
+          code: 'NETWORK_ERROR'
+        }
+      };
+    }
   }
 
-  hasPermission(_user: User, _resource: string, _action?: string): boolean {
-    // TODO: Implement permission check
-    throw new Error('Real API not implemented yet');
+  hasPermission(user: User, resource: string, action: string = 'read'): boolean {
+    // Check if user has wildcard permission
+    const hasWildcard = user.roles.some(role =>
+      role.permissions.some(perm =>
+        perm.resource === '*' && perm.actions.includes('*')
+      )
+    );
+
+    if (hasWildcard) return true;
+
+    // Check specific permission
+    return user.roles.some(role =>
+      role.permissions.some(perm =>
+        perm.resource === resource && 
+        (perm.actions.includes(action) || perm.actions.includes('*'))
+      )
+    );
   }
 }
 
 // Factory function to create the appropriate service
 export function createApiService(): IApiService {
-  const useMockApi = import.meta.env.VITE_USE_MOCK_API !== 'false';
+  const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
   
   if (useMockApi) {
+    console.log('Using mock API service');
     return new MockApiService();
   }
   
+  console.log('Using real API service at:', import.meta.env.VITE_API_URL || 'http://localhost:7071/api');
   return new RealApiService();
 }
 

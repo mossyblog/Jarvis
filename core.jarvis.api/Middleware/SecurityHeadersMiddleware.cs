@@ -79,7 +79,7 @@ public class SecurityHeadersMiddleware : IFunctionsWorkerMiddleware
         {
             response.Headers.Add("Cache-Control", "no-store, no-cache, must-revalidate, private");
             response.Headers.Add("Pragma", "no-cache");
-            response.Headers.Add("Expires", "0");
+            response.Headers.Add("Expires", DateTime.UtcNow.ToString("R"));
         }
     }
 

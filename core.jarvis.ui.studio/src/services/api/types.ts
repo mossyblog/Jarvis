@@ -52,6 +52,24 @@ export interface AuthResponse {
   expiresIn: number;
 }
 
+export interface AuthToken {
+  id: string;
+  ownerEntityId: string;
+  accessToken: string;
+  refreshToken: string;
+  refreshTokenHash?: string;
+  expiresAt: string;
+  refreshExpiresAt: string;
+  tokenType: string;
+  sessionId: string;
+  clientId?: string;
+  ipAddress?: string;
+  userAgent?: string;
+  isRevoked: boolean;
+  revokedAt?: string;
+  issuedAt: string;
+}
+
 export interface ApiError {
   message: string;
   code?: string;

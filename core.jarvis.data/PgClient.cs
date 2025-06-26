@@ -52,23 +52,23 @@ namespace core.jarvis.data
             if (_conn.State != System.Data.ConnectionState.Open)
                 await _conn.OpenAsync();
 
-            // Check for users table
-            var tableCheck = "SELECT to_regclass('public.users') IS NOT NULL";
-            var hasUsersTable = (bool)(await new NpgsqlCommand(tableCheck, _conn).ExecuteScalarAsync() ?? false);
-            if (!hasUsersTable)
-                throw new InvalidOperationException("Required table 'users' does not exist.");
+            // Check for account table (component table)
+            var tableCheck = "SELECT to_regclass('public.account') IS NOT NULL";
+            var hasAccountTable = (bool)(await new NpgsqlCommand(tableCheck, _conn).ExecuteScalarAsync() ?? false);
+            if (!hasAccountTable)
+                throw new InvalidOperationException("Required table 'account' does not exist.");
 
             // Check for password_hash column
-            var colCheck = "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='users' AND column_name='password_hash')";
+            var colCheck = "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='account' AND column_name='password_hash')";
             var hasPasswordHash = (bool)(await new NpgsqlCommand(colCheck, _conn).ExecuteScalarAsync() ?? false);
             if (!hasPasswordHash)
-                throw new InvalidOperationException("Required column 'password_hash' does not exist in 'users' table.");
+                throw new InvalidOperationException("Required column 'password_hash' does not exist in 'account' table.");
 
-            // Check for at least one RLS policy on users table
-            var policyCheck = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users')";
+            // Check for at least one RLS policy on account table
+            var policyCheck = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'account')";
             var hasPolicy = (bool)(await new NpgsqlCommand(policyCheck, _conn).ExecuteScalarAsync() ?? false);
             if (!hasPolicy)
-                throw new InvalidOperationException("No RLS policy found on 'users' table. RLS must be enabled and at least one policy defined.");
+                throw new InvalidOperationException("No RLS policy found on 'account' table. RLS must be enabled and at least one policy defined.");
         }
 
         /// <summary>
@@ -84,14 +84,22 @@ namespace core.jarvis.data
             if (_conn.State != System.Data.ConnectionState.Open)
                 await _conn.OpenAsync();
                 
-            // Example: Query user by email
-            var sql = "SELECT id, password_hash AS PasswordHash FROM users WHERE email = @email";
+            // Query account component by email and check if active
+            var sql = "SELECT owner_entity_id AS Id, password_hash AS PasswordHash, is_active AS IsActive FROM \"account\" WHERE email = @email";
             try
             {
                 var user = await _conn.QueryFirstOrDefaultAsync<UserAuthRecord>(sql, new { email });
 
                 if (user == null)
                 {
+                    Console.WriteLine($"No account found with email: {email}");
+                    return null;
+                }
+                
+                // Check if account is active
+                if (!user.IsActive)
+                {
+                    Console.WriteLine($"Account {email} is not active");
                     return null;
                 }
                 
@@ -122,6 +130,7 @@ namespace core.jarvis.data
         {
             public Guid Id { get; set; }
             public string PasswordHash { get; set; } = "";
+            public bool IsActive { get; set; } = true;
         }
 
         /// <summary>
@@ -317,6 +326,22 @@ namespace core.jarvis.data
             await JWTClaims();
 
             await _conn.ExecuteAsync(sql, dynamicParams);
+        }
+
+        /// <summary>
+        /// Executes SQL command directly with parameters.
+        /// Sets JWT claims for RLS if available.
+        /// </summary>
+        /// <param name="sql">SQL command to execute.</param>
+        /// <param name="parameters">Parameters for the SQL command.</param>
+        public async Task ExecuteAsync(string sql, object? parameters = null)
+        {
+            await EnsureConnectionOpen();
+            
+            // Set JWT claims for RLS if available
+            await JWTClaims();
+
+            await _conn.ExecuteAsync(sql, parameters);
         }
     }
 }
