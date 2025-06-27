@@ -72,7 +72,7 @@ public static class HttpRequestExtensions
         var error = new { error = message };
         var response = req.CreateResponse(statusCode);
         response.Headers.Add("Content-Type", "application/json");
-        await response.WriteAsJsonAsync(error);
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
         return response;
     }
 
@@ -91,7 +91,7 @@ public static class HttpRequestExtensions
         
         var response = req.CreateResponse(HttpStatusCode.BadRequest);
         response.Headers.Add("Content-Type", "application/json");
-        await response.WriteAsJsonAsync(error);
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
         return response;
     }
 
@@ -105,7 +105,7 @@ public static class HttpRequestExtensions
         var error = ErrorResponseService.CreateAuthenticationError();
         var response = req.CreateResponse(HttpStatusCode.Unauthorized);
         response.Headers.Add("Content-Type", "application/json");
-        await response.WriteAsJsonAsync(error);
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
         return response;
     }
 }
