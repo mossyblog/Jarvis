@@ -116,10 +116,10 @@ public class AuthHandler : ComponentHandler<Account>
                     additionalClaims["roles"] = string.Join(",", securityProfile.RoleIds);
                 }
             }
-            catch (Exception ex)
+            catch (EntityNotFoundException)
             {
-                // User doesn't have a security profile yet, which is fine for new users
-                Logger.LogDebug(ex, "No security profile found for user {UserId}, proceeding without roles", authenticatedEntityId);
+                // User doesn't have a security profile yet - this is completely normal and expected
+                // Do nothing - just continue without roles
             }
 
             var finalAccessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
