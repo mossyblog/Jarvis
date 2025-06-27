@@ -6,7 +6,6 @@ using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
 using core.jarvis.data;
-using core.jarvis.Systems;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -101,6 +100,7 @@ public static class ServiceCollectionExtensions
         
         // Add System services
         services.AddScoped<Systems.RegistrationSystem>();
+        services.AddScoped<Systems.AuthSystem>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>

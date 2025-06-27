@@ -1,6 +1,7 @@
 using System.Linq;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
+using core.jarvis.api.Exceptions;
 using core.jarvis.Data;
 using core.jarvis.data;
 using core.jarvis.Exceptions;
@@ -155,6 +156,34 @@ public class AuthHandler : ComponentHandler<Account>
     }
 
     /// <summary>
+    /// Authenticates a user from JSON request body
+    /// </summary>
+    public async Task<AuthToken> AuthenticateFromJson(string requestBody, string? ipAddress, string? userAgent)
+    {
+        // Parse JSON
+        Account accountCredentials;
+        try
+        {
+            accountCredentials = System.Text.Json.JsonSerializer.Deserialize<Account>(requestBody) 
+                ?? throw new core.jarvis.api.Exceptions.ValidationException("Invalid request body");
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            throw new core.jarvis.api.Exceptions.ValidationException($"Invalid JSON: {ex.Message}");
+        }
+
+        // Create new instance with IP and user agent
+        accountCredentials = accountCredentials with
+        {
+            IpAddress = ipAddress,
+            UserAgent = userAgent
+        };
+
+        // Delegate to existing authentication method
+        return await Authenticate(accountCredentials);
+    }
+
+    /// <summary>
     /// Checks if the provided AuthToken component represents successful authentication.
     /// </summary>
     public bool IsAuthenticated(AuthToken authToken)
@@ -207,80 +236,6 @@ public class AuthHandler : ComponentHandler<Account>
         }
     }
 
-    /// <summary>
-    /// Authenticates a user from JSON request and returns the auth token.
-    /// This method handles all authentication logic to keep the API layer thin.
-    /// </summary>
-    public async Task<AuthToken> AuthenticateFromJson(string requestBody, string? ipAddress, string? userAgent)
-    {
-        try
-        {
-            // Parse request body
-            if (string.IsNullOrEmpty(requestBody))
-            {
-                Logger.LogInformation("Auth request body is empty");
-                return new AuthToken(); // Empty token indicates failure
-            }
-
-            Account? accountRequest;
-            try
-            {
-                // First try with default (PascalCase) deserialization
-                accountRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<Account>(requestBody);
-            }
-            catch (Newtonsoft.Json.JsonException)
-            {
-                try
-                {
-                    // If that fails, try with camelCase
-                    var camelCaseSettings = new Newtonsoft.Json.JsonSerializerSettings
-                    {
-                        ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver()
-                    };
-                    accountRequest = Newtonsoft.Json.JsonConvert.DeserializeObject<Account>(requestBody, camelCaseSettings);
-                }
-                catch (Newtonsoft.Json.JsonException ex)
-                {
-                    Logger.LogWarning("JSON deserialization failed: {Message}. Request body: {Body}", ex.Message, requestBody);
-                    return new AuthToken();
-                }
-            }
-
-            if (accountRequest == null)
-            {
-                return new AuthToken();
-            }
-
-            // Validate required fields
-            if (string.IsNullOrEmpty(accountRequest.Email) || string.IsNullOrEmpty(accountRequest.Password))
-            {
-                return new AuthToken();
-            }
-
-            // Add IP and User-Agent to the request
-            accountRequest = accountRequest with 
-            { 
-                IpAddress = ipAddress ?? "unknown",
-                UserAgent = userAgent
-            };
-
-            // Authenticate and return result
-            var authToken = await Authenticate(accountRequest);
-            
-            // If authentication succeeded, persist the session
-            if (IsAuthenticated(authToken))
-            {
-                await PersistSession(authToken);
-            }
-            
-            return authToken;
-        }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Error in authentication from JSON");
-            return new AuthToken();
-        }
-    }
 
     /// <summary>
     /// Validates email format.
