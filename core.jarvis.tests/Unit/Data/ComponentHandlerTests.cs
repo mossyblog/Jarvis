@@ -185,49 +185,6 @@ public class ComponentHandlerTests
         exception.Message.ShouldContain(errorMessage);
     }
 
-    /// <summary>
-    /// Validates that Generate() factory method creates new component instances with proper entity association.
-    /// </summary>
-    /// <remarks>
-    /// <para><strong>INTENT:</strong> Validates the Generate() factory method functionality.</para>
-    /// <para><strong>PURPOSE:</strong> Ensures handlers can create new component instances with proper entity binding.</para>
-    /// <para><strong>BUSINESS CONTEXT:</strong> Handlers need to create new components (invoices, payments) during
-    /// business operations. The component must be properly associated with the handler's entity for data integrity.</para>
-    /// <para><strong>WHY IMPORTANT:</strong> Component creation is fundamental to the ECS pattern - each component
-    /// must be correctly bound to its entity for proper data relationships and query operations.</para>
-    /// <para><strong>ARCHITECTURAL SIGNIFICANCE:</strong> Demonstrates the component factory pattern that ensures
-    /// consistent entity association using reflection to set OwnerEntityId automatically without manual binding.</para>
-    /// <para><strong>FUTURE RESILIENCE:</strong> If component instantiation changes, this documents that new
-    /// components should always be associated with the handler's target entity to maintain ECS data integrity.</para>
-    /// </remarks>
-    private TestComponent CreateComponent(Guid ownerEntityId)
-    {
-        var component = new TestComponent { Name = "HandlerTest" };
-        var ownerEntityIdProp = typeof(TestComponent).GetProperty("OwnerEntityId");
-        if (ownerEntityIdProp != null && ownerEntityIdProp.CanWrite)
-        {
-            ownerEntityIdProp.SetValue(component, ownerEntityId);
-        }
-        return component;
-    }
-
-    [Fact]
-    public void CreateComponent_ShouldReturnNewComponentWithEntityId()
-    {
-        // Arrange
-        var ownerEntityId = Guid.NewGuid();
-        var dataContext = new FakeDataContext();
-        var logger = new FakeLogger<ConcreteTestHandler>();
-        var handler = new ConcreteTestHandler(dataContext, logger);
-        handler.InitializeContext(ownerEntityId);
-
-        // Act
-        var component = CreateComponent(ownerEntityId);
-
-        // Assert
-        Assert.NotNull(component);
-        Assert.Equal(ownerEntityId, component.OwnerEntityId);
-    }
 
     // For testing database operations, we'll need to create integration tests
     // with a real Supabase connection or use a different approach.

@@ -24,8 +24,7 @@ public class ServiceRegistrationIntegrationTests : IAsyncLifetime
     
     public async Task InitializeAsync()
     {
-        // Load environment and get connection string
-        TestEnvironment.EnsureLoaded();
+        // Get connection string
         _connectionString = TestDatabaseSetup.GetConnectionString();
         await TestDatabaseSetup.EnsureSetupAsync(_connectionString);
         

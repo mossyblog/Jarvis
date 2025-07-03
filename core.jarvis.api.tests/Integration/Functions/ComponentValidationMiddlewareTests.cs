@@ -1,8 +1,11 @@
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Models;
 using Microsoft.Extensions.Logging;
-using Moq;
 using Newtonsoft.Json;
+using Shouldly;
+using Xunit;
+using System;
+using System.Reflection;
 
 namespace core.jarvis.api.tests.Integration.Functions;
 
@@ -16,13 +19,13 @@ namespace core.jarvis.api.tests.Integration.Functions;
 /// </summary>
 public class ComponentValidationMiddlewareTests
 {
-    private readonly Mock<ILogger<ComponentValidationMiddleware>> _loggerMock;
+    private readonly ILogger<ComponentValidationMiddleware> _logger;
     private readonly ComponentValidationMiddleware _middleware;
 
     public ComponentValidationMiddlewareTests()
     {
-        _loggerMock = new Mock<ILogger<ComponentValidationMiddleware>>();
-        _middleware = new ComponentValidationMiddleware(_loggerMock.Object);
+        _logger = new NullLogger<ComponentValidationMiddleware>();
+        _middleware = new ComponentValidationMiddleware(_logger);
     }
 
     [Fact]
@@ -165,5 +168,18 @@ public class ComponentValidationMiddlewareTests
             
         var result = method.Invoke(instance, parameters);
         return (T)(result ?? throw new InvalidOperationException("Method returned null"));
+    }
+}
+
+// NullLogger implementation
+public class NullLogger<T> : ILogger<T>
+{
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull => new NullScope();
+    public bool IsEnabled(LogLevel logLevel) => false;
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
+    
+    private class NullScope : IDisposable
+    {
+        public void Dispose() { }
     }
 }

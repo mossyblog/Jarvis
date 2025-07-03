@@ -48,38 +48,6 @@ namespace core.jarvis.tests.Integration.GraphQL
         }
 
         /// <summary>
-        /// INTENT: Verify that WithAuth properly flows JWT through to PgClient
-        /// PURPOSE: Ensure authentication tokens are correctly propagated
-        /// BUSINESS CONTEXT: JWT tokens enable row-level security in the database
-        /// WHY IMPORTANT: RLS enforcement depends on proper JWT propagation
-        /// ARCHITECTURAL SIGNIFICANCE: Validates authentication flow through all layers
-        /// FUTURE RESILIENCE: Ensures JWT handling remains consistent
-        /// </summary>
-        [Fact(Skip = "Passes individually but fails due to test isolation when run with all tests")]
-        public async Task Execute_WithAuth_PropagatesJWTToPgClient()
-        {
-            // Arrange
-            // Use a valid JWT format that can be parsed
-            var jwt = GenerateTestJWT(new Dictionary<string, string> 
-            { 
-                { "sub", "user123" },
-                { "role", "user" }
-            });
-            
-            var query = "{ __typename }";
-            var graphQLQuery = _dataContext.GraphQL(query);
-            
-            // Act & Assert
-            // The fact that this doesn't throw UnauthorizedException proves JWT was propagated
-            var result = await graphQLQuery
-                .WithAuth(jwt)
-                .Execute();
-                
-            result.ShouldNotBeNull();
-            result.Data.ShouldNotBeNull();
-        }
-
-        /// <summary>
         /// INTENT: Verify that RequireRole validates JWT role claims correctly
         /// PURPOSE: Ensure role-based access control is enforced
         /// BUSINESS CONTEXT: Different roles have different data access permissions

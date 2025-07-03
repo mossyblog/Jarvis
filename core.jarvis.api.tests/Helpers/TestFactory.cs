@@ -4,7 +4,6 @@ using System.Text;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.DependencyInjection;
-using Moq;
 
 namespace core.jarvis.api.tests.Helpers;
 
@@ -18,11 +17,9 @@ public static class TestFactory
     /// </summary>
     public static HttpRequestData CreateHttpRequestData(string method, string url, string? body = null)
     {
-        var context = new Mock<FunctionContext>();
-        var serviceProvider = new Mock<IServiceProvider>();
         var services = new ServiceCollection();
-        
-        context.Setup(c => c.InstanceServices).Returns(serviceProvider.Object);
+        var serviceProvider = services.BuildServiceProvider();
+        var context = new TestFunctionContext(serviceProvider);
         
         // Handle relative URLs by prepending a base URL
         Uri uri;
@@ -36,7 +33,7 @@ public static class TestFactory
             uri = new Uri("http://localhost" + (url.StartsWith("/") ? url : "/" + url));
         }
         
-        var request = new MockHttpRequestData(context.Object, uri, method);
+        var request = new MockHttpRequestData(context, uri, method);
         
         if (body != null)
         {
@@ -178,4 +175,36 @@ public class MockHttpCookie : IHttpCookie
     public string? Path { get; set; }
     public SameSite SameSite { get; set; }
     public bool? Secure { get; set; }
+}
+
+/// <summary>
+/// Test implementation of FunctionContext
+/// </summary>
+public class TestFunctionContext : FunctionContext
+{
+    private readonly IServiceProvider _serviceProvider;
+    private readonly IDictionary<object, object> _items = new Dictionary<object, object>();
+    
+    public TestFunctionContext(IServiceProvider serviceProvider)
+    {
+        _serviceProvider = serviceProvider;
+    }
+    
+    public override string InvocationId => Guid.NewGuid().ToString();
+    public override string FunctionId => "test";
+    public override TraceContext TraceContext => null!;
+    public override BindingContext BindingContext => null!;
+    public override RetryContext RetryContext => null!;
+    public override IServiceProvider InstanceServices 
+    {
+        get => _serviceProvider;
+        set => throw new NotSupportedException();
+    }
+    public override FunctionDefinition FunctionDefinition => null!;
+    public override IDictionary<object, object> Items
+    {
+        get => _items;
+        set => throw new NotSupportedException();
+    }
+    public override IInvocationFeatures Features => null!;
 }

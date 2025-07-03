@@ -26,6 +26,7 @@ namespace core.jarvis.tests.Helpers;
 public abstract class IntegrationTestBase : IAsyncLifetime
 {
     protected ServiceProvider _serviceProvider;
+    private IServiceScope _scope;
     private ILogger<TestHandler> _logger;
     private IDataContext _dataContext;
     private readonly ConcurrentDictionary<Guid, byte> _testEntities = new();
@@ -80,13 +81,13 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             return pgClientWrapper;
         });
         
-        services.AddTransient<IDataContext, DataContext>();
+        services.AddScoped<IDataContext, DataContext>();
         services.AddScoped<EventSubscriptionManager>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IEntityQuery, EntityQuery>();
         
         // Register default event emitter for tests
-        services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.NoOpEventEmitter>();
+        services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.InMemoryEventEmitter>();
 
         // Register the DataContext with the service provider
         services.AddTransient<TestHandler>();
@@ -143,10 +144,9 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         }
 
         _serviceProvider = services.BuildServiceProvider();
-        _logger = _serviceProvider.GetRequiredService<ILogger<TestHandler>>();
-        
-        // Pass in the service provider to the DataContext
-        _dataContext = _serviceProvider.GetRequiredService<IDataContext>();
+        _scope = _serviceProvider.CreateScope();
+        _logger = _scope.ServiceProvider.GetRequiredService<ILogger<TestHandler>>();
+        _dataContext = _scope.ServiceProvider.GetRequiredService<IDataContext>();
     }
 
     public async Task DisposeAsync()
@@ -209,6 +209,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             }
         }
         
+        _scope?.Dispose();
         _serviceProvider?.Dispose();
     }
 }

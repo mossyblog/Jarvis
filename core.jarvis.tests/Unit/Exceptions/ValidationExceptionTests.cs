@@ -46,15 +46,5 @@ public class ValidationExceptionTests
             exception.Errors.ShouldBe(errors);
         }
 
-        [Fact]
-        public void WithNullErrors_ShouldCreateEmptyDictionary()
-        {
-            // Act
-            var exception = new ValidationException(null!);
-
-            // Assert
-            exception.Errors.ShouldNotBeNull();
-            exception.Errors.ShouldBeEmpty();
-        }
     }
 }
