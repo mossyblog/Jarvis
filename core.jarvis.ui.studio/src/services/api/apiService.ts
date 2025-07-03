@@ -185,10 +185,10 @@ class RealApiService implements IApiService {
 
   async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
     try {
-      // The API expects a User object but only cares about Email and Password for auth
+      // The API expects lowercase property names for JSON deserialization
       const requestBody = {
-        Email: credentials.email,
-        Password: credentials.password
+        email: credentials.email,
+        password: credentials.password
       };
       
       console.log('Sending login request:', requestBody);
@@ -201,37 +201,59 @@ class RealApiService implements IApiService {
         body: JSON.stringify(requestBody)
       });
 
+      console.log('Login response status:', response.status);
+      console.log('Login response ok:', response.ok);
+      
+      // If we get a 401, it means authentication failed
+      if (response.status === 401) {
+        const errorData = await response.json().catch(() => ({ message: 'Authentication failed' }));
+        console.log('401 error data:', errorData);
+        return { 
+          error: { 
+            message: errorData.message || 'Invalid email or password', 
+            code: 'AUTH_FAILED' 
+          } 
+        };
+      }
+
       const result = await this.handleResponse<AuthToken>(response);
       
       if (result.error) {
+        console.log('Login error from handleResponse:', result.error);
         return { error: result.error };
       }
 
       if (result.data) {
+        console.log('Login response data:', result.data);
         // The API returns PascalCase properties
         const authToken = result.data as any;
         const accessToken = authToken.AccessToken || authToken.accessToken;
         const refreshToken = authToken.RefreshToken || authToken.refreshToken;
+        console.log('Extracted tokens - Access:', !!accessToken, 'Refresh:', !!refreshToken);
         
         if (accessToken) {
           // Store tokens
           localStorage.setItem(TOKEN_KEY, accessToken);
           
-          // Get user info from the token
-          const userInfo = await this.getCurrentUser();
+          // Extract user info from the auth response
+          const user: User = {
+            id: authToken.OwnerEntityId || authToken.ownerEntityId,
+            email: credentials.email,
+            name: credentials.email.split('@')[0], // Use email prefix as name for now
+            roles: [],
+            permissions: []
+          };
           
-          if (userInfo.data) {
-            localStorage.setItem(USER_KEY, JSON.stringify(userInfo.data));
-            
-            return {
-              data: {
-                user: userInfo.data,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                expiresIn: 3600 // Default to 1 hour
-              }
-            };
-          }
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
+          
+          return {
+            data: {
+              user: user,
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+              expiresIn: 3600 // Default to 1 hour
+            }
+          };
         }
       }
 
@@ -271,25 +293,22 @@ class RealApiService implements IApiService {
       return { data: null };
     }
 
-    try {
-      const response = await fetch(`${this.apiUrl}/security/user`, {
-        headers: this.getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(USER_KEY);
-        }
-        return { data: null };
+    // Try to get user from localStorage first
+    const storedUser = localStorage.getItem(USER_KEY);
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        return { data: user };
+      } catch {
+        // Invalid stored user data
+        localStorage.removeItem(USER_KEY);
       }
-
-      const result = await this.handleResponse<User>(response);
-      return result.data ? result : { data: null };
-    } catch {
-      return { data: null };
     }
+
+    // If no stored user, token is invalid
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    return { data: null };
   }
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
