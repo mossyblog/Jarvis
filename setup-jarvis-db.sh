@@ -137,45 +137,66 @@ read -r -d '' SETUP_SQL << 'EOF' || true
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Create users table (required for authentication)
-CREATE TABLE IF NOT EXISTS users (
-    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- Enable Row Level Security on users table
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-
--- Create index on email for faster lookups
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
--- Create security_token table for JWT refresh tokens
-CREATE TABLE IF NOT EXISTS security_token (
+-- Create account_component table (follows ECS naming)
+CREATE TABLE IF NOT EXISTS account_component (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_entity_id UUID NOT NULL UNIQUE,
-    user_id UUID NOT NULL REFERENCES users(id),
-    session_id UUID NOT NULL,
-    refresh_token_hash TEXT NOT NULL,
-    issued_at TIMESTAMPTZ NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL DEFAULT '',
+    two_factor_code VARCHAR(10),
+    auth_method VARCHAR(50) NOT NULL DEFAULT 'password',
+    client_id VARCHAR(255),
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ip_address VARCHAR(45),
+    user_agent TEXT
+);
+
+-- Create indexes for account_component table
+CREATE INDEX IF NOT EXISTS idx_account_owner_entity_id ON account_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_account_email ON account_component(email);
+
+-- Enable Row Level Security on account_component table
+ALTER TABLE account_component ENABLE ROW LEVEL SECURITY;
+
+-- Create a simple RLS policy for account_component table
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'public' AND tablename = 'account_component' AND policyname = 'Enable all for development') THEN
+        CREATE POLICY "Enable all for development" ON account_component
+            FOR ALL USING (true) WITH CHECK (true);
+    END IF;
+END $$;
+
+-- Create auth_token_component table (follows ECS naming)
+CREATE TABLE IF NOT EXISTS auth_token_component (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_entity_id UUID NOT NULL UNIQUE,
+    access_token TEXT NOT NULL DEFAULT '',
+    refresh_token TEXT NOT NULL DEFAULT '',
+    refresh_token_hash TEXT NOT NULL DEFAULT '',
+    expires_at TIMESTAMPTZ NOT NULL,
     refresh_expires_at TIMESTAMPTZ NOT NULL,
+    token_type TEXT NOT NULL DEFAULT 'Bearer',
+    session_id UUID NOT NULL,
+    scope TEXT NOT NULL DEFAULT '',
     client_id TEXT,
+    issued_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ip_address TEXT,
     user_agent TEXT,
     is_revoked BOOLEAN NOT NULL DEFAULT FALSE,
     revoked_at TIMESTAMPTZ,
-    version INTEGER DEFAULT 1,
+    version INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Create indexes for security_token
-CREATE INDEX IF NOT EXISTS idx_security_token_owner_entity_id ON security_token(owner_entity_id);
-CREATE INDEX IF NOT EXISTS idx_security_token_user_id ON security_token(user_id);
-CREATE INDEX IF NOT EXISTS idx_security_token_session_id ON security_token(session_id);
-CREATE INDEX IF NOT EXISTS idx_security_token_refresh_expires_at ON security_token(refresh_expires_at) WHERE is_revoked = FALSE;
+-- Create indexes for auth_token_component
+CREATE INDEX IF NOT EXISTS idx_auth_token_owner_entity_id ON auth_token_component(owner_entity_id);
+CREATE INDEX IF NOT EXISTS idx_auth_token_session_id ON auth_token_component(session_id);
+CREATE INDEX IF NOT EXISTS idx_auth_token_refresh_expires_at ON auth_token_component(refresh_expires_at) WHERE is_revoked = FALSE;
 
 -- Create audit_event table for comprehensive audit logging
 CREATE TABLE IF NOT EXISTS audit_event (
@@ -286,8 +307,8 @@ fi
 if [ "$CREATE_TEST_USER" = true ]; then
     echo -e "${YELLOW}Creating test user...${NC}"
     
-    TEST_USER_SQL="INSERT INTO users (email, password_hash) 
-VALUES ('test@example.com', crypt('test123', gen_salt('bf')))
+    TEST_USER_SQL="INSERT INTO account_component (owner_entity_id, email, password_hash) 
+VALUES (gen_random_uuid(), 'test@example.com', '\$2a\$12\$QnOKnn.PumrtVscPkO3C.ONHR/5NANzEbqMoLQOyUFhQMhynyVoe.')
 ON CONFLICT (email) DO NOTHING;"
     
     if execute_sql "$TEST_USER_SQL" "$DATABASE"; then
