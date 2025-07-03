@@ -110,12 +110,18 @@ public static class ServiceCollectionExtensions
             var secretKey = configuration["Jwt:SecretKey"];
             
             // Validate JWT secret key
-            if (string.IsNullOrEmpty(secretKey) || 
-                secretKey.Contains("DEVELOPMENT_SECRET_KEY") || 
-                secretKey.Contains("CHANGE_ME"))
+            if (string.IsNullOrEmpty(secretKey) || secretKey.Contains("CHANGE_ME"))
             {
                 throw new InvalidOperationException(
                     "JWT secret key not properly configured. Please set Jwt__SecretKey in .env.local or environment variables.");
+            }
+            
+            // Only validate against DEVELOPMENT_SECRET_KEY in non-test environments
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Test" && 
+                secretKey.Contains("DEVELOPMENT_SECRET_KEY"))
+            {
+                throw new InvalidOperationException(
+                    "Development secret key is not allowed in production. Please set Jwt__SecretKey to a secure value.");
             }
             
             var expirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");

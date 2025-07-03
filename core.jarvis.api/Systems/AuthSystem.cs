@@ -29,12 +29,18 @@ public class AuthSystem
     /// <summary>
     /// Authenticates a user and returns auth token
     /// </summary>
-    public async Task<AuthToken> AuthenticateUser(string requestBody, string? ipAddress, string? userAgent)
+    public async Task<AuthToken> AuthenticateUser(Account accountCredentials)
     {
-        // All validation and logic handled by handler
+        // Validate input component
+        if (accountCredentials == null)
+        {
+            throw new ValidationException("Account credentials are required");
+        }
+
+        // All authentication logic handled by handler
         var authEntityId = Guid.NewGuid();
         var authHandler = _dataContext.For<AuthHandler>(authEntityId);
-        var authToken = await authHandler.AuthenticateFromJson(requestBody, ipAddress, userAgent);
+        var authToken = await authHandler.Authenticate(accountCredentials);
 
         if (authToken == null || string.IsNullOrEmpty(authToken.AccessToken) || authToken.OwnerEntityId == Guid.Empty)
         {

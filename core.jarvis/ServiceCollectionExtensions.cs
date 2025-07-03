@@ -67,7 +67,6 @@ public static class JarvisServiceCollectionExtensions
             }
 
             throw new ApplicationException("No Connection String");
-
         });
 
         // 9. Register Audit Service

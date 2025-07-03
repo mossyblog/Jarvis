@@ -17,10 +17,10 @@ public class SecurityHeadersMiddleware : IFunctionsWorkerMiddleware
     // CSP policy - adjust based on your needs
     private const string ContentSecurityPolicy = 
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; " +
-        "style-src 'self' 'unsafe-inline'; " +
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
         "img-src 'self' data: https:; " +
-        "font-src 'self'; " +
+        "font-src 'self' https://cdn.jsdelivr.net; " +
         "connect-src 'self'; " +
         "frame-ancestors 'none'; " +
         "form-action 'self'; " +
@@ -33,16 +33,20 @@ public class SecurityHeadersMiddleware : IFunctionsWorkerMiddleware
 
     public async Task Invoke(FunctionContext context, FunctionExecutionDelegate next)
     {
+        var httpRequest = await context.GetHttpRequestDataAsync();
+        
         await next(context);
 
         var httpResponse = context.GetHttpResponseData();
         if (httpResponse != null)
         {
-            AddSecurityHeaders(httpResponse);
+            var isSwaggerEndpoint = httpRequest?.Url.AbsolutePath.Contains("/swagger/", StringComparison.OrdinalIgnoreCase) ?? false;
+            
+            AddSecurityHeaders(httpResponse, isSwaggerEndpoint);
         }
     }
 
-    private void AddSecurityHeaders(HttpResponseData response)
+    private void AddSecurityHeaders(HttpResponseData response, bool isSwaggerEndpoint = false)
     {
         // Prevent MIME type sniffing
         response.Headers.Add("X-Content-Type-Options", "nosniff");
@@ -56,8 +60,11 @@ public class SecurityHeadersMiddleware : IFunctionsWorkerMiddleware
         // Force HTTPS
         response.Headers.Add("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
         
-        // Content Security Policy
-        response.Headers.Add("Content-Security-Policy", ContentSecurityPolicy);
+        // Content Security Policy - skip for Swagger endpoints
+        if (!isSwaggerEndpoint)
+        {
+            response.Headers.Add("Content-Security-Policy", ContentSecurityPolicy);
+        }
         
         // Referrer Policy
         response.Headers.Add("Referrer-Policy", "strict-origin-when-cross-origin");

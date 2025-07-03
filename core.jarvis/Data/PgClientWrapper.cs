@@ -11,6 +11,7 @@ public class PgClientWrapper : IPgClient, IDisposable
 {
     private readonly PgClient _pgClient;
     private readonly NpgsqlConnection _connection;
+    private readonly bool _ownsConnection;
     private bool _disposed = false;
     private string? _currentJwt;
     
@@ -18,12 +19,14 @@ public class PgClientWrapper : IPgClient, IDisposable
     {
         _connection = new NpgsqlConnection(connectionString);
         _pgClient = new PgClient(_connection);
+        _ownsConnection = true;
     }
     
     public PgClientWrapper(NpgsqlConnection connection)
     {
         _connection = connection;
         _pgClient = new PgClient(connection);
+        _ownsConnection = false;
     }
     
     /// <inheritdoc/>
@@ -107,7 +110,10 @@ public class PgClientWrapper : IPgClient, IDisposable
     {
         if (!_disposed && disposing)
         {
-            _connection?.Dispose();
+            if (_ownsConnection)
+            {
+                _connection?.Dispose();
+            }
             _disposed = true;
         }
     }

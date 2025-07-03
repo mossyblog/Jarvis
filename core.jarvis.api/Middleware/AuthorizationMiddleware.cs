@@ -89,6 +89,14 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             var email = principal.FindFirst(ClaimTypes.Email)?.Value;
             var roles = principal.FindFirst("roles")?.Value?.Split(',') ?? Array.Empty<string>();
 
+            // Ensure we have a valid user ID
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("Token missing user identifier claim for path: {Path}", path);
+                await CreateUnauthorizedResponse(context, "Invalid token claims");
+                return;
+            }
+
             // Check role-based authorization for specific endpoints
             if (!HasRequiredRole(path, roles))
             {
@@ -99,7 +107,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 
             // Store user context for downstream handlers
             context.Items["UserId"] = userId;
-            context.Items["UserEmail"] = email;
+            context.Items["UserEmail"] = email ?? string.Empty;
             context.Items["UserRoles"] = roles;
             context.Items["AuthToken"] = token;
 

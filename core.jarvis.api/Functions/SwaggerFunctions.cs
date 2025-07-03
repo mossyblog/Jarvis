@@ -179,7 +179,7 @@ public class SwaggerFunctions
                                             Reference = new OpenApiReference
                                             {
                                                 Type = ReferenceType.Schema,
-                                                Id = "Auth"
+                                                Id = "Account"
                                             }
                                         }
                                     }
@@ -199,7 +199,7 @@ public class SwaggerFunctions
                                                 Reference = new OpenApiReference
                                                 {
                                                     Type = ReferenceType.Schema,
-                                                    Id = "Auth"
+                                                    Id = "AuthToken"
                                                 }
                                             }
                                         }
@@ -295,7 +295,7 @@ public class SwaggerFunctions
                                             Reference = new OpenApiReference
                                             {
                                                 Type = ReferenceType.Schema,
-                                                Id = "Auth"
+                                                Id = "RefreshTokenRequest"
                                             }
                                         }
                                     }
@@ -315,7 +315,7 @@ public class SwaggerFunctions
                                                 Reference = new OpenApiReference
                                                 {
                                                     Type = ReferenceType.Schema,
-                                                    Id = "Auth"
+                                                    Id = "AuthToken"
                                                 }
                                             }
                                         }
@@ -388,7 +388,9 @@ public class SwaggerFunctions
                 {
                     ["Account"] = GenerateSchemaForType(typeof(Models.Account)),
                     ["AuthToken"] = GenerateSchemaForType(typeof(Models.AuthToken)),
-                    ["TokenValidation"] = GenerateSchemaForType(typeof(Models.TokenValidation))
+                    ["TokenValidation"] = GenerateSchemaForType(typeof(Models.TokenValidation)),
+                    ["RefreshTokenRequest"] = GenerateSchemaForType(typeof(Models.RefreshTokenRequest)),
+                    ["ValidateTokenRequest"] = GenerateSchemaForType(typeof(Models.ValidateTokenRequest))
                 }
             }
         };

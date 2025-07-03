@@ -1,4 +1,5 @@
 using System.Net;
+using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Systems;
 using core.jarvis.api.Extensions;
@@ -49,13 +50,49 @@ public class AuthFunction
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "XML content type not allowed");
             }
             
-            // Extract request data
-            var requestBody = await req.ReadAsStringAsync();
-            var ipAddress = req.GetClientIpAddress();
-            var userAgent = req.GetUserAgent();
+            // Parse and validate request body
+            var requestBody = await req.ReadAsStringAsync() ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(requestBody))
+            {
+                return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Request body is required");
+            }
 
-            // Delegate to system
-            var authToken = await _authSystem.AuthenticateUser(requestBody, ipAddress, userAgent);
+            // Deserialize to Account component
+            Account accountCredentials;
+            try
+            {
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                };
+                accountCredentials = System.Text.Json.JsonSerializer.Deserialize<Account>(requestBody, options) 
+                    ?? throw new ValidationException("Invalid request body");
+            }
+            catch (System.Text.Json.JsonException ex)
+            {
+                _logger.LogWarning("Invalid JSON in auth request: {Message}", ex.Message);
+                return await req.CreateErrorResponse(HttpStatusCode.BadRequest, $"Invalid JSON: {ex.Message}");
+            }
+
+            // Basic validation
+            if (string.IsNullOrWhiteSpace(accountCredentials.Email))
+            {
+                return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Email is required");
+            }
+            if (string.IsNullOrWhiteSpace(accountCredentials.Password))
+            {
+                return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Password is required");
+            }
+
+            // Enrich component with request metadata
+            accountCredentials = accountCredentials with
+            {
+                IpAddress = req.GetClientIpAddress(),
+                UserAgent = req.GetUserAgent()
+            };
+
+            // Delegate to system with proper component
+            var authToken = await _authSystem.AuthenticateUser(accountCredentials);
 
             // Return success response
             var response = req.CreateResponse(HttpStatusCode.OK);
