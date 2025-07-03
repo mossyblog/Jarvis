@@ -69,11 +69,21 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                     outputTemplate: "[{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}");
         });
         
-        // Register PgClient as scoped to reuse connections per test
+        // Configure NpgsqlDataSource for connection pooling
+        services.AddSingleton<NpgsqlDataSource>(sp =>
+        {
+            // Add pooling parameters to connection string
+            var pooledConnectionString = $"{_connectionString};Pooling=true;Maximum Pool Size=50;Minimum Pool Size=5";
+            var dataSource = NpgsqlDataSource.Create(pooledConnectionString);
+            return dataSource;
+        });
+        
+        // Register PgClient as scoped using pooled connections
         services.AddScoped<IPgClient>(sp =>
         {
-            var connection = new NpgsqlConnection(_connectionString);
-            var pgClientWrapper = new PgClientWrapper(connection);
+            var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+            var connection = dataSource.CreateConnection();
+            var pgClientWrapper = new PgClientWrapper(connection, ownsConnection: true);
             
             // For API tests, don't authenticate during setup as we're testing the auth service itself
             // Other tests can authenticate if needed
@@ -209,7 +219,13 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             }
         }
         
+        // Dispose of scope first to ensure all scoped services are disposed
         _scope?.Dispose();
+        
+        // Dispose of the NpgsqlDataSource to properly close all pooled connections
+        var dataSource = _serviceProvider?.GetService<NpgsqlDataSource>();
+        dataSource?.Dispose();
+        
         _serviceProvider?.Dispose();
     }
 }

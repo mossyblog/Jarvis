@@ -22,11 +22,11 @@ public class PgClientWrapper : IPgClient, IDisposable
         _ownsConnection = true;
     }
     
-    public PgClientWrapper(NpgsqlConnection connection)
+    public PgClientWrapper(NpgsqlConnection connection, bool ownsConnection = true)
     {
         _connection = connection;
         _pgClient = new PgClient(connection);
-        _ownsConnection = false;
+        _ownsConnection = ownsConnection;
     }
     
     /// <inheritdoc/>
