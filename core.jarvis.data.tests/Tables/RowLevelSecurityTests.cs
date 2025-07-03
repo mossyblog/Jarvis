@@ -31,8 +31,13 @@ namespace core.jarvis.data.tests.Tables
             Environment.SetEnvironmentVariable("Jwt__Issuer", "jarvis-api-test");
             Environment.SetEnvironmentVariable("Jwt__Audience", "jarvis-clients-test");
             
+            // Ensure test database exists
+            await TestHelpers.EnsureTestDatabaseExists();
+            
+            // Use the centralized connection string
             var connString = TestHelpers.GetConnectionStringFromEnv();
             _conn = new NpgsqlConnection(connString);
+            await _conn.OpenAsync();
             _adminClient = await PgClientFactory.Create(_conn);
 
             // Create test tables with RLS
@@ -42,13 +47,12 @@ namespace core.jarvis.data.tests.Tables
         private async Task SetupRLSTables()
         {
             // Drop existing objects
+            // Note: DROP POLICY IF EXISTS still requires the table to exist
+            // So we drop tables first (which cascades policies), then functions
             var dropSql = @"
-                DROP POLICY IF EXISTS tenant_isolation ON tenant_data;
-                DROP POLICY IF EXISTS user_own_records ON user_data;
-                DROP POLICY IF EXISTS role_based_access ON sensitive_data;
-                DROP TABLE IF EXISTS tenant_data;
-                DROP TABLE IF EXISTS user_data;
-                DROP TABLE IF EXISTS sensitive_data;
+                DROP TABLE IF EXISTS tenant_data CASCADE;
+                DROP TABLE IF EXISTS user_data CASCADE;
+                DROP TABLE IF EXISTS sensitive_data CASCADE;
                 DROP FUNCTION IF EXISTS current_user_id();
                 DROP FUNCTION IF EXISTS current_tenant_id();
                 DROP FUNCTION IF EXISTS current_user_role();

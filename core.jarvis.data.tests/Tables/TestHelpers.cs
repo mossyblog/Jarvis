@@ -1,11 +1,40 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Npgsql;
 
 namespace core.jarvis.data.tests.Tables
 {
     public static class TestHelpers
     {
+        /// <summary>
+        /// Ensures the jarvis_test database exists before running tests.
+        /// </summary>
+        public static async Task EnsureTestDatabaseExists()
+        {
+            var testConnString = GetConnectionStringFromEnv();
+            var builder = new NpgsqlConnectionStringBuilder(testConnString);
+            var dbName = builder.Database;
+            
+            // Connect to postgres database to create test database if needed
+            builder.Database = "postgres";
+            using var adminConn = new NpgsqlConnection(builder.ToString());
+            await adminConn.OpenAsync();
+            
+            // Check if database exists
+            var checkDbSql = "SELECT 1 FROM pg_database WHERE datname = @dbName";
+            using var checkCmd = new NpgsqlCommand(checkDbSql, adminConn);
+            checkCmd.Parameters.AddWithValue("dbName", dbName);
+            var exists = await checkCmd.ExecuteScalarAsync() != null;
+            
+            if (!exists)
+            {
+                // Create database if it doesn't exist
+                var createDbSql = $"CREATE DATABASE {dbName}";
+                using var createCmd = new NpgsqlCommand(createDbSql, adminConn);
+                await createCmd.ExecuteNonQueryAsync();
+            }
+        }
         public static string GetConnectionStringFromEnv()
         {
             // First check if TEST_DATABASE_URL environment variable is set (for CI/CD)
@@ -15,37 +44,8 @@ namespace core.jarvis.data.tests.Tables
                 return testDbUrl;
             }
 
-            // Fall back to .env.local file for local development
-            var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env.local");
-            if (!File.Exists(envPath))
-            {
-                // Try project root
-                var dir = Directory.GetCurrentDirectory();
-                while (dir != null && !File.Exists(Path.Combine(dir, ".env.local")))
-                {
-                    dir = Directory.GetParent(dir)?.FullName;
-                }
-                if (dir != null)
-                    envPath = Path.Combine(dir, ".env.local");
-                else
-                {
-                    // If no .env.local file, use default connection string
-                    return "Host=localhost;Port=5432;Username=postgres;Password=postgres;Database=postgres";
-                }
-            }
-
-            var lines = File.ReadAllLines(envPath);
-            string host = "localhost", port = "5432", user = "postgres", pass = "postgres", db = "postgres";
-            foreach (var line in lines)
-            {
-                var trimmed = line.Trim();
-                if (trimmed.StartsWith("PGHOST=")) host = trimmed.Substring(7);
-                if (trimmed.StartsWith("PGPORT=")) port = trimmed.Substring(7);
-                if (trimmed.StartsWith("PGUSER=")) user = trimmed.Substring(7);
-                if (trimmed.StartsWith("PGPASSWORD=")) pass = trimmed.Substring(11);
-                if (trimmed.StartsWith("PGDATABASE=")) db = trimmed.Substring(11);
-            }
-            return $"Host={host};Port={port};Username={user};Password={pass};Database={db}";
+            // Use jarvis_test database with supabase_admin user to match integration tests
+            return "Host=localhost;Port=5432;Username=supabase_admin;Password=postgres;Database=jarvis_test";
         }
 
         public static string GetSupabaseAdminConnectionString()

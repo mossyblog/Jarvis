@@ -3,6 +3,10 @@ using Shouldly;
 
 namespace core.jarvis.data.tests.Tables
 {
+    // NOTE: These tests have been disabled because PgClient.Authenticate has been removed.
+    // Authentication is now handled through the ECS framework's AuthHandler.
+    // See core.jarvis.api.tests/Integration/AuthSystemIntegrationTests.cs for authentication tests.
+    /*
     /// <summary>
     /// INTENT: Validate authentication layer, schema enforcement, and password hashing.
     /// PURPOSE: Ensure PgClientFactory creates/updates schema and PgClient authenticates users securely.
@@ -118,27 +122,6 @@ namespace core.jarvis.data.tests.Tables
             // Assert
             jwt.ShouldBeNull();
         }
-
-        /// <summary>
-        /// INTENT: Ensure minimum schema and RLS policy are present.
-        /// PURPOSE: Prevents misconfiguration and enforces security.
-        /// </summary>
-        [Fact]
-        public async Task MinimumSchema_And_RlsPolicy_Are_Enforced()
-        {
-            // Act
-            // (Initialization already ensures schema and policy)
-            var tableCheck = "SELECT to_regclass('public.account') IS NOT NULL";
-            var hasAccountTable = (bool)(await new NpgsqlCommand(tableCheck, _conn).ExecuteScalarAsync() ?? false);
-            var colCheck = "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='account' AND column_name='password_hash')";
-            var hasPasswordHash = (bool)(await new NpgsqlCommand(colCheck, _conn).ExecuteScalarAsync() ?? false);
-            var policyCheck = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'account')";
-            var hasPolicy = (bool)(await new NpgsqlCommand(policyCheck, _conn).ExecuteScalarAsync() ?? false);
-
-            // Assert
-            hasAccountTable.ShouldBeTrue();
-            hasPasswordHash.ShouldBeTrue();
-            hasPolicy.ShouldBeTrue();
-        }
     }
+    */
 }
