@@ -15,7 +15,7 @@ The main CI/CD pipeline that builds and tests all projects in the solution.
 #### PostgreSQL Service
 The workflow includes a PostgreSQL 15 service container with:
 - **Database**: `jarvis_test`
-- **Username**: `postgres`
+- **Username**: `supabase_admin`
 - **Password**: `postgres`
 - **Port**: 5432
 
@@ -48,14 +48,14 @@ To replicate the CI environment locally:
 # Start PostgreSQL container
 docker run -d \
   --name jarvis-test-db \
-  -e POSTGRES_USER=postgres \
+  -e POSTGRES_USER=supabase_admin \
   -e POSTGRES_PASSWORD=postgres \
   -e POSTGRES_DB=jarvis_test \
   -p 5432:5432 \
   postgres:15
 
 # Set environment variable
-export TEST_DATABASE_URL="Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres"
+export TEST_DATABASE_URL="Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres"
 
 # Run tests
 dotnet test

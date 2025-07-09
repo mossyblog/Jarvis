@@ -150,23 +150,11 @@ public class AuthHandler : ComponentHandler<Account>
             var sessionId = Guid.NewGuid();
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
 
-            // Try to get existing security profile for role claims
-            var additionalClaims = new Dictionary<string, string>();
-            try
+            // Add sessionId to token claims for revocation tracking
+            var additionalClaims = new Dictionary<string, string>
             {
-                var profileHandler = DataContext.For<AccountProfileHandler>(authenticatedEntityId);
-                var securityProfile = await profileHandler.Get();
-                
-                if (securityProfile?.RoleIds?.Any() == true)
-                {
-                    additionalClaims["roles"] = string.Join(",", securityProfile.RoleIds);
-                }
-            }
-            catch (EntityNotFoundException)
-            {
-                // User doesn't have a security profile yet - this is completely normal and expected
-                // Do nothing - just continue without roles
-            }
+                ["sessionId"] = sessionId.ToString()
+            };
 
             var finalAccessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
 

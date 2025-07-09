@@ -142,6 +142,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
         services.AddScoped<ISecurityAuditService, SecurityAuditService>();
         services.AddScoped<IConstantTimeService, ConstantTimeService>();
+        
+        // Add permission service with caching
+        services.AddMemoryCache();
+        services.AddScoped<IPermissionService, PermissionService>();
 
         return services;
     }

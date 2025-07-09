@@ -8,7 +8,7 @@ set -e  # Exit on error
 # Default values
 SERVER="${JARVIS_DB_SERVER:-localhost}"
 PORT="${JARVIS_DB_PORT:-5432}"
-USERNAME="${JARVIS_DB_USERNAME:-postgres}"
+USERNAME="${JARVIS_DB_USERNAME:-supabase_admin}"
 DATABASE="${JARVIS_DB_NAME:-jarvis_test}"
 CREATE_TEST_USER=false
 
@@ -29,7 +29,7 @@ Sets up the Jarvis framework database with all required tables.
 OPTIONS:
     -h, --host          PostgreSQL server hostname (default: localhost)
     -p, --port          PostgreSQL server port (default: 5432)
-    -u, --username      PostgreSQL username (default: postgres)
+    -u, --username      PostgreSQL username (default: supabase_admin)
     -d, --database      Target database name (default: jarvis)
     -t, --test-user     Create a test user for development
     --help              Display this help message
@@ -94,12 +94,18 @@ if ! command -v psql &> /dev/null; then
     exit 1
 fi
 
-# Check if password is set
+# Check if password is set, default to 'postgres' for supabase_admin
 if [ -z "$PGPASSWORD" ]; then
-    echo -n "Enter PostgreSQL password for user '$USERNAME': "
-    read -s PGPASSWORD
-    echo
-    export PGPASSWORD
+    if [ "$USERNAME" = "supabase_admin" ]; then
+        PGPASSWORD="postgres"
+        export PGPASSWORD
+        echo -e "${CYAN}Using default password for supabase_admin${NC}"
+    else
+        echo -n "Enter PostgreSQL password for user '$USERNAME': "
+        read -s PGPASSWORD
+        echo
+        export PGPASSWORD
+    fi
 fi
 
 echo -e "${GREEN}Setting up Jarvis database...${NC}"
