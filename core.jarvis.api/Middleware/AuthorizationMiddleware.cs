@@ -63,7 +63,12 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         }
 
         // Extract and validate JWT token
-        var authHeader = httpRequest.Headers.GetValues("Authorization")?.FirstOrDefault();
+        string? authHeader = null;
+        if (httpRequest.Headers.TryGetValues("Authorization", out var authValues))
+        {
+            authHeader = authValues?.FirstOrDefault();
+        }
+        
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("Missing or invalid Authorization header for path: {Path}", path);
