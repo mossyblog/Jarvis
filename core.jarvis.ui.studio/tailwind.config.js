@@ -6,14 +6,123 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-  	container: {
-  		center: true,
-  		padding: '2rem',
-  		screens: {
-  			'2xl': '1400px'
-  		}
-  	},
-  	extend: {
+    container: {
+      center: true,
+      padding: '2rem',
+      screens: {
+        '2xl': '1400px'
+      }
+    },
+    extend: {
+      spacing: {
+        // Base unit: 8px
+        'unit': '8px',
+        // T-shirt sizes (multiples of 8)
+        'xs': '4px',   // 0.5 * 8
+        'sm': '8px',   // 1 * 8
+        'md': '16px',  // 2 * 8
+        'lg': '24px',  // 3 * 8
+        'xl': '32px',  // 4 * 8
+        '2xl': '40px', // 5 * 8
+        '3xl': '48px', // 6 * 8
+        '4xl': '64px', // 8 * 8
+        '5xl': '80px', // 10 * 8
+        '6xl': '96px', // 12 * 8
+        // Numeric values for more flexibility
+        '0.5': '4px',
+        '1.5': '12px',
+        '2.5': '20px',
+        '3.5': '28px',
+        '4.5': '36px',
+        '5.5': '44px',
+        '6.5': '52px',
+        '7.5': '60px',
+        '8.5': '68px',
+        '9.5': '76px',
+        '10.5': '84px',
+        '11.5': '92px',
+        '13': '104px',
+        '14': '112px',
+        '15': '120px',
+        '16': '128px',
+        '18': '144px',
+        '20': '160px',
+        '24': '192px',
+        '28': '224px',
+        '32': '256px',
+        '36': '288px',
+        '40': '320px',
+        '44': '352px',
+        '48': '384px',
+        '52': '416px',
+        '56': '448px',
+        '60': '480px',
+        '64': '512px',
+        '72': '576px',
+        '80': '640px',
+        '96': '768px',
+      },
+      fontSize: {
+        // Font sizes following 8px grid where possible
+        'xs': ['12px', '16px'],
+        'sm': ['14px', '20px'],
+        'base': ['16px', '24px'],
+        'lg': ['18px', '28px'],
+        'xl': ['20px', '28px'],
+        '2xl': ['24px', '32px'],
+        '3xl': ['30px', '36px'],
+        '4xl': ['36px', '40px'],
+        '5xl': ['48px', '48px'],
+        '6xl': ['60px', '60px'],
+        '7xl': ['72px', '72px'],
+        '8xl': ['96px', '96px'],
+        '9xl': ['128px', '128px'],
+      },
+      borderRadius: {
+        'none': '0',
+        'sm': '4px',
+        'DEFAULT': '8px',
+        'md': '8px',
+        'lg': '12px',
+        'xl': '16px',
+        '2xl': '24px',
+        '3xl': '32px',
+        'full': '9999px',
+      },
+      minHeight: {
+        // Min heights following 8px grid
+        '8': '32px',
+        '10': '40px',
+        '12': '48px',
+        '14': '56px',
+        '16': '64px',
+        '20': '80px',
+        '24': '96px',
+        '28': '112px',
+        '32': '128px',
+        '36': '144px',
+        '40': '160px',
+        '48': '192px',
+        '56': '224px',
+        '64': '256px',
+        '72': '288px',
+        '80': '320px',
+        '96': '384px',
+      },
+      maxWidth: {
+        // Max widths following 8px grid
+        'xs': '320px',
+        'sm': '384px',
+        'md': '448px',
+        'lg': '512px',
+        'xl': '576px',
+        '2xl': '672px',
+        '3xl': '768px',
+        '4xl': '896px',
+        '5xl': '1024px',
+        '6xl': '1152px',
+        '7xl': '1280px',
+      },
   		fontFamily: {
   			sans: [
   				'var(--font-custom)'
@@ -138,7 +247,7 @@ export default {
   	}
   },
   plugins: [
+    require('tailwindcss-animate'),
     require('@tailwindcss/container-queries'),
   ],
 }
-

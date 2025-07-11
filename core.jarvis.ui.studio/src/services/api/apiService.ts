@@ -19,9 +19,14 @@ export interface IApiService {
   getNavigation(): Promise<ApiResponse<NavigationItem[]>>;
   refreshToken(token: string): Promise<ApiResponse<AuthResponse>>;
   hasPermission(user: User, resource: string, action?: string): boolean;
+  getUsers(): Promise<ApiResponse<User[]>>;
 }
 
 class MockApiService implements IApiService {
+  async getUsers(): Promise<ApiResponse<User[]>> {
+    await this.simulateDelay();
+    return { data: mockUsers };
+  }
   private simulateDelay(): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
   }
@@ -154,6 +159,13 @@ class MockApiService implements IApiService {
 
 // Real API service implementation
 class RealApiService implements IApiService {
+  async getUsers(): Promise<ApiResponse<User[]>> {
+    const response = await fetch(`${this.apiUrl}/users`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<User[]>(response);
+  }
   private apiUrl: string;
 
   constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:7071/api') {
@@ -240,8 +252,7 @@ class RealApiService implements IApiService {
             id: authToken.OwnerEntityId || authToken.ownerEntityId,
             email: credentials.email,
             name: credentials.email.split('@')[0], // Use email prefix as name for now
-            roles: [],
-            permissions: []
+            roles: []
           };
           
           localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -395,15 +406,19 @@ class RealApiService implements IApiService {
 }
 
 // Factory function to create the appropriate service
+// Utility to get/set API mode
+export function getApiMode(): 'mock' | 'real' {
+  const mode = localStorage.getItem('jarvis_api_mode');
+  return mode === 'real' ? 'real' : 'mock';
+}
+
+export function setApiMode(mode: 'mock' | 'real') {
+  localStorage.setItem('jarvis_api_mode', mode);
+  window.location.reload();
+}
+
 export function createApiService(): IApiService {
-  const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
-  
-  if (useMockApi) {
-    console.log('Using mock API service');
-    return new MockApiService();
-  }
-  
-  console.log('Using real API service at:', import.meta.env.VITE_API_URL || 'http://localhost:7071/api');
+  if (getApiMode() === 'mock') return new MockApiService();
   return new RealApiService();
 }
 
