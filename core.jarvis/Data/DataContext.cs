@@ -74,6 +74,15 @@ public class DataContext : IDataContext
         return new EntityQuery(_queryRegistry);
     }
 
+    /// <summary>
+    /// Creates a new Entity with a generated ID.
+    /// </summary>
+    /// <returns>A new Entity instance with a unique ID.</returns>
+    public Entity Entity()
+    {
+        return new Entity(Guid.NewGuid());
+    }
+
     public async Task Commit<TComponent>(TComponent component) 
         where TComponent : class, IComponent, new()
     {

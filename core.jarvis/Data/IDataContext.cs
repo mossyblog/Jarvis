@@ -32,6 +32,12 @@ public interface IDataContext
     IEntityQuery Query();
 
     /// <summary>
+    /// Creates a new Entity with a generated ID.
+    /// </summary>
+    /// <returns>A new Entity instance with a unique ID.</returns>
+    Entity Entity();
+
+    /// <summary>
     /// Attempts to save a component through the centralized DataContext with optimistic concurrency control.
     /// Use this instead of direct Supabase client operations.
     /// </summary>
