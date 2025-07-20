@@ -150,24 +150,27 @@ public class OrderService
 ### 1. Handler Pattern
 Encapsulate all business logic in testable handlers:
 ```csharp
-public class InvoiceHandler : ComponentHandler<Invoice>
+public class InvoiceHandler : ComponentHandler<InvoiceTestComponent>
 {
-    public async Task<Invoice> GenerateFromOrder(Guid orderId)
+    public async Task<InvoiceTestComponent> GenerateFromOrder(Guid orderId)
     {
         // Complex business logic in one place
         var orderHandler = DataContext.For<OrderHandler>(orderId);
         var order = await orderHandler.Get();
         Ensure(order.Status == "CONFIRMED", "Can only invoice confirmed orders");
         
-        var invoice = new Invoice
+        var invoice = new InvoiceTestComponent
         {
-            OrderId = orderId,
-            Amount = order.TotalAmount,
-            DueDate = DateTime.UtcNow.AddDays(30)
+            Id = Guid.NewGuid(),
+            OwnerEntityId = OwnerEntityId,
+            WorkOrderId = orderId,
+            Amount = order.TotalAmountCents,
+            DueDate = DateTime.UtcNow.AddDays(30),
+            Status = "PENDING",
+            UpdatedAt = DateTime.UtcNow
         };
         
         await DataContext.Commit(invoice);
-        await AuditService.LogEvent("InvoiceGenerated", invoice);
         
         return invoice;
     }
@@ -179,15 +182,15 @@ Find entities across components with type-safe queries:
 ```csharp
 // Find all confirmed orders with invoices
 var invoicedOrders = await dataContext.Query()
-    .WithAll<OrderComponent, Invoice>()
-    .Where<OrderComponent>(o => o.Status == "CONFIRMED")
-    .ToListAsync();
+    .WithAll<OrderComponent>(o => o.Status == "CONFIRMED")
+    .WithAll<InvoiceTestComponent>(i => true)
+    .ToEntityComponents();
 
 // Find orders without invoices (need billing)
 var unbilledOrders = await dataContext.Query()
-    .WithAll<OrderComponent>()
-    .WithNone<Invoice>()
-    .ToListAsync();
+    .WithAll<OrderComponent>(o => true)
+    .WithNone<InvoiceTestComponent>(i => true)
+    .ToEntityComponents();
 ```
 
 ### 3. Built-in Security
@@ -243,11 +246,12 @@ public async Task OrderHandler_ConfirmOrder_ChangesStatus()
     await handler.CreateOrder("TEST-001", "CUST-123", 100m, "Test Address");
     
     // Act
-    await handler.ConfirmOrder();
+    var result = await handler.ConfirmOrder();
     
     // Assert
+    Assert.True(result);
     var order = await handler.Get();
-    order.Status.ShouldBe("CONFIRMED");
+    Assert.Equal("CONFIRMED", order.Status);
 }
 ```
 
