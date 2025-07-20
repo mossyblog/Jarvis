@@ -1,2 +1,0 @@
-- npm run dev will be run by me, always ask me to rebuild or run it first.
-- When i ask you to compare between screenshots. pay close attention to font settings, spacing, padding, layout, seperation of elements, designs specific criteria. Be very thorough and dont just do the bare mimums

@@ -172,21 +172,19 @@ public class BlogPostComponentHandler : ComponentHandler<BlogPostComponent>
 
     public async Task<IList<BlogPostComponent>> GetAllPosts()
     {
-        // Use the Supabase client directly to fetch all BlogPostComponent records for this entity
-        var dataContext = DataContext as DataContext;
-        if (dataContext == null)
-            throw new InvalidOperationException("DataContext must be of type DataContext to access Supabase client.");
-        var clientField = typeof(DataContext).GetField("_client", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        if (clientField == null)
-            throw new InvalidOperationException("Could not find _client field on DataContext.");
-        var supabaseClient = clientField.GetValue(dataContext) as Supabase.Client;
-        if (supabaseClient == null)
-            throw new InvalidOperationException("Supabase client is not available.");
-        var response = await supabaseClient.Postgrest
-            .Table<BlogPostComponent>()
-            .Filter("owner_entity_id", Supabase.Postgrest.Constants.Operator.Equals, OwnerEntityId.ToString())
-            .Get();
-        return response.Models;
+        // Use DataContext query system to fetch all BlogPostComponent records for this entity
+        var entityComponents = await DataContext.Query()
+            .WithAll<BlogPostComponent>(p => p.OwnerEntityId == OwnerEntityId)
+            .ToEntityComponents();
+            
+        var posts = new List<BlogPostComponent>();
+        foreach (var components in entityComponents.Values)
+        {
+            var post = components.Get<BlogPostComponent>();
+            if (post != null)
+                posts.Add(post);
+        }
+        return posts;
     }
 
     public async Task<BlogPostComponent> CreatePost(
