@@ -18,8 +18,6 @@ This guide demonstrates how to implement and use the `_dataContext.BlogHandler(b
 #### BlogComponent
 ```csharp
 using core.jarvis.Data;
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
 
 namespace core.jarvis.tests.Examples;
 
@@ -50,8 +48,6 @@ public class BlogComponent : BaseModel, IComponent
 #### BlogPostComponent
 ```csharp
 using core.jarvis.Data;
-using Supabase.Postgrest.Attributes;
-using Supabase.Postgrest.Models;
 
 namespace core.jarvis.tests.Examples;
 
@@ -161,7 +157,6 @@ using Microsoft.Extensions.Logging;
 using core.jarvis.Data;
 using core.jarvis.Exceptions;
 using core.jarvis.Validation;
-using Supabase;
 
 namespace core.jarvis.tests.Examples;
 
