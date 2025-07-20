@@ -62,7 +62,7 @@ public class RegistrationSystem
             IsActive = true,
             IpAddress = ipAddress,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         });
         
         // 5. Create security profile using handler
@@ -75,7 +75,7 @@ public class RegistrationSystem
             var updated = profile with 
             { 
                 Name = request.FullName.Trim(),
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             await _dataContext.Commit(updated);
             profile = updated;

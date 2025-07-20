@@ -55,7 +55,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                 {
                     IsRevoked = true,
                     RevokedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
                 await DataContext.Commit(revokedToken);
                 Logger.LogInformation("Revoked token for session: {SessionId}", token.SessionId);
@@ -121,7 +121,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             {
                 IsRevoked = true,
                 RevokedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             await DataContext.Commit(revokedToken);
 
@@ -139,7 +139,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                 ClientId = matchingToken.ClientId,
                 IsRevoked = false,
                 IssuedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             await DataContext.Commit(newToken);
@@ -274,7 +274,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                     {
                         IsRevoked = true,
                         RevokedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        LastUpdated = DateTime.UtcNow
                     };
                     await DataContext.Commit(revokedToken);
                     Logger.LogInformation("Revoked old session {SessionId} to enforce session limit", token.SessionId);

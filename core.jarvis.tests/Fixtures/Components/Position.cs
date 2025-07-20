@@ -18,7 +18,7 @@ public record PositionComponent : IComponent, IVersionedComponent
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     
     public int? Version { get; set; }
 }

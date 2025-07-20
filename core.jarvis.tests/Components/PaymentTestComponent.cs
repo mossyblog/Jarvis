@@ -9,7 +9,7 @@ namespace core.jarvis.tests.Components
         public decimal Amount { get; set; }
         public string Status { get; set; } = string.Empty;
         public DateTime PaymentDate { get; set; }
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
         public int? Version { get; set; }
     }
 }

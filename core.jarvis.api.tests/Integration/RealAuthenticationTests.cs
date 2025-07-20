@@ -67,7 +67,7 @@ public class RealAuthenticationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await dataContext.Commit(account);
@@ -131,7 +131,7 @@ public class RealAuthenticationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await dataContext.Commit(account);

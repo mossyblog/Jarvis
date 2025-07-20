@@ -146,7 +146,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
             RoleIds = new[] { "admin", "user" },
             PermissionIds = new[] { "read", "write" },
             Preferences = """{"theme": "dark", "language": "en", "nested": {"value": 123}}""",
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(securityProfile);
         
@@ -489,7 +489,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await TestDataContext().Commit(account);

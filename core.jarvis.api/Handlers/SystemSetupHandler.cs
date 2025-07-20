@@ -21,7 +21,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
     {
         var setup = await GetOrDefault() ?? throw new InvalidOperationException("SystemSetup component not found");
         
-        setup = setup with { OwnerEntityId = OwnerEntityId, UpdatedAt = DateTime.UtcNow };
+        setup = setup with { OwnerEntityId = OwnerEntityId, LastUpdated = DateTime.UtcNow };
         await DataContext.Commit(setup);
         return setup;
     }

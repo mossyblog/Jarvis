@@ -169,7 +169,7 @@ public class AuthHandler : ComponentHandler<Account>
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
                 SessionId = sessionId,
                 ClientId = accountCredentials.ClientId,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             // Save the auth token to the database
@@ -233,7 +233,7 @@ public class AuthHandler : ComponentHandler<Account>
                 ClientId = authToken.ClientId,
                 IsRevoked = false,
                 IssuedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             await DataContext.Commit(sessionEntity);
@@ -371,7 +371,7 @@ public class AuthHandler : ComponentHandler<Account>
             { 
                 IsRevoked = true, 
                 RevokedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             await DataContext.Commit(revokedToken);
             
@@ -389,7 +389,7 @@ public class AuthHandler : ComponentHandler<Account>
                 IpAddress = existingToken.IpAddress,
                 UserAgent = existingToken.UserAgent,
                 IsRevoked = false,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             
             await DataContext.Commit(newAuthToken);

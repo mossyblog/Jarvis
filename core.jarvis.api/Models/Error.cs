@@ -15,7 +15,7 @@ public record Error : IComponent
     public Guid OwnerEntityId { get; set; }
     
     /// <inheritdoc/>
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Error code for programmatic handling.

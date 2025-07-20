@@ -51,7 +51,7 @@ public class OrderHandler : ComponentHandler<OrderComponent>
         order.ShippingAddress = shippingAddress;
         order.Status = "PENDING";
         order.OrderDate = DateTime.UtcNow;
-        order.UpdatedAt = DateTime.UtcNow;
+        order.LastUpdated = DateTime.UtcNow;
 
         // Persist to database
         var success = await DataContext.TryCommit(order);
@@ -87,7 +87,7 @@ public class OrderHandler : ComponentHandler<OrderComponent>
         // Update status
         var previousStatus = order.Status;
         order.Status = "CONFIRMED";
-        order.UpdatedAt = DateTime.UtcNow;
+        order.LastUpdated = DateTime.UtcNow;
 
         // Persist changes
         var success = await DataContext.TryCommit(order);
@@ -133,7 +133,7 @@ public class OrderHandler : ComponentHandler<OrderComponent>
         var previousStatus = order.Status;
         order.Status = "CANCELLED";
         order.Notes = $"Cancelled: {reason}";
-        order.UpdatedAt = DateTime.UtcNow;
+        order.LastUpdated = DateTime.UtcNow;
 
         // Persist changes
         var success = await DataContext.TryCommit(order);
@@ -175,7 +175,7 @@ public class OrderHandler : ComponentHandler<OrderComponent>
             TotalAmount = order.TotalAmount,
             IsPaid = order.IsPaid,
             OrderDate = order.OrderDate,
-            UpdatedAt = order.UpdatedAt,
+            UpdatedAt = order.LastUpdated,
             IsShippable = order.Status == "CONFIRMED" && order.IsPaid,
             DaysOld = (DateTime.UtcNow - order.OrderDate).Days
         };

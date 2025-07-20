@@ -47,7 +47,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
             {
                 IsValid = false,
                 ErrorMessage = "No token provided",
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
         }
 
@@ -62,7 +62,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                 {
                     IsValid = false,
                     ErrorMessage = "Invalid or expired token",
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
             }
 
@@ -77,7 +77,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                 {
                     IsValid = false,
                     ErrorMessage = "Invalid user ID in token",
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
             }
 
@@ -99,7 +99,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                     ["email"] = principal.FindFirst("email")?.Value ?? string.Empty
                 },
                 ErrorMessage = null,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             await DataContext.Commit(result);
@@ -112,7 +112,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
             {
                 IsValid = false,
                 ErrorMessage = "Validation error occurred",
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
         }
     }

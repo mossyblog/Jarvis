@@ -65,7 +65,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             RoleIds = defaultRoleId != Guid.Empty ? new[] { defaultRoleId.ToString() } : Array.Empty<string>(),
             PermissionIds = permissionIds.ToArray(),
             Avatar = null,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(userProfile);
@@ -121,7 +121,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         { 
             RoleIds = roleIds.ToArray(),
             PermissionIds = allPermissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);
@@ -185,7 +185,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         { 
             RoleIds = roleIds.ToArray(),
             PermissionIds = allPermissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);
@@ -252,7 +252,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             Name = !string.IsNullOrEmpty(updateRequest.Name) ? updateRequest.Name : profile.Name,
             Avatar = updateRequest.Avatar, // Allow null to clear avatar
             Preferences = updateRequest.Preferences ?? profile.Preferences,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);

@@ -92,7 +92,7 @@ public class RegistrationIntegrationTests : IntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(existingAccount);
         TrackEntity(existingEntityId);

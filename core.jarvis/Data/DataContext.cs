@@ -79,7 +79,7 @@ public class DataContext : IDataContext
     {
         try
         {
-            component.UpdatedAt = DateTime.UtcNow;
+            component.LastUpdated = DateTime.UtcNow;
             
             // Try to get existing component to determine if this is an insert or update
             TComponent? existing = null;
@@ -168,8 +168,8 @@ public class DataContext : IDataContext
     {
         try
         {
-            var originalUpdatedAt = component.UpdatedAt;
-            component.UpdatedAt = DateTime.UtcNow;
+            var originalUpdatedAt = component.LastUpdated;
+            component.LastUpdated = DateTime.UtcNow;
 
             // Try to get existing record by ID
             TComponent? existing = null;
@@ -241,7 +241,7 @@ public class DataContext : IDataContext
             else
             {
                 // For non-versioned components, fall back to timestamp-based concurrency
-                var timeDiff = Math.Abs((existing.UpdatedAt - originalUpdatedAt).TotalMilliseconds);
+                var timeDiff = Math.Abs((existing.LastUpdated - originalUpdatedAt).TotalMilliseconds);
                 
                 // Debug logging removed - timestamp concurrency check performed
                 
@@ -255,13 +255,13 @@ public class DataContext : IDataContext
                             ComponentType = typeof(TComponent).Name, 
                             ComponentId = component.Id, 
                             ExpectedTimestamp = originalUpdatedAt, 
-                            ActualTimestamp = existing.UpdatedAt, 
+                            ActualTimestamp = existing.LastUpdated, 
                             DifferenceMs = timeDiff 
                         });
                         
                     ErrorHandlingPolicy.LogExpectedError(
-                        $"Timestamp concurrency conflict for {typeof(TComponent).Name} ID {component.Id}. Expected: {originalUpdatedAt:O}, Actual: {existing.UpdatedAt:O}, Diff: {timeDiff}ms",
-                        new { ComponentType = typeof(TComponent).Name, ComponentId = component.Id, ExpectedTimestamp = originalUpdatedAt, ActualTimestamp = existing.UpdatedAt, DifferenceMs = timeDiff });
+                        $"Timestamp concurrency conflict for {typeof(TComponent).Name} ID {component.Id}. Expected: {originalUpdatedAt:O}, Actual: {existing.LastUpdated:O}, Diff: {timeDiff}ms",
+                        new { ComponentType = typeof(TComponent).Name, ComponentId = component.Id, ExpectedTimestamp = originalUpdatedAt, ActualTimestamp = existing.LastUpdated, DifferenceMs = timeDiff });
                     return false;
                 }
             }
@@ -672,7 +672,7 @@ public class DataContext : IDataContext
                 {
                     Id = Guid.NewGuid(),
                     OwnerEntityId = parentId,
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
             }
             
@@ -709,7 +709,7 @@ public class DataContext : IDataContext
                     OwnerEntityId = childId,
                     ParentId = parentId,
                     ParentType = parentType,
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
                 
                 await Commit(childRelationship);

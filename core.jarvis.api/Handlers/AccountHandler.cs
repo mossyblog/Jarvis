@@ -33,7 +33,7 @@ public class AccountHandler : ComponentHandler<Account>
         var activated = account with 
         { 
             IsActive = true, 
-            UpdatedAt = DateTime.UtcNow 
+            LastUpdated = DateTime.UtcNow 
         };
 
         await DataContext.Commit(activated);
@@ -57,7 +57,7 @@ public class AccountHandler : ComponentHandler<Account>
         var deactivated = account with 
         { 
             IsActive = false, 
-            UpdatedAt = DateTime.UtcNow 
+            LastUpdated = DateTime.UtcNow 
         };
 
         await DataContext.Commit(deactivated);

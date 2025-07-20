@@ -37,7 +37,7 @@ public class RoleHandler : ComponentHandler<Role>
         var updated = role with 
         { 
             PermissionIds = permissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);
@@ -66,7 +66,7 @@ public class RoleHandler : ComponentHandler<Role>
         var updated = role with 
         { 
             PermissionIds = permissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);

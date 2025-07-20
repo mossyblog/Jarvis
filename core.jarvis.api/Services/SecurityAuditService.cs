@@ -255,7 +255,7 @@ public record SecurityAuditEvent : IComponent
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid OwnerEntityId { get; set; } = Guid.Empty;
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     
     public string EventType { get; init; } = string.Empty;
     public DateTime EventTime { get; init; }

@@ -45,7 +45,7 @@ public class SecurityTokenHandler : ComponentHandler<AuthToken>
             IpAddress = null, // Could be added later if needed
             UserAgent = null, // Could be added later if needed
             IsRevoked = false,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(authToken);
@@ -70,7 +70,7 @@ public class SecurityTokenHandler : ComponentHandler<AuthToken>
         { 
             IsRevoked = true, 
             RevokedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(revoked);

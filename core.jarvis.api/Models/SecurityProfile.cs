@@ -9,7 +9,7 @@ public record SecurityProfile : IComponent
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid OwnerEntityId { get; set; }
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Display name for the user.
