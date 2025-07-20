@@ -95,8 +95,7 @@ public class HandlerOperationTests : IntegrationTestBase
         result.ShouldBeTrue();
 
         // Verify the component was updated in the database
-        var verifyHandler = TestDataContext().For<TestHandler>(entityId);
-        var updatedComponent = await verifyHandler.Get();
+        var updatedComponent = await handler.Get();
         
         updatedComponent.ShouldNotBeNull();
         updatedComponent.Status.ShouldBe("ACTIVE");
@@ -170,8 +169,7 @@ public class HandlerOperationTests : IntegrationTestBase
         result.ShouldBeTrue();
 
         // Verify the component was updated in the database
-        var verifyHandler = TestDataContext().For<TestHandler>(entityId);
-        var updatedComponent = await verifyHandler.Get();
+        var updatedComponent = await handler.Get();
         
         updatedComponent.ShouldNotBeNull();
         updatedComponent.Status.ShouldBe("INACTIVE");
@@ -243,8 +241,7 @@ public class HandlerOperationTests : IntegrationTestBase
         await handler.Deactivate("End of test");
 
         // Assert - Verify final state
-        var finalHandler = TestDataContext().For<TestHandler>(entityId);
-        var finalComponent = await finalHandler.Get();
+        var finalComponent = await handler.Get();
         
         finalComponent.ShouldNotBeNull();
         finalComponent.Status.ShouldBe("INACTIVE");

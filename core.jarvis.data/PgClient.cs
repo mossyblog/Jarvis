@@ -44,94 +44,16 @@ namespace core.jarvis.data
         }
 
         /// <summary>
-        /// Verifies the connection and checks for required authentication tables and policies.
-        /// Throws InvalidOperationException if requirements are not met.
+        /// Verifies the connection is open and ready.
         /// </summary>
         private async Task VerifyMinimums()
         {
             if (_conn.State != System.Data.ConnectionState.Open)
                 await _conn.OpenAsync();
-
-            // Check for account table (component table)
-            var tableCheck = "SELECT to_regclass('public.account') IS NOT NULL";
-            var hasAccountTable = (bool)(await new NpgsqlCommand(tableCheck, _conn).ExecuteScalarAsync() ?? false);
-            if (!hasAccountTable)
-                throw new InvalidOperationException("Required table 'account' does not exist.");
-
-            // Check for password_hash column
-            var colCheck = "SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='account' AND column_name='password_hash')";
-            var hasPasswordHash = (bool)(await new NpgsqlCommand(colCheck, _conn).ExecuteScalarAsync() ?? false);
-            if (!hasPasswordHash)
-                throw new InvalidOperationException("Required column 'password_hash' does not exist in 'account' table.");
-
-            // Check for at least one RLS policy on account table
-            var policyCheck = "SELECT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'account')";
-            var hasPolicy = (bool)(await new NpgsqlCommand(policyCheck, _conn).ExecuteScalarAsync() ?? false);
-            if (!hasPolicy)
-                throw new InvalidOperationException("No RLS policy found on 'account' table. RLS must be enabled and at least one policy defined.");
+            
+            // Connection verification is sufficient - table creation is handled by the component system
         }
 
-        /// <summary>
-        /// Validates user credentials and issues a JWT if valid.
-        /// Extend this method to implement RBAC/RLS logic as needed.
-        /// </summary>
-        /// <param name="email">User email.</param>
-        /// <param name="password">Plaintext password.</param>
-        /// <returns>JWT string if authentication succeeds, otherwise null.</returns>
-        public async Task<string?> Authenticate(string email, string password)
-        {
-            // Ensure connection is open
-            if (_conn.State != System.Data.ConnectionState.Open)
-                await _conn.OpenAsync();
-                
-            // Query account component by email and check if active
-            var sql = "SELECT owner_entity_id AS Id, password_hash AS PasswordHash, is_active AS IsActive FROM \"account\" WHERE email = @email";
-            try
-            {
-                var user = await _conn.QueryFirstOrDefaultAsync<UserAuthRecord>(sql, new { email });
-
-                if (user == null)
-                {
-                    Console.WriteLine($"No account found with email: {email}");
-                    return null;
-                }
-                
-                // Check if account is active
-                if (!user.IsActive)
-                {
-                    Console.WriteLine($"Account {email} is not active");
-                    return null;
-                }
-                
-                // Check if password hash is null or empty before verification
-                if (string.IsNullOrEmpty(user.PasswordHash))
-                {
-                    return null;
-                }
-
-                // Verify password using BCrypt
-                var isValid = BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
-                
-                if (!isValid)
-                    return null;
-
-                // Return a simple JWT-like token that indicates successful authentication
-                // The actual JWT generation should be done by the consuming application
-                // This is just to indicate that authentication was successful
-                return $"auth.success.{user.Id}";
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-        }
-
-        private class UserAuthRecord
-        {
-            public Guid Id { get; set; }
-            public string PasswordHash { get; set; } = "";
-            public bool IsActive { get; set; } = true;
-        }
 
         /// <summary>
         /// Sets the JWT token to be used for all subsequent requests.

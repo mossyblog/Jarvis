@@ -65,4 +65,16 @@ public class AccountHandler : ComponentHandler<Account>
         return deactivated;
     }
 
+    /// <summary>
+    /// Creates a new account from an Account component.
+    /// </summary>
+    public async Task<Account> CreateAccount(Account newAccount)
+    {
+        // Ensure the account has the correct owner entity
+        var account = newAccount with { OwnerEntityId = OwnerEntityId };
+        
+        await DataContext.Commit(account);
+        Logger.LogInformation("Created account {AccountId} for entity {EntityId}", account.Id, OwnerEntityId);
+        return account;
+    }
 }

@@ -91,7 +91,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
                 "/api/security/auth",
                 JsonConvert.SerializeObject(new
                 {
-                    email = "admin@test.com",
+                    email = $"admin_{Guid.NewGuid()}@test.com",
                     password = "wrongpassword"
                 })
             );

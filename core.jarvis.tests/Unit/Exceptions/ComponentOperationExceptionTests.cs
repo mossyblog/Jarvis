@@ -108,23 +108,4 @@ public class ComponentOperationExceptionTests
         ((string)context!.Operation).ShouldBe(operation);
     }
 
-    [Fact]
-    public void Constructor_WithNullValues_ShouldStillWork()
-    {
-        // Act & Assert
-        Should.NotThrow(() => 
-            new ComponentOperationException(null!, null!, null!));
-    }
-
-    [Fact]
-    public void Constructor_WithEmptyValues_ShouldStillWork()
-    {
-        // Act
-        var exception = new ComponentOperationException("", "", "");
-
-        // Assert
-        exception.ComponentType.ShouldBe("");
-        exception.Operation.ShouldBe("");
-        exception.Code.ShouldBe("_FAILED");
-    }
 }

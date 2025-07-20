@@ -1,6 +1,8 @@
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
-using core.jarvis.Systems;
+using core.jarvis.api.Systems;
+using core.jarvis.Data;
+using core.jarvis.Exceptions;
 using core.jarvis.tests.Helpers;
 using Shouldly;
 using Xunit;
@@ -15,7 +17,7 @@ namespace core.jarvis.tests.Integration;
 /// </summary>
 public class RegistrationIntegrationTests : IntegrationTestBase
 {
-    private ISystem GetSystem() => new HandlerSystem(TestDataContext(), NullLogger<HandlerSystem>.Instance);
+    private RegistrationSystem GetRegistrationSystem() => _serviceProvider.GetRequiredService<RegistrationSystem>();
     
     /// <summary>
     /// INTENT: Verify that a user can successfully register with valid email and password
@@ -38,37 +40,33 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         """;
         
         // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        var components = await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
         
         // Assert
-        result.Success.ShouldBeTrue();
-        result.AccountId.ShouldNotBe(Guid.Empty);
-        result.Email.ShouldBe("newuser@test.com");
-        result.Message.ShouldBe("Registration successful");
-        result.Errors.ShouldBeNull();
+        components.Count.ShouldBe(2); // Account and SecurityProfile
         
-        // Verify Account was created
-        var accountHandler = TestDataContext().For<AccountHandler>(result.AccountId);
-        var account = await accountHandler.Get();
+        var account = components[0] as Account;
+        var profile = components[1] as SecurityProfile;
+        
         account.ShouldNotBeNull();
+        profile.ShouldNotBeNull();
+        
+        // Verify Account details
         account.Email.ShouldBe("newuser@test.com");
         account.AuthMethod.ShouldBe("password");
         account.IsActive.ShouldBeTrue();
         account.PasswordHash.ShouldNotBeEmpty();
         account.Password.ShouldBeEmpty(); // Should never store plain password
+        account.OwnerEntityId.ShouldNotBe(Guid.Empty);
         
-        // Verify SecurityProfile was created
-        var profileHandler = TestDataContext().For<AccountProfileHandler>(result.AccountId);
-        var profile = await profileHandler.Get();
-        profile.ShouldNotBeNull();
+        // Verify SecurityProfile details
         profile.Name.ShouldBe("Test User");
         profile.RoleIds.ShouldBeEmpty();
         profile.PermissionIds.ShouldBeEmpty();
+        profile.OwnerEntityId.ShouldBe(account.OwnerEntityId);
         
         // Track for cleanup
-        TrackEntity(result.AccountId);
+        TrackEntity(account.OwnerEntityId);
     }
     
     /// <summary>
@@ -86,6 +84,7 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         var existingEntityId = Guid.NewGuid();
         var existingAccount = new Account
         {
+            Id = Guid.NewGuid(),
             OwnerEntityId = existingEntityId,
             Email = "existing@test.com",
             PasswordHash = "hash",
@@ -106,15 +105,14 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         }
         """;
         
-        // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        // Act & Assert
+        var exception = await Should.ThrowAsync<BusinessRuleException>(async () =>
+        {
+            await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
+        });
         
-        // Assert
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe("EMAIL_EXISTS");
-        result.AccountId.ShouldBe(Guid.Empty);
+        exception.Code.ShouldBe("RULE_EMAIL_EXISTS");
+        exception.Message.ShouldBe("EMAIL_EXISTS");
     }
     
     /// <summary>
@@ -137,17 +135,15 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         }
         """;
         
-        // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        // Act & Assert
+        var exception = await Should.ThrowAsync<ValidationException>(async () =>
+        {
+            await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
+        });
         
-        // Assert
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe("Validation failed");
-        result.Errors.ShouldNotBeNull();
-        result.Errors.ShouldContainKey("password");
-        result.Errors["password"].ShouldContain(err => err.Contains("at least"));
+        exception.Errors.ShouldNotBeNull();
+        exception.Errors.ShouldContainKey("password");
+        exception.Errors["password"].ShouldContain(err => err.Contains("at least"));
     }
     
     /// <summary>
@@ -170,17 +166,15 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         }
         """;
         
-        // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        // Act & Assert
+        var exception = await Should.ThrowAsync<ValidationException>(async () =>
+        {
+            await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
+        });
         
-        // Assert
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe("Validation failed");
-        result.Errors.ShouldNotBeNull();
-        result.Errors.ShouldContainKey("email");
-        result.Errors["email"].ShouldContain("Invalid email format");
+        exception.Errors.ShouldNotBeNull();
+        exception.Errors.ShouldContainKey("email");
+        exception.Errors["email"].ShouldContain("Invalid email format");
     }
     
     /// <summary>
@@ -204,22 +198,22 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         """;
         
         // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        var components = await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
         
         // Assert
-        result.Success.ShouldBeTrue();
+        components.Count.ShouldBe(2);
+        var account = components[0] as Account;
+        var profile = components[1] as SecurityProfile;
+        
+        account.ShouldNotBeNull();
+        profile.ShouldNotBeNull();
         
         // Verify profile was created with email prefix as default name
-        var profileHandler = TestDataContext().For<AccountProfileHandler>(result.AccountId);
-        var profile = await profileHandler.Get();
-        profile.ShouldNotBeNull();
         var expectedName = uniqueEmail.Split('@')[0]; // AccountProfileHandler uses email prefix as default
         profile.Name.ShouldBe(expectedName);
         
         // Track for cleanup
-        TrackEntity(result.AccountId);
+        TrackEntity(account.OwnerEntityId);
     }
     
     /// <summary>
@@ -240,17 +234,15 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         }
         """;
         
-        // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        // Act & Assert
+        var exception = await Should.ThrowAsync<ValidationException>(async () =>
+        {
+            await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
+        });
         
-        // Assert
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe("Validation failed");
-        result.Errors.ShouldNotBeNull();
-        result.Errors.ShouldContainKey("password");
-        result.Errors["password"].ShouldContain("Password is required");
+        exception.Errors.ShouldNotBeNull();
+        exception.Errors.ShouldContainKey("password");
+        exception.Errors["password"].ShouldContain("Password is required");
     }
     
     /// <summary>
@@ -267,17 +259,15 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         // Arrange
         var malformedJson = "{ invalid json }";
         
-        // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(malformedJson, "127.0.0.1"));
+        // Act & Assert
+        var exception = await Should.ThrowAsync<ValidationException>(async () =>
+        {
+            await GetRegistrationSystem().RegisterUser(malformedJson, "127.0.0.1");
+        });
         
-        // Assert
-        result.Success.ShouldBeFalse();
-        result.Message.ShouldBe("Validation failed");
-        result.Errors.ShouldNotBeNull();
-        result.Errors.ShouldContainKey("body");
-        result.Errors["body"].ShouldContain("Invalid request format");
+        exception.Errors.ShouldNotBeNull();
+        exception.Errors.ShouldContainKey("body");
+        exception.Errors["body"].ShouldContain("Invalid request format");
     }
     
     /// <summary>
@@ -301,19 +291,19 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         """;
         
         // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        var components = await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
         
         // Assert
-        result.Success.ShouldBeTrue();
+        components.Count.ShouldBe(2);
+        var account = components[0] as Account;
+        account.ShouldNotBeNull();
         
         // Verify audit event was logged (would need to query SecurityAuditEvent table)
         // For now, we just verify the registration succeeded which implies audit logging worked
-        // since the handler logs on success
+        // since the system logs on success
         
         // Track for cleanup
-        TrackEntity(result.AccountId);
+        TrackEntity(account.OwnerEntityId);
     }
     
     /// <summary>
@@ -337,20 +327,16 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         """;
         
         // Act
-        var result = await GetSystem().ExecuteHandlerWithResult<RegistrationHandler, RegistrationResult>(
-            Guid.Empty,
-            handler => handler.RegisterFromJson(requestJson, "127.0.0.1"));
+        var components = await GetRegistrationSystem().RegisterUser(requestJson, "127.0.0.1");
         
         // Assert
-        result.Success.ShouldBeTrue();
-        result.Email.ShouldBe("mixedcase@test.com");
+        components.Count.ShouldBe(2);
+        var account = components[0] as Account;
         
-        // Verify account was created with lowercase email
-        var accountHandler = TestDataContext().For<AccountHandler>(result.AccountId);
-        var account = await accountHandler.Get();
+        account.ShouldNotBeNull();
         account.Email.ShouldBe("mixedcase@test.com");
         
         // Track for cleanup
-        TrackEntity(result.AccountId);
+        TrackEntity(account.OwnerEntityId);
     }
 }

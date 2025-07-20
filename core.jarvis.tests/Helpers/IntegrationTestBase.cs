@@ -26,6 +26,7 @@ namespace core.jarvis.tests.Helpers;
 public abstract class IntegrationTestBase : IAsyncLifetime
 {
     protected ServiceProvider _serviceProvider;
+    private IServiceScope _scope;
     private ILogger<TestHandler> _logger;
     private IDataContext _dataContext;
     private readonly ConcurrentDictionary<Guid, byte> _testEntities = new();
@@ -68,11 +69,21 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                     outputTemplate: "[{Level:u3}] {SourceContext} {Message:lj}{NewLine}{Exception}");
         });
         
-        // Register PgClient as scoped to reuse connections per test
+        // Configure NpgsqlDataSource for connection pooling
+        services.AddSingleton<NpgsqlDataSource>(sp =>
+        {
+            // Add pooling parameters to connection string
+            var pooledConnectionString = $"{_connectionString};Pooling=true;Maximum Pool Size=50;Minimum Pool Size=5";
+            var dataSource = NpgsqlDataSource.Create(pooledConnectionString);
+            return dataSource;
+        });
+        
+        // Register PgClient as scoped using pooled connections
         services.AddScoped<IPgClient>(sp =>
         {
-            var connection = new NpgsqlConnection(_connectionString);
-            var pgClientWrapper = new PgClientWrapper(connection);
+            var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+            var connection = dataSource.CreateConnection();
+            var pgClientWrapper = new PgClientWrapper(connection, ownsConnection: true);
             
             // For API tests, don't authenticate during setup as we're testing the auth service itself
             // Other tests can authenticate if needed
@@ -80,13 +91,13 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             return pgClientWrapper;
         });
         
-        services.AddTransient<IDataContext, DataContext>();
+        services.AddScoped<IDataContext, DataContext>();
         services.AddScoped<EventSubscriptionManager>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IEntityQuery, EntityQuery>();
         
         // Register default event emitter for tests
-        services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.NoOpEventEmitter>();
+        services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.InMemoryEventEmitter>();
 
         // Register the DataContext with the service provider
         services.AddTransient<TestHandler>();
@@ -114,8 +125,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         {
             services.RegisterAllComponentHandlersAndQueriesFromAssembly(_apiAssembly);
             
-            // Manually register handlers that implement non-generic IComponentHandler
-            services.AddTransient<core.jarvis.api.Handlers.RegistrationHandler>();
+            // Register System services
+            services.AddTransient<core.jarvis.api.Systems.RegistrationSystem>();
             
             // Register API services for authentication tests
             services.AddTransient<core.jarvis.api.Services.IPasswordPolicyService, core.jarvis.api.Services.PasswordPolicyService>();
@@ -143,10 +154,9 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         }
 
         _serviceProvider = services.BuildServiceProvider();
-        _logger = _serviceProvider.GetRequiredService<ILogger<TestHandler>>();
-        
-        // Pass in the service provider to the DataContext
-        _dataContext = _serviceProvider.GetRequiredService<IDataContext>();
+        _scope = _serviceProvider.CreateScope();
+        _logger = _scope.ServiceProvider.GetRequiredService<ILogger<TestHandler>>();
+        _dataContext = _scope.ServiceProvider.GetRequiredService<IDataContext>();
     }
 
     public async Task DisposeAsync()
@@ -208,6 +218,13 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                 _logger.LogWarning(ex, "Error cleaning up entity {EntityId}", entityId);
             }
         }
+        
+        // Dispose of scope first to ensure all scoped services are disposed
+        _scope?.Dispose();
+        
+        // Dispose of the NpgsqlDataSource to properly close all pooled connections
+        var dataSource = _serviceProvider?.GetService<NpgsqlDataSource>();
+        dataSource?.Dispose();
         
         _serviceProvider?.Dispose();
     }

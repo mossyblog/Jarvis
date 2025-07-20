@@ -6,7 +6,7 @@ using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
-using core.jarvis.Systems;
+using core.jarvis.Data;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -15,15 +15,15 @@ namespace core.jarvis.api.Functions.Security;
 /// </summary>
 public class AccountFunction
 {
-    private readonly ISystem _system;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<AccountFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public AccountFunction(
-        ISystem system,
+        IDataContext dataContext,
         ILogger<AccountFunction> logger)
     {
-        _system = system;
+        _dataContext = dataContext;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -59,9 +59,8 @@ public class AccountFunction
             }
 
             // Get user profile using System
-            var userProfile = await _system.ExecuteHandler<AccountProfileHandler, SecurityProfile>(
-                userId,
-                handler => handler.Get());
+            var profileHandler = _dataContext.For<AccountProfileHandler>(userId);
+            var userProfile = await profileHandler.Get();
             if (userProfile == null)
             {
                 var notFoundError = new Error
@@ -125,9 +124,8 @@ public class AccountFunction
             }
 
             // Get user navigation using System - ALL logic in handler
-            var navigation = await _system.ExecuteHandlerWithResult<AccountProfileHandler, List<NavigationItem>>(
-                userId,
-                handler => handler.GetUserNavigation());
+            var profileHandler = _dataContext.For<AccountProfileHandler>(userId);
+            var navigation = await profileHandler.GetUserNavigation();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
@@ -194,9 +192,8 @@ public class AccountFunction
             }
 
             // Update profile using System - ALL logic in handler
-            var updated = await _system.ExecuteHandler<AccountProfileHandler, SecurityProfile>(
-                userId,
-                handler => handler.UpdateProfile(updateProfile));
+            var profileHandler = _dataContext.For<AccountProfileHandler>(userId);
+            var updated = await profileHandler.UpdateProfile(updateProfile);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");

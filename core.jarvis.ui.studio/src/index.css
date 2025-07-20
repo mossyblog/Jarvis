@@ -1,9 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500;600;700&display=swap');
 @import './fonts/fonts.css';
+@import './styles/spacing.css';
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  /* Table cell sizes - Using our 8px grid spacing system */
+  .table-cell {
+    @apply whitespace-nowrap;
+  }
+  
+  /* Extra Small - 4px vertical, 12px horizontal */
+  .table-cell-xs {
+    @apply px-3 py-xs text-xs;
+  }
+  
+  /* Small - 8px vertical, 16px horizontal */
+  .table-cell-sm {
+    @apply px-md py-sm text-sm;
+  }
+  
+  /* Medium (default) - 12px vertical, 20px horizontal */
+  .table-cell-md {
+    @apply px-5 py-3 text-sm;
+  }
+  
+  /* Large - 16px vertical, 24px horizontal */
+  .table-cell-lg {
+    @apply px-lg py-md text-base;
+  }
+  
+  /* Extra Large - 20px vertical, 32px horizontal */
+  .table-cell-xl {
+    @apply px-xl py-5 text-base;
+  }
+}
 
 @layer base {
   :root {
@@ -34,7 +68,7 @@
     --border-stronger: 0 0% 82%;
     
     /* Font Variables */
-    --font-custom: 'CustomFont', 'Circular', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+    --font-custom: 'Inter', system-ui, sans-serif;
     --font-source-code-pro: 'Source Code Pro', 'Office Code Pro', 'Menlo', monospace;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;

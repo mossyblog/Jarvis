@@ -34,7 +34,7 @@ public class InputValidationMiddleware : IFunctionsWorkerMiddleware
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
     
     private static readonly Regex SqlInjectionPattern = new(
-        @"(\b(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|vbscript|onload|onerror|onclick)\b)|(-{2})|(/\*.*?\*/)|;",
+        @"(\b(union|select|insert|update|delete|drop|create|alter|exec|execute|script|javascript|vbscript|onload|onerror|onclick)\b)|(-{2})|(/\*.*?\*/)|;|'[\s]*OR[\s]*'|'[\s]*OR[\s]*\d|'[\s]*AND[\s]*'|\|\||'[\s]*#|'[\s]*--",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
     
     private static readonly Regex XssPattern = new(
@@ -364,17 +364,16 @@ public class InputValidationMiddleware : IFunctionsWorkerMiddleware
             StatusCode = 400
         };
 
-        var response = context.GetHttpResponseData();
-        if (response == null)
+        var request = await context.GetHttpRequestDataAsync();
+        if (request != null)
         {
-            response = context.GetInvocationResult().Value as HttpResponseData;
-        }
-
-        if (response != null)
-        {
+            var response = request.CreateResponse();
             response.StatusCode = HttpStatusCode.BadRequest;
             response.Headers.Add("Content-Type", "application/json");
             await response.WriteStringAsync(JsonConvert.SerializeObject(error));
+            
+            // Set the invocation result to prevent further processing
+            context.GetInvocationResult().Value = response;
         }
     }
 

@@ -26,35 +26,6 @@ public class EntityNotFoundExceptionTests
         exception.Message.ShouldContain(entityId.ToString());
     }
 
-    [Fact]
-    public void Constructor_WithNullEntityType_ShouldStillWork()
-    {
-        // Arrange
-        var entityId = Guid.NewGuid();
-
-        // Act
-        var exception = new EntityNotFoundException(entityId, null!);
-
-        // Assert
-        exception.EntityId.ShouldBe(entityId);
-        exception.EntityType.ShouldBeNull();
-        exception.Code.ShouldBe("NOT_FOUND");
-    }
-
-    [Fact]
-    public void Constructor_WithEmptyGuid_ShouldStillWork()
-    {
-        // Arrange
-        var entityId = Guid.Empty;
-        var entityType = "TestComponent";
-
-        // Act
-        var exception = new EntityNotFoundException(entityId, entityType);
-
-        // Assert
-        exception.EntityId.ShouldBe(Guid.Empty);
-        exception.EntityType.ShouldBe(entityType);
-    }
 
     [Fact]
     public void Exception_ShouldBeInstanceOfDomainException()

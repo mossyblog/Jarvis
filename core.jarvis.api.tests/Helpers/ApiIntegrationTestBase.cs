@@ -55,6 +55,13 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
         }
     }
     
+    // Override TestDataContext to use our API-configured service provider
+    protected new IDataContext TestDataContext()
+    {
+        EnsureApiServicesInitialized();
+        return _apiServiceProvider!.GetRequiredService<IDataContext>();
+    }
+    
     private void EnsureApiServicesInitialized()
     {
         if (!_apiServicesInitialized)
@@ -98,6 +105,7 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
         services.AddScoped<DeauthFunction>();
         services.AddScoped<RefreshFunction>();
         services.AddScoped<ValidateFunction>();
+        services.AddScoped<RegisterFunction>();
         
         // Build the API service provider
         _apiServiceProvider = services.BuildServiceProvider();

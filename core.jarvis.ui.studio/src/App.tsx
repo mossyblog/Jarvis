@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
+import UserManagement from './pages/UserManagement';
 import TableEditor from './pages/TableEditor';
 import SchemaVisualizer from './pages/SchemaVisualizer';
 import { Login } from './pages/Login';
@@ -18,6 +19,7 @@ function App() {
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/UserManagement" element={<UserManagement />} />
           <Route 
             path="/" 
             element={

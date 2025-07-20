@@ -42,8 +42,23 @@ public class PgTable<T> where T : class, new()
         _client = client;
         _rlsPolicies = rlsPolicies ?? new RLSPolicyRegistry();
         _jwtClaims = jwtClaims ?? new Dictionary<string, string>();
-        // Quote table name to handle reserved words like "user"
-        _tableName = $"\"{typeof(T).Name.ToSnakeCase()}\"";
+        
+        // For ECS components, add _component suffix to table name
+        var typeName = typeof(T).Name;
+        var snakeCaseName = typeName.ToSnakeCase();
+        
+        // Check if this is a component type (implements IComponent)
+        var isComponent = typeof(T).GetInterfaces().Any(i => i.Name == "IComponent");
+        if (isComponent)
+        {
+            // ECS components use table_name_component convention
+            _tableName = $"\"{snakeCaseName}_component\"";
+        }
+        else
+        {
+            // Quote table name to handle reserved words like "user"
+            _tableName = $"\"{snakeCaseName}\"";
+        }
     }
 
     /// <summary>

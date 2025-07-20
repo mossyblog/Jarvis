@@ -31,8 +31,8 @@ export function LoginForm() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: 'test@example.com',
+      password: 'test123',
     },
   });
 
@@ -40,9 +40,16 @@ export function LoginForm() {
     try {
       setIsLoading(true);
       setError('');
+      console.log('LoginForm: Starting login...');
       await login(values);
-      navigate('/');
+      console.log('LoginForm: Login successful, navigating to /');
+      
+      // Add a small delay to ensure state updates have propagated
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     } catch (err) {
+      console.error('LoginForm: Login failed', err);
       setError(err instanceof Error ? err.message : 'Login failed');
     } finally {
       setIsLoading(false);

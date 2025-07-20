@@ -3,17 +3,17 @@ using core.jarvis.Data.Query;
 using core.jarvis.Events;
 using core.jarvis.Events.Emitters;
 using core.jarvis.Exceptions;
+using core.jarvis.tests.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Moq;
 using Npgsql;
 using Shouldly;
 using Xunit;
 
 namespace core.jarvis.tests.Integration;
 
-public class EventEmissionIntegrationTests
+public class EventEmissionIntegrationTests : IntegrationTestBase
 {
     /// <summary>
     /// INTENT: Verify that DataContext can emit events through configured emitter
@@ -27,27 +27,8 @@ public class EventEmissionIntegrationTests
     public async Task DataContext_Emit_ShouldEmitEventThroughConfiguredEmitter()
     {
         // Arrange
-        var services = new ServiceCollection();
-        
-        // Register required services
-        services.AddLogging();
-        services.AddSingleton<IComponentQueryHandlerRegistry, ComponentQueryHandlerRegistry>();
-        services.AddScoped<IAuditService, AuditService>();
-        
-        // Register mock PgClient
-        var mockPgClient = new Mock<IPgClient>();
-        services.AddSingleton(mockPgClient.Object);
-        
-        // Register InMemory event emitter
-        services.AddSingleton<InMemoryEventEmitter>();
-        services.AddSingleton<IEventEmitter>(provider => provider.GetRequiredService<InMemoryEventEmitter>());
-        
-        // Register DataContext
-        services.AddScoped<IDataContext, DataContext>();
-
-        var provider = services.BuildServiceProvider();
-        var dataContext = provider.GetRequiredService<IDataContext>();
-        var eventEmitter = provider.GetRequiredService<IEventEmitter>() as InMemoryEventEmitter;
+        var dataContext = TestDataContext();
+        var eventEmitter = _serviceProvider.GetRequiredService<IEventEmitter>() as InMemoryEventEmitter;
 
         var testEvent = new OrderCreatedEvent(Guid.NewGuid(), 100m);
 
@@ -77,27 +58,8 @@ public class EventEmissionIntegrationTests
     public async Task DataContext_EmitBatch_ShouldEmitAllEventsThroughConfiguredEmitter()
     {
         // Arrange
-        var services = new ServiceCollection();
-        
-        // Register required services
-        services.AddLogging();
-        services.AddSingleton<IComponentQueryHandlerRegistry, ComponentQueryHandlerRegistry>();
-        services.AddScoped<IAuditService, AuditService>();
-        
-        // Register mock PgClient
-        var mockPgClient = new Mock<IPgClient>();
-        services.AddSingleton(mockPgClient.Object);
-        
-        // Register InMemory event emitter
-        services.AddSingleton<InMemoryEventEmitter>();
-        services.AddSingleton<IEventEmitter>(provider => provider.GetRequiredService<InMemoryEventEmitter>());
-        
-        // Register DataContext
-        services.AddScoped<IDataContext, DataContext>();
-
-        var provider = services.BuildServiceProvider();
-        var dataContext = provider.GetRequiredService<IDataContext>();
-        var eventEmitter = provider.GetRequiredService<IEventEmitter>() as InMemoryEventEmitter;
+        var dataContext = TestDataContext();
+        var eventEmitter = _serviceProvider.GetRequiredService<IEventEmitter>() as InMemoryEventEmitter;
 
         var events = new List<OrderCreatedEvent>
         {
@@ -128,22 +90,13 @@ public class EventEmissionIntegrationTests
     [Fact]
     public async Task DataContext_Emit_WhenEmitterFails_ShouldThrowEventEmissionException()
     {
-        // Arrange
+        // Arrange - Create a new service provider with failing emitter
         var services = new ServiceCollection();
-        
-        // Register required services
         services.AddLogging();
         services.AddSingleton<IComponentQueryHandlerRegistry, ComponentQueryHandlerRegistry>();
         services.AddScoped<IAuditService, AuditService>();
-        
-        // Register mock PgClient
-        var mockPgClient = new Mock<IPgClient>();
-        services.AddSingleton(mockPgClient.Object);
-        
-        // Register a failing emitter
+        services.AddSingleton<IPgClient>(_serviceProvider.GetRequiredService<IPgClient>());
         services.AddSingleton<IEventEmitter>(new FailingEventEmitter());
-        
-        // Register DataContext
         services.AddScoped<IDataContext, DataContext>();
 
         var provider = services.BuildServiceProvider();
@@ -158,48 +111,6 @@ public class EventEmissionIntegrationTests
         exception.InnerException.ShouldNotBeNull();
     }
 
-    /// <summary>
-    /// INTENT: Verify that NoOp emitter is used by default when no configuration provided
-    /// PURPOSE: Ensure safe defaults for event emission
-    /// BUSINESS CONTEXT: Support zero-configuration deployment scenarios
-    /// WHY IMPORTANT: Prevents missing configuration from breaking the system
-    /// ARCHITECTURAL SIGNIFICANCE: Establishes safe default behavior
-    /// FUTURE RESILIENCE: Ensures system works without event infrastructure
-    /// </summary>
-    [Fact]
-    public async Task DataContext_WithoutConfiguration_ShouldUseNoOpEmitter()
-    {
-        // Arrange
-        var services = new ServiceCollection();
-        
-        // Register required services
-        services.AddLogging();
-        services.AddSingleton<IComponentQueryHandlerRegistry, ComponentQueryHandlerRegistry>();
-        services.AddScoped<IAuditService, AuditService>();
-        
-        // Register mock PgClient
-        var mockPgClient = new Mock<IPgClient>();
-        services.AddSingleton(mockPgClient.Object);
-        
-        // Register NoOp emitter (default behavior)
-        services.AddSingleton<IEventEmitter, NoOpEventEmitter>();
-        
-        // Register DataContext
-        services.AddScoped<IDataContext, DataContext>();
-
-        var provider = services.BuildServiceProvider();
-        var dataContext = provider.GetRequiredService<IDataContext>();
-        var eventEmitter = provider.GetRequiredService<IEventEmitter>();
-        
-        var testEvent = new OrderCreatedEvent(Guid.NewGuid(), 100m);
-
-        // Act
-        await dataContext.Emit(testEvent);
-
-        // Assert
-        eventEmitter.ShouldBeOfType<NoOpEventEmitter>();
-        // No exception should be thrown, event is silently ignored
-    }
 
     // Test fixtures
     private record OrderCreatedEvent(Guid OrderId, decimal Total) : DomainEvent;

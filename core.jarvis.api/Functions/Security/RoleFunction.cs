@@ -6,8 +6,8 @@ using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
+using core.jarvis.api.Extensions;
 using core.jarvis.Data;
-using core.jarvis.Systems;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -17,17 +17,14 @@ namespace core.jarvis.api.Functions.Security;
 public class RoleFunction
 {
     private readonly IDataContext _dataContext;
-    private readonly ISystem _system;
     private readonly ILogger<RoleFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RoleFunction(
         IDataContext dataContext,
-        ISystem system,
         ILogger<RoleFunction> logger)
     {
         _dataContext = dataContext;
-        _system = system;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -53,11 +50,10 @@ public class RoleFunction
                 return await req.CreateErrorResponse(HttpStatusCode.Unauthorized, "User not authenticated");
             }
 
-            // Get all roles using System
+            // Get all roles using handler directly
             var systemId = Guid.Parse("00000000-0000-0000-0000-000000000001"); // Well-known system entity ID
-            var allRoles = await _system.ExecuteHandlerWithResult<SystemSetupHandler, List<Role>>(
-                systemId,
-                handler => handler.GetAllRoles());
+            var systemSetupHandler = _dataContext.For<SystemSetupHandler>(systemId);
+            var allRoles = await systemSetupHandler.GetAllRoles();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
@@ -96,13 +92,14 @@ public class RoleFunction
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid request body");
             }
 
-            // Create new role using System
-            var roleId = await _system.CreateComponent(role);
+            // Create new role
+            var roleId = Guid.NewGuid();
+            role.OwnerEntityId = roleId;
+            await _dataContext.Commit(role);
             
-            // Get the created role using System
-            var result = await _system.ExecuteHandler<RoleHandler, Role>(
-                roleId,
-                handler => handler.Get());
+            // Get the created role using handler
+            var roleHandler = _dataContext.For<RoleHandler>(roleId);
+            var result = await roleHandler.Get();
 
             var response = req.CreateResponse(HttpStatusCode.Created);
             response.Headers.Add("Content-Type", "application/json");
@@ -151,10 +148,9 @@ public class RoleFunction
             updateRole.OwnerEntityId = roleGuid;
             await _dataContext.Commit(updateRole);
             
-            // Get the updated role using System
-            var updatedRole = await _system.ExecuteHandler<RoleHandler, Role>(
-                roleGuid,
-                handler => handler.Get());
+            // Get the updated role using handler
+            var roleHandler = _dataContext.For<RoleHandler>(roleGuid);
+            var updatedRole = await roleHandler.Get();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
@@ -178,11 +174,10 @@ public class RoleFunction
     {
         try
         {
-            // Ensure default roles using System
+            // Ensure default roles using handler directly
             var systemId = Guid.Parse("00000000-0000-0000-0000-000000000001"); // Well-known system entity ID
-            var result = await _system.ExecuteHandlerWithResult<SystemSetupHandler, List<Role>>(
-                systemId,
-                handler => handler.EnsureDefaultRoles());
+            var systemSetupHandler = _dataContext.For<SystemSetupHandler>(systemId);
+            var result = await systemSetupHandler.EnsureDefaultRoles();
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");

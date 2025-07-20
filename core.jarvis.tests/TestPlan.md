@@ -3,7 +3,6 @@
 ## Test Framework
 - **xUnit** - Test framework
 - **Shouldly** - Assertions
-- **Moq** - Mocking
 - **Coverlet** - Code coverage
 
 ## Recommended Directory Structure

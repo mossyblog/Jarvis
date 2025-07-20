@@ -19,9 +19,14 @@ export interface IApiService {
   getNavigation(): Promise<ApiResponse<NavigationItem[]>>;
   refreshToken(token: string): Promise<ApiResponse<AuthResponse>>;
   hasPermission(user: User, resource: string, action?: string): boolean;
+  getUsers(): Promise<ApiResponse<User[]>>;
 }
 
 class MockApiService implements IApiService {
+  async getUsers(): Promise<ApiResponse<User[]>> {
+    await this.simulateDelay();
+    return { data: mockUsers };
+  }
   private simulateDelay(): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, MOCK_DELAY));
   }
@@ -154,6 +159,13 @@ class MockApiService implements IApiService {
 
 // Real API service implementation
 class RealApiService implements IApiService {
+  async getUsers(): Promise<ApiResponse<User[]>> {
+    const response = await fetch(`${this.apiUrl}/users`, {
+      method: 'GET',
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse<User[]>(response);
+  }
   private apiUrl: string;
 
   constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:7071/api') {
@@ -185,10 +197,10 @@ class RealApiService implements IApiService {
 
   async login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>> {
     try {
-      // The API expects a User object but only cares about Email and Password for auth
+      // The API expects lowercase property names for JSON deserialization
       const requestBody = {
-        Email: credentials.email,
-        Password: credentials.password
+        email: credentials.email,
+        password: credentials.password
       };
       
       console.log('Sending login request:', requestBody);
@@ -201,37 +213,58 @@ class RealApiService implements IApiService {
         body: JSON.stringify(requestBody)
       });
 
+      console.log('Login response status:', response.status);
+      console.log('Login response ok:', response.ok);
+      
+      // If we get a 401, it means authentication failed
+      if (response.status === 401) {
+        const errorData = await response.json().catch(() => ({ message: 'Authentication failed' }));
+        console.log('401 error data:', errorData);
+        return { 
+          error: { 
+            message: errorData.message || 'Invalid email or password', 
+            code: 'AUTH_FAILED' 
+          } 
+        };
+      }
+
       const result = await this.handleResponse<AuthToken>(response);
       
       if (result.error) {
+        console.log('Login error from handleResponse:', result.error);
         return { error: result.error };
       }
 
       if (result.data) {
+        console.log('Login response data:', result.data);
         // The API returns PascalCase properties
         const authToken = result.data as any;
         const accessToken = authToken.AccessToken || authToken.accessToken;
         const refreshToken = authToken.RefreshToken || authToken.refreshToken;
+        console.log('Extracted tokens - Access:', !!accessToken, 'Refresh:', !!refreshToken);
         
         if (accessToken) {
           // Store tokens
           localStorage.setItem(TOKEN_KEY, accessToken);
           
-          // Get user info from the token
-          const userInfo = await this.getCurrentUser();
+          // Extract user info from the auth response
+          const user: User = {
+            id: authToken.OwnerEntityId || authToken.ownerEntityId,
+            email: credentials.email,
+            name: credentials.email.split('@')[0], // Use email prefix as name for now
+            roles: []
+          };
           
-          if (userInfo.data) {
-            localStorage.setItem(USER_KEY, JSON.stringify(userInfo.data));
-            
-            return {
-              data: {
-                user: userInfo.data,
-                accessToken: accessToken,
-                refreshToken: refreshToken,
-                expiresIn: 3600 // Default to 1 hour
-              }
-            };
-          }
+          localStorage.setItem(USER_KEY, JSON.stringify(user));
+          
+          return {
+            data: {
+              user: user,
+              accessToken: accessToken,
+              refreshToken: refreshToken,
+              expiresIn: 3600 // Default to 1 hour
+            }
+          };
         }
       }
 
@@ -271,25 +304,22 @@ class RealApiService implements IApiService {
       return { data: null };
     }
 
-    try {
-      const response = await fetch(`${this.apiUrl}/security/user`, {
-        headers: this.getAuthHeaders()
-      });
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          // Token expired or invalid
-          localStorage.removeItem(TOKEN_KEY);
-          localStorage.removeItem(USER_KEY);
-        }
-        return { data: null };
+    // Try to get user from localStorage first
+    const storedUser = localStorage.getItem(USER_KEY);
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        return { data: user };
+      } catch {
+        // Invalid stored user data
+        localStorage.removeItem(USER_KEY);
       }
-
-      const result = await this.handleResponse<User>(response);
-      return result.data ? result : { data: null };
-    } catch {
-      return { data: null };
     }
+
+    // If no stored user, token is invalid
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    return { data: null };
   }
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
@@ -376,15 +406,19 @@ class RealApiService implements IApiService {
 }
 
 // Factory function to create the appropriate service
+// Utility to get/set API mode
+export function getApiMode(): 'mock' | 'real' {
+  const mode = localStorage.getItem('jarvis_api_mode');
+  return mode === 'real' ? 'real' : 'mock';
+}
+
+export function setApiMode(mode: 'mock' | 'real') {
+  localStorage.setItem('jarvis_api_mode', mode);
+  window.location.reload();
+}
+
 export function createApiService(): IApiService {
-  const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
-  
-  if (useMockApi) {
-    console.log('Using mock API service');
-    return new MockApiService();
-  }
-  
-  console.log('Using real API service at:', import.meta.env.VITE_API_URL || 'http://localhost:7071/api');
+  if (getApiMode() === 'mock') return new MockApiService();
   return new RealApiService();
 }
 

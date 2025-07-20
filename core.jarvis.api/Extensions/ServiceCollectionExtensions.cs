@@ -6,7 +6,6 @@ using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
 using core.jarvis.data;
-using core.jarvis.Systems;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -99,8 +98,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, NavigationItemHandler>();
         services.AddScoped<NavigationItemHandler>();
         
-        services.AddScoped<IComponentHandler, RegistrationHandler>();
-        services.AddScoped<RegistrationHandler>();
+        // Add System services
+        services.AddScoped<Systems.RegistrationSystem>();
+        services.AddScoped<Systems.AuthSystem>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>
@@ -110,12 +110,18 @@ public static class ServiceCollectionExtensions
             var secretKey = configuration["Jwt:SecretKey"];
             
             // Validate JWT secret key
-            if (string.IsNullOrEmpty(secretKey) || 
-                secretKey.Contains("DEVELOPMENT_SECRET_KEY") || 
-                secretKey.Contains("CHANGE_ME"))
+            if (string.IsNullOrEmpty(secretKey) || secretKey.Contains("CHANGE_ME"))
             {
                 throw new InvalidOperationException(
                     "JWT secret key not properly configured. Please set Jwt__SecretKey in .env.local or environment variables.");
+            }
+            
+            // Only validate against DEVELOPMENT_SECRET_KEY in non-test environments
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Test" && 
+                secretKey.Contains("DEVELOPMENT_SECRET_KEY"))
+            {
+                throw new InvalidOperationException(
+                    "Development secret key is not allowed in production. Please set Jwt__SecretKey to a secure value.");
             }
             
             var expirationMinutes = int.Parse(configuration["Jwt:AccessTokenExpirationMinutes"] ?? "15");
@@ -136,6 +142,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
         services.AddScoped<ISecurityAuditService, SecurityAuditService>();
         services.AddScoped<IConstantTimeService, ConstantTimeService>();
+        
+        // Add permission service with caching
+        services.AddMemoryCache();
+        services.AddScoped<IPermissionService, PermissionService>();
 
         return services;
     }

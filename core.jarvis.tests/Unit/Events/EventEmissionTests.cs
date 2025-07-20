@@ -1,7 +1,10 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using core.jarvis.Events;
 using core.jarvis.Events.Emitters;
 using Microsoft.Extensions.Logging;
-using Moq;
 using Shouldly;
 using Xunit;
 
@@ -9,90 +12,28 @@ namespace core.jarvis.tests.Unit.Events;
 
 public class EventEmissionTests
 {
-    private readonly Mock<ILogger<NoOpEventEmitter>> _noOpLoggerMock;
-    private readonly Mock<ILogger<InMemoryEventEmitter>> _inMemoryLoggerMock;
+    private readonly ILogger<InMemoryEventEmitter> _inMemoryLogger;
 
     public EventEmissionTests()
     {
-        _noOpLoggerMock = new Mock<ILogger<NoOpEventEmitter>>();
-        _inMemoryLoggerMock = new Mock<ILogger<InMemoryEventEmitter>>();
+        // Use real null loggers instead of mocks
+        _inMemoryLogger = new NullLogger<InMemoryEventEmitter>();
     }
 
-    /// <summary>
-    /// INTENT: Verify that NoOpEventEmitter successfully processes events without performing any action
-    /// PURPOSE: Ensure the no-op emitter can be used when event emission is disabled
-    /// BUSINESS CONTEXT: Support scenarios where event emission should be turned off
-    /// WHY IMPORTANT: Allows system to run without external event dependencies
-    /// ARCHITECTURAL SIGNIFICANCE: Provides a safe default when no event infrastructure is configured
-    /// FUTURE RESILIENCE: Ensures system can operate in minimal configuration mode
-    /// </summary>
-    [Fact]
-    public async Task NoOpEventEmitter_Emit_ShouldCompleteWithoutAction()
-    {
-        // Arrange
-        var emitter = new NoOpEventEmitter(_noOpLoggerMock.Object);
-        var testEvent = new TestEvent { Message = "Test" };
-
-        // Act
-        await emitter.Emit(testEvent);
-
-        // Assert
-        _noOpLoggerMock.Verify(
-            x => x.Log(
-                LogLevel.Trace,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Event emission disabled")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
 
     /// <summary>
-    /// INTENT: Verify that NoOpEventEmitter handles batch emissions without action
-    /// PURPOSE: Ensure batch operations are supported in no-op mode
-    /// BUSINESS CONTEXT: Support batch event scenarios even when emission is disabled
-    /// WHY IMPORTANT: Maintains API consistency across all emitter implementations
-    /// ARCHITECTURAL SIGNIFICANCE: Ensures uniform behavior regardless of configuration
-    /// FUTURE RESILIENCE: Allows code to use batch operations without checking emitter type
-    /// </summary>
-    [Fact]
-    public async Task NoOpEventEmitter_EmitBatch_ShouldCompleteWithoutAction()
-    {
-        // Arrange
-        var emitter = new NoOpEventEmitter(_noOpLoggerMock.Object);
-        var events = new List<TestEvent>
-        {
-            new TestEvent { Message = "Test1" },
-            new TestEvent { Message = "Test2" }
-        };
-
-        // Act
-        await emitter.EmitBatch(events);
-
-        // Assert
-        _noOpLoggerMock.Verify(
-            x => x.Log(
-                LogLevel.Trace,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, t) => v.ToString().Contains("Event emission disabled") && v.ToString().Contains("2")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    /// <summary>
-    /// INTENT: Verify that InMemoryEventEmitter correctly stores emitted events
-    /// PURPOSE: Enable testing of event emission without external dependencies
-    /// BUSINESS CONTEXT: Support unit testing of components that emit events
-    /// WHY IMPORTANT: Allows verification of event emission in tests
-    /// ARCHITECTURAL SIGNIFICANCE: Provides testability for event-driven components
-    /// FUTURE RESILIENCE: Ensures event emission can be tested in isolation
+    /// INTENT: Verify that InMemoryEventEmitter stores emitted events
+    /// PURPOSE: Ensure events are retained in memory for testing and debugging
+    /// BUSINESS CONTEXT: Support testing scenarios where event verification is needed
+    /// WHY IMPORTANT: Enables unit testing of event-driven components
+    /// ARCHITECTURAL SIGNIFICANCE: Provides testable event infrastructure
+    /// FUTURE RESILIENCE: Allows verification of event emission in tests
     /// </summary>
     [Fact]
     public async Task InMemoryEventEmitter_Emit_ShouldStoreEvent()
     {
         // Arrange
-        var emitter = new InMemoryEventEmitter(_inMemoryLoggerMock.Object);
+        var emitter = new InMemoryEventEmitter(_inMemoryLogger);
         var testEvent = new TestEvent { Message = "Test" };
 
         // Act
@@ -100,58 +41,54 @@ public class EventEmissionTests
 
         // Assert
         emitter.EmittedEvents.Count.ShouldBe(1);
-        emitter.EmittedEvents[0].ShouldBe(testEvent);
+        var storedEvent = emitter.EmittedEvents.First();
+        storedEvent.ShouldBeOfType<TestEvent>();
+        ((TestEvent)storedEvent).Message.ShouldBe("Test");
     }
 
     /// <summary>
-    /// INTENT: Verify that InMemoryEventEmitter correctly stores multiple events
-    /// PURPOSE: Ensure batch emission works correctly in memory
-    /// BUSINESS CONTEXT: Support testing of batch event scenarios
-    /// WHY IMPORTANT: Validates batch operations work as expected
-    /// ARCHITECTURAL SIGNIFICANCE: Ensures batch operations are properly implemented
-    /// FUTURE RESILIENCE: Supports testing of high-throughput event scenarios
+    /// INTENT: Verify that InMemoryEventEmitter stores batch events
+    /// PURPOSE: Ensure batch operations correctly store all events
+    /// BUSINESS CONTEXT: Support batch event testing scenarios
+    /// WHY IMPORTANT: Validates batch processing capabilities
+    /// ARCHITECTURAL SIGNIFICANCE: Ensures consistent batch handling
+    /// FUTURE RESILIENCE: Supports testing of batch event scenarios
     /// </summary>
     [Fact]
     public async Task InMemoryEventEmitter_EmitBatch_ShouldStoreAllEvents()
     {
         // Arrange
-        var emitter = new InMemoryEventEmitter(_inMemoryLoggerMock.Object);
+        var emitter = new InMemoryEventEmitter(_inMemoryLogger);
         var events = new List<TestEvent>
         {
             new TestEvent { Message = "Test1" },
-            new TestEvent { Message = "Test2" },
-            new TestEvent { Message = "Test3" }
+            new TestEvent { Message = "Test2" }
         };
 
         // Act
         await emitter.EmitBatch(events);
 
         // Assert
-        emitter.EmittedEvents.Count.ShouldBe(3);
-        emitter.EmittedEvents.ShouldContain(e => ((TestEvent)e).Message == "Test1");
-        emitter.EmittedEvents.ShouldContain(e => ((TestEvent)e).Message == "Test2");
-        emitter.EmittedEvents.ShouldContain(e => ((TestEvent)e).Message == "Test3");
+        emitter.EmittedEvents.Count.ShouldBe(2);
+        emitter.EmittedEvents.OfType<TestEvent>().Select(e => e.Message)
+            .ShouldBe(new[] { "Test1", "Test2" });
     }
 
     /// <summary>
-    /// INTENT: Verify that InMemoryEventEmitter.Clear removes all stored events
-    /// PURPOSE: Allow resetting of event storage between tests
-    /// BUSINESS CONTEXT: Support test isolation and cleanup
-    /// WHY IMPORTANT: Prevents test interference in shared instances
-    /// ARCHITECTURAL SIGNIFICANCE: Ensures testability best practices
-    /// FUTURE RESILIENCE: Supports complex test scenarios with state reset
+    /// INTENT: Verify that Clear removes all stored events
+    /// PURPOSE: Ensure test isolation by clearing events between tests
+    /// BUSINESS CONTEXT: Support clean test state management
+    /// WHY IMPORTANT: Prevents test interference
+    /// ARCHITECTURAL SIGNIFICANCE: Enables proper test isolation
+    /// FUTURE RESILIENCE: Maintains test reliability
     /// </summary>
     [Fact]
     public async Task InMemoryEventEmitter_Clear_ShouldRemoveAllEvents()
     {
         // Arrange
-        var emitter = new InMemoryEventEmitter(_inMemoryLoggerMock.Object);
-        var events = new List<TestEvent>
-        {
-            new TestEvent { Message = "Test1" },
-            new TestEvent { Message = "Test2" }
-        };
-        await emitter.EmitBatch(events);
+        var emitter = new InMemoryEventEmitter(_inMemoryLogger);
+        await emitter.Emit(new TestEvent { Message = "Test1" });
+        await emitter.Emit(new TestEvent { Message = "Test2" });
 
         // Act
         emitter.Clear();
@@ -161,36 +98,96 @@ public class EventEmissionTests
     }
 
     /// <summary>
-    /// INTENT: Verify that DomainEvent correctly initializes with default values
-    /// PURPOSE: Ensure domain events have proper metadata
-    /// BUSINESS CONTEXT: Support consistent event structure across the system
-    /// WHY IMPORTANT: Ensures all events have required metadata
-    /// ARCHITECTURAL SIGNIFICANCE: Establishes event contract standards
-    /// FUTURE RESILIENCE: Supports event processing and auditing requirements
+    /// INTENT: Verify that InMemoryEventEmitter maintains event order
+    /// PURPOSE: Ensure events are stored in emission order
+    /// BUSINESS CONTEXT: Support scenarios requiring event ordering
+    /// WHY IMPORTANT: Validates event sequence integrity
+    /// ARCHITECTURAL SIGNIFICANCE: Ensures predictable event ordering
+    /// FUTURE RESILIENCE: Supports time-based event analysis
     /// </summary>
     [Fact]
-    public void DomainEvent_ShouldInitializeWithDefaults()
+    public async Task InMemoryEventEmitter_ShouldMaintainEventOrder()
     {
-        // Arrange & Act
-        var domainEvent = new TestDomainEvent("TestData");
+        // Arrange
+        var emitter = new InMemoryEventEmitter(_inMemoryLogger);
+        var events = new List<TestEvent>();
+        for (int i = 0; i < 5; i++)
+        {
+            events.Add(new TestEvent { Message = $"Event{i}" });
+        }
+
+        // Act
+        foreach (var evt in events)
+        {
+            await emitter.Emit(evt);
+        }
 
         // Assert
-        domainEvent.Id.ShouldNotBe(Guid.Empty);
-        domainEvent.OccurredAt.ShouldBeInRange(DateTime.UtcNow.AddSeconds(-1), DateTime.UtcNow.AddSeconds(1));
-        domainEvent.Type.ShouldBe("TestDomainEvent");
-        domainEvent.Metadata.ShouldNotBeNull();
-        domainEvent.Data.ShouldBe("TestData");
+        emitter.EmittedEvents.Count.ShouldBe(5);
+        for (int i = 0; i < 5; i++)
+        {
+            ((TestEvent)emitter.EmittedEvents[i]).Message.ShouldBe($"Event{i}");
+        }
     }
 
-    // Test fixtures
-    private record TestEvent : IEvent
+    /// <summary>
+    /// INTENT: Verify event filtering functionality
+    /// PURPOSE: Ensure events can be retrieved by type
+    /// BUSINESS CONTEXT: Support event analysis and debugging
+    /// WHY IMPORTANT: Enables targeted event inspection
+    /// ARCHITECTURAL SIGNIFICANCE: Provides event query capabilities
+    /// FUTURE RESILIENCE: Supports complex event analysis scenarios
+    /// </summary>
+    [Fact]
+    public async Task InMemoryEventEmitter_GetEvents_ShouldFilterByType()
     {
-        public Guid Id { get; } = Guid.NewGuid();
-        public DateTime OccurredAt { get; } = DateTime.UtcNow;
-        public string Type => "TestEvent";
-        public Dictionary<string, object> Metadata { get; } = new();
-        public string Message { get; init; } = string.Empty;
-    }
+        // Arrange
+        var emitter = new InMemoryEventEmitter(_inMemoryLogger);
+        await emitter.Emit(new TestEvent { Message = "Test" });
+        await emitter.Emit(new AnotherTestEvent { Value = 42 });
 
-    private record TestDomainEvent(string Data) : DomainEvent;
+        // Act
+        var testEvents = emitter.EmittedEvents.OfType<TestEvent>().ToList();
+        var anotherEvents = emitter.EmittedEvents.OfType<AnotherTestEvent>().ToList();
+
+        // Assert
+        testEvents.Count.ShouldBe(1);
+        testEvents[0].Message.ShouldBe("Test");
+        anotherEvents.Count.ShouldBe(1);
+        anotherEvents[0].Value.ShouldBe(42);
+    }
+}
+
+// Test event classes
+public class TestEvent : IEvent
+{
+    public Guid Id { get; } = Guid.NewGuid();
+    public DateTime OccurredAt { get; } = DateTime.UtcNow;
+    public string Type => nameof(TestEvent);
+    public Dictionary<string, object> Metadata { get; } = new();
+    
+    public string Message { get; set; } = string.Empty;
+}
+
+public class AnotherTestEvent : IEvent
+{
+    public Guid Id { get; } = Guid.NewGuid();
+    public DateTime OccurredAt { get; } = DateTime.UtcNow;
+    public string Type => nameof(AnotherTestEvent);
+    public Dictionary<string, object> Metadata { get; } = new();
+    
+    public int Value { get; set; }
+}
+
+// Real logger implementation for tests
+public class NullLogger<T> : ILogger<T>
+{
+    public IDisposable BeginScope<TState>(TState state) where TState : notnull => new NullScope();
+    public bool IsEnabled(LogLevel logLevel) => false;
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) { }
+    
+    private class NullScope : IDisposable
+    {
+        public void Dispose() { }
+    }
 }

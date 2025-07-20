@@ -4,7 +4,6 @@ using core.jarvis.Data.Query;
 using core.jarvis.Events;
 using core.jarvis.Events.Emitters;
 using core.jarvis.Logging;
-using core.jarvis.Systems;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -57,19 +56,49 @@ public static class JarvisServiceCollectionExtensions
 
 
         // 8. Register PostgreSQL Client
-        services.TryAddScoped<IPgClient>(sp =>
+        // Check for connection pooling feature flag
+        var useConnectionPooling = configuration?.GetValue<bool>("Jarvis:Database:ConnectionPooling:Enabled") ?? false;
+        
+        if (useConnectionPooling)
         {
-            // Check if we have a direct connection string (for testing)
-            var directConnectionString = Environment.GetEnvironmentVariable("TEST_DATABASE_URL");
-            if (!string.IsNullOrEmpty(directConnectionString))
+            // Register connection factory as singleton for connection pooling
+            services.TryAddSingleton<INpgsqlConnectionFactory>(sp =>
             {
-                var connection = new NpgsqlConnection(directConnectionString);
+                var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+                    ?? Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
+                    ?? throw new ApplicationException("No connection string configured");
+                
+                var logger = sp.GetRequiredService<ILogger<NpgsqlConnectionFactory>>();
+                
+                // Get pool configuration
+                var maxPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MaxPoolSize") ?? 20;
+                var minPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MinPoolSize") ?? 5;
+                var connectionLifetimeMinutes = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:ConnectionLifetimeMinutes") ?? 5;
+                
+                return new NpgsqlConnectionFactory(
+                    connectionString,
+                    logger,
+                    maxPoolSize,
+                    minPoolSize,
+                    TimeSpan.FromMinutes(connectionLifetimeMinutes));
+            });
+            
+            // Register pooled PgClient
+            services.TryAddScoped<IPgClient, PgClientPooled>();
+        }
+        else
+        {
+            // Use traditional single-connection model
+            services.TryAddScoped<IPgClient>(sp =>
+            {
+                var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+                    ?? Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
+                    ?? throw new ApplicationException("No connection string configured");
+                
+                var connection = new NpgsqlConnection(connectionString);
                 return new PgClientWrapper(connection);
-            }
-
-            throw new ApplicationException("No Connection String");
-
-        });
+            });
+        }
 
         // 9. Register Audit Service
         services.TryAddScoped<IAuditService, AuditService>();
@@ -81,7 +110,6 @@ public static class JarvisServiceCollectionExtensions
         services.AddEventEmission(configuration);
 
         // 12. Add System layer for handler orchestration
-        services.AddJarvisSystem();
 
         return services;
     }

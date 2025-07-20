@@ -128,6 +128,19 @@ public class TokenService : ITokenService
     public bool VerifyRefreshToken(string refreshToken, string hashedToken)
     {
         var computedHash = HashRefreshToken(refreshToken);
-        return computedHash == hashedToken;
+        
+        // Use constant-time comparison to prevent timing attacks
+        if (computedHash.Length != hashedToken.Length)
+        {
+            return false;
+        }
+        
+        var result = 0;
+        for (int i = 0; i < computedHash.Length; i++)
+        {
+            result |= computedHash[i] ^ hashedToken[i];
+        }
+        
+        return result == 0;
     }
 }

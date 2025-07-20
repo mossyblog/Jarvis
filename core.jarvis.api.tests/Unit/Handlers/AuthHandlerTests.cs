@@ -6,7 +6,7 @@ using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
-using core.jarvis.tests.Helpers;
+using core.jarvis.api.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
@@ -21,7 +21,7 @@ namespace core.jarvis.api.tests.Unit.Handlers;
 /// ARCHITECTURAL SIGNIFICANCE: Tests the exact flow the API invokes
 /// FUTURE RESILIENCE: Prevents authentication regressions
 /// </summary>
-public class AuthHandlerTests : IntegrationTestBase
+public class AuthHandlerTests : ApiIntegrationTestBase
 {
     /// <summary>
     /// INTENT: Test EXACTLY what happens when API calls AuthHandler.Authenticate

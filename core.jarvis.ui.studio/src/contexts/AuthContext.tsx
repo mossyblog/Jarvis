@@ -60,18 +60,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const login = async (credentials: LoginCredentials) => {
+    console.log('AuthContext: Starting login...');
     const result = await apiService.login(credentials);
     
     if (result.error) {
+      console.error('AuthContext: Login error', result.error);
       throw new Error(result.error.message);
     }
 
     if (result.data) {
+      console.log('AuthContext: Login successful, setting user:', result.data.user);
       setUser(result.data.user);
       
       // Load navigation for the newly logged in user
       const navResult = await apiService.getNavigation();
       if (navResult.data) {
+        console.log('AuthContext: Setting navigation:', navResult.data);
         setNavigation(navResult.data);
       }
     }

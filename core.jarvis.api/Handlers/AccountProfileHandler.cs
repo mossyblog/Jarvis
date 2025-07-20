@@ -1,6 +1,8 @@
 using core.jarvis.Data;
 using core.jarvis.api.Models;
+using core.jarvis.api.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace core.jarvis.api.Handlers;
 
@@ -9,11 +11,15 @@ namespace core.jarvis.api.Handlers;
 /// </summary>
 public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 {
+    private readonly IServiceProvider _serviceProvider;
+    
     public AccountProfileHandler(
         IDataContext dataContext,
-        ILogger<AccountProfileHandler> logger)
+        ILogger<AccountProfileHandler> logger,
+        IServiceProvider serviceProvider)
         : base(dataContext, logger)
     {
+        _serviceProvider = serviceProvider;
     }
 
     /// <summary>
@@ -120,6 +126,14 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 
         await DataContext.Commit(updated);
         Logger.LogInformation("Assigned role {RoleId} to user {UserId}", roleId, OwnerEntityId);
+        
+        // Invalidate permission cache since permissions have changed
+        var permissionService = _serviceProvider.GetService<IPermissionService>();
+        if (permissionService != null)
+        {
+            await permissionService.InvalidateCacheAsync(OwnerEntityId);
+        }
+        
         return updated;
     }
 
@@ -176,6 +190,14 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 
         await DataContext.Commit(updated);
         Logger.LogInformation("Removed role {RoleId} from user {UserId}", roleId, OwnerEntityId);
+        
+        // Invalidate permission cache since permissions have changed
+        var permissionService = _serviceProvider.GetService<IPermissionService>();
+        if (permissionService != null)
+        {
+            await permissionService.InvalidateCacheAsync(OwnerEntityId);
+        }
+        
         return updated;
     }
 
