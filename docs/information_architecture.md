@@ -57,7 +57,7 @@ Developer Mental Model → Documentation Structure
 │   ├── handler-pattern.md            # Core handler pattern
 │   ├── ecs-principles.md             # Entity-Component-System concepts
 │   ├── data-flow.md                  # How data flows through the system
-│   └── supabase-integration.md       # Storage layer details
+│   └── postgresql-integration.md     # Storage layer details
 ├── api-reference/
 │   ├── README.md                     # API documentation index
 │   ├── core-interfaces.md            # IDataContext, IComponentHandler, etc.
@@ -80,7 +80,7 @@ Developer Mental Model → Documentation Structure
 └── troubleshooting/
     ├── README.md                     # Common issues
     ├── performance-issues.md         # Performance debugging
-    └── supabase-connection.md        # Database connectivity issues
+    └── postgresql-connection.md      # Database connectivity issues
 ```
 
 ## Key Documentation Principles

@@ -36,7 +36,7 @@ Welcome to the Jarvis ECS SDK documentation. This guide will help you understand
 ### Troubleshooting
 - **[Common Issues](troubleshooting/README.md)** - Solutions to frequent problems
 - **[Performance Issues](troubleshooting/performance-issues.md)** - Debugging slow queries
-- **[Database Connection](troubleshooting/supabase-connection.md)** - Connection troubleshooting
+- **[Database Connection](troubleshooting/postgresql-connection.md)** - Connection troubleshooting
 
 ## 🎯 Quick Links by Role
 
@@ -91,7 +91,7 @@ For comprehensive understanding, we recommend this order:
 
 ### By Problem
 - **"My queries are slow"** → [Performance Issues](troubleshooting/performance-issues.md)
-- **"Can't connect to database"** → [Database Connection](troubleshooting/supabase-connection.md)
+- **"Can't connect to database"** → [Database Connection](troubleshooting/postgresql-connection.md)
 - **"Tests are failing"** → [Testing Strategies](guides/testing-strategies.md#troubleshooting)
 
 ### By Component

@@ -35,7 +35,7 @@ if (order == null)
 1. Check PostgreSQL is running: `docker ps`
 2. Verify connection string format
 3. Check firewall/network settings
-4. See [Database Connection Guide](supabase-connection.md)
+4. See [Database Connection Guide](postgresql-connection.md)
 
 #### "Permission denied" errors
 - Ensure JWT token is set: `client.JWT(token)`
@@ -147,7 +147,7 @@ When reporting an issue, include:
 ## 🔗 Quick Links
 
 - [Performance Issues](performance-issues.md) - Optimize slow queries
-- [Database Connection](supabase-connection.md) - Connection troubleshooting
+- [Database Connection](postgresql-connection.md) - Connection troubleshooting
 - [GitHub Issues](https://github.com/yourusername/jarvis/issues) - Report bugs
 - [Stack Overflow](https://stackoverflow.com/questions/tagged/jarvis-ecs) - Community help
 

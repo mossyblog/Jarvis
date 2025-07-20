@@ -672,8 +672,8 @@ public async Task MigrateExistingAuditData()
             UpdatedAt = DateTime.UtcNow
         };
         
-        // Use Supabase client to insert
-        await _supabaseClient.From<ComponentSnapshotRecord>()
+        // Use PostgreSQL client to insert
+        await _pgClient.From<ComponentSnapshotRecord>()
             .Insert(record);
     }
 }
