@@ -19,7 +19,7 @@ jobs:
       postgres:
         image: supabase/postgres:15.1.0.155
         env:
-          POSTGRES_USER: postgres
+          POSTGRES_USER: supabase_admin
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: jarvis_test
         ports:
@@ -31,7 +31,7 @@ jobs:
           --health-retries 5
 
     env:
-      TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres;Command Timeout=30;Timeout=30;Pooling=false"
+      TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres;Command Timeout=30;Timeout=30;Pooling=false"
       SUPABASE_ADMIN_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres;Command Timeout=30;Timeout=30;Pooling=false"
 
     steps:
@@ -48,7 +48,7 @@ jobs:
       run: |
         # Wait for PostgreSQL to be ready
         for i in {1..30}; do
-          if pg_isready -h localhost -p 5432 -U postgres; then
+          if pg_isready -h localhost -p 5432 -U supabase_admin; then
             echo "PostgreSQL is ready"
             break
           fi
@@ -57,7 +57,7 @@ jobs:
         done
         
         # Run the setup script
-        PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d jarvis_test -f core.jarvis.tests/Scripts/setup-test-database.sql
+        PGPASSWORD=postgres psql -h localhost -p 5432 -U supabase_admin -d jarvis_test -f core.jarvis.tests/Scripts/setup-test-database.sql
         
         # Create GraphQL wrapper function as supabase_admin
         PGPASSWORD=postgres psql -h localhost -p 5432 -U supabase_admin -d jarvis_test -f core.jarvis.tests/Scripts/setup-graphql-wrapper.sql
@@ -67,7 +67,7 @@ jobs:
         
         # Verify setup
         echo "Verifying database setup..."
-        PGPASSWORD=postgres psql -h localhost -p 5432 -U postgres -d jarvis_test -c "\dt" | grep -E "(users|security_token|audit_event)" || exit 1
+        PGPASSWORD=postgres psql -h localhost -p 5432 -U supabase_admin -d jarvis_test -c "\dt" | grep -E "(users|security_token|audit_event)" || exit 1
         echo "Database initialization complete"
       env:
         PGPASSWORD: postgres
@@ -85,7 +85,7 @@ jobs:
         # Temporarily removed --collect:"XPlat Code Coverage" to debug hanging issue
         dotnet test --no-build --verbosity minimal --settings test.runsettings --logger "console;verbosity=minimal" --logger "trx;LogFileName=test-results.trx" --filter "DisplayName!~AddRandomDelay&DisplayName!~ConstantTimeEquals&DisplayName!~ExecuteWithMinimumTime&DisplayName!~AuthenticationSimulation&DisplayName!~Authentication_MustResistTimingAttacks&DisplayName!~SecureComparison_MustBeConstantTime" --blame-hang-timeout 5m --blame-hang-dump-type none
       env:
-        TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres;Command Timeout=30;Timeout=30;Pooling=false"
+        TEST_DATABASE_URL: "Host=localhost;Port=5432;Database=jarvis_test;Username=supabase_admin;Password=postgres;Command Timeout=30;Timeout=30;Pooling=false"
         ASPNETCORE_ENVIRONMENT: "Test"
         MSBUILDDISABLENODEREUSE: "1"
     # - name: Upload coverage reports to Codecov

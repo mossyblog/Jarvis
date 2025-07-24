@@ -3,6 +3,7 @@ using core.jarvis.data.RLS;
 using Dapper;
 using Npgsql;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
 
 namespace core.jarvis.data
 {
@@ -17,6 +18,7 @@ namespace core.jarvis.data
         private string? _jwt;
         private Dictionary<string, string>? _jwtClaims;
         private readonly RLSPolicyRegistry _rlsPolicies;
+        private readonly ILogger? _logger;
         
         /// <summary>
         /// Gets the current user ID extracted from the JWT token.
@@ -29,10 +31,12 @@ namespace core.jarvis.data
         /// </summary>
         /// <param name="conn">The Npgsql database connection.</param>
         /// <param name="rlsPolicies">Optional RLS policy registry. If not provided, uses default policies.</param>
-        public PgClient(NpgsqlConnection conn, RLSPolicyRegistry? rlsPolicies = null)
+        /// <param name="logger">Optional logger for debugging and diagnostics.</param>
+        public PgClient(NpgsqlConnection conn, RLSPolicyRegistry? rlsPolicies = null, ILogger? logger = null)
         {
             _conn = conn;
             _rlsPolicies = rlsPolicies ?? new RLSPolicyRegistry();
+            _logger = logger;
             
             // Register default policies if using default registry
             if (rlsPolicies == null)
@@ -222,7 +226,7 @@ namespace core.jarvis.data
         /// <returns>PgTable instance for the entity type.</returns>
         public PgTable<T> From<T>() where T : class, new()
         {
-            return new PgTable<T>(_conn, this, _rlsPolicies, _jwtClaims ?? new Dictionary<string, string>());
+            return new PgTable<T>(_conn, this, _rlsPolicies, _jwtClaims ?? new Dictionary<string, string>(), _logger);
         }
 
         /// <summary>

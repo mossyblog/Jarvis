@@ -1,5 +1,47 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+- **Optional Component Versioning**: New `IVersionedComponent` interface for opt-in version control
+  - Components can now selectively implement versioning for snapshot tracking and optimistic concurrency
+  - `Version` property automatically increments on updates for versioned components  
+  - Non-versioned components (like `Account`) work without version column requirements
+- **Schema Management System**: Automatic table validation and creation
+  - `ITableManager` interface for component table schema management
+  - `PostgreSqlTableManager` implementation with automatic field detection and creation
+  - Schema validation prevents incompatible data type changes
+- **Enhanced Snapshot System**: Improved snapshot capture for audit trails
+  - UPDATE snapshots now correctly capture state BEFORE changes for compliance
+  - CREATE snapshots capture initial component state after insertion
+  - Snapshots are only created for components implementing `IVersionedComponent`
+
+### Changed
+- **DataContext Database Strategy**: Different approaches for versioned vs non-versioned components
+  - Versioned components: Use `Upsert()` with full version column support
+  - Non-versioned components: Use separate `Insert()` and `Update()` calls to avoid version column issues
+  - Existing component queries only performed for versioned components
+- **Property Name Consistency**: Fixed property naming across snapshot components
+  - `ComponentSnapshots.UpdatedAt` → `ComponentSnapshots.LastUpdated`
+  - Aligns with standard `IComponent.LastUpdated` naming convention
+- **Test Expectations**: Updated snapshot test assertions for correct behavior
+  - Tests now properly validate that UPDATE snapshots capture pre-change state
+  - Enhanced test documentation for snapshot capture timing
+
+### Fixed
+- **Version Column Compatibility**: Resolved `column "version" does not exist` error
+  - Non-versioned components (like Account, SecurityProfile) no longer attempt version column access
+  - Database operations properly handle mixed versioned/non-versioned component scenarios
+- **Snapshot Test Logic**: Fixed failing test expectations for snapshot capture timing
+  - `Commit_Should_Capture_Previous_State_On_Update` now correctly validates pre-update state capture
+  - All 3 snapshot creation tests pass with proper state validation
+
+### Architecture
+- **Selective Versioning**: Clear separation between versioned and non-versioned components
+  - Maintains backward compatibility for existing non-versioned components
+  - Provides full versioning features only where needed for audit requirements
+  - Follows principle of least surprise - components work as expected without mandatory versioning
+
 ## 2.0.0
 
 ### Added

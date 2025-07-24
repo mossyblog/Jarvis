@@ -93,9 +93,9 @@ public class SnapshotCreationTests : IntegrationTestBase
         firstSnapshot.Version.ShouldBe(1);
         
         var secondSnapshot = snapshotList[1].Deserialize<TestComponent>();
-        secondSnapshot.Name.ShouldBe("Original");  // Snapshot captures state BEFORE the update
-        secondSnapshot.Value.ShouldBe(100);        // So it still has the original values
-        secondSnapshot.Version.ShouldBe(1);        // With version 1
+        secondSnapshot.Name.ShouldBe("Original");  // UPDATE snapshot captures state BEFORE the update
+        secondSnapshot.Value.ShouldBe(100);        // So it still has the original values  
+        secondSnapshot.Version.ShouldBe(1);        // With version 1 (before increment)
     }
     
     /// <summary>

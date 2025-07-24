@@ -105,6 +105,102 @@ public class PgClientPooled : IPgClient
         return await _connectionFactory.GetConnectionAsync();
     }
     
+    /// <inheritdoc/>
+    public async Task<T> ExecuteScalar<T>(string query, object? parameters = null)
+    {
+        return await ExecuteWithConnectionAsync(async pgClient =>
+        {
+            var connection = await GetConnectionAsync();
+            await using var command = new NpgsqlCommand(query, connection);
+            
+            if (parameters != null)
+            {
+                AddParameters(command, parameters);
+            }
+            
+            var result = await command.ExecuteScalarAsync();
+            return (T)Convert.ChangeType(result, typeof(T));
+        });
+    }
+    
+    /// <inheritdoc/>
+    public async Task Execute(string command, object? parameters = null)
+    {
+        await ExecuteWithConnectionAsync<bool>(async pgClient =>
+        {
+            var connection = await GetConnectionAsync();
+            await using var cmd = new NpgsqlCommand(command, connection);
+            
+            if (parameters != null)
+            {
+                AddParameters(cmd, parameters);
+            }
+            
+            await cmd.ExecuteNonQueryAsync();
+            return true;
+        });
+    }
+    
+    /// <inheritdoc/>
+    public async Task<IEnumerable<T>> Query<T>(string query, object? parameters = null)
+    {
+        return await ExecuteWithConnectionAsync(async pgClient =>
+        {
+            var connection = await GetConnectionAsync();
+            await using var command = new NpgsqlCommand(query, connection);
+            
+            if (parameters != null)
+            {
+                AddParameters(command, parameters);
+            }
+            
+            var results = new List<T>();
+            await using var reader = await command.ExecuteReaderAsync();
+            
+            while (await reader.ReadAsync())
+            {
+                var item = MapReaderToObject<T>(reader);
+                results.Add(item);
+            }
+            
+            return (IEnumerable<T>)results;
+        });
+    }
+    
+    private void AddParameters(NpgsqlCommand command, object parameters)
+    {
+        var properties = parameters.GetType().GetProperties();
+        foreach (var prop in properties)
+        {
+            var value = prop.GetValue(parameters);
+            command.Parameters.AddWithValue($"@{prop.Name}", value ?? DBNull.Value);
+        }
+    }
+    
+    private T MapReaderToObject<T>(NpgsqlDataReader reader)
+    {
+        var type = typeof(T);
+        var instance = Activator.CreateInstance<T>();
+        
+        for (int i = 0; i < reader.FieldCount; i++)
+        {
+            var columnName = reader.GetName(i);
+            var property = type.GetProperty(columnName, 
+                System.Reflection.BindingFlags.IgnoreCase | 
+                System.Reflection.BindingFlags.Public | 
+                System.Reflection.BindingFlags.Instance);
+            
+            if (property != null && property.CanWrite && !reader.IsDBNull(i))
+            {
+                var value = reader.GetValue(i);
+                var convertedValue = Convert.ChangeType(value, property.PropertyType);
+                property.SetValue(instance, convertedValue);
+            }
+        }
+        
+        return instance;
+    }
+    
     /// <summary>
     /// Executes an operation with a pooled connection.
     /// The connection is automatically acquired and returned to the pool.
@@ -122,7 +218,7 @@ public class PgClientPooled : IPgClient
         var connection = await _connectionFactory.GetConnectionAsync();
         try
         {
-            var pgClient = new PgClient(connection);
+            var pgClient = new PgClient(connection, null, _logger);
             
             // Apply JWT if set
             if (!string.IsNullOrEmpty(_jwt))

@@ -46,9 +46,9 @@ public class ComponentSnapshots
     
     /// <summary>
     /// Updated timestamp.
-    /// Maps to updated_at in database.
+    /// Maps to last_updated in database.
     /// </summary>
-    public DateTime UpdatedAt { get; set; }
+    public DateTime LastUpdated { get; set; }
     
     /// <summary>
     /// Gets the snapshot entries from the JSON document

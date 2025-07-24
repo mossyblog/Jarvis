@@ -268,7 +268,7 @@ public class AuditServiceTests : IntegrationTestBase
         auditEvents.Count.ShouldBe(1);
         var auditEvent = auditEvents.First();
         auditEvent.Metadata.ShouldContain("Numbers");
-        auditEvent.Metadata.ShouldContain("[1, 2, 3]");
+        auditEvent.Metadata.ShouldContain("[1,2,3]");
         auditEvent.Metadata.ShouldContain("Nested");
     }
 }

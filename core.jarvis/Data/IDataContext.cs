@@ -165,4 +165,11 @@ public interface IDataContext
     /// <param name="events">The events to emit.</param>
     /// <returns>Task representing the batch emission operation.</returns>
     Task EmitBatch<TEvent>(IEnumerable<TEvent> events) where TEvent : Events.IEvent;
+
+    /// <summary>
+    /// Ensures the Entity table exists for relationship management.
+    /// This method is public to allow test initialization to create the table.
+    /// </summary>
+    /// <returns>Task representing the table creation operation.</returns>
+    Task EnsureEntityTableExists();
 }

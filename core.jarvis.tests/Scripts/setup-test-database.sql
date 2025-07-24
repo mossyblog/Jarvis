@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS account_component (
     client_id VARCHAR(255),
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     ip_address VARCHAR(45),
     user_agent TEXT
 );
@@ -110,7 +110,7 @@ CREATE TABLE IF NOT EXISTS auth_token_component (
     revoked_at TIMESTAMPTZ,
     version INTEGER,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Create indexes for auth_token_component
@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS security_profile_component (
     permission_ids TEXT[] DEFAULT '{}',
     preferences TEXT DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Create indexes for security_profile_component
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS role_component (
     description TEXT,
     permission_ids TEXT[] DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1
 );
 
@@ -157,7 +157,7 @@ CREATE TABLE IF NOT EXISTS permission_component (
     resource VARCHAR(100) NOT NULL,
     actions TEXT[] DEFAULT '{}',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1
 );
 
@@ -177,7 +177,7 @@ CREATE TABLE IF NOT EXISTS navigation_item (
     permission_required VARCHAR(255),
     is_active BOOLEAN NOT NULL DEFAULT true,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1
 );
 
@@ -199,7 +199,7 @@ CREATE TABLE IF NOT EXISTS audit_event (
     metadata JSONB,
     transaction_id VARCHAR(100),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1
 );
 
@@ -222,7 +222,7 @@ CREATE TABLE IF NOT EXISTS audit_event_component (
     metadata JSONB,
     transaction_id VARCHAR(100),
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1
 );
 
@@ -250,7 +250,7 @@ CREATE TABLE IF NOT EXISTS security_audit_event_component (
     failed_attempts INTEGER,
     locked_until TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Create indexes for security_audit_event_component
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS test_component (
     status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
     version INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT test_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
 
@@ -284,7 +284,7 @@ CREATE TABLE IF NOT EXISTS test_component_component (
     status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE',
     version INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT test_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
 
@@ -299,7 +299,7 @@ CREATE TABLE IF NOT EXISTS position_component (
     y REAL NOT NULL DEFAULT 0,
     version INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT position_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
 
@@ -314,7 +314,7 @@ CREATE TABLE IF NOT EXISTS position_component_component (
     y REAL NOT NULL DEFAULT 0,
     version INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT position_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
 
@@ -329,7 +329,7 @@ CREATE TABLE IF NOT EXISTS velocity_component (
     delta_y REAL NOT NULL DEFAULT 0,
     version INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT velocity_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
 
@@ -344,7 +344,7 @@ CREATE TABLE IF NOT EXISTS velocity_component_component (
     delta_y REAL NOT NULL DEFAULT 0,
     version INTEGER DEFAULT 1,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT velocity_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
 
@@ -362,7 +362,7 @@ CREATE TABLE IF NOT EXISTS blog_component (
     target_audience VARCHAR(255),
     settings JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT blog_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -381,7 +381,7 @@ CREATE TABLE IF NOT EXISTS blog_component_component (
     target_audience VARCHAR(255),
     settings JSONB,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT blog_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -402,7 +402,7 @@ CREATE TABLE IF NOT EXISTS blog_post_component (
     word_count INTEGER NOT NULL DEFAULT 0,
     published_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     archived_at TIMESTAMPTZ,
     version INTEGER DEFAULT 1
 );
@@ -423,7 +423,7 @@ CREATE TABLE IF NOT EXISTS blog_post_component_component (
     word_count INTEGER NOT NULL DEFAULT 0,
     published_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     archived_at TIMESTAMPTZ,
     version INTEGER DEFAULT 1
 );
@@ -444,7 +444,7 @@ CREATE TABLE IF NOT EXISTS order_component (
     shipping_address TEXT NOT NULL,
     is_paid BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT order_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -465,7 +465,7 @@ CREATE TABLE IF NOT EXISTS order_component_component (
     shipping_address TEXT NOT NULL,
     is_paid BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT order_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -483,7 +483,7 @@ CREATE TABLE IF NOT EXISTS invoice_test_component (
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     due_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT invoice_test_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -501,7 +501,7 @@ CREATE TABLE IF NOT EXISTS invoice_test_component_component (
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     due_date TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT invoice_test_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -518,7 +518,7 @@ CREATE TABLE IF NOT EXISTS payment_test_component (
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     processed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT payment_test_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -535,7 +535,7 @@ CREATE TABLE IF NOT EXISTS payment_test_component_component (
     status VARCHAR(50) NOT NULL DEFAULT 'PENDING',
     processed_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT payment_test_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -554,7 +554,7 @@ CREATE TABLE IF NOT EXISTS work_order_test_component (
     assigned_to VARCHAR(255),
     is_pre_payment_required BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT work_order_test_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -573,7 +573,7 @@ CREATE TABLE IF NOT EXISTS work_order_test_component_component (
     assigned_to VARCHAR(255),
     is_pre_payment_required BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     version INTEGER DEFAULT 1,
     CONSTRAINT work_order_test_component_component_owner_entity_id_unique UNIQUE (owner_entity_id)
 );
@@ -599,7 +599,7 @@ CREATE TABLE IF NOT EXISTS work_order_component (
     approved_date TIMESTAMP,
     cancellation_reason TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Create index on owner_entity_id for performance
@@ -623,7 +623,7 @@ CREATE TABLE IF NOT EXISTS work_order_component_component (
     approved_date TIMESTAMP,
     cancellation_reason TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 -- Create index on owner_entity_id for performance
@@ -637,7 +637,7 @@ CREATE TABLE IF NOT EXISTS component_snapshots (
     component_id UUID NOT NULL UNIQUE,
     snapshots JSONB NOT NULL DEFAULT '[]',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Create indexes for component_snapshots
@@ -654,7 +654,7 @@ CREATE TABLE IF NOT EXISTS entity_relationship (
     parent_type TEXT,
     child_types JSONB DEFAULT '{}',
     version INT,
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
+    last_updated TIMESTAMPTZ DEFAULT NOW(),
     
     -- Index for efficient lookups
     CONSTRAINT idx_entity_relationship_owner UNIQUE (owner_entity_id)
@@ -662,7 +662,7 @@ CREATE TABLE IF NOT EXISTS entity_relationship (
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_entity_relationship_parent_id ON entity_relationship(parent_id);
-CREATE INDEX IF NOT EXISTS idx_entity_relationship_updated_at ON entity_relationship(updated_at);
+CREATE INDEX IF NOT EXISTS idx_entity_relationship_last_updated ON entity_relationship(last_updated);
 
 -- Create entity_relationship_component table (ECS naming: EntityRelationship -> entity_relationship_component)
 CREATE TABLE IF NOT EXISTS entity_relationship_component (
@@ -674,13 +674,13 @@ CREATE TABLE IF NOT EXISTS entity_relationship_component (
     child_types JSONB DEFAULT '{}',
     version INT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
+    last_updated TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- Create indexes for performance
 CREATE INDEX IF NOT EXISTS idx_entity_relationship_component_owner_entity_id ON entity_relationship_component(owner_entity_id);
 CREATE INDEX IF NOT EXISTS idx_entity_relationship_component_parent_id ON entity_relationship_component(parent_id);
-CREATE INDEX IF NOT EXISTS idx_entity_relationship_component_updated_at ON entity_relationship_component(updated_at);
+CREATE INDEX IF NOT EXISTS idx_entity_relationship_component_last_updated ON entity_relationship_component(last_updated);
 
 -- Enable RLS on account_component table (required by PgClient)
 ALTER TABLE account_component ENABLE ROW LEVEL SECURITY;

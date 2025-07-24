@@ -22,5 +22,5 @@ public record TestComponent : IComponent, IVersionedComponent
     
     public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     
-    public int? Version { get; set; }
+    public int? Version { get; set; } = 1;
 }

@@ -46,4 +46,19 @@ public interface IPgClient : IDisposable
     /// Gets the underlying database connection.
     /// </summary>
     Task<Npgsql.NpgsqlConnection> GetConnectionAsync();
+    
+    /// <summary>
+    /// Executes a raw SQL query and returns a scalar result.
+    /// </summary>
+    Task<T> ExecuteScalar<T>(string query, object? parameters = null);
+    
+    /// <summary>
+    /// Executes a raw SQL command (INSERT, UPDATE, DELETE).
+    /// </summary>
+    Task Execute(string command, object? parameters = null);
+    
+    /// <summary>
+    /// Executes a raw SQL query and returns multiple results.
+    /// </summary>
+    Task<IEnumerable<T>> Query<T>(string query, object? parameters = null);
 }

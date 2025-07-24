@@ -118,7 +118,7 @@ public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
             // Check for IComponent required properties
             var hasId = jsonObject.ContainsKey("id") || jsonObject.ContainsKey("Id");
             var hasOwnerEntityId = jsonObject.ContainsKey("ownerEntityId") || jsonObject.ContainsKey("OwnerEntityId");
-            var hasUpdatedAt = jsonObject.ContainsKey("updatedAt") || jsonObject.ContainsKey("UpdatedAt");
+            var hasUpdatedAt = jsonObject.ContainsKey("updatedAt") || jsonObject.ContainsKey("UpdatedAt") || jsonObject.ContainsKey("LastUpdated");
 
             return hasId && hasOwnerEntityId && hasUpdatedAt;
         }

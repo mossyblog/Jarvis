@@ -18,7 +18,7 @@ INSERT INTO "user" (
     auth_method,
     is_active,
     created_at,
-    updated_at
+    last_updated
 ) VALUES (
     gen_random_uuid(),
     gen_random_uuid(),

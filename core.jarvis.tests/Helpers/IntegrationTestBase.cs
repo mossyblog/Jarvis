@@ -83,7 +83,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         {
             var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
             var connection = dataSource.CreateConnection();
-            var pgClientWrapper = new PgClientWrapper(connection, ownsConnection: true);
+            var logger = sp.GetService<ILogger<PgClientWrapper>>();
+            var pgClientWrapper = new PgClientWrapper(connection, ownsConnection: true, logger: logger);
             
             // For API tests, don't authenticate during setup as we're testing the auth service itself
             // Other tests can authenticate if needed
@@ -95,6 +96,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddScoped<EventSubscriptionManager>();
         services.AddScoped<IAuditService, AuditService>();
         services.AddScoped<IEntityQuery, EntityQuery>();
+        services.AddScoped<core.jarvis.Data.Schema.ITableManager, core.jarvis.Data.Schema.PostgreSqlTableManager>();
         
         // Register default event emitter for tests
         services.AddSingleton<core.jarvis.Events.IEventEmitter, core.jarvis.Events.Emitters.InMemoryEventEmitter>();

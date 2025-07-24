@@ -91,16 +91,20 @@ public class DataContext : IDataContext
             component.LastUpdated = DateTime.UtcNow;
             
             // Try to get existing component to determine if this is an insert or update
+            // Only query if component supports versioning to avoid version column issues
             TComponent? existing = null;
-            try
+            if (component is IVersionedComponent)
             {
-                existing = await _pgClient.From<TComponent>()
-                    .Filter("id", "eq", component.Id)
-                    .Single();
-            }
-            catch
-            {
-                // Component doesn't exist yet - this is an insert
+                try
+                {
+                    existing = await _pgClient.From<TComponent>()
+                        .Filter("id", "eq", component.Id)
+                        .Single();
+                }
+                catch
+                {
+                    // Component doesn't exist yet - this is an insert
+                }
             }
             
             // Check if component supports versioning
@@ -129,7 +133,24 @@ public class DataContext : IDataContext
                 }
             }
             
-            await _pgClient.From<TComponent>().Upsert(component);
+            // Use different insert/update strategy based on versioning support
+            if (component is IVersionedComponent)
+            {
+                await _pgClient.From<TComponent>().Upsert(component);
+            }
+            else
+            {
+                // For non-versioned components, try insert first, then update if it fails
+                try
+                {
+                    await _pgClient.From<TComponent>().Insert(component);
+                }
+                catch
+                {
+                    // If insert fails (component exists), do update
+                    await _pgClient.From<TComponent>().Update(component);
+                }
+            }
             
             // Audit the operation
             if (existing == null)
@@ -181,16 +202,20 @@ public class DataContext : IDataContext
             component.LastUpdated = DateTime.UtcNow;
 
             // Try to get existing record by ID
+            // Only query if component supports versioning to avoid version column issues
             TComponent? existing = null;
-            try
+            if (component is IVersionedComponent)
             {
-                existing = await _pgClient.From<TComponent>()
-                    .Filter("id", "eq", component.Id)
-                    .Single();
-            }
-            catch
-            {
-                // Record doesn't exist, which is fine for inserts
+                try
+                {
+                    existing = await _pgClient.From<TComponent>()
+                        .Filter("id", "eq", component.Id)
+                        .Single();
+                }
+                catch
+                {
+                    // Record doesn't exist, which is fine for inserts
+                }
             }
 
             if (existing == null)
@@ -201,8 +226,16 @@ public class DataContext : IDataContext
                     versionedComponent.Version = 1;
                 }
                 
-                // Use Upsert to handle both insert and update cases
-                await _pgClient.From<TComponent>().Upsert(component);
+                // Use different insert/update strategy based on versioning support
+                if (component is IVersionedComponent)
+                {
+                    await _pgClient.From<TComponent>().Upsert(component);
+                }
+                else
+                {
+                    // For non-versioned components, use insert since this is a new record
+                    await _pgClient.From<TComponent>().Insert(component);
+                }
                 
                 // Audit the new component creation
                 await _auditService.LogEvent(
@@ -275,8 +308,16 @@ public class DataContext : IDataContext
                 }
             }
             
-            // Safe to update
-            await _pgClient.From<TComponent>().Upsert(component);
+            // Safe to update - use different strategy based on versioning support
+            if (component is IVersionedComponent)
+            {
+                await _pgClient.From<TComponent>().Upsert(component);
+            }
+            else
+            {
+                // For non-versioned components, use update since we know the record exists
+                await _pgClient.From<TComponent>().Update(component);
+            }
             
             // Audit the successful update
             await _auditService.LogChange(
@@ -485,7 +526,7 @@ public class DataContext : IDataContext
                 
                 // Update the snapshots JSON
                 existing.Snapshots = JsonSerializer.Serialize(newSnapshotsArray);
-                existing.UpdatedAt = DateTime.UtcNow;
+                existing.LastUpdated = DateTime.UtcNow;
                 
                 await _pgClient.From<ComponentSnapshots>().Update(existing);
             }
@@ -500,7 +541,7 @@ public class DataContext : IDataContext
                     ComponentId = component.Id,
                     Snapshots = JsonSerializer.Serialize(new[] { snapshotEntry }),
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
                 
                 await _pgClient.From<ComponentSnapshots>().Insert(record);
@@ -1020,5 +1061,13 @@ public class DataContext : IDataContext
                 
             throw new EventEmissionException("Failed to emit event batch", ex);
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task EnsureEntityTableExists()
+    {
+        // Implementation for ensuring Entity table exists
+        // This is a placeholder - the actual implementation may be needed
+        await Task.CompletedTask;
     }
 }

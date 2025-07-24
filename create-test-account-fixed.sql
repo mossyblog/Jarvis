@@ -12,7 +12,7 @@ INSERT INTO account_component (
     auth_method, 
     is_active, 
     created_at, 
-    updated_at
+    last_updated
 ) VALUES (
     gen_random_uuid(), 
     '11111111-1111-1111-1111-111111111111', 

@@ -70,7 +70,7 @@ public class SnapshotPerformanceTests : IntegrationTestBase
     /// ARCHITECTURAL SIGNIFICANCE: Validates snapshot impact on TryCommit
     /// FUTURE RESILIENCE: Ensures performance remains acceptable
     /// </summary>
-    [Fact(Skip = "Skipping due to timezone handling issue in TryCommit - snapshots are working correctly")]
+    [Fact]
     public async Task TryCommit_Performance_Should_Remain_Acceptable()
     {
         // Arrange

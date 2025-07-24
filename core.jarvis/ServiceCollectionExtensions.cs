@@ -1,6 +1,7 @@
 using System.Reflection;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
+using core.jarvis.Data.Schema;
 using core.jarvis.Events;
 using core.jarvis.Events.Emitters;
 using core.jarvis.Logging;
@@ -49,6 +50,9 @@ public static class JarvisServiceCollectionExtensions
 
         // 5. Register EntityQuery factory
         services.TryAddScoped<IEntityQuery, EntityQuery>();
+        
+        // 5.5. Register Table Manager
+        services.TryAddScoped<ITableManager, PostgreSqlTableManager>();
 
         // 6. Register DataContext
         services.TryAddScoped<IDataContext, DataContext>();
