@@ -1,13 +1,15 @@
 using System.Linq.Expressions;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
+using core.jarvis.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Xunit;
 
 namespace core.jarvis.tests;
 
-public class ComponentQueryHandlerTests
+public class ComponentQueryHandlerTests : IAsyncLifetime
 {
     public class TestComponent : IComponent
     {
@@ -18,19 +20,47 @@ public class ComponentQueryHandlerTests
         public int Status { get; init; } = 0;
     }
 
+    private string _connectionString;
+    private ServiceProvider _serviceProvider;
+
+    public async Task InitializeAsync()
+    {
+        // Setup test database
+        _connectionString = TestDatabaseSetup.GetConnectionString();
+        await TestDatabaseSetup.EnsureSetupAsync(_connectionString);
+    }
+
+    public Task DisposeAsync()
+    {
+        _serviceProvider?.Dispose();
+        return Task.CompletedTask;
+    }
+
     [Fact]
-    public void ApplyExpressionFilter_WithEqualsExpression_ShouldAddFilter()
+    public async Task ApplyExpressionFilter_WithEqualsExpression_ShouldAddFilter()
     {
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
         
-        // Set up PostgreSQL connection for testing
-        // Use environment variable - never hard-code credentials
-        // Environment variable should be set by CI/test runner
+        // Configure NpgsqlDataSource for connection pooling
+        services.AddSingleton<NpgsqlDataSource>(sp =>
+        {
+            var pooledConnectionString = $"{_connectionString};Pooling=true;Maximum Pool Size=50;Minimum Pool Size=5";
+            return NpgsqlDataSource.Create(pooledConnectionString);
+        });
         
-        services.RegisterJarvis(LogLevel.Trace);
+        // Register PgClient using pooled connections
+        services.AddScoped<IPgClient>(sp =>
+        {
+            var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+            var connection = dataSource.CreateConnection();
+            var logger = sp.GetService<ILogger<PgClientWrapper>>();
+            return new PgClientWrapper(connection, ownsConnection: true, logger: logger);
+        });
+        
         var serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = serviceProvider;
         
         var pgClient = serviceProvider.GetRequiredService<IPgClient>();
         var logger = serviceProvider.GetRequiredService<ILogger<ComponentQueryHandler<TestComponent>>>();
@@ -40,24 +70,37 @@ public class ComponentQueryHandlerTests
         Expression<Func<TestComponent, bool>> filter = c => c.OwnerEntityId == testEntityId;
         
         // Act & Assert - This should not throw an exception
-        var task = handler.QueryEntityIds(filter);
+        var result = await handler.QueryEntityIds(filter);
         
         // If we get here without exception, the expression parsing worked
-        Assert.NotNull(task);
+        Assert.NotNull(result);
     }
     
     [Fact]  
-    public void ApplyExpressionFilter_WithStringContains_ShouldAddLikeFilter()
+    public async Task ApplyExpressionFilter_WithStringContains_ShouldAddLikeFilter()
     {
         // Arrange
         var services = new ServiceCollection();
         services.AddLogging();
         
-        // Use environment variable - never hard-code credentials
-        // Environment variable should be set by CI/test runner
+        // Configure NpgsqlDataSource for connection pooling
+        services.AddSingleton<NpgsqlDataSource>(sp =>
+        {
+            var pooledConnectionString = $"{_connectionString};Pooling=true;Maximum Pool Size=50;Minimum Pool Size=5";
+            return NpgsqlDataSource.Create(pooledConnectionString);
+        });
         
-        services.RegisterJarvis(LogLevel.Trace);
+        // Register PgClient using pooled connections
+        services.AddScoped<IPgClient>(sp =>
+        {
+            var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+            var connection = dataSource.CreateConnection();
+            var logger = sp.GetService<ILogger<PgClientWrapper>>();
+            return new PgClientWrapper(connection, ownsConnection: true, logger: logger);
+        });
+        
         var serviceProvider = services.BuildServiceProvider();
+        _serviceProvider = serviceProvider;
         
         var pgClient = serviceProvider.GetRequiredService<IPgClient>();
         var logger = serviceProvider.GetRequiredService<ILogger<ComponentQueryHandler<TestComponent>>>();
@@ -66,8 +109,8 @@ public class ComponentQueryHandlerTests
         Expression<Func<TestComponent, bool>> filter = c => c.Name.Contains("Test");
         
         // Act & Assert - This should not throw an exception  
-        var task = handler.QueryEntityIds(filter);
+        var result = await handler.QueryEntityIds(filter);
         
-        Assert.NotNull(task);
+        Assert.NotNull(result);
     }
 }

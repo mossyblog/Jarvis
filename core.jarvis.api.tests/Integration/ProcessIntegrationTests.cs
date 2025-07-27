@@ -9,6 +9,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.api.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Shouldly;
 using Xunit;
@@ -34,10 +35,50 @@ namespace core.jarvis.api.tests.Integration;
 /// </summary>
 public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
 {
+    /// <summary>
+    /// Port number for running the test Azure Functions instance.
+    /// Chosen to avoid conflicts with common development ports.
+    /// </summary>
+    private const int TestPort = 7072;
+    
+    /// <summary>
+    /// Base URL for test API endpoints.
+    /// Constructed using the test port for local testing.
+    /// </summary>
+    private const string BaseUrl = "http://localhost:7072";
+    
+    /// <summary>
+    /// Timeout in milliseconds for process termination.
+    /// Allows sufficient time for graceful shutdown.
+    /// </summary>
+    private const int ProcessTerminationTimeoutMs = 5000;
+    
+    /// <summary>
+    /// Maximum wait time in seconds for application startup.
+    /// Balances test execution time with startup reliability.
+    /// </summary>
+    private const int MaxAppStartupWaitSeconds = 60;
+    
+    /// <summary>
+    /// HTTP client timeout for individual requests during testing.
+    /// Prevents hanging tests while allowing for slower operations.
+    /// </summary>
+    private const int HttpClientTimeoutSeconds = 5;
+    
+    /// <summary>
+    /// Delay between startup checks in milliseconds.
+    /// Prevents excessive polling while maintaining responsiveness.
+    /// </summary>
+    private const int StartupCheckDelayMs = 1000;
+    
+    /// <summary>
+    /// Interval for status logging during startup wait.
+    /// Provides visibility into long startup processes.
+    /// </summary>
+    private const int StatusLogIntervalSeconds = 5;
+    
     private Process? _funcProcess;
     private HttpClient? _httpClient;
-    private const int TestPort = 7072;
-    private const string BaseUrl = "http://localhost:7072";
     
     public new async Task InitializeAsync()
     {
@@ -87,7 +128,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         };
         
         var jsonString = JsonConvert.SerializeObject(accountJson);
-        Console.WriteLine($"Sending JSON: {jsonString}");
+        Logger().LogInformation("Sending JSON: {JsonString}", jsonString);
         
         // Act - Send real HTTP request using StringContent to ensure proper headers
         var content = new StringContent(jsonString, System.Text.Encoding.UTF8, "application/json");
@@ -97,8 +138,8 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var errorBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Response status: {response.StatusCode}");
-            Console.WriteLine($"Error body: {errorBody}");
+            Logger().LogWarning("Response status: {StatusCode}", response.StatusCode);
+            Logger().LogWarning("Error body: {ErrorBody}", errorBody);
         }
         
         // The test passes if we get either OK or InternalServerError
@@ -109,7 +150,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
             // Check if authentication actually succeeded by looking at function output
             // This proves the Jarvis framework handled the JSON auth correctly
             // even if Azure Functions has instance creation issues
-            Console.WriteLine("Note: Got 500 error but authentication may have succeeded. This is acceptable for this test.");
+            Logger().LogInformation("Note: Got 500 error but authentication may have succeeded. This is acceptable for this test.");
         }
         
         response.StatusCode.ShouldBeOneOf(HttpStatusCode.OK, HttpStatusCode.InternalServerError);
@@ -329,7 +370,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
                 CreateNoWindow = true
             });
             
-            process?.WaitForExit(5000);
+            process?.WaitForExit(ProcessTerminationTimeoutMs);
             return process?.ExitCode == 0;
         }
         catch
@@ -380,15 +421,15 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
-                Console.WriteLine($"[FUNC] {e.Data}");
+                Logger().LogInformation("[FUNC] {Data}", e.Data);
                 // Capture connection string errors
                 if (e.Data.Contains("connection string") || e.Data.Contains("ConnectionStrings"))
                 {
-                    Console.WriteLine("[FUNC] CONNECTION STRING ERROR DETECTED");
+                    Logger().LogWarning("[FUNC] CONNECTION STRING ERROR DETECTED");
                 }
                 if (e.Data.Contains("Now listening on") || e.Data.Contains("Host started") || e.Data.Contains("Job host started"))
                 {
-                    Console.WriteLine("[FUNC] HOST STARTED MESSAGE DETECTED");
+                    Logger().LogInformation("[FUNC] HOST STARTED MESSAGE DETECTED");
                 }
             }
         };
@@ -396,7 +437,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         _funcProcess.ErrorDataReceived += (sender, e) => 
         {
             if (!string.IsNullOrEmpty(e.Data))
-                Console.WriteLine($"[FUNC ERROR] {e.Data}");
+                Logger().LogError("[FUNC ERROR] {Data}", e.Data);
         };
         
         _funcProcess.Start();
@@ -407,7 +448,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         await WaitForAppReady();
     }
     
-    private async Task WaitForAppReady(int maxWaitSeconds = 60)
+    private async Task WaitForAppReady(int maxWaitSeconds = MaxAppStartupWaitSeconds)
     {
         var stopwatch = Stopwatch.StartNew();
         var successCount = 0;
@@ -417,17 +458,17 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         {
             try
             {
-                using var client = new HttpClient { BaseAddress = new Uri(BaseUrl), Timeout = TimeSpan.FromSeconds(5) };
+                using var client = new HttpClient { BaseAddress = new Uri(BaseUrl), Timeout = TimeSpan.FromSeconds(HttpClientTimeoutSeconds) };
                 // Try to hit the swagger endpoint to check if app is ready
                 var response = await client.GetAsync("/api/swagger.json");
                 if (response.IsSuccessStatusCode)
                 {
                     successCount++;
-                    Console.WriteLine($"Azure Functions app responding ({successCount}/{requiredSuccesses})");
+                    Logger().LogInformation("Azure Functions app responding ({SuccessCount}/{RequiredSuccesses})", successCount, requiredSuccesses);
                     
                     if (successCount >= requiredSuccesses)
                     {
-                        Console.WriteLine("Azure Functions app is ready!");
+                        Logger().LogInformation("Azure Functions app is ready!");
                         return;
                     }
                 }
@@ -440,13 +481,13 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
             {
                 successCount = 0; // Reset on exception
                 // App not ready yet
-                if (stopwatch.Elapsed.TotalSeconds % 5 < 1)
+                if (stopwatch.Elapsed.TotalSeconds % StatusLogIntervalSeconds < 1)
                 {
-                    Console.WriteLine($"Waiting for Functions app... ({stopwatch.Elapsed.TotalSeconds:F0}s) - {ex.Message}");
+                    Logger().LogInformation("Waiting for Functions app... ({ElapsedSeconds:F0}s) - {Message}", stopwatch.Elapsed.TotalSeconds, ex.Message);
                 }
             }
             
-            await Task.Delay(1000);
+            await Task.Delay(StartupCheckDelayMs);
         }
         
         throw new TimeoutException($"Azure Functions app did not start within {maxWaitSeconds} seconds");
@@ -459,7 +500,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
             try
             {
                 _funcProcess.Kill();
-                _funcProcess.WaitForExit(5000);
+                _funcProcess.WaitForExit(ProcessTerminationTimeoutMs);
             }
             catch
             {

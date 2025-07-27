@@ -50,4 +50,8 @@
       <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="TestResults\" />
+    </ItemGroup>
+
 </Project>

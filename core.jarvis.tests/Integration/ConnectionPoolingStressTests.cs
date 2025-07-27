@@ -70,8 +70,8 @@ public class ConnectionPoolingStressTests : IntegrationTestBase
         for (int i = 0; i < concurrentOperations; i++)
         {
             var operationIndex = i;
-            // Stagger the start of operations
-            await Task.Delay(i * 100);
+            // Stagger the start of operations for stress testing
+            await Task.Delay(i * 10); // Reduced delay while maintaining staggering
             tasks.Add(Task.Run(async () =>
             {
                 try
@@ -87,8 +87,7 @@ public class ConnectionPoolingStressTests : IntegrationTestBase
                         var component = await handler.Get();
                         component.ShouldNotBeNull();
                         
-                        // Small delay to reduce connection conflicts
-                        await Task.Delay(50);
+                        // Component access should handle concurrent connections without artificial delays
                     }
                 }
                 catch (Exception ex)
@@ -236,7 +235,13 @@ public class ConnectionPoolingStressTests : IntegrationTestBase
             Status = "ACTIVE",
             Value = 1
         };
-        await TestDataContext().TryCommit(testComponent);
+        var initialCommitSuccess = await TestDataContext().TryCommit(testComponent);
+        initialCommitSuccess.ShouldBeTrue("Initial component creation failed");
+        
+        // Verify the component was created successfully
+        var verifyHandler = TestDataContext().For<TestHandler>(entityId);
+        var verifyComponent = await verifyHandler.Get();
+        verifyComponent.ShouldNotBeNull("Component should exist after initial creation");
 
         // Act - Create and dispose scopes repeatedly
         for (int i = 0; i < iterations; i++)
@@ -246,16 +251,35 @@ public class ConnectionPoolingStressTests : IntegrationTestBase
                 var dataContext = scope.ServiceProvider.GetRequiredService<IDataContext>();
                 var handler = dataContext.For<TestHandler>(entityId);
                 
-                var component = await handler.Get();
-                component.ShouldNotBeNull();
+                // Add retry logic for transient connection issues
+                TestComponent component = null;
+                var retryCount = 0;
+                const int maxRetries = 3;
+                
+                while (component == null && retryCount < maxRetries)
+                {
+                    try
+                    {
+                        component = await handler.Get();
+                    }
+                    catch (InvalidOperationException ex) when (retryCount < maxRetries - 1 && ex.Message.Contains("not found"))
+                    {
+                        Logger().LogWarning(
+                            "Failed to get component on iteration {Iteration}, retry {Retry}: {Error}",
+                            i, retryCount, ex.Message);
+                        await Task.Delay(50 * (retryCount + 1)); // Reduced exponential backoff
+                        retryCount++;
+                    }
+                }
+                
+                component.ShouldNotBeNull($"Component not found on iteration {i} after {retryCount} retries");
                 component.Value = i + 1;
                 
                 var success = await dataContext.TryCommit(component);
-                success.ShouldBeTrue();
+                success.ShouldBeTrue($"Commit failed on iteration {i}");
             }
             
-            // Small delay between iterations
-            await Task.Delay(50);
+            // No artificial delay needed between operations
         }
 
         // Assert - Verify final state

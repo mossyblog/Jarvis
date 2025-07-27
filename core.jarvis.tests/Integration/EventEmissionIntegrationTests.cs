@@ -95,6 +95,8 @@ public class EventEmissionIntegrationTests : IntegrationTestBase
         services.AddLogging();
         services.AddSingleton<IComponentQueryHandlerRegistry, ComponentQueryHandlerRegistry>();
         services.AddScoped<IAuditService, AuditService>();
+        services.AddScoped<IEntityQuery, EntityQuery>();
+        services.AddScoped<core.jarvis.Data.Schema.ITableManager, core.jarvis.Data.Schema.PostgreSqlTableManager>();
         services.AddSingleton<IPgClient>(_serviceProvider.GetRequiredService<IPgClient>());
         services.AddSingleton<IEventEmitter>(new FailingEventEmitter());
         services.AddScoped<IDataContext, DataContext>();

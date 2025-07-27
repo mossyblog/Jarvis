@@ -49,8 +49,8 @@ public class ConnectionPoolingTests : IntegrationTestBase
                 var connection = await factory.GetConnectionAsync();
                 try
                 {
-                    // Simulate some work
-                    await Task.Delay(100);
+                    // Verify connection is valid
+                    connection.ShouldNotBeNull();
                     results.Add(true);
                 }
                 finally
@@ -178,7 +178,7 @@ public class ConnectionPoolingTests : IntegrationTestBase
             
             // Try to acquire one more - should timeout or throw
             var acquireTask = factory.GetConnectionAsync();
-            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(2));
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(2)); // Legitimate timeout test
             
             var completedTask = await Task.WhenAny(acquireTask, timeoutTask);
             
@@ -232,8 +232,8 @@ public class ConnectionPoolingTests : IntegrationTestBase
             var connection = await factory.GetConnectionAsync();
             connection.ShouldNotBeNull();
             
-            // Do some work
-            await Task.Delay(50);
+            // Verify connection is valid
+            connection.ShouldNotBeNull();
             
             // Return to pool
             await factory.ReturnConnectionAsync(connection);

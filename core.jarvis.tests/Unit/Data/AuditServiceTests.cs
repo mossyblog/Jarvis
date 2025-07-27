@@ -96,9 +96,6 @@ public class AuditServiceTests : IntegrationTestBase
 
         // Act
         await auditService.LogEvent(eventType, entityId, metadata);
-        
-        // Wait for audit to be persisted
-        await Task.Delay(100);
 
         // Assert - Verify the audit event was created
         var auditEvents = await pgClient.From<AuditEvent>()
@@ -134,8 +131,6 @@ public class AuditServiceTests : IntegrationTestBase
 
         // Act
         await auditService.LogEvent(eventType, entityId, null);
-        
-        await Task.Delay(100);
 
         // Assert
         var auditEvents = await pgClient.From<AuditEvent>()
@@ -170,8 +165,6 @@ public class AuditServiceTests : IntegrationTestBase
 
         // Act
         await auditService.LogChange(eventType, entityId, oldValue, newValue, metadata);
-        
-        await Task.Delay(100);
 
         // Assert
         var auditEvents = await pgClient.From<AuditEvent>()
@@ -257,8 +250,6 @@ public class AuditServiceTests : IntegrationTestBase
 
         // Act
         await auditService.LogEvent(eventType, entityId, metadata);
-        
-        await Task.Delay(100);
 
         // Assert
         var auditEvents = await pgClient.From<AuditEvent>()

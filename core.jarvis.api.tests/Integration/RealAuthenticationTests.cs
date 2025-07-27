@@ -10,6 +10,7 @@ using core.jarvis.api.Exceptions;
 using core.jarvis.data;
 using core.jarvis.Data;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 using BCrypt.Net;
@@ -52,7 +53,11 @@ public class RealAuthenticationTests : ApiIntegrationTestBase
         {
             await dataContext.Remove<Account>(ownerEntityId);
         }
-        catch { /* Doesn't exist */ }
+        catch (Exception ex)
+        {
+            // Account doesn't exist or removal failed - log for debugging but continue with test
+            Logger().LogDebug(ex, "Test account cleanup failed for entity {EntityId} - account may not exist", ownerEntityId);
+        }
         
         // Create account with proper BCrypt hash
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(password, 10);

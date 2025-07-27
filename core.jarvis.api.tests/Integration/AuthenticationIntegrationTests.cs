@@ -17,6 +17,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
@@ -198,7 +199,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
         var requestBody = JsonSerializer.Serialize(new { Email = email, Password = password });
         
-        Console.WriteLine($"Sending JSON: {requestBody}");
+        Logger().LogInformation("Sending JSON: {RequestBody}", requestBody);
         
         var request = TestFactory.CreateHttpRequestData("POST", "/api/security/auth", requestBody);
         request.Headers.Add("Content-Type", "application/json");
@@ -209,7 +210,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var errorBody = await TestFactory.GetResponseBodyAsync(response);
-            Console.WriteLine($"Auth failed with status {response.StatusCode}: {errorBody}");
+            Logger().LogWarning("Auth failed with status {StatusCode}: {ErrorBody}", response.StatusCode, errorBody);
         }
         response.StatusCode.ShouldBe(HttpStatusCode.OK, 
             $"Authentication failed for {email}. Check logs for details.");
@@ -269,7 +270,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
             ""userAgent"": ""string""
         }}";
         
-        Console.WriteLine($"Sending full Account JSON: {accountJson}");
+        Logger().LogInformation("Sending full Account JSON: {AccountJson}", accountJson);
         
         var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
         var request = TestFactory.CreateHttpRequestData("POST", "/api/security/auth", accountJson);
@@ -281,7 +282,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var errorBody = await TestFactory.GetResponseBodyAsync(response);
-            Console.WriteLine($"Auth failed with status {response.StatusCode}: {errorBody}");
+            Logger().LogWarning("Auth failed with status {StatusCode}: {ErrorBody}", response.StatusCode, errorBody);
         }
         response.StatusCode.ShouldBe(HttpStatusCode.OK, 
             "Authentication should work with full Account object");

@@ -43,6 +43,9 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
+        // Set test environment to help services detect they're running in tests
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Test");
+        
         // For GraphQL tests, ensure JWT environment variables are set
         // This is needed because PgClient validates JWT signatures
         if (this.GetType().Namespace?.Contains("GraphQL") == true)
@@ -188,31 +191,46 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                     {
                         await TestDataContext().Remove<core.jarvis.api.Models.Account>(entityId);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Account component not found or failed to remove for entity {EntityId}", entityId);
+                    }
                     
                     try
                     {
                         await TestDataContext().Remove<core.jarvis.api.Models.AuthToken>(entityId);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "AuthToken component not found or failed to remove for entity {EntityId}", entityId);
+                    }
                     
                     try
                     {
                         await TestDataContext().Remove<core.jarvis.api.Models.SecurityProfile>(entityId);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "SecurityProfile component not found or failed to remove for entity {EntityId}", entityId);
+                    }
                     
                     try
                     {
                         await TestDataContext().Remove<core.jarvis.api.Models.Role>(entityId);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Role component not found or failed to remove for entity {EntityId}", entityId);
+                    }
                     
                     try
                     {
                         await TestDataContext().Remove<core.jarvis.api.Models.Permission>(entityId);
                     }
-                    catch { }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "Permission component not found or failed to remove for entity {EntityId}", entityId);
+                    }
                 }
             }
             catch (Exception ex)
