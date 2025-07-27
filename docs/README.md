@@ -1,123 +1,181 @@
 # Jarvis Documentation
 
-Welcome to the Jarvis ECS SDK documentation. This guide will help you understand and effectively use the framework.
+**Status:** Approved  
+**Author:** Jarvis Team  
+**Owner:** Technical Documentation Team  
+**Last Updated:** 2025-07-27  
+**Review Due:** 2025-10-27  
+**Version:** 2.0  
 
-## 📚 Documentation Structure
+**Tags:** ecs, documentation, jarvis, framework, togaf  
+**Systems:** core.jarvis, core.jarvis.data, core.jarvis.api  
+**Components:** IComponent, IComponentHandler, IDataContext  
 
-### Getting Started
-- **[Installation Guide](getting-started/installation.md)** - Set up Jarvis in your project
-- **[Your First Handler](getting-started/first-handler.md)** - Build your first feature
-- **[Examples](getting-started/examples/)** - Working code examples
+---
 
-### Core Concepts
-- **[ECS Architecture](architecture/ecs-principles.md)** - Understanding Entity Component System
-- **[Handler Pattern](architecture/handler-pattern.md)** - How handlers encapsulate business logic
-- **[Data Flow](architecture/data-flow.md)** - Request lifecycle through the system
-- **[Security Model](AUTHENTICATION_RBAC_RLS_TECHNICAL_WHITEPAPER.md)** - JWT, RLS, and permissions
+## Purpose
 
-### Development Guides
-- **[Handler Development](guides/handler-development.md)** - Best practices for handlers
-- **[Testing Strategies](guides/testing-strategies.md)** - Unit and integration testing
-- **[Error Handling](guides/error-handling.md)** - Exception patterns and recovery
-- **[Performance Optimization](guides/performance-optimization.md)** - Scaling and optimization
+This document serves as the main entry point for the Jarvis ECS SDK documentation, organized according to TOGAF architecture framework principles. The documentation is structured to support architectural decision-making, implementation guidance, and operational excellence.
 
-### API Reference
-- **[Core Interfaces](api-reference/core-interfaces.md)** - IDataContext, IComponentHandler
-- **[Query API](api-reference/query-api.md)** - Entity querying and filtering
-- **[Extension Methods](api-reference/extension-methods.md)** - Plugin extension patterns
-- **[Snapshot API](api-reference/snapshot-api.md)** - Component versioning
+---
 
-### Advanced Topics
-- **[System Pattern](architecture/system-pattern-example.md)** - Orchestration layer
-- **[Connection Pooling](CONNECTION_POOLING_TECHNICAL_WHITEPAPER.md)** - Database optimization
-- **[Plugin Architecture](guides/plugin-architecture.md)** - Extending the framework
-- **[Migration Guide](migration/README.md)** - Upgrading from older versions
+## Quick Facts
 
-### Troubleshooting
-- **[Common Issues](troubleshooting/README.md)** - Solutions to frequent problems
-- **[Performance Issues](troubleshooting/performance-issues.md)** - Debugging slow queries
-- **[Database Connection](troubleshooting/postgresql-connection.md)** - Connection troubleshooting
+- **Current State:** Active - Reorganized to TOGAF structure
+- **Dependencies:** .NET 8.0, PostgreSQL 14+, Azure Functions v4
+- **Consumers:** Backend developers, system architects, DevOps engineers
+- **SLA:** Documentation updated within 7 days of major releases
 
-## 🎯 Quick Links by Role
+---
 
-### For Backend Developers
-1. Start with [Installation](getting-started/installation.md)
-2. Build [Your First Handler](getting-started/first-handler.md)
-3. Learn [Handler Development](guides/handler-development.md)
-4. Master [Testing Strategies](guides/testing-strategies.md)
+## Documentation Structure (TOGAF-Based)
+
+### [00 - Overview](00_Overview/README.md)
+High-level overview documentation for the Jarvis ECS framework.
+- [Jarvis Overview](00_Overview/jarvis-overview.md) - Introduction to the framework
+- [Installation Guide](00_Overview/installation.md) - Setting up your environment
+- [First Handler](00_Overview/first-handler.md) - Quick start guide
+- [Examples](00_Overview/examples/) - Working code examples
+
+### [01 - Current State](01_CurrentState/README.md)
+Documentation of the current architecture and implementation.
+
+#### [Services](01_CurrentState/Services/README.md)
+- [Authentication, RBAC & RLS](01_CurrentState/Services/authentication-rbac-rls-technical-whitepaper.md)
+- [Connection Pooling](01_CurrentState/Services/connection-pooling-technical-whitepaper.md)
+
+#### [Components](01_CurrentState/Components/README.md)
+- Core component documentation
+- Handler implementations
+- Component relationships
+
+#### [Flows](01_CurrentState/Flows/README.md)
+- Data flow patterns
+- System workflows
+- Process documentation
+
+#### [Mappings](01_CurrentState/Mappings/README.md)
+- Entity relationships
+- Component dependencies
+- System integrations
+
+#### [Technology](01_CurrentState/Technology/README.md)
+- PostgreSQL integration
+- .NET 8.0 framework usage
+- Azure Functions deployment
+
+### [02 - Target State](02_TargetState/README.md)
+Future architecture and planned enhancements.
+
+### [03 - Gap Analysis](03_GapAnalysis/README.md)
+Analysis of gaps between current and target states.
+
+### [04 - Roadmap](04_Roadmap/README.md)
+Implementation roadmap and timeline.
+
+### [05 - Governance](05_Governance/README.md)
+Architecture principles, standards, and guidelines.
+- [Architecture Decisions](05_Governance/decisions/README.md)
+
+### [06 - Catalogs](06_Catalogs/README.md)
+Reusable components, patterns, and best practices.
+
+### [07 - Projects](07_Projects/README.md)
+Project-specific documentation and case studies.
+
+### [08 - Change Requests](08_ChangeRequests/README.md)
+Change management and request tracking.
+
+### [09 - Diagrams](09_Diagrams/README.md)
+Architecture diagrams and visual documentation.
+
+### [10 - Vocabulary](10_Vocabulary/README.md)
+Glossary and terminology definitions.
+
+### Additional Resources
+
+#### [Troubleshooting](troubleshooting/README.md)
+Common issues and solutions (maintained separately from TOGAF structure for quick access).
+
+---
+
+## Navigation Guide
+
+### For New Users
+1. Start with [Overview](00_Overview/README.md)
+2. Follow the [Installation Guide](00_Overview/installation.md)
+3. Build your [First Handler](00_Overview/first-handler.md)
+4. Explore [Examples](00_Overview/examples/)
 
 ### For Architects
-1. Understand [ECS Principles](architecture/ecs-principles.md)
-2. Review [System Architecture](SYSTEM_HANDLER_ARCHITECTURE.md)
-3. Explore [Security Model](AUTHENTICATION_RBAC_RLS_TECHNICAL_WHITEPAPER.md)
-4. Plan [Plugin Architecture](guides/plugin-architecture.md)
+1. Review [Current State Architecture](01_CurrentState/README.md)
+2. Understand [Target State](02_TargetState/README.md)
+3. Analyze [Gaps](03_GapAnalysis/README.md)
+4. Check [Governance](05_Governance/README.md)
 
-### For DevOps Engineers
-1. Configure [Database Connection](getting-started/installation.md#database-setup)
-2. Optimize [Connection Pooling](CONNECTION_POOLING_TECHNICAL_WHITEPAPER.md)
-3. Monitor [Performance](guides/performance-optimization.md)
-4. Deploy [API Layer](../core.jarvis.api/README.md)
+### For Developers
+1. Browse [Component Catalogs](06_Catalogs/README.md)
+2. Study [Current Implementation](01_CurrentState/Components/README.md)
+3. Review [Best Practices](05_Governance/README.md)
+4. Check [Troubleshooting](troubleshooting/README.md)
 
-## 📖 Reading Order
+---
 
-For comprehensive understanding, we recommend this order:
+## Quick Links
 
-1. **Concepts First**
-   - [ECS Principles](architecture/ecs-principles.md)
-   - [Handler Pattern](architecture/handler-pattern.md)
-   
-2. **Hands-On Practice**
-   - [Installation](getting-started/installation.md)
-   - [First Handler](getting-started/first-handler.md)
-   - [Examples](getting-started/examples/)
+### Essential Documentation
+- [ECS Architecture Principles](05_Governance/ecs-principles.md)
+- [Handler Pattern Guide](05_Governance/handler-pattern.md)
+- [Comprehensive Handler Guide](01_CurrentState/Components/comprehensive-handler-guide.md)
+- [Security Model](01_CurrentState/Services/authentication-rbac-rls-technical-whitepaper.md)
 
-3. **Deep Dive**
-   - [Handler Development](guides/handler-development.md)
-   - [Query API](api-reference/query-api.md)
-   - [Testing Strategies](guides/testing-strategies.md)
+### API References
+- [Core Interfaces](01_CurrentState/Components/core-interfaces.md)
+- [DataContext API](01_CurrentState/Mappings/datacontext-api.md)
+- [Query API](01_CurrentState/Technology/query-api.md)
 
-4. **Advanced Topics**
-   - [System Pattern](architecture/system-pattern-example.md)
-   - [Plugin Architecture](guides/plugin-architecture.md)
-   - [Performance Optimization](guides/performance-optimization.md)
+### Development Resources
+- [Testing Strategies](07_Projects/testing-strategies.md)
+- [Performance Optimization](05_Governance/performance-optimization.md)
+- [Error Handling](05_Governance/error-handling.md)
 
-## 🔍 Finding Information
+---
 
-### By Task
-- **"How do I create a handler?"** → [Handler Development](guides/handler-development.md)
-- **"How do I query entities?"** → [Query API](api-reference/query-api.md)
-- **"How do I handle errors?"** → [Error Handling](guides/error-handling.md)
-- **"How do I test my code?"** → [Testing Strategies](guides/testing-strategies.md)
+## Documentation Standards
 
-### By Problem
-- **"My queries are slow"** → [Performance Issues](troubleshooting/performance-issues.md)
-- **"Can't connect to database"** → [Database Connection](troubleshooting/postgresql-connection.md)
-- **"Tests are failing"** → [Testing Strategies](guides/testing-strategies.md#troubleshooting)
+All documentation in this repository follows:
+- TOGAF architecture framework principles
+- Mandatory template structure with metadata headers
+- Clear ownership and review cycles
+- Consistent naming conventions (kebab-case)
+- Cross-references using relative paths
 
-### By Component
-- **Data Layer** → [core.jarvis.data README](../core.jarvis.data/README.md)
-- **API Layer** → [core.jarvis.api README](../core.jarvis.api/README.md)
-- **Core Framework** → [Architecture Overview](architecture/ecs-principles.md)
+For documentation guidelines, see [Information Architecture](05_Governance/information_architecture.md).
 
-## 💡 Best Practices
+---
 
-1. **Start Small**: Begin with simple handlers before complex orchestration
-2. **Test Early**: Write tests alongside your handlers
-3. **Track Relationships**: Use LinkRelationship for entity hierarchies
-4. **Audit Everything**: Use the built-in audit service for compliance
-5. **Optimize Later**: Get it working first, then optimize queries
+## Contributing
 
-## 🤝 Contributing to Documentation
+When contributing documentation:
+1. Follow the TOGAF structure
+2. Use the mandatory template format
+3. Update cross-references
+4. Maintain consistency with existing documentation
+5. Submit for review according to governance processes
 
-Found an error or want to improve the docs? 
-- Submit a PR with your changes
-- Focus on clarity and real-world examples
-- Test all code examples before submitting
-- Keep the same friendly, practical tone
+---
 
-## 📞 Need Help?
+## Change History
 
-- Check [Troubleshooting](troubleshooting/README.md) first
-- Search existing [GitHub Issues](https://github.com/yourusername/jarvis/issues)
-- Join our [Discussions](https://github.com/yourusername/jarvis/discussions)
-- Review [Examples](getting-started/examples/) for patterns
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 2.0 | 2025-07-27 | Technical Documentation Team | Reorganized to TOGAF structure |
+| 1.0 | 2025-01-01 | Jarvis Team | Initial documentation |
+
+---
+
+## Related Documentation
+
+- [Information Architecture Guidelines](05_Governance/information_architecture.md)
+- [Documentation Audit Report](05_Governance/documentation-audit-report.md)
+- [CLAUDE.md](../CLAUDE.md) - AI assistant guidelines
