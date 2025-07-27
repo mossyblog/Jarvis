@@ -1,5 +1,23 @@
 # Changelog
 
+## 2.1.1
+
+### Fixed
+- **PostgreSQL Duplicate Key Constraint**: Fixed race condition during concurrent schema creation
+  - Implemented PostgreSQL advisory locks in `PgClientFactory.EnsureMinimumSchema`
+  - Prevents "duplicate key value violates unique constraint pg_type_typname_nsp_index" errors
+  - Ensures safe concurrent initialization of database schema
+- **PostgreSQL Column Naming**: Fixed incorrect column reference in RLS status check
+  - Changed "row_security" to correct PostgreSQL system column "rowsecurity"
+  - Resolves "column row_security does not exist" error when checking RLS status
+  - Properly queries `pg_tables.rowsecurity` for table RLS configuration
+
+### Documentation
+- **Windows Development Environment**: Added PowerShell development setup in CLAUDE.md
+  - Instructions for configuring .env.local on Windows
+  - PowerShell script examples for environment variable setup
+  - Cross-platform development support documentation
+
 ## 2.1.0
 
 ### Added

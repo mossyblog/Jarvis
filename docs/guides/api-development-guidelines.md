@@ -244,7 +244,7 @@ public async Task<SecurityProfile> UpdateProfile(ProfileUpdateRequest request)
     {
         Name = request.Name,
         RoleIds = request.RoleIds ?? profile.RoleIds,
-        UpdatedAt = DateTime.UtcNow
+        LastUpdated = DateTime.UtcNow
     };
     
     await DataContext.Commit(updated);
@@ -295,8 +295,8 @@ public async Task<AuthToken> RefreshToken(string refreshToken)
         throw new UnauthorizedException("Refresh token expired");
     
     // 5. Generate new tokens
-    var newAccessToken = GenerateAccessToken(session.AccountId);
-    var newRefreshToken = GenerateRefreshToken();
+    var newAccessToken = AccessToken(session.AccountId);
+    var newRefreshToken = RefreshToken();
     
     // 6. Update session
     var updated = session with
@@ -305,7 +305,7 @@ public async Task<AuthToken> RefreshToken(string refreshToken)
         RefreshToken = newRefreshToken,
         ExpiresAt = DateTime.UtcNow.AddHours(1),
         RefreshExpiresAt = DateTime.UtcNow.AddDays(30),
-        UpdatedAt = DateTime.UtcNow
+        LastUpdated = DateTime.UtcNow
     };
     
     await DataContext.Commit(updated);

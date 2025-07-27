@@ -15,7 +15,7 @@ public interface IComponent
 {
     Guid Id { get; init; }
     Guid OwnerEntityId { get; set; }
-    DateTime UpdatedAt { get; set; } // Tracks last modification time
+    DateTime LastUpdated { get; set; } // Tracks last modification time
 }
 ```
 
@@ -63,7 +63,7 @@ For components implementing `IVersionedComponent`:
 For components only implementing `IComponent`:
 1. **New Records**: Always succeeds with current timestamp
 2. **Existing Records**:
-   - Compares the `UpdatedAt` timestamp with database value
+   - Compares the `LastUpdated` timestamp with database value
    - If timestamps match (within 10ms tolerance), update proceeds
    - If timestamps differ, returns `false` (concurrency conflict)
 
@@ -189,7 +189,7 @@ CREATE TABLE my_component (
     owner_entity_id UUID NOT NULL UNIQUE,
     -- component fields...
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 
@@ -203,7 +203,7 @@ CREATE TABLE versioned_component (
     version INT,  -- Required for version-based concurrency
     -- component fields...
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 ```
 

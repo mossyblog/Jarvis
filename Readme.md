@@ -15,7 +15,7 @@ public record OrderComponent : IComponent, IVersionedComponent
     public string Status { get; set; }
     public int TotalAmountCents { get; set; }
     public DateTime OrderDate { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime LastUpdated { get; set; }
     public string ShippingAddress { get; set; }
     public bool IsPaid { get; set; }
     public int? Version { get; set; }
@@ -44,7 +44,7 @@ public class OrderHandler : ComponentHandler<OrderComponent>
             TotalAmountCents = (int)(totalAmount * 100),
             ShippingAddress = shippingAddress,
             OrderDate = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.TryCommit(order);
@@ -167,7 +167,7 @@ public class InvoiceHandler : ComponentHandler<InvoiceTestComponent>
             Amount = order.TotalAmountCents,
             DueDate = DateTime.UtcNow.AddDays(30),
             Status = "PENDING",
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(invoice);

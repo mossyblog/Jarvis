@@ -172,8 +172,8 @@ public class ComponentSnapshotRecord : BaseModel
     /// <summary>
     /// When this snapshot record was last updated
     /// </summary>
-    [Column("updated_at")]
-    public DateTime UpdatedAt { get; set; }
+    [Column("last_updated")]
+    public DateTime LastUpdated { get; set; }
     
     /// <summary>
     /// Parse the JSON snapshots into strongly-typed objects

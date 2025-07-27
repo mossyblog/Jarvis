@@ -83,7 +83,7 @@ public class AuthSystem
             throw new ValidationException("Token is required");
         }
 
-        var principal = _tokenService.ValidateToken(token);
+        var principal = _tokenService.Validate(token);
         if (principal == null)
         {
             _logger.LogWarning("Token validation failed");

@@ -46,7 +46,7 @@ public class CoreSecurityValidationTests : ApiIntegrationTestBase
         // Arrange
         var tokenService = TokenService;
         var userId = Guid.NewGuid();
-        var validToken = tokenService.GenerateAccessToken(userId, "test@example.com");
+        var validToken = tokenService.AccessToken(userId, "test@example.com");
         
         // Create a tampered token
         var parts = validToken.Split('.');
@@ -56,12 +56,12 @@ public class CoreSecurityValidationTests : ApiIntegrationTestBase
         var tamperedToken = $"{parts[0]}.tampered.{parts[2]}";
         
         // Act & Assert - Valid token should work
-        var validClaims = tokenService.ValidateToken(validToken);
+        var validClaims = tokenService.Validate(validToken);
         validClaims.ShouldNotBeNull();
         validClaims.FindFirst("email")?.Value.ShouldBe("test@example.com");
         
         // Tampered token MUST fail - this is the critical security check
-        var invalidClaims = tokenService.ValidateToken(tamperedToken);
+        var invalidClaims = tokenService.Validate(tamperedToken);
         invalidClaims.ShouldBeNull("Tampered token should return null");
     }
 
@@ -179,10 +179,10 @@ public class CoreSecurityValidationTests : ApiIntegrationTestBase
         var email = "test@example.com";
         
         // Act - Generate multiple tokens
-        var token1 = tokenService.GenerateAccessToken(userId, email);
-        var token2 = tokenService.GenerateAccessToken(userId, email);
-        var refreshToken1 = tokenService.GenerateRefreshToken();
-        var refreshToken2 = tokenService.GenerateRefreshToken();
+        var token1 = tokenService.AccessToken(userId, email);
+        var token2 = tokenService.AccessToken(userId, email);
+        var refreshToken1 = tokenService.RefreshToken();
+        var refreshToken2 = tokenService.RefreshToken();
         
         // Assert - Tokens must be different (prevent replay attacks)
         token1.ShouldNotBe(token2, "Access tokens must be unique");
@@ -256,7 +256,7 @@ public class CoreSecurityValidationTests : ApiIntegrationTestBase
                 
                 // Verify the JWT is valid
                 var tokenService = TokenService;
-                var claims = tokenService.ValidateToken(authToken.AccessToken);
+                var claims = tokenService.Validate(authToken.AccessToken);
                 claims.ShouldNotBeNull();
             }
         }

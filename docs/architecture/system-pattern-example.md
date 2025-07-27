@@ -199,7 +199,7 @@ public class RegistrationHandler : IComponentHandler
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow,
             IpAddress = ipAddress
         };
         
@@ -221,7 +221,7 @@ public class RegistrationHandler : IComponentHandler
             PermissionIds = Array.Empty<string>(),
             Preferences = new Dictionary<string, object>(),
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await _dataContext.Commit(profile);

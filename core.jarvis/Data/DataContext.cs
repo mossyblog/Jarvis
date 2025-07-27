@@ -78,7 +78,7 @@ public class DataContext : IDataContext
     /// Creates a new Entity with a generated ID.
     /// </summary>
     /// <returns>A new Entity instance with a unique ID.</returns>
-    public Entity Entity()
+    public Entity NewEntity()
     {
         return new Entity(Guid.NewGuid());
     }
@@ -86,109 +86,25 @@ public class DataContext : IDataContext
     public async Task Commit<TComponent>(TComponent component) 
         where TComponent : class, IComponent, new()
     {
-        try
+        await ExecuteWithErrorHandling(async () =>
         {
             component.LastUpdated = DateTime.UtcNow;
+            var existing = await GetExistingComponent(component);
             
-            // Try to get existing component to determine if this is an insert or update
-            // Only query if component supports versioning to avoid version column issues
-            TComponent? existing = null;
-            if (component is IVersionedComponent)
+            if (existing != null && component is IVersionedComponent)
             {
-                try
-                {
-                    existing = await _pgClient.From<TComponent>()
-                        .Filter("id", "eq", component.Id)
-                        .Single();
-                }
-                catch
-                {
-                    // Component doesn't exist yet - this is an insert
-                }
+                await Snapshot(existing, "UPDATE");
             }
             
-            // Check if component supports versioning
-            if (component is IVersionedComponent versionedComponent)
-            {
-                if (existing != null)
-                {
-                    // This is an update - capture snapshot of existing state BEFORE any changes
-                    await Snapshot(existing, "UPDATE");
-                    
-                    // For version-based concurrency, always increment from the existing version
-                    // This ensures we don't accidentally skip versions
-                    if (existing is IVersionedComponent existingVersioned)
-                    {
-                        versionedComponent.Version = (existingVersioned.Version ?? 0) + 1;
-                    }
-                    else
-                    {
-                        versionedComponent.Version = (versionedComponent.Version ?? 0) + 1;
-                    }
-                }
-                else
-                {
-                    // This is an insert - set initial version
-                    versionedComponent.Version = 1;
-                }
-            }
+            HandleVersioning(component, existing);
+            await ExecuteDatabaseOperation(component, existing == null);
+            await AuditComponentOperation(component, existing, existing == null ? "CREATED" : "UPDATED");
             
-            // Use different insert/update strategy based on versioning support
-            if (component is IVersionedComponent)
-            {
-                await _pgClient.From<TComponent>().Upsert(component);
-            }
-            else
-            {
-                // For non-versioned components, try insert first, then update if it fails
-                try
-                {
-                    await _pgClient.From<TComponent>().Insert(component);
-                }
-                catch
-                {
-                    // If insert fails (component exists), do update
-                    await _pgClient.From<TComponent>().Update(component);
-                }
-            }
-            
-            // Audit the operation
-            if (existing == null)
-            {
-                await _auditService.LogEvent(
-                    AuditEventTypes.ForComponent(typeof(TComponent).Name, "CREATED"),
-                    component.OwnerEntityId,
-                    new { ComponentId = component.Id, ComponentType = typeof(TComponent).Name });
-            }
-            else
-            {
-                await _auditService.LogChange(
-                    AuditEventTypes.ForComponent(typeof(TComponent).Name, "UPDATED"),
-                    component.OwnerEntityId,
-                    existing,
-                    component,
-                    new { ComponentId = component.Id, ComponentType = typeof(TComponent).Name });
-            }
-            
-            // For new inserts with versioning, capture initial snapshot after save
             if (existing == null && component is IVersionedComponent)
             {
                 await Snapshot(component, "CREATE");
             }
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                component.OwnerEntityId,
-                ex,
-                new { Operation = "Commit", ComponentType = typeof(TComponent).Name, ComponentId = component.Id });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to save component {typeof(TComponent).Name} for entity {component.OwnerEntityId}",
-                new { ComponentType = typeof(TComponent).Name, EntityId = component.OwnerEntityId, ComponentId = component.Id });
-        }
+        }, "Commit", component.OwnerEntityId, new { ComponentType = typeof(TComponent).Name, ComponentId = component.Id });
     }
     
     
@@ -200,62 +116,24 @@ public class DataContext : IDataContext
         {
             var originalUpdatedAt = component.LastUpdated;
             component.LastUpdated = DateTime.UtcNow;
-
-            // Try to get existing record by ID
-            // Only query if component supports versioning to avoid version column issues
-            TComponent? existing = null;
-            if (component is IVersionedComponent)
-            {
-                try
-                {
-                    existing = await _pgClient.From<TComponent>()
-                        .Filter("id", "eq", component.Id)
-                        .Single();
-                }
-                catch
-                {
-                    // Record doesn't exist, which is fine for inserts
-                }
-            }
+            var existing = await GetExistingComponent(component);
 
             if (existing == null)
             {
-                // New record - check if versioning is supported
-                if (component is IVersionedComponent versionedComponent)
-                {
-                    versionedComponent.Version = 1;
-                }
+                HandleVersioning(component, existing);
+                await ExecuteDatabaseOperation(component, true);
+                await AuditComponentOperation(component, existing, "CREATED");
                 
-                // Use different insert/update strategy based on versioning support
-                if (component is IVersionedComponent)
-                {
-                    await _pgClient.From<TComponent>().Upsert(component);
-                }
-                else
-                {
-                    // For non-versioned components, use insert since this is a new record
-                    await _pgClient.From<TComponent>().Insert(component);
-                }
-                
-                // Audit the new component creation
-                await _auditService.LogEvent(
-                    AuditEventTypes.ForComponent(typeof(TComponent).Name, "CREATED"),
-                    component.OwnerEntityId,
-                    new { ComponentId = component.Id, ComponentType = typeof(TComponent).Name });
-                
-                // Capture initial snapshot after insert
                 if (component is IVersionedComponent)
                 {
                     await Snapshot(component, "CREATE");
                 }
-                
                 return true;
             }
 
-            // For versioned components, use version-based concurrency control
+            // Check for concurrency conflicts
             if (component is IVersionedComponent versionedComp && existing is IVersionedComponent existingVersioned)
             {
-                // Check if version matches - if not, it's a concurrency conflict
                 if (versionedComp.Version != existingVersioned.Version)
                 {
                     await _auditService.LogEvent(
@@ -274,20 +152,12 @@ public class DataContext : IDataContext
                     return false;
                 }
                 
-                // Snapshot the existing state before update
                 await Snapshot(existing, "UPDATE");
-                
-                // Increment version for update
-                versionedComp.Version = (existingVersioned.Version ?? 0) + 1;
+                HandleVersioning(component, existing);
             }
             else
             {
-                // For non-versioned components, fall back to timestamp-based concurrency
                 var timeDiff = Math.Abs((existing.LastUpdated - originalUpdatedAt).TotalMilliseconds);
-                
-                // Debug logging removed - timestamp concurrency check performed
-                
-                // If timestamps differ by more than 10ms, it's a concurrency conflict
                 if (timeDiff > 10)
                 {
                     await _auditService.LogEvent(
@@ -308,25 +178,8 @@ public class DataContext : IDataContext
                 }
             }
             
-            // Safe to update - use different strategy based on versioning support
-            if (component is IVersionedComponent)
-            {
-                await _pgClient.From<TComponent>().Upsert(component);
-            }
-            else
-            {
-                // For non-versioned components, use update since we know the record exists
-                await _pgClient.From<TComponent>().Update(component);
-            }
-            
-            // Audit the successful update
-            await _auditService.LogChange(
-                AuditEventTypes.ForComponent(typeof(TComponent).Name, "UPDATED"),
-                component.OwnerEntityId,
-                existing,
-                component,
-                new { ComponentId = component.Id, ComponentType = typeof(TComponent).Name });
-            
+            await ExecuteDatabaseOperation(component, false);
+            await AuditComponentOperation(component, existing, "UPDATED");
             return true;
         }
         catch (Exception ex)
@@ -341,7 +194,7 @@ public class DataContext : IDataContext
                 ex,
                 $"Failed to save component {typeof(TComponent).Name} for entity {component.OwnerEntityId}",
                 new { ComponentType = typeof(TComponent).Name, EntityId = component.OwnerEntityId, ComponentId = component.Id });
-            return false; // This line will never be reached but satisfies the compiler
+            return false;
         }
     }
 
@@ -349,38 +202,17 @@ public class DataContext : IDataContext
     public async Task Remove<TComponent>(Guid entityId) 
         where TComponent : class, IComponent, new()
     {
-            
-        try
+        await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the deletion attempt
             await _auditService.LogEvent(
                 AuditEventTypes.ForComponent(typeof(TComponent).Name, "DELETED"),
                 entityId,
                 new { ComponentType = typeof(TComponent).Name, Operation = "Remove" });
             
-            // Remove by owner_entity_id
             await _pgClient.From<TComponent>()
                 .Filter("owner_entity_id", "eq", entityId)
                 .Delete();
-            
-            await _pgClient.From<TComponent>()
-                .Filter("id", "eq", entityId)
-                .Delete();
-        
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
-                new { Operation = "Remove", ComponentType = typeof(TComponent).Name });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to remove {typeof(TComponent).Name} components for entity {entityId}",
-                new { ComponentType = typeof(TComponent).Name, EntityId = entityId });
-        }
+        }, "Remove", entityId, new { ComponentType = typeof(TComponent).Name });
     }
 
     
@@ -389,36 +221,17 @@ public class DataContext : IDataContext
     public async Task Insert<TModel>(TModel model) 
         where TModel : class, new()
     {
-        try
+        var entityId = model is IComponent component ? component.OwnerEntityId : Guid.Empty;
+        
+        await ExecuteWithErrorHandling(async () =>
         {
             await _pgClient.From<TModel>().Insert(model);
-            
-            // Audit the successful insertion
-            Guid entityId = Guid.Empty;
-            if (model is IComponent component)
-            {
-                entityId = component.OwnerEntityId;
-            }
             
             await _auditService.LogEvent(
                 AuditEventTypes.ForComponent(typeof(TModel).Name, "INSERTED"),
                 entityId,
                 new { ModelType = typeof(TModel).Name, Operation = "Insert" });
-        }
-        catch (Exception ex)
-        {
-            // Audit the error
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                Guid.Empty,
-                ex,
-                new { Operation = "Insert", ModelType = typeof(TModel).Name });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to insert {typeof(TModel).Name}",
-                new { ModelType = typeof(TModel).Name, ModelData = model });
-        }
+        }, "Insert", entityId, new { ModelType = typeof(TModel).Name, ModelData = model });
     }
     
     /// <inheritdoc/>
@@ -528,7 +341,15 @@ public class DataContext : IDataContext
                 existing.Snapshots = JsonSerializer.Serialize(newSnapshotsArray);
                 existing.LastUpdated = DateTime.UtcNow;
                 
-                await _pgClient.From<ComponentSnapshots>().Update(existing);
+                try
+                {
+                    await _pgClient.From<ComponentSnapshots>().Update(existing);
+                }
+                catch (Exception updateEx)
+                {
+                    _logger.LogError(updateEx, "Failed to update snapshot record for component {ComponentId}", component.Id);
+                    throw;
+                }
             }
             else
             {
@@ -544,7 +365,15 @@ public class DataContext : IDataContext
                     LastUpdated = DateTime.UtcNow
                 };
                 
-                await _pgClient.From<ComponentSnapshots>().Insert(record);
+                try
+                {
+                    await _pgClient.From<ComponentSnapshots>().Insert(record);
+                }
+                catch (Exception insertEx)
+                {
+                    _logger.LogError(insertEx, "Failed to create snapshot record for component {ComponentId}", component.Id);
+                    throw;
+                }
             }
             
             // Audit successful snapshot creation
@@ -582,123 +411,53 @@ public class DataContext : IDataContext
     /// <inheritdoc/>
     public async Task<Guid?> Parent(Guid entityId)
     {
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the relationship query
-            await _auditService.LogEvent(
-                AuditEventTypes.RelationshipQueried,
-                entityId,
-                new { EntityId = entityId, Operation = "Parent", QueryType = "GetParent" });
+            await AuditRelationshipQuery("Parent", "GetParent", entityId);
             
             var relationship = await _pgClient.From<EntityRelationship>()
                 .Filter("owner_entity_id", "eq", entityId)
                 .SingleOrDefault();
             
             return relationship?.ParentId;
-        }
-        catch (InvalidOperationException)
-        {
-            // No relationship found
-            return null;
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
-                new { Operation = "Parent", EntityId = entityId });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to get parent for entity {entityId}",
-                new { EntityId = entityId });
-            return null; // This line will never be reached but satisfies the compiler
-        }
+        }, "Parent", entityId, defaultValue: (Guid?)null);
     }
 
     /// <inheritdoc/>
     public async Task<List<Guid>> Children(Guid entityId)
     {
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the relationship query
-            await _auditService.LogEvent(
-                AuditEventTypes.RelationshipQueried,
-                entityId,
-                new { EntityId = entityId, Operation = "Children", QueryType = "GetChildren" });
+            await AuditRelationshipQuery("Children", "GetChildren", entityId);
             
             var relationship = await _pgClient.From<EntityRelationship>()
                 .Filter("owner_entity_id", "eq", entityId)
                 .SingleOrDefault();
             
             return relationship?.ChildrenIds?.ToList() ?? new List<Guid>();
-        }
-        catch (InvalidOperationException)
-        {
-            // No relationship found
-            return new List<Guid>();
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
-                new { Operation = "Children", EntityId = entityId });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to get children for entity {entityId}",
-                new { EntityId = entityId });
-            return new List<Guid>(); // This line will never be reached but satisfies the compiler
-        }
+        }, "Children", entityId, defaultValue: new List<Guid>());
     }
 
     /// <inheritdoc/>
     public async Task<bool> ChildOf(Guid childId, Guid parentId)
     {
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the relationship query
-            await _auditService.LogEvent(
-                AuditEventTypes.RelationshipQueried,
-                childId,
-                new { ChildId = childId, ParentId = parentId, Operation = "ChildOf", QueryType = "CheckParentChild" });
+            await AuditRelationshipQuery("ChildOf", "CheckParentChild", childId, new { ChildId = childId, ParentId = parentId });
             
             var childRelationship = await _pgClient.From<EntityRelationship>()
                 .Filter("owner_entity_id", "eq", childId)
                 .SingleOrDefault();
             
             return childRelationship?.ParentId == parentId;
-        }
-        catch (InvalidOperationException)
-        {
-            // No relationship found
-            return false;
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                childId,
-                ex,
-                new { Operation = "ChildOf", ChildId = childId, ParentId = parentId });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to check relationship between {childId} and {parentId}",
-                new { ChildId = childId, ParentId = parentId });
-            return false; // This line will never be reached but satisfies the compiler
-        }
+        }, "ChildOf", childId, new { ChildId = childId, ParentId = parentId }, defaultValue: false);
     }
 
     /// <inheritdoc/>
     public async Task LinkRelationship(Guid parentId, Guid childId, string? parentType = null, string? childType = null)
     {
-        try
+        await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the relationship creation attempt
             await _auditService.LogEvent(
                 AuditEventTypes.RelationshipCreated,
                 parentId,
@@ -717,7 +476,6 @@ public class DataContext : IDataContext
             
             if (parentRelationship == null)
             {
-                // Create new relationship for parent
                 parentRelationship = new EntityRelationship
                 {
                     Id = Guid.NewGuid(),
@@ -726,17 +484,14 @@ public class DataContext : IDataContext
                 };
             }
             
-            // Add child if not already present
             if (!parentRelationship.ChildrenIds.Contains(childId))
             {
-                // Convert array to list, add, and convert back
                 var childrenList = parentRelationship.ChildrenIds.ToList();
                 childrenList.Add(childId);
                 parentRelationship.ChildrenIds = childrenList.ToArray();
                 
                 if (childType != null)
                 {
-                    // Deserialize, update, and re-serialize the child types
                     var childTypesDict = JsonSerializer.Deserialize<Dictionary<Guid, string>>(parentRelationship.ChildTypes) ?? new Dictionary<Guid, string>();
                     childTypesDict[childId] = childType;
                     parentRelationship.ChildTypes = JsonSerializer.Serialize(childTypesDict);
@@ -752,7 +507,6 @@ public class DataContext : IDataContext
             
             if (childRelationship == null)
             {
-                // Create new relationship for child
                 childRelationship = new EntityRelationship
                 {
                     Id = Guid.NewGuid(),
@@ -766,41 +520,19 @@ public class DataContext : IDataContext
             }
             else if (childRelationship.ParentId != parentId)
             {
-                // Update existing relationship
                 childRelationship.ParentId = parentId;
                 childRelationship.ParentType = parentType;
                 
                 await Commit(childRelationship);
             }
-        }
-        catch (Exception ex)
-        {
-            // Audit the error
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                parentId,
-                ex,
-                new { 
-                    Operation = "LinkRelationship", 
-                    ParentId = parentId, 
-                    ChildId = childId,
-                    ParentType = parentType,
-                    ChildType = childType
-                });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to add relationship between parent {parentId} and child {childId}",
-                new { ParentId = parentId, ChildId = childId, ParentType = parentType, ChildType = childType });
-        }
+        }, "LinkRelationship", parentId, new { ParentId = parentId, ChildId = childId, ParentType = parentType, ChildType = childType });
     }
 
     /// <inheritdoc/>
     public async Task UnlinkRelationship(Guid parentId, Guid childId)
     {
-        try
+        await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the relationship removal attempt
             await _auditService.LogEvent(
                 AuditEventTypes.RelationshipRemoved,
                 parentId,
@@ -817,12 +549,10 @@ public class DataContext : IDataContext
             
             if (parentRelationship != null && parentRelationship.ChildrenIds.Contains(childId))
             {
-                // Convert array to list, remove, and convert back
                 var childrenList = parentRelationship.ChildrenIds.ToList();
                 childrenList.Remove(childId);
                 parentRelationship.ChildrenIds = childrenList.ToArray();
                 
-                // Deserialize, update, and re-serialize the child types
                 var childTypesDict = JsonSerializer.Deserialize<Dictionary<Guid, string>>(parentRelationship.ChildTypes) ?? new Dictionary<Guid, string>();
                 childTypesDict.Remove(childId);
                 parentRelationship.ChildTypes = JsonSerializer.Serialize(childTypesDict);
@@ -842,42 +572,19 @@ public class DataContext : IDataContext
                 
                 await Commit(childRelationship);
             }
-        }
-        catch (Exception ex)
-        {
-            // Audit the error
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                parentId,
-                ex,
-                new { 
-                    Operation = "UnlinkRelationship", 
-                    ParentId = parentId, 
-                    ChildId = childId
-                });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to remove relationship between parent {parentId} and child {childId}",
-                new { ParentId = parentId, ChildId = childId });
-        }
+        }, "UnlinkRelationship", parentId, new { ParentId = parentId, ChildId = childId });
     }
 
     /// <inheritdoc/>
     public async Task<List<Guid>> Ancestors(Guid entityId)
     {
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the hierarchy query
-            await _auditService.LogEvent(
-                AuditEventTypes.RelationshipQueried,
-                entityId,
-                new { EntityId = entityId, Operation = "Ancestors", QueryType = "GetAncestors" });
+            await AuditRelationshipQuery("Ancestors", "GetAncestors", entityId);
             
             var ancestors = new List<Guid>();
             var currentId = entityId;
             
-            // Traverse up the hierarchy
             while (true)
             {
                 var parentId = await Parent(currentId);
@@ -887,7 +594,6 @@ public class DataContext : IDataContext
                 ancestors.Add(parentId.Value);
                 currentId = parentId.Value;
                 
-                // Prevent infinite loops
                 if (ancestors.Count > 100)
                 {
                     await _auditService.LogEvent(
@@ -908,39 +614,20 @@ public class DataContext : IDataContext
             }
             
             return ancestors;
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
-                new { Operation = "Ancestors", EntityId = entityId });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to get ancestors for entity {entityId}",
-                new { EntityId = entityId });
-            return new List<Guid>(); // This line will never be reached but satisfies the compiler
-        }
+        }, "Ancestors", entityId, defaultValue: new List<Guid>());
     }
 
     /// <inheritdoc/>
     public async Task<List<Guid>> Descendants(Guid entityId)
     {
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            // Audit the hierarchy query
-            await _auditService.LogEvent(
-                AuditEventTypes.RelationshipQueried,
-                entityId,
-                new { EntityId = entityId, Operation = "Descendants", QueryType = "GetDescendants" });
+            await AuditRelationshipQuery("Descendants", "GetDescendants", entityId);
             
             var descendants = new List<Guid>();
             var toProcess = new Queue<Guid>();
             toProcess.Enqueue(entityId);
             
-            // Breadth-first traversal
             while (toProcess.Count > 0)
             {
                 var currentId = toProcess.Dequeue();
@@ -955,7 +642,6 @@ public class DataContext : IDataContext
                     }
                 }
                 
-                // Prevent infinite loops
                 if (descendants.Count > 1000)
                 {
                     await _auditService.LogEvent(
@@ -976,21 +662,7 @@ public class DataContext : IDataContext
             }
             
             return descendants;
-        }
-        catch (Exception ex)
-        {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
-                new { Operation = "Descendants", EntityId = entityId });
-                
-            ErrorHandlingPolicy.LogAndRethrow(
-                ex,
-                $"Failed to get descendants for entity {entityId}",
-                new { EntityId = entityId });
-            return new List<Guid>(); // This line will never be reached but satisfies the compiler
-        }
+        }, "Descendants", entityId, defaultValue: new List<Guid>());
     }
 
     /// <inheritdoc/>
@@ -998,13 +670,9 @@ public class DataContext : IDataContext
     {
         try
         {
-            // Add context metadata
-            @event.Metadata["EmittedFrom"] = "DataContext";
-            @event.Metadata["EmittedAt"] = DateTime.UtcNow.ToString("O");
-            
+            AddEventMetadata(@event);
             await _eventEmitter.Emit(@event);
             
-            // Audit the event emission
             await _auditService.LogEvent(
                 AuditEventTypes.EventEmitted,
                 Guid.Empty,
@@ -1032,17 +700,13 @@ public class DataContext : IDataContext
         try
         {
             var eventsList = events.ToList();
-            
-            // Add context metadata to each event
             foreach (var @event in eventsList)
             {
-                @event.Metadata["EmittedFrom"] = "DataContext";
-                @event.Metadata["EmittedAt"] = DateTime.UtcNow.ToString("O");
+                AddEventMetadata(@event);
             }
             
             await _eventEmitter.EmitBatch(eventsList);
             
-            // Audit the batch emission
             await _auditService.LogEvent(
                 AuditEventTypes.EventBatchEmitted,
                 Guid.Empty,
@@ -1063,11 +727,168 @@ public class DataContext : IDataContext
         }
     }
 
+    private async Task<TComponent?> GetExistingComponent<TComponent>(TComponent component)
+        where TComponent : class, IComponent, new()
+    {
+        if (component is not IVersionedComponent) return null;
+        
+        try
+        {
+            return await _pgClient.From<TComponent>()
+                .Filter("id", "eq", component.Id)
+                .Single();
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private void HandleVersioning<TComponent>(TComponent component, TComponent? existing)
+        where TComponent : class, IComponent, new()
+    {
+        if (component is not IVersionedComponent versionedComponent) return;
+
+        if (existing != null)
+        {
+            var existingVersion = existing is IVersionedComponent existingVersioned 
+                ? existingVersioned.Version ?? 0 
+                : 0;
+            versionedComponent.Version = existingVersion + 1;
+        }
+        else
+        {
+            versionedComponent.Version = 1;
+        }
+    }
+
+    private async Task ExecuteDatabaseOperation<TComponent>(TComponent component, bool isInsert)
+        where TComponent : class, IComponent, new()
+    {
+        if (component is IVersionedComponent)
+        {
+            await _pgClient.From<TComponent>().Upsert(component);
+        }
+        else if (isInsert)
+        {
+            try
+            {
+                await _pgClient.From<TComponent>().Insert(component);
+            }
+            catch
+            {
+                await _pgClient.From<TComponent>().Update(component);
+            }
+        }
+        else
+        {
+            await _pgClient.From<TComponent>().Update(component);
+        }
+    }
+
+    private async Task<T> ExecuteWithErrorHandling<T>(
+        Func<Task<T>> operation,
+        string operationName,
+        Guid entityId,
+        object? context = null,
+        T? defaultValue = default)
+    {
+        try
+        {
+            return await operation();
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogError(
+                AuditEventTypes.DatabaseError,
+                entityId,
+                ex,
+                new { Operation = operationName, Context = context });
+                
+            ErrorHandlingPolicy.LogAndRethrow(
+                ex,
+                $"Failed to execute {operationName} for entity {entityId}",
+                new { EntityId = entityId, Context = context });
+            return defaultValue!;
+        }
+    }
+
+    private async Task ExecuteWithErrorHandling(
+        Func<Task> operation,
+        string operationName,
+        Guid entityId,
+        object? context = null)
+    {
+        try
+        {
+            await operation();
+        }
+        catch (Exception ex)
+        {
+            await _auditService.LogError(
+                AuditEventTypes.DatabaseError,
+                entityId,
+                ex,
+                new { Operation = operationName, Context = context });
+                
+            ErrorHandlingPolicy.LogAndRethrow(
+                ex,
+                $"Failed to execute {operationName} for entity {entityId}",
+                new { EntityId = entityId, Context = context });
+        }
+    }
+
+    private async Task AuditRelationshipQuery(string operation, string queryType, Guid entityId, object? additionalData = null)
+    {
+        var auditData = new Dictionary<string, object>
+        {
+            { "EntityId", entityId },
+            { "Operation", operation },
+            { "QueryType", queryType }
+        };
+
+        if (additionalData != null)
+        {
+            foreach (var prop in additionalData.GetType().GetProperties())
+            {
+                auditData[prop.Name] = prop.GetValue(additionalData) ?? "";
+            }
+        }
+
+        await _auditService.LogEvent(AuditEventTypes.RelationshipQueried, entityId, auditData);
+    }
+
+    private async Task AuditComponentOperation<TComponent>(TComponent component, TComponent? existing, string operation)
+        where TComponent : class, IComponent
+    {
+        if (existing == null)
+        {
+            await _auditService.LogEvent(
+                AuditEventTypes.ForComponent(typeof(TComponent).Name, "CREATED"),
+                component.OwnerEntityId,
+                new { ComponentId = component.Id, ComponentType = typeof(TComponent).Name });
+        }
+        else
+        {
+            await _auditService.LogChange(
+                AuditEventTypes.ForComponent(typeof(TComponent).Name, "UPDATED"),
+                component.OwnerEntityId,
+                existing,
+                component,
+                new { ComponentId = component.Id, ComponentType = typeof(TComponent).Name });
+        }
+    }
+
+    private void AddEventMetadata<TEvent>(TEvent @event) where TEvent : Events.IEvent
+    {
+        @event.Metadata["EmittedFrom"] = "DataContext";
+        @event.Metadata["EmittedAt"] = DateTime.UtcNow.ToString("O");
+    }
+
     /// <inheritdoc/>
     public async Task EnsureEntityTableExists()
     {
-        // Implementation for ensuring Entity table exists
-        // This is a placeholder - the actual implementation may be needed
+        // TODO: Finish this...
         await Task.CompletedTask;
     }
 }

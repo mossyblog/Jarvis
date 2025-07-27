@@ -55,7 +55,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
         {
             // Validate the JWT token
             var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-            var principal = tokenService.ValidateToken(token);
+            var principal = tokenService.Validate(token);
             if (principal == null)
             {
                 return validationRequest with

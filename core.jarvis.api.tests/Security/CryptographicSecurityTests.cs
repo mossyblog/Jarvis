@@ -147,7 +147,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         // Act - Generate multiple tokens
         for (int i = 0; i < tokenCount; i++)
         {
-            var token = tokenService.GenerateRefreshToken();
+            var token = tokenService.RefreshToken();
             tokens.Add(token);
         }
 
@@ -256,7 +256,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
             accessTokenExpirationMinutes: 15
         );
 
-        var token = tokenService.GenerateAccessToken(Guid.NewGuid(), "test@test.com");
+        var token = tokenService.AccessToken(Guid.NewGuid(), "test@test.com");
         
         // Decode header to check algorithm
         var parts = token.Split('.');

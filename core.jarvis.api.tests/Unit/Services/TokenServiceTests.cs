@@ -22,14 +22,14 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void GenerateAccessToken_Should_Create_Valid_JWT_Token()
+    public void AccessToken_Should_Create_Valid_JWT_Token()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var email = "test@example.com";
 
         // Act
-        var token = _tokenService.GenerateAccessToken(userId, email);
+        var token = _tokenService.AccessToken(userId, email);
 
         // Assert
         token.ShouldNotBeNullOrEmpty();
@@ -37,7 +37,7 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void GenerateAccessToken_With_Additional_Claims_Should_Include_Claims()
+    public void AccessToken_With_Additional_Claims_Should_Include_Claims()
     {
         // Arrange
         var userId = Guid.NewGuid();
@@ -49,8 +49,8 @@ public class TokenServiceTests
         };
 
         // Act
-        var token = _tokenService.GenerateAccessToken(userId, email, additionalClaims);
-        var principal = _tokenService.ValidateToken(token);
+        var token = _tokenService.AccessToken(userId, email, additionalClaims);
+        var principal = _tokenService.Validate(token);
 
         // Assert
         principal.ShouldNotBeNull();
@@ -59,15 +59,15 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void ValidateToken_With_Valid_Token_Should_Return_Claims()
+    public void Validate_With_Valid_Token_Should_Return_Claims()
     {
         // Arrange
         var userId = Guid.NewGuid();
         var email = "test@example.com";
-        var token = _tokenService.GenerateAccessToken(userId, email);
+        var token = _tokenService.AccessToken(userId, email);
 
         // Act
-        var principal = _tokenService.ValidateToken(token);
+        var principal = _tokenService.Validate(token);
 
         // Assert
         principal.ShouldNotBeNull();
@@ -76,20 +76,20 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void ValidateToken_With_Invalid_Token_Should_Return_Null()
+    public void Validate_With_Invalid_Token_Should_Return_Null()
     {
         // Arrange
         var invalidToken = "invalid.token.here";
 
         // Act
-        var principal = _tokenService.ValidateToken(invalidToken);
+        var principal = _tokenService.Validate(invalidToken);
 
         // Assert
         principal.ShouldBeNull();
     }
 
     [Fact(Skip = "JWT library doesn't allow creating tokens with expiration in the past")]
-    public async Task ValidateToken_With_Expired_Token_Should_Return_Null()
+    public async Task Validate_With_Expired_Token_Should_Return_Null()
     {
         // This test is skipped because the JWT library validates that expiration
         // must be after the issue time when creating the token.
@@ -98,11 +98,11 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void GenerateRefreshToken_Should_Create_Unique_Tokens()
+    public void RefreshToken_Should_Create_Unique_Tokens()
     {
         // Arrange & Act
-        var token1 = _tokenService.GenerateRefreshToken();
-        var token2 = _tokenService.GenerateRefreshToken();
+        var token1 = _tokenService.RefreshToken();
+        var token2 = _tokenService.RefreshToken();
 
         // Assert
         token1.ShouldNotBeNullOrEmpty();
@@ -115,7 +115,7 @@ public class TokenServiceTests
     public void HashRefreshToken_Should_Create_Consistent_Hash()
     {
         // Arrange
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshToken = _tokenService.RefreshToken();
 
         // Act
         var hash1 = _tokenService.HashRefreshToken(refreshToken);
@@ -130,7 +130,7 @@ public class TokenServiceTests
     public void VerifyRefreshToken_With_Correct_Token_Should_Return_True()
     {
         // Arrange
-        var refreshToken = _tokenService.GenerateRefreshToken();
+        var refreshToken = _tokenService.RefreshToken();
         var hashedToken = _tokenService.HashRefreshToken(refreshToken);
 
         // Act
@@ -144,8 +144,8 @@ public class TokenServiceTests
     public void VerifyRefreshToken_With_Incorrect_Token_Should_Return_False()
     {
         // Arrange
-        var refreshToken1 = _tokenService.GenerateRefreshToken();
-        var refreshToken2 = _tokenService.GenerateRefreshToken();
+        var refreshToken1 = _tokenService.RefreshToken();
+        var refreshToken2 = _tokenService.RefreshToken();
         var hashedToken = _tokenService.HashRefreshToken(refreshToken1);
 
         // Act
@@ -156,32 +156,32 @@ public class TokenServiceTests
     }
 
     [Fact]
-    public void ValidateToken_With_Wrong_Issuer_Should_Return_Null()
+    public void Validate_With_Wrong_Issuer_Should_Return_Null()
     {
         // Arrange
         var wrongIssuerService = new TokenService("wrong-issuer", "test-audience", _testSecretKey, 15);
         var userId = Guid.NewGuid();
         var email = "test@example.com";
-        var token = wrongIssuerService.GenerateAccessToken(userId, email);
+        var token = wrongIssuerService.AccessToken(userId, email);
 
         // Act
-        var principal = _tokenService.ValidateToken(token);
+        var principal = _tokenService.Validate(token);
 
         // Assert
         principal.ShouldBeNull();
     }
 
     [Fact]
-    public void ValidateToken_With_Wrong_Audience_Should_Return_Null()
+    public void Validate_With_Wrong_Audience_Should_Return_Null()
     {
         // Arrange
         var wrongAudienceService = new TokenService("test-issuer", "wrong-audience", _testSecretKey, 15);
         var userId = Guid.NewGuid();
         var email = "test@example.com";
-        var token = wrongAudienceService.GenerateAccessToken(userId, email);
+        var token = wrongAudienceService.AccessToken(userId, email);
 
         // Act
-        var principal = _tokenService.ValidateToken(token);
+        var principal = _tokenService.Validate(token);
 
         // Assert
         principal.ShouldBeNull();

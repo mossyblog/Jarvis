@@ -35,7 +35,7 @@ public interface IDataContext
     /// Creates a new Entity with a generated ID.
     /// </summary>
     /// <returns>A new Entity instance with a unique ID.</returns>
-    Entity Entity();
+    Entity NewEntity();
 
     /// <summary>
     /// Attempts to save a component through the centralized DataContext with optimistic concurrency control.

@@ -175,8 +175,21 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
             }
             return null;
         }
-        catch
+        catch (EntityNotFoundException)
         {
+            // Expected when component doesn't exist
+            return null;
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Log and return null for query issues
+            Logger.LogWarning(ex, "Failed to query component {ComponentType} for entity {EntityId}", typeof(T).Name, OwnerEntityId);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            // Log unexpected exceptions but don't rethrow to maintain method contract
+            Logger.LogError(ex, "Unexpected error retrieving component {ComponentType} for entity {EntityId}", typeof(T).Name, OwnerEntityId);
             return null;
         }
     }

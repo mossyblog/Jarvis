@@ -91,7 +91,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
         
         // Verify token is valid
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-        var principal = tokenService.ValidateToken(authToken.AccessToken);
+        var principal = tokenService.Validate(authToken.AccessToken);
         principal.ShouldNotBeNull();
         
         // Note: Roles claim will only be present if SecurityProfile is found at authentication time

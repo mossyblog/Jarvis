@@ -26,7 +26,7 @@ public class TokenService : ITokenService
         _tokenHandler = new JwtSecurityTokenHandler();
     }
 
-    public string GenerateAccessToken(Guid userId, string email, Dictionary<string, string>? additionalClaims = null)
+    public string AccessToken(Guid userId, string email, Dictionary<string, string>? additionalClaims = null)
     {
         var key = Encoding.ASCII.GetBytes(_secretKey);
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -57,7 +57,7 @@ public class TokenService : ITokenService
         return _tokenHandler.WriteToken(token);
     }
 
-    public string GenerateRefreshToken()
+    public string RefreshToken()
     {
         var randomNumber = new byte[32];
         using var rng = RandomNumberGenerator.Create();
@@ -65,7 +65,7 @@ public class TokenService : ITokenService
         return Convert.ToBase64String(randomNumber);
     }
 
-    public ClaimsPrincipal? ValidateToken(string token)
+    public ClaimsPrincipal? Validate(string token)
     {
         if (string.IsNullOrWhiteSpace(token))
         {

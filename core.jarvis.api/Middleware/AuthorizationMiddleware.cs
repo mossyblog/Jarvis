@@ -84,7 +84,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             var configuration = context.InstanceServices.GetRequiredService<IConfiguration>();
             var tokenService = context.InstanceServices.GetRequiredService<ITokenService>();
             
-            var principal = tokenService.ValidateToken(token);
+            var principal = tokenService.Validate(token);
             if (principal == null)
             {
                 _logger.LogWarning("Invalid token provided for path: {Path}", path);

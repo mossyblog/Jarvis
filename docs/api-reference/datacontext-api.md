@@ -124,6 +124,47 @@ var activeUserSessions = await dataContext.Query()
     .ToEntityComponents();
 ```
 
+## Factory Methods
+
+### Entity\<TComponent\>(TComponent component)
+
+Creates a new entity with a unique ID and associates the component with it.
+
+```csharp
+public TComponent Entity<TComponent>(TComponent component) 
+    where TComponent : class, IComponent
+```
+
+**Features:**
+- Generates a new unique entity ID (Guid)
+- Sets the component's OwnerEntityId
+- Returns the modified component
+- Useful for creating new entities without manually managing IDs
+
+**Usage Examples:**
+
+```csharp
+// Create a new order entity
+var order = dataContext.Entity(new OrderComponent
+{
+    OrderNumber = "ORD-001",
+    CustomerId = customerId,
+    Status = "PENDING",
+    TotalAmountCents = 9999,
+    LastUpdated = DateTime.UtcNow
+});
+// order.OwnerEntityId is now set to a new Guid
+
+// Create multiple related components for the same entity
+var entityId = Guid.NewGuid();
+var account = new Account { OwnerEntityId = entityId, Email = "user@example.com" };
+var profile = new UserProfile { OwnerEntityId = entityId, DisplayName = "John Doe" };
+
+// Or use Entity method for automatic ID
+var account = dataContext.Entity(new Account { Email = "user@example.com" });
+var profile = new UserProfile { OwnerEntityId = account.OwnerEntityId, DisplayName = "John Doe" };
+```
+
 ## Component Persistence Methods
 
 ### Commit\<TComponent\>(TComponent component)
@@ -155,7 +196,7 @@ await dataContext.Commit(order);
 
 // Update existing component
 order.Status = "CONFIRMED";
-order.UpdatedAt = DateTime.UtcNow;
+order.LastUpdated = DateTime.UtcNow;
 await dataContext.Commit(order);
 ```
 
@@ -506,7 +547,7 @@ public async Task<bool> UpdateOrderStatus(Guid orderId, string newStatus, int ma
         var order = await handler.Get();
         
         order.Status = newStatus;
-        order.UpdatedAt = DateTime.UtcNow;
+        order.LastUpdated = DateTime.UtcNow;
         
         if (await _dataContext.TryCommit(order))
         {

@@ -168,7 +168,7 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         
         // Verify roles are in token
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-        var principal = tokenService.ValidateToken(authToken.AccessToken);
+        var principal = tokenService.Validate(authToken.AccessToken);
         principal.ShouldNotBeNull();
         principal.Claims.ShouldContain(c => c.Type == "roles" && c.Value.Contains("admin"));
     }

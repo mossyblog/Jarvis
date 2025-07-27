@@ -20,7 +20,7 @@ public interface IComponent
     
     /// <summary>
     /// Timestamp of last update.
-    /// Maps to updated_at in database.
+    /// Maps to last_updated in database.
     /// </summary>
     public DateTime LastUpdated { get; set; }
 }

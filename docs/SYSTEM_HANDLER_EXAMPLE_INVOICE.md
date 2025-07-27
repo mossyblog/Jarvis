@@ -110,7 +110,7 @@ public class InvoiceHandler : ComponentHandler<Invoice>
         var invoice = updatedInvoice with 
         { 
             OwnerEntityId = OwnerEntityId,
-            UpdatedAt = DateTime.UtcNow 
+            LastUpdated = DateTime.UtcNow 
         };
         await DataContext.Commit(invoice);
         return invoice;
@@ -252,7 +252,7 @@ public class InvoiceSystem
                 UnitPrice = itemRequest.UnitPrice,
                 LineTotal = lineTotal,
                 CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             lineItems.Add(lineItem);
         }
@@ -277,7 +277,7 @@ public class InvoiceSystem
             Status = InvoiceStatus.Draft,
             DueDate = DateTime.UtcNow.AddDays(request.DueDateDays),
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         });
         components.Add(invoice);
 
@@ -321,7 +321,7 @@ public class InvoiceSystem
         {
             Status = InvoiceStatus.Sent,
             SentDate = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         var updated = await invoiceHandler.UpdateInvoice(sentInvoice);
@@ -378,7 +378,7 @@ public class InvoiceSystem
             ReferenceNumber = request.ReferenceNumber ?? string.Empty,
             PaymentDate = DateTime.UtcNow,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         });
         components.Add(payment);
 
@@ -393,7 +393,7 @@ public class InvoiceSystem
             BalanceDue = newBalance,
             Status = newStatus,
             PaidDate = newStatus == InvoiceStatus.Paid ? DateTime.UtcNow : null,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         var savedInvoice = await invoiceHandler.UpdateInvoice(updatedInvoice);
@@ -455,7 +455,7 @@ public class InvoiceSystem
             var updated = invoice with
             {
                 Status = InvoiceStatus.Overdue,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             
             var savedInvoice = await handler.UpdateInvoice(updated);

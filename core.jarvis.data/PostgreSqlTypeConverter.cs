@@ -45,11 +45,19 @@ public static class PostgreSqlTypeConverter
             return DeserializeJsonValue(jsonString, targetType);
         }
 
+        // Handle enum types with robust conversion
+        var underlyingType = Nullable.GetUnderlyingType(targetType);
+        var enumType = underlyingType?.IsEnum == true ? underlyingType : (targetType.IsEnum ? targetType : null);
+        
+        if (enumType != null)
+        {
+            return ConvertEnumValue(value, targetType, enumType);
+        }
+
         // Standard type conversion for primitive and simple types
         try
         {
             // Handle nullable types properly
-            var underlyingType = Nullable.GetUnderlyingType(targetType);
             if (underlyingType != null)
             {
                 // For nullable types, convert to the underlying type
@@ -67,6 +75,59 @@ public static class PostgreSqlTypeConverter
         {
             // Return default value if format is invalid (e.g., GUID parsing)
             return GetDefaultValue(targetType);
+        }
+    }
+
+    /// <summary>
+    /// Converts database values to enum types with robust handling.
+    /// Prevents data corruption by preserving actual stored enum values.
+    /// </summary>
+    private static object? ConvertEnumValue(object? value, Type targetType, Type enumType)
+    {
+        if (value == null)
+        {
+            return targetType.IsValueType && Nullable.GetUnderlyingType(targetType) == null 
+                ? Enum.ToObject(enumType, 0) 
+                : null;
+        }
+        
+        try
+        {
+            // Handle integer values (most common case)
+            if (value is int intValue)
+            {
+                return Enum.ToObject(enumType, intValue);
+            }
+            
+            // Handle other numeric types
+            if (value is long || value is short || value is byte || value is decimal)
+            {
+                var intVal = Convert.ToInt32(value);
+                return Enum.ToObject(enumType, intVal);
+            }
+            
+            // Handle string values
+            if (value is string stringValue)
+            {
+                // Try parsing as enum name first
+                if (Enum.TryParse(enumType, stringValue, true, out var enumValue))
+                    return enumValue;
+                
+                // Try parsing as integer
+                if (int.TryParse(stringValue, out var intVal))
+                    return Enum.ToObject(enumType, intVal);
+            }
+            
+            // Last resort: try direct conversion
+            return Enum.ToObject(enumType, Convert.ToInt32(value));
+        }
+        catch (Exception ex)
+        {
+            // For enums, we should not silently return default values as this causes data corruption
+            // Instead, throw with detailed information to help debug the issue
+            throw new InvalidCastException(
+                $"Cannot convert value '{value}' (type: {value?.GetType().Name}) to enum {enumType.Name}. " +
+                $"Target type: {targetType.Name}. Error: {ex.Message}", ex);
         }
     }
 

@@ -27,11 +27,14 @@ The `DataContext` acts as the orchestration layer that:
 #### Handler Resolution
 
 ```csharp
+// Create a new entity with unique ID (new method)
+var entity = dataContext.Entity();
+
 // Resolve a handler by interface type
-var invoiceHandler = dataContext.For<IInvoiceHandler>(entityId);
+var invoiceHandler = dataContext.For<IInvoiceHandler>(entity.Id);
 
 // Resolve by component type (less common)
-var handler = dataContext.For(typeof(InvoiceComponent), entityId);
+var handler = dataContext.For(typeof(InvoiceComponent), entity.Id);
 ```
 
 Handlers are:
@@ -53,10 +56,12 @@ await dataContext.Remove<InvoiceComponent>(entityId);
 ```
 
 Persistence features:
-- Automatic versioning for `IVersionedComponent`
-- Optimistic concurrency control
-- Audit trail creation
-- Snapshot capture for versioned components
+- **Optional versioning** for `IVersionedComponent` interface
+- Optimistic concurrency control (version-based for versioned components, timestamp-based otherwise)  
+- Automatic audit trail creation with pre-change state capture
+- Enhanced snapshot system for versioned components
+- Automatic table creation and schema validation via `ITableManager`
+- Different handling strategies for versioned vs non-versioned components
 
 #### Entity Querying
 
@@ -124,7 +129,7 @@ The DataContext implements two types of concurrency control:
    - Rejects updates if version doesn't match
    
 2. **Timestamp-based** (fallback):
-   - Uses `UpdatedAt` field
+   - Uses `LastUpdated` field
    - Allows 10ms tolerance for clock drift
 
 #### Audit Trail
@@ -233,6 +238,7 @@ foreach (var snapshot in history)
 
 Interface defining the contract for DataContext. Main operations:
 
+- `Entity()`: Create new entity with unique ID
 - `For<THandler>(Guid entityId)`: Resolve handler for entity
 - `Query()`: Create entity query builder
 - `Commit<T>(T component)`: Save component changes

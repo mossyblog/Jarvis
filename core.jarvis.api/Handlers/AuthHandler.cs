@@ -45,19 +45,18 @@ public class AuthHandler : ComponentHandler<Account>
     public async Task<AuthToken> Authenticate(Account accountCredentials)
     {
         // Wrap authentication in constant-time execution to prevent timing attacks
-        // For test environment, use very minimal timing to pass tests while maintaining concept
+        // Stronger timing attack protection
         var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
-        var minimumTime = isTestEnvironment ? 5 : 100; // Very low for tests, higher for production
+        var minimumTime = isTestEnvironment ? 10 : 500; // Increased minimum time for production
         
         var result = await _constantTimeService.ExecuteWithMinimumTime(async () => 
             await AuthenticateInternal(accountCredentials), 
             minimumMilliseconds: minimumTime);
         
-        // Skip random delay in test environment to reduce variance
-        if (!isTestEnvironment)
-        {
-            await _constantTimeService.AddRandomDelay(10, 50);
-        }
+        // Add random delay even in test environment for better security
+        var minDelay = isTestEnvironment ? 5 : 50;
+        var maxDelay = isTestEnvironment ? 15 : 200;
+        await _constantTimeService.AddRandomDelay(minDelay, maxDelay);
         
         return result;
     }
@@ -145,8 +144,8 @@ public class AuthHandler : ComponentHandler<Account>
             var authenticatedEntityId = account.OwnerEntityId;
 
             // Generate tokens
-            var accessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email);
-            var refreshToken = tokenService.GenerateRefreshToken();
+            var accessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email);
+            var refreshToken = tokenService.RefreshToken();
             var sessionId = Guid.NewGuid();
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
 
@@ -156,7 +155,7 @@ public class AuthHandler : ComponentHandler<Account>
                 ["sessionId"] = sessionId.ToString()
             };
 
-            var finalAccessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
+            var finalAccessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
 
             // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
             var authToken = new AuthToken
@@ -272,8 +271,8 @@ public class AuthHandler : ComponentHandler<Account>
             if (!domainPart.Contains('.'))
                 return false;
 
-            // Check for valid characters
-            var validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_@+";
+            // Check for valid characters (removed dangerous + character)
+            var validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_@";
             foreach (char c in email)
             {
                 if (!validChars.Contains(c))
@@ -363,8 +362,8 @@ public class AuthHandler : ComponentHandler<Account>
             }
             
             // Generate new tokens
-            var newAccessToken = tokenService.GenerateAccessToken(account.Id, account.Email);
-            var newRefreshToken = tokenService.GenerateRefreshToken();
+            var newAccessToken = tokenService.AccessToken(account.Id, account.Email);
+            var newRefreshToken = tokenService.RefreshToken();
             
             // Revoke the old token
             var revokedToken = existingToken with 
@@ -419,12 +418,23 @@ public class AuthHandler : ComponentHandler<Account>
             return IsValidEmail(input);
         }
 
-        // For passwords, allow most characters but check for obvious injection patterns
-        // Only check for the most dangerous patterns that would never be in a legitimate password
+        // Comprehensive injection pattern detection
+        // Check for SQL injection, NoSQL injection, command injection, and script injection patterns
         var dangerousPatterns = new[] { 
-            "' OR '", "'; DROP", "'; DELETE", "'; UPDATE", "'; INSERT",
-            "--", "/*", "*/", " UNION ", " SELECT ", 
-            "`", "$(", "${", "&&", "||", "\n", "\r"
+            // SQL injection patterns
+            "' OR '", "'; DROP", "'; DELETE", "'; UPDATE", "'; INSERT", "'; CREATE", "'; ALTER",
+            "\' OR ", "\';DROP", "\';DELETE", "\';UPDATE", "\';INSERT", "\';CREATE", "\';ALTER",
+            "--", "/*", "*/", " UNION ", " SELECT ", " FROM ", " WHERE ", " INTO ",
+            "EXEC(", "EXECUTE(", "SP_", "XP_", "0x", "CHAR(", "ASCII(",
+            // NoSQL injection patterns
+            "$where", "$ne", "$in", "$nin", "$gt", "$lt", "$regex", "$or", "$and",
+            // Command injection patterns
+            "`", "$(", "${", "&&", "||", ";", "|", "<", ">", "&",
+            // Script injection patterns
+            "<script", "</script", "javascript:", "vbscript:", "onload=", "onerror=",
+            "eval(", "setTimeout(", "setInterval(", "Function(",
+            // Control characters
+            "\n", "\r", "\t", "\0", "\x00"
         };
         
         foreach (var pattern in dangerousPatterns)

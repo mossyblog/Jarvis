@@ -330,7 +330,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         
         // Verify the JWT token is valid
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-        var claims = tokenService.ValidateToken(authToken.AccessToken);
+        var claims = tokenService.Validate(authToken.AccessToken);
         claims.ShouldNotBeNull();
     }
 

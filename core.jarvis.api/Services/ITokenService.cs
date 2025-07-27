@@ -8,26 +8,26 @@ namespace core.jarvis.api.Services;
 public interface ITokenService
 {
     /// <summary>
-    /// Generates a JWT access token.
+    /// Creates a JWT access token.
     /// </summary>
     /// <param name="userId">User ID to include in token.</param>
     /// <param name="email">User email to include in token.</param>
     /// <param name="claims">Additional claims to include.</param>
     /// <returns>JWT token string.</returns>
-    string GenerateAccessToken(Guid userId, string email, Dictionary<string, string>? claims = null);
+    string AccessToken(Guid userId, string email, Dictionary<string, string>? claims = null);
 
     /// <summary>
-    /// Generates a refresh token.
+    /// Creates a refresh token.
     /// </summary>
     /// <returns>Refresh token string.</returns>
-    string GenerateRefreshToken();
+    string RefreshToken();
 
     /// <summary>
     /// Validates and extracts claims from a JWT token.
     /// </summary>
     /// <param name="token">The JWT token to validate.</param>
     /// <returns>Claims principal if valid, null otherwise.</returns>
-    ClaimsPrincipal? ValidateToken(string token);
+    ClaimsPrincipal? Validate(string token);
 
     /// <summary>
     /// Hashes a refresh token for secure storage.

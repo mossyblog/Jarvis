@@ -110,8 +110,8 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             }
 
             // Generate new tokens
-            var newAccessToken = tokenService.GenerateAccessToken(matchingToken.OwnerEntityId, string.Empty);
-            var newRefreshToken = tokenService.GenerateRefreshToken();
+            var newAccessToken = tokenService.AccessToken(matchingToken.OwnerEntityId, string.Empty);
+            var newRefreshToken = tokenService.RefreshToken();
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
             var configuration = _serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
             var refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
@@ -174,7 +174,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
         try
         {
             var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-            var principal = tokenService.ValidateToken(authToken.AccessToken);
+            var principal = tokenService.Validate(authToken.AccessToken);
             
             if (principal == null)
             {

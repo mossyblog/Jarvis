@@ -5,10 +5,11 @@ This guide explains how to implement and use the snapshot versioning system in J
 ## Overview
 
 Snapshot versioning automatically captures the state of components when they are modified, providing:
-- **Audit Trail**: Complete history of all changes to your data
-- **Data Recovery**: Ability to restore previous states
-- **Fire-and-Forget**: Zero performance impact on business operations (snapshots are captured asynchronously)
+- **Enhanced Audit Trail**: Complete history with pre-change state capture
+- **Data Recovery**: Ability to restore previous states  
+- **Synchronous Capture**: Snapshots captured synchronously for data consistency
 - **Automatic Versioning**: Version numbers are managed automatically
+- **Optional Versioning**: Only components implementing `IVersionedComponent` are versioned
 - **Compliance**: Built-in data lineage for regulatory requirements
 
 ## Quick Start
@@ -200,9 +201,9 @@ The `snapshots` column contains an array of all versions:
 - New versions are appended to the existing array
 - The `data` object excludes BaseModel properties to avoid serialization issues
 
-### Synchronous Snapshot Capture
+### Enhanced Snapshot Capture with Pre-Change State
 
-Snapshots are captured **synchronously** as part of the commit operation:
+Snapshots are captured **synchronously** as part of the commit operation, with improved pre-change state capture:
 
 ```csharp
 // In DataContext.TryCommit - actual implementation

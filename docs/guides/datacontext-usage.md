@@ -40,8 +40,32 @@ if (invoice != null)
 
 ### Creating New Entities
 
+#### Method 1: Using Entity() Helper (Recommended)
+
 ```csharp
 public async Task<Guid> CreateOrder(decimal amount, string customerName)
+{
+    // Entity() automatically generates a new ID
+    var order = _dataContext.Entity(new OrderComponent
+    {
+        Amount = amount,
+        CustomerName = customerName,
+        Status = "PENDING",
+        CreatedAt = DateTime.UtcNow,
+        LastUpdated = DateTime.UtcNow
+    });
+    
+    // Save to database
+    await _dataContext.Commit(order);
+    
+    return order.OwnerEntityId;
+}
+```
+
+#### Method 2: Manual ID Assignment
+
+```csharp
+public async Task<Guid> CreateOrderManual(decimal amount, string customerName)
 {
     var orderId = Guid.NewGuid();
     
@@ -54,7 +78,7 @@ public async Task<Guid> CreateOrder(decimal amount, string customerName)
         CustomerName = customerName,
         Status = "New",
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        LastUpdated = DateTime.UtcNow
     };
     
     // Save through handler
@@ -114,7 +138,7 @@ public async Task<bool> UpdateInvoiceAmount(Guid invoiceId, decimal newAmount)
     var invoice = await handler.Require();
     
     invoice.Amount = newAmount;
-    invoice.UpdatedAt = DateTime.UtcNow;
+    invoice.LastUpdated = DateTime.UtcNow;
     
     // Use TryCommit for user-initiated updates
     if (!await _dataContext.TryCommit(invoice))

@@ -432,7 +432,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
         { 
             Status = "Completed",
             CompletedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(completed);
@@ -465,7 +465,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
             AssignedTo = technicianId.ToString(),
             ScheduledDate = scheduledDate,
             Status = "Assigned",
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(assigned);

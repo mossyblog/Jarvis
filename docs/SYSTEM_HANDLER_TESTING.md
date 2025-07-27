@@ -96,7 +96,7 @@ public async Task RegisterUser_WithExistingEmail_ThrowsBusinessRuleException()
         AuthMethod = "password",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        LastUpdated = DateTime.UtcNow
     };
     await TestDataContext().Commit(existingAccount);
     TrackEntity(existingAccount.OwnerEntityId);
@@ -180,7 +180,7 @@ public class AccountHandlerTests : IntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         // Act
@@ -217,7 +217,7 @@ public async Task AccountHandler_Deactivate_UpdatesIsActiveFlag()
         AuthMethod = "password",
         IsActive = true,
         CreatedAt = DateTime.UtcNow,
-        UpdatedAt = DateTime.UtcNow
+        LastUpdated = DateTime.UtcNow
     });
     
     // Act
@@ -225,7 +225,7 @@ public async Task AccountHandler_Deactivate_UpdatesIsActiveFlag()
     
     // Assert
     deactivated.IsActive.ShouldBeFalse();
-    deactivated.UpdatedAt.ShouldBeGreaterThan(account.UpdatedAt);
+    deactivated.LastUpdated.ShouldBeGreaterThan(account.LastUpdated);
     deactivated.Email.ShouldBe(account.Email); // Other fields unchanged
 }
 ```
@@ -439,7 +439,7 @@ public class TestDataBuilder
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
     }
     
@@ -454,7 +454,7 @@ public class TestDataBuilder
             Status = InvoiceStatus.Draft,
             DueDate = DateTime.UtcNow.AddDays(30),
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
     }
 }
@@ -481,7 +481,7 @@ public static class ComponentAssertions
         account.PasswordHash.ShouldNotBeEmpty();
         account.Password.ShouldBeEmpty();
         account.CreatedAt.ShouldBeLessThanOrEqualTo(DateTime.UtcNow);
-        account.UpdatedAt.ShouldBeLessThanOrEqualTo(DateTime.UtcNow);
+        account.LastUpdated.ShouldBeLessThanOrEqualTo(DateTime.UtcNow);
     }
     
     public static void ShouldContainComponent<T>(this List<IComponent> components) 
