@@ -1,5 +1,28 @@
 # Changelog
 
+## 2.1.2
+
+### Fixed
+- **Registration System Transaction Handling**: Fixed PostgreSQL transaction abort errors
+  - Added defensive try-catch around `SecurityAuditService.LogSuccessfulAuthentication`
+  - Modified `AccountProfileHandler.CreateWithDefaults` to accept optional fullName parameter
+  - Eliminated separate profile update operations within registration transaction
+  - Prevents "current transaction is aborted" errors during user registration
+- **Audit Service Reliability**: Enhanced audit logging robustness
+  - Added retry logic with exponential backoff for `LogChange` method
+  - Improved error handling in test environments while maintaining production behavior
+  - Fixed special character handling in audit metadata with proper JSON escaping
+
+### Enhanced
+- **Snapshot System**: Strengthened snapshot creation and audit functionality
+  - Enhanced `DataContext.cs` snapshot logic with comprehensive logging
+  - Improved error handling - failures are audited instead of throwing
+  - Added retry logic when retrieving existing snapshots for updates
+- **Connection Pooling**: Improved connection handling in stress scenarios
+  - Added exponential backoff retry logic for transient failures
+  - Better verification of component existence before operations
+  - Enhanced error recovery mechanisms
+
 ## 2.1.1
 
 ### Fixed
