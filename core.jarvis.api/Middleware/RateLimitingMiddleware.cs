@@ -20,12 +20,48 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
     private static readonly ConcurrentDictionary<string, RateLimitInfo> _rateLimitStore = new();
     private static readonly ConcurrentDictionary<string, AccountLockInfo> _accountLockStore = new();
     
-    // Configuration
+    // Rate Limiting Configuration
+    /// <summary>
+    /// Maximum number of authentication attempts allowed per minute per IP address.
+    /// This helps prevent high-frequency brute force attacks.
+    /// </summary>
     private const int MaxAttemptsPerMinute = 5;
+    
+    /// <summary>
+    /// Maximum number of authentication attempts allowed per hour per IP address.
+    /// This provides protection against sustained brute force attacks.
+    /// </summary>
     private const int MaxAttemptsPerHour = 20;
+    
+    /// <summary>
+    /// Number of consecutive failed authentication attempts that trigger account lockout.
+    /// Balance between security and user experience.
+    /// </summary>
     private const int MaxFailedAttemptsBeforeLock = 5;
+    
+    /// <summary>
+    /// Duration in minutes for which an account remains locked after exceeding failed attempts.
+    /// Industry standard for temporary lockout duration.
+    /// </summary>
     private const int LockoutMinutes = 30;
-    private const int ProgressiveDelayMilliseconds = 1000; // Add 1 second per failed attempt
+    
+    /// <summary>
+    /// Base delay in milliseconds added per failed attempt to prevent timing attacks.
+    /// Progressive delay helps slow down automated attacks.
+    /// </summary>
+    private const int ProgressiveDelayMilliseconds = 1000;
+    
+    /// <summary>
+    /// Maximum progressive delay in milliseconds to prevent indefinite delays.
+    /// Caps the maximum delay for failed authentication attempts.
+    /// </summary>
+    private const int MaxProgressiveDelayMilliseconds = 10000;
+    
+    /// <summary>
+    /// HTTP Retry-After header value in seconds for rate-limited responses.
+    /// Standard value indicating client should wait before retrying.
+    /// </summary>
+    private const string RetryAfterSeconds = "60";
 
     public RateLimitingMiddleware(ILogger<RateLimitingMiddleware> logger)
     {
@@ -80,7 +116,7 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
                             if (lockInfo != null)
                             {
                                 var delay = lockInfo.FailedAttempts * ProgressiveDelayMilliseconds;
-                                await Task.Delay(Math.Min(delay, 10000)); // Max 10 second delay
+                                await Task.Delay(Math.Min(delay, MaxProgressiveDelayMilliseconds));
                             }
                             
                             await CreateRateLimitResponse(context, "Account temporarily locked due to multiple failed attempts.");
@@ -259,7 +295,7 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
         {
             response.StatusCode = HttpStatusCode.TooManyRequests;
             response.Headers.Add("Content-Type", "application/json");
-            response.Headers.Add("Retry-After", "60"); // Tell client to retry after 60 seconds
+            response.Headers.Add("Retry-After", RetryAfterSeconds);
             await response.WriteStringAsync(JsonConvert.SerializeObject(error));
         }
     }

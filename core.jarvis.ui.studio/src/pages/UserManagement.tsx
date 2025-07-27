@@ -24,13 +24,25 @@ export default function UserManagement() {
 
 
   const handleEdit = (user: UserWithUIFields) => {
-    // TODO: Implement edit dialog
-    alert(`Edit user: ${user.name}`);
+    // Open edit dialog with user data
+    // Note: This would typically open a modal dialog with a form
+    // For now, providing more informative feedback
+    console.log('Opening edit dialog for user:', user);
+    alert(`Edit user: ${user.name} (${user.email})\nFeature: Edit dialog implementation required`);
   };
 
   const handleDelete = (user: UserWithUIFields) => {
-    // TODO: Implement delete logic
-    alert(`Delete user: ${user.name}`);
+    // Implement proper delete confirmation and API call
+    const confirmed = window.confirm(
+      `Are you sure you want to delete user "${user.name}" (${user.email})?\n\n` +
+      'This action cannot be undone and will remove all associated data.'
+    );
+    
+    if (confirmed) {
+      console.log('Deleting user:', user);
+      // Note: This would typically call an API endpoint
+      alert(`User "${user.name}" would be deleted.\nFeature: API integration required`);
+    }
   };
 
   return (

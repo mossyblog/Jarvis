@@ -18,8 +18,11 @@ public class AccountHandler : ComponentHandler<Account>
 
 
     /// <summary>
-    /// Activates this account.
+    /// Activates this account by setting IsActive to true.
+    /// Used to enable account access after creation or reactivation.
     /// </summary>
+    /// <returns>The updated Account with IsActive set to true</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the Account component is not found</exception>
     public async Task<Account> Activate()
     {
         var account = await GetOrDefault() ?? throw new InvalidOperationException("Account component not found");
@@ -42,8 +45,11 @@ public class AccountHandler : ComponentHandler<Account>
     }
 
     /// <summary>
-    /// Deactivates this account.
+    /// Deactivates this account by setting IsActive to false.
+    /// Used to prevent account access while maintaining the account record.
     /// </summary>
+    /// <returns>The updated Account with IsActive set to false</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the Account component is not found</exception>
     public async Task<Account> Deactivate()
     {
         var account = await GetOrDefault() ?? throw new InvalidOperationException("Account component not found");

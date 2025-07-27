@@ -25,7 +25,18 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
     /// <summary>
     /// Deauthenticates (revokes) the AuthToken bound to this handler.
+    /// Finds and revokes all tokens associated with the same SessionId to ensure complete logout.
     /// </summary>
+    /// <returns>
+    /// The deauthenticated AuthToken with cleared access and refresh tokens and IsRevoked set to true.
+    /// Returns an empty AuthToken if no token is found for this handler.
+    /// </returns>
+    /// <remarks>
+    /// This method performs a complete logout by:
+    /// - Finding all tokens with the same SessionId
+    /// - Marking them as revoked with a timestamp
+    /// - Clearing sensitive token data from the returned object
+    /// </remarks>
     public async Task<AuthToken> Deauthenticate()
     {
         var authToken = await GetOrDefault();
@@ -43,10 +54,18 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
         // Find and revoke the token by SessionId
         var tokenEntities = await DataContext.Query()
-            .WithAll<AuthToken>(t => t.SessionId == authToken.SessionId && !t.IsRevoked)
+            .WithAll<AuthToken>()
             .ToEntityComponents();
+            
+        // Filter in memory to avoid SQL translation issues
+        var activeTokens = tokenEntities
+            .Where(kvp => 
+            {
+                var token = kvp.Value.Get<AuthToken>();
+                return token != null && token.SessionId == authToken.SessionId && !token.IsRevoked;
+            });
 
-        foreach (var kvp in tokenEntities)
+        foreach (var kvp in activeTokens)
         {
             var token = kvp.Value.Get<AuthToken>();
             if (token != null)
@@ -72,8 +91,21 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
     }
 
     /// <summary>
-    /// Refreshes the authentication token.
+    /// Refreshes the authentication token using token rotation for enhanced security.
+    /// Validates the current refresh token, revokes it, and generates new access and refresh tokens.
     /// </summary>
+    /// <returns>
+    /// A new AuthToken with fresh access and refresh tokens if the current refresh token is valid.
+    /// Returns an empty AuthToken if the refresh token is invalid, expired, or not found.
+    /// </returns>
+    /// <remarks>
+    /// This method implements token rotation by:
+    /// - Verifying the current refresh token against stored hashes
+    /// - Revoking the old token to prevent reuse
+    /// - Generating new access and refresh tokens
+    /// - Creating a new session ID for the rotated token
+    /// - Updating expiration times based on configuration
+    /// </remarks>
     public async Task<AuthToken> RefreshToken()
     {
         var authToken = await GetOrDefault();
@@ -89,11 +121,19 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
             // Find active token by refresh token
             var tokenEntities = await DataContext.Query()
-                .WithAll<AuthToken>(t => !t.IsRevoked && t.RefreshExpiresAt > DateTime.UtcNow)
+                .WithAll<AuthToken>()
                 .ToEntityComponents();
+                
+            // Filter in memory for active tokens
+            var activeTokens = tokenEntities
+                .Where(kvp => 
+                {
+                    var token = kvp.Value.Get<AuthToken>();
+                    return token != null && !token.IsRevoked && token.RefreshExpiresAt > DateTime.UtcNow;
+                });
 
             AuthToken? matchingToken = null;
-            foreach (var kvp in tokenEntities)
+            foreach (var kvp in activeTokens)
             {
                 var token = kvp.Value.Get<AuthToken>();
                 if (token != null && tokenService.VerifyRefreshToken(authToken.RefreshToken, token.RefreshTokenHash))
@@ -156,8 +196,20 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
     }
 
     /// <summary>
-    /// Validates the authentication token.
+    /// Validates the authentication token bound to this handler.
+    /// Performs JWT validation and extracts claims information.
     /// </summary>
+    /// <returns>
+    /// A TokenValidation object containing validation results, expiration time, and claims if valid.
+    /// Returns validation failure information if the token is invalid or expired.
+    /// </returns>
+    /// <remarks>
+    /// This method validates:
+    /// - Token presence and format
+    /// - JWT signature and structure
+    /// - Token expiration
+    /// - Claims extraction for valid tokens
+    /// </remarks>
     public async Task<TokenValidation> ValidateToken()
     {
         var authToken = await GetOrDefault();
@@ -210,14 +262,29 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
     /// Cleans up expired tokens for the current user.
     /// Called automatically during authentication to prevent token accumulation.
     /// </summary>
+    /// <returns>The number of expired tokens that were cleaned up and removed from the database</returns>
+    /// <remarks>
+    /// This method removes tokens that are either:
+    /// - Past their refresh expiration date
+    /// - Already marked as revoked
+    /// This helps maintain database hygiene and prevents accumulation of stale authentication data.
+    /// </remarks>
     public async Task<int> CleanupExpiredTokens()
     {
         try
         {
-            var expiredTokens = await DataContext.Query()
-                .WithAll<AuthToken>(t => t.OwnerEntityId == OwnerEntityId && 
-                    (t.RefreshExpiresAt < DateTime.UtcNow || t.IsRevoked))
+            var allTokens = await DataContext.Query()
+                .WithAll<AuthToken>()
                 .ToEntityComponents();
+                
+            // Filter in memory for expired/revoked tokens for this owner
+            var expiredTokens = allTokens
+                .Where(kvp => 
+                {
+                    var token = kvp.Value.Get<AuthToken>();
+                    return token != null && token.OwnerEntityId == OwnerEntityId && 
+                        (token.RefreshExpiresAt < DateTime.UtcNow || token.IsRevoked);
+                });
 
             int cleanedCount = 0;
             foreach (var kvp in expiredTokens)
@@ -244,16 +311,33 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
     /// Enforces maximum active sessions per user.
     /// Revokes oldest sessions if limit is exceeded.
     /// </summary>
+    /// <param name="maxSessions">The maximum number of active sessions allowed per user (default: 5)</param>
+    /// <remarks>
+    /// This security feature prevents session proliferation by:
+    /// - Counting active (non-revoked, non-expired) sessions for the user
+    /// - Revoking the oldest sessions if the limit is exceeded
+    /// - Making room for new sessions during authentication
+    /// Sessions are ordered by IssuedAt timestamp, with oldest sessions revoked first.
+    /// </remarks>
     public async Task EnforceSessionLimit(int maxSessions = 5)
     {
         try
         {
-            var activeSessions = await DataContext.Query()
-                .WithAll<AuthToken>(t => t.OwnerEntityId == OwnerEntityId && 
-                    !t.IsRevoked && t.RefreshExpiresAt > DateTime.UtcNow)
+            var allSessions = await DataContext.Query()
+                .WithAll<AuthToken>()
                 .ToEntityComponents();
+                
+            // Filter in memory for active sessions for this owner
+            var activeSessions = allSessions
+                .Where(kvp => 
+                {
+                    var token = kvp.Value.Get<AuthToken>();
+                    return token != null && token.OwnerEntityId == OwnerEntityId && 
+                        !token.IsRevoked && token.RefreshExpiresAt > DateTime.UtcNow;
+                })
+                .ToList();
 
-            if (activeSessions.Count <= maxSessions)
+            if (activeSessions.Count() <= maxSessions)
             {
                 return;
             }

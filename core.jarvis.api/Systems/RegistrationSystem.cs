@@ -9,12 +9,25 @@ using System.Text.Json;
 namespace core.jarvis.api.Systems;
 
 /// <summary>
-/// System that orchestrates user registration workflow.
-/// Creates Account and SecurityProfile components atomically.
-/// Returns a list containing both created components.
+/// System that orchestrates user registration workflow with full transaction support.
+/// Creates Account and SecurityProfile components atomically within a database transaction.
+/// Ensures data consistency by rolling back all changes if any operation fails.
+/// Returns a list containing both created components on successful registration.
 /// </summary>
 public class RegistrationSystem
 {
+    /// <summary>
+    /// BCrypt cost factor for password hashing during registration.
+    /// Should match the cost factor used in PasswordPolicyService.
+    /// </summary>
+    private const int BCryptCostFactor = 12;
+    
+    /// <summary>
+    /// Maximum allowed length for user full name field.
+    /// Prevents excessively long names that could impact database performance.
+    /// </summary>
+    private const int MaxFullNameLength = 255;
+    
     private readonly IDataContext _dataContext;
     private readonly IPasswordPolicyService _passwordPolicy;
     private readonly ISecurityAuditService _securityAudit;
@@ -35,6 +48,7 @@ public class RegistrationSystem
     /// <summary>
     /// Register a new user from JSON input.
     /// Returns a list containing [Account, SecurityProfile] components.
+    /// All operations are performed atomically within a database transaction.
     /// </summary>
     public async Task<List<IComponent>> RegisterUser(string requestBody, string? ipAddress)
     {
@@ -48,51 +62,51 @@ public class RegistrationSystem
         // 3. Generate new entity ID for the user
         var userEntityId = Guid.NewGuid();
         
-        // TODO: Wrap in transaction when available
-        
-        // 4. Create account component through handler
-        var accountHandler = _dataContext.For<AccountHandler>(userEntityId);
-        var account = await accountHandler.CreateAccount(new Account
+        // 4. Execute registration within a transaction for data consistency
+        return await _dataContext.ExecuteInTransaction(async () =>
         {
-            Id = Guid.NewGuid(),
-            Email = request.Email.ToLower().Trim(),
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, 12),
-            Password = string.Empty, // Never store plain password
-            AuthMethod = "password",
-            IsActive = true,
-            IpAddress = ipAddress,
-            CreatedAt = DateTime.UtcNow,
-            LastUpdated = DateTime.UtcNow
-        });
-        
-        // 5. Create security profile using handler
-        var profileHandler = _dataContext.For<AccountProfileHandler>(userEntityId);
-        var profile = await profileHandler.CreateWithDefaults(request.Email);
-        
-        // 6. Update profile with name if provided
-        if (!string.IsNullOrWhiteSpace(request.FullName))
-        {
-            var updated = profile with 
-            { 
-                Name = request.FullName.Trim(),
+            _logger.LogDebug("Starting transactional user registration for email: {Email}", request.Email);
+            
+            // Create account component through handler
+            var accountHandler = _dataContext.For<AccountHandler>(userEntityId);
+            var account = await accountHandler.CreateAccount(new Account
+            {
+                Id = Guid.NewGuid(),
+                Email = request.Email.ToLower().Trim(),
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password, BCryptCostFactor),
+                Password = string.Empty, // Never store plain password
+                AuthMethod = "password",
+                IsActive = true,
+                IpAddress = ipAddress,
+                CreatedAt = DateTime.UtcNow,
                 LastUpdated = DateTime.UtcNow
-            };
-            await _dataContext.Commit(updated);
-            profile = updated;
-        }
-        
-        // 7. Log successful registration
-        await _securityAudit.LogSuccessfulAuthentication(
-            userEntityId,
-            request.Email,
-            ipAddress ?? "unknown",
-            "Registration"
-        );
-        
-        _logger.LogInformation("User registered successfully: {Email}", request.Email);
-        
-        // 8. Return both components as a flat list
-        return new List<IComponent> { account, profile };
+            });
+            
+            // Create security profile using handler with the provided name
+            var profileHandler = _dataContext.For<AccountProfileHandler>(userEntityId);
+            var profile = await profileHandler.CreateWithDefaults(request.Email, request.FullName);
+            
+            // Log successful registration - wrapped in try-catch to prevent transaction failure
+            try 
+            {
+                await _securityAudit.LogSuccessfulAuthentication(
+                    userEntityId,
+                    request.Email,
+                    ipAddress ?? "unknown",
+                    "Registration"
+                );
+            }
+            catch (Exception ex)
+            {
+                // Log the error but don't fail the registration
+                _logger.LogWarning(ex, "Failed to log security audit event for registration, but continuing with registration");
+            }
+            
+            _logger.LogInformation("User registered successfully within transaction: {Email}", request.Email);
+            
+            // Return both components as a flat list
+            return new List<IComponent> { account, profile };
+        });
     }
 
     private RegistrationRequest ParseRegistrationRequest(string requestBody)
@@ -153,9 +167,9 @@ public class RegistrationSystem
         }
         
         // Validate name (optional but if provided, must be valid)
-        if (!string.IsNullOrWhiteSpace(request.FullName) && request.FullName.Length > 255)
+        if (!string.IsNullOrWhiteSpace(request.FullName) && request.FullName.Length > MaxFullNameLength)
         {
-            errors["fullName"] = new[] { "Name is too long (max 255 characters)" };
+            errors["fullName"] = new[] { $"Name is too long (max {MaxFullNameLength} characters)" };
         }
         
         if (errors.Any())
@@ -166,11 +180,19 @@ public class RegistrationSystem
 
     private async Task CheckEmailAvailability(string email)
     {
-        var existingAccounts = await _dataContext.Query()
-            .WithAll<Account>(a => a.Email.ToLower() == email.ToLower())
-            .ToEntityIds();
+        // Normalize email to lowercase for comparison
+        var normalizedEmail = email.ToLower();
+        
+        // Get all accounts and filter in memory to avoid SQL translation issues
+        var allAccounts = await _dataContext.Query()
+            .WithAll<Account>(a => true)
+            .ToEntityComponents();
             
-        if (existingAccounts.Any())
+        var existingAccount = allAccounts
+            .Select(kvp => kvp.Value.Get<Account>())
+            .FirstOrDefault(a => a != null && a.Email.ToLower() == normalizedEmail);
+            
+        if (existingAccount != null)
         {
             _logger.LogInformation("Registration attempted with existing email: {Email}", email);
             throw new BusinessRuleException("EMAIL_EXISTS", "EMAIL_EXISTS");

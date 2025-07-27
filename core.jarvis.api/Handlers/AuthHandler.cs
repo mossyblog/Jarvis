@@ -41,7 +41,22 @@ public class AuthHandler : ComponentHandler<Account>
     /// Authenticates account credentials and generates tokens.
     /// Takes Account (credentials), validates against existing data, and returns AuthToken with session data.
     /// Does NOT persist anything - authentication is read-only validation.
+    /// Uses constant-time execution to prevent timing attacks and includes comprehensive security logging.
     /// </summary>
+    /// <param name="accountCredentials">Account object containing email, password, and optional metadata (IP address, user agent, client ID)</param>
+    /// <returns>
+    /// AuthToken with access token, refresh token, and session data if authentication succeeds.
+    /// Returns empty AuthToken if authentication fails for any reason (invalid credentials, inactive account, etc.).
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when accountCredentials is null</exception>
+    /// <remarks>
+    /// This method implements several security features:
+    /// - Constant-time execution to prevent timing attacks
+    /// - Input validation to prevent injection attacks
+    /// - BCrypt password verification
+    /// - Security audit logging for both successful and failed attempts
+    /// - Random delays to further obfuscate timing patterns
+    /// </remarks>
     public async Task<AuthToken> Authenticate(Account accountCredentials)
     {
         // Wrap authentication in constant-time execution to prevent timing attacks
@@ -195,6 +210,8 @@ public class AuthHandler : ComponentHandler<Account>
     /// <summary>
     /// Checks if the provided AuthToken component represents successful authentication.
     /// </summary>
+    /// <param name="authToken">The AuthToken to validate</param>
+    /// <returns>True if the token contains a valid access token and owner entity ID, false otherwise</returns>
     public bool IsAuthenticated(AuthToken authToken)
     {
         return authToken != null && !string.IsNullOrEmpty(authToken.AccessToken) && authToken.OwnerEntityId != Guid.Empty;
@@ -203,7 +220,17 @@ public class AuthHandler : ComponentHandler<Account>
     /// <summary>
     /// Persists the authenticated session token to the database.
     /// Only call this after successful authentication.
+    /// Includes cleanup of expired tokens and session limit enforcement.
     /// </summary>
+    /// <param name="authToken">The authenticated AuthToken to persist</param>
+    /// <returns>True if the session was successfully persisted, false if validation failed or an error occurred</returns>
+    /// <remarks>
+    /// This method performs several operations:
+    /// - Validates the AuthToken before persisting
+    /// - Cleans up expired tokens for the user
+    /// - Enforces a maximum of 5 active sessions per user
+    /// - Stores only the refresh token hash (not plain tokens) for security
+    /// </remarks>
     public async Task<bool> PersistSession(AuthToken authToken)
     {
         if (!IsAuthenticated(authToken))
@@ -289,7 +316,22 @@ public class AuthHandler : ComponentHandler<Account>
     
     /// <summary>
     /// Refreshes an authentication token using a valid refresh token.
+    /// Validates the refresh token, revokes the old token, and generates new access and refresh tokens.
     /// </summary>
+    /// <param name="refreshToken">The refresh token string to validate and use for token refresh</param>
+    /// <returns>
+    /// New AuthToken with fresh access and refresh tokens if the refresh token is valid.
+    /// Returns empty AuthToken if the refresh token is invalid, expired, or revoked.
+    /// </returns>
+    /// <remarks>
+    /// This method performs the following operations:
+    /// - Hashes the refresh token for secure lookup
+    /// - Validates the refresh token against stored hash
+    /// - Checks token expiration and revocation status
+    /// - Generates new access and refresh tokens
+    /// - Revokes the old refresh token to prevent reuse
+    /// - Maintains the same session ID for continuity
+    /// </remarks>
     public async Task<AuthToken> RefreshToken(string refreshToken)
     {
         try

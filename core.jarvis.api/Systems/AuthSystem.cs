@@ -27,8 +27,13 @@ public class AuthSystem
     }
 
     /// <summary>
-    /// Authenticates a user and returns auth token
+    /// Authenticates a user and returns auth token.
+    /// Delegates to AuthHandler for authentication logic and validates the result.
     /// </summary>
+    /// <param name="accountCredentials">Account credentials containing email, password, and optional metadata</param>
+    /// <returns>AuthToken with access and refresh tokens if authentication succeeds</returns>
+    /// <exception cref="ValidationException">Thrown when accountCredentials is null</exception>
+    /// <exception cref="UnauthorizedException">Thrown when authentication fails</exception>
     public async Task<AuthToken> AuthenticateUser(Account accountCredentials)
     {
         // Validate input component
@@ -52,8 +57,13 @@ public class AuthSystem
     }
 
     /// <summary>
-    /// Refreshes an authentication token
+    /// Refreshes an authentication token using a valid refresh token.
+    /// Delegates to AuthHandler for token refresh logic and validates the result.
     /// </summary>
+    /// <param name="refreshToken">The refresh token string to use for generating new tokens</param>
+    /// <returns>New AuthToken with fresh access and refresh tokens if refresh succeeds</returns>
+    /// <exception cref="ValidationException">Thrown when refreshToken is null or empty</exception>
+    /// <exception cref="UnauthorizedException">Thrown when token refresh fails</exception>
     public async Task<AuthToken> RefreshToken(string refreshToken)
     {
         if (string.IsNullOrEmpty(refreshToken))
@@ -74,8 +84,13 @@ public class AuthSystem
     }
 
     /// <summary>
-    /// Validates a token and returns validation result
+    /// Validates a token and returns validation result.
+    /// Extracts claims information and validates JWT structure and signature.
     /// </summary>
+    /// <param name="token">The JWT token string to validate</param>
+    /// <returns>TokenValidationResult containing user information and validation status</returns>
+    /// <exception cref="ValidationException">Thrown when token is null or empty</exception>
+    /// <exception cref="UnauthorizedException">Thrown when token validation fails</exception>
     public Task<TokenValidationResult> ValidateToken(string token)
     {
         if (string.IsNullOrEmpty(token))
