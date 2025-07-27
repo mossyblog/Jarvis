@@ -165,6 +165,24 @@ public class ComponentQueryHandler<T> : IComponentQueryHandler<T>
             case MethodCallExpression methodExpr:
                 return ProcessMethodCallExpression(query, methodExpr);
                 
+            case ConstantExpression constantExpr:
+                // Handle constant expressions like 'true' or 'false'
+                if (constantExpr.Value is bool boolValue)
+                {
+                    if (boolValue)
+                    {
+                        // Return query unchanged for 'true' (no filter)
+                        return query;
+                    }
+                    else
+                    {
+                        // For 'false', we'd need to return empty results
+                        // This is a special case that would require different handling
+                        throw new NotSupportedException("Constant 'false' expression would return no results");
+                    }
+                }
+                throw new NotSupportedException($"Constant expression of type {constantExpr.Type} is not supported");
+                
             default:
                 throw new NotSupportedException($"Expression type {expression.NodeType} is not supported");
         }

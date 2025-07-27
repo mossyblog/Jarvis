@@ -32,6 +32,15 @@ public class EntityQuery : IEntityQuery
         _withAll[typeof(T)] = filter;
         return this;
     }
+    
+    /// <inheritdoc/>
+    public IEntityQuery WithAll<T>() where T : class, IComponent, new()
+    {
+        // Use a filter that always returns true
+        Expression<Func<T, bool>> alwaysTrue = _ => true;
+        _withAll[typeof(T)] = alwaysTrue;
+        return this;
+    }
 
     /// <inheritdoc/>
     public IEntityQuery WithAny<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new()

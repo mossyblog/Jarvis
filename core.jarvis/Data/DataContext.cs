@@ -2,6 +2,7 @@ using System.Text.Json;
 using core.jarvis.Data.Components;
 using core.jarvis.Data.GraphQL;
 using core.jarvis.Data.Query;
+using core.jarvis.Data.Schema;
 using core.jarvis.ErrorHandling;
 using core.jarvis.Exceptions;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,6 +22,7 @@ public class DataContext : IDataContext
     private readonly IServiceProvider _serviceProvider;
     private readonly IAuditService _auditService;
     private readonly Events.IEventEmitter _eventEmitter;
+    private readonly ITableManager _tableManager;
     
     public DataContext(
         IServiceProvider serviceProvider,
@@ -28,7 +30,8 @@ public class DataContext : IDataContext
         IPgClient pgClient,
         ILogger<DataContext> logger,
         IAuditService auditService,
-        Events.IEventEmitter eventEmitter)
+        Events.IEventEmitter eventEmitter,
+        ITableManager tableManager)
     {
         _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
         _queryRegistry = queryRegistry ?? throw new ArgumentNullException(nameof(queryRegistry));
@@ -36,6 +39,7 @@ public class DataContext : IDataContext
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
         _eventEmitter = eventEmitter ?? throw new ArgumentNullException(nameof(eventEmitter));
+        _tableManager = tableManager ?? throw new ArgumentNullException(nameof(tableManager));
     }
 
     public IComponentHandler For(Type componentType, Guid entityId)
@@ -204,6 +208,9 @@ public class DataContext : IDataContext
     {
         await ExecuteWithErrorHandling(async () =>
         {
+            // Ensure table exists before attempting to delete
+            await _tableManager.EnsureTableExists<TComponent>();
+            
             await _auditService.LogEvent(
                 AuditEventTypes.ForComponent(typeof(TComponent).Name, "DELETED"),
                 entityId,
@@ -225,6 +232,15 @@ public class DataContext : IDataContext
         
         await ExecuteWithErrorHandling(async () =>
         {
+            // Ensure table exists before attempting to insert (only for IComponent types)
+            if (model is IComponent && typeof(IComponent).IsAssignableFrom(typeof(TModel)))
+            {
+                // Use reflection to call EnsureTableExists<TModel> when TModel implements IComponent
+                var method = _tableManager.GetType().GetMethod("EnsureTableExists");
+                var genericMethod = method!.MakeGenericMethod(typeof(TModel));
+                await (Task)genericMethod.Invoke(_tableManager, null)!;
+            }
+            
             await _pgClient.From<TModel>().Insert(model);
             
             await _auditService.LogEvent(
@@ -386,19 +402,32 @@ public class DataContext : IDataContext
                     Version = version,
                     Operation = operation 
                 });
+            
+            _logger.LogInformation("Successfully created snapshot for {ComponentType} {ComponentId}, operation: {Operation}, version: {Version}",
+                component.GetType().Name, component.Id, operation, version);
         }
         catch (Exception ex)
         {
+            _logger.LogError(ex, "Failed to capture snapshot for {ComponentType} {ComponentId}, operation: {Operation}",
+                component.GetType().Name, component.Id, operation);
+            
             // Audit snapshot failure
-            await _auditService.LogError(
-                AuditEventTypes.SnapshotFailed,
-                component.OwnerEntityId,
-                ex,
-                new { 
-                    ComponentType = component.GetType().Name, 
-                    ComponentId = component.Id, 
-                    Operation = operation 
-                });
+            try
+            {
+                await _auditService.LogError(
+                    AuditEventTypes.SnapshotFailed,
+                    component.OwnerEntityId,
+                    ex,
+                    new { 
+                        ComponentType = component.GetType().Name, 
+                        ComponentId = component.Id, 
+                        Operation = operation 
+                    });
+            }
+            catch (Exception auditEx)
+            {
+                _logger.LogError(auditEx, "Failed to audit snapshot failure for component {ComponentId}", component.Id);
+            }
                 
             // Log but don't fail the operation - fire and forget
             ErrorHandlingPolicy.LogAndContinue(
@@ -765,6 +794,9 @@ public class DataContext : IDataContext
     private async Task ExecuteDatabaseOperation<TComponent>(TComponent component, bool isInsert)
         where TComponent : class, IComponent, new()
     {
+        // Ensure table exists before attempting any database operations
+        await _tableManager.EnsureTableExists<TComponent>();
+        
         if (component is IVersionedComponent)
         {
             await _pgClient.From<TComponent>().Upsert(component);
@@ -799,10 +831,7 @@ public class DataContext : IDataContext
         }
         catch (Exception ex)
         {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
+            await SafeAuditError(AuditEventTypes.DatabaseError, entityId, ex, 
                 new { Operation = operationName, Context = context });
                 
             ErrorHandlingPolicy.LogAndRethrow(
@@ -825,10 +854,7 @@ public class DataContext : IDataContext
         }
         catch (Exception ex)
         {
-            await _auditService.LogError(
-                AuditEventTypes.DatabaseError,
-                entityId,
-                ex,
+            await SafeAuditError(AuditEventTypes.DatabaseError, entityId, ex,
                 new { Operation = operationName, Context = context });
                 
             ErrorHandlingPolicy.LogAndRethrow(
@@ -885,10 +911,497 @@ public class DataContext : IDataContext
         @event.Metadata["EmittedAt"] = DateTime.UtcNow.ToString("O");
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// Ensures that the core entity table exists in the database with the correct schema.
+    /// This method validates the Entity table structure and creates or updates it as needed.
+    /// - If table doesn't exist: Creates the table with proper schema
+    /// - If table exists but missing columns: Adds missing columns
+    /// - If table exists but has incompatible column types: Throws SchemaValidationException
+    /// </summary>
+    /// <exception cref="SchemaValidationException">Thrown when existing columns have incompatible data types requiring manual migration</exception>
+    /// <exception cref="InvalidOperationException">Thrown when table management fails due to system errors</exception>
     public async Task EnsureEntityTableExists()
     {
-        // TODO: Finish this...
-        await Task.CompletedTask;
+        await ExecuteWithErrorHandling(async () =>
+        {
+            _logger.LogDebug("Ensuring Entity table exists in database");
+            
+            await _auditService.LogEvent(
+                "TABLE_VALIDATION_STARTED",
+                Guid.Empty,
+                new { TableName = "entity", Operation = "EnsureEntityTableExists" });
+
+            try
+            {
+                // Use the table manager to ensure the Entity table exists
+                // Entity class serves as the IComponent-like structure for table management
+                await EnsureEntityTableExistsInternal();
+                
+                _logger.LogInformation("Successfully validated Entity table schema");
+                
+                await _auditService.LogEvent(
+                    "TABLE_VALIDATION_COMPLETED",
+                    Guid.Empty,
+                    new { TableName = "entity", Operation = "EnsureEntityTableExists", Status = "Success" });
+            }
+            catch (SchemaValidationException schemaEx)
+            {
+                _logger.LogError(schemaEx, "Entity table schema validation failed: {ErrorMessage}", schemaEx.Message);
+                
+                await _auditService.LogError(
+                    "TABLE_SCHEMA_VALIDATION_FAILED",
+                    Guid.Empty,
+                    schemaEx,
+                    new { 
+                        TableName = "entity", 
+                        Operation = "EnsureEntityTableExists",
+                        ExpectedType = schemaEx.ExpectedType,
+                        ActualType = schemaEx.ActualType,
+                        FieldName = schemaEx.FieldName
+                    });
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to ensure Entity table exists: {ErrorMessage}", ex.Message);
+                
+                await _auditService.LogError(
+                    AuditEventTypes.DatabaseError,
+                    Guid.Empty,
+                    ex,
+                    new { TableName = "entity", Operation = "EnsureEntityTableExists" });
+                throw;
+            }
+        }, "EnsureEntityTableExists", Guid.Empty, new { TableName = "entity" });
+    }
+    
+    private async Task EnsureEntityTableExistsInternal()
+    {
+        // Since Entity doesn't implement IComponent, we need to handle it specially
+        // Check if the entity table exists manually using PostgreSQL system tables
+        var tableExists = await CheckEntityTableExists();
+        
+        if (!tableExists)
+        {
+            _logger.LogInformation("Creating entity table");
+            await CreateEntityTable();
+            return;
+        }
+        
+        // Table exists - validate schema manually
+        _logger.LogDebug("Entity table exists, validating schema");
+        await ValidateEntityTableSchema();
+    }
+    
+    private async Task<bool> CheckEntityTableExists()
+    {
+        var query = @"
+            SELECT EXISTS (
+                SELECT FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_name = 'entity'
+            )";
+        
+        try
+        {
+            var result = await _pgClient.ExecuteScalar<bool>(query);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to check if entity table exists");
+            throw;
+        }
+    }
+    
+    private async Task CreateEntityTable()
+    {
+        var createTableSql = @"
+            CREATE TABLE entity (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                name TEXT NOT NULL DEFAULT '',
+                parent_id UUID DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
+                children_ids UUID[] DEFAULT '{}'
+            )";
+        
+        try
+        {
+            await _pgClient.Execute(createTableSql);
+            _logger.LogInformation("Successfully created entity table");
+            
+            // Create indexes for better performance
+            await CreateEntityTableIndexes();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create entity table");
+            throw;
+        }
+    }
+    
+    private async Task CreateEntityTableIndexes()
+    {
+        var indexes = new[]
+        {
+            "CREATE INDEX IF NOT EXISTS idx_entity_parent_id ON entity(parent_id)",
+            "CREATE INDEX IF NOT EXISTS idx_entity_name ON entity(name)",
+            "CREATE INDEX IF NOT EXISTS idx_entity_children_ids ON entity USING GIN(children_ids)"
+        };
+        
+        foreach (var indexSql in indexes)
+        {
+            try
+            {
+                await _pgClient.Execute(indexSql);
+                _logger.LogDebug("Created entity table index");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to create entity table index, but continuing");
+                // Don't fail on index creation errors
+            }
+        }
+    }
+    
+    private async Task ValidateEntityTableSchema()
+    {
+        var query = @"
+            SELECT 
+                c.column_name,
+                c.data_type,
+                c.is_nullable = 'YES' as is_nullable,
+                c.column_default
+            FROM information_schema.columns c
+            WHERE c.table_name = 'entity'
+            ORDER BY c.ordinal_position";
+        
+        try
+        {
+            var actualColumns = await _pgClient.Query<dynamic>(query);
+            var columnsList = actualColumns.ToList();
+            
+            // Define expected columns for Entity table
+            var expectedColumns = new Dictionary<string, string>
+            {
+                { "id", "uuid" },
+                { "name", "text" },
+                { "parent_id", "uuid" },
+                { "children_ids", "ARRAY" }
+            };
+            
+            var missingColumns = new List<string>();
+            
+            foreach (var expected in expectedColumns)
+            {
+                var actualColumn = columnsList.FirstOrDefault(c => 
+                    ((string)c.column_name).Equals(expected.Key, StringComparison.OrdinalIgnoreCase));
+                
+                if (actualColumn == null)
+                {
+                    _logger.LogDebug("Column {ColumnName} not found in entity table, will add it", expected.Key);
+                    missingColumns.Add(expected.Key);
+                }
+                else
+                {
+                    // Basic type validation - could be enhanced for more strict checking
+                    var actualType = ((string)actualColumn.data_type).ToLowerInvariant();
+                    var expectedType = expected.Value.ToLowerInvariant();
+                    
+                    if (expectedType == "array" && !actualType.Contains("array"))
+                    {
+                        throw new SchemaValidationException(
+                            "entity", 
+                            expected.Key, 
+                            "UUID[]", 
+                            actualType);
+                    }
+                    else if (expectedType != "array" && !actualType.Contains(expectedType))
+                    {
+                        throw new SchemaValidationException(
+                            "entity", 
+                            expected.Key, 
+                            expectedType.ToUpperInvariant(), 
+                            actualType.ToUpperInvariant());
+                    }
+                }
+            }
+            
+            // Add missing columns
+            if (missingColumns.Any())
+            {
+                await AddMissingEntityColumns(missingColumns);
+            }
+        }
+        catch (SchemaValidationException)
+        {
+            throw; // Re-throw schema validation exceptions
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to validate entity table schema");
+            throw;
+        }
+    }
+    
+    private async Task AddMissingEntityColumns(List<string> missingColumns)
+    {
+        _logger.LogInformation("Adding {Count} missing columns to entity table", missingColumns.Count);
+        
+        var columnDefinitions = new Dictionary<string, string>
+        {
+            { "id", "id UUID PRIMARY KEY DEFAULT gen_random_uuid()" },
+            { "name", "name TEXT NOT NULL DEFAULT ''" },
+            { "parent_id", "parent_id UUID DEFAULT '00000000-0000-0000-0000-000000000000'::uuid" },
+            { "children_ids", "children_ids UUID[] DEFAULT '{}'" }
+        };
+        
+        foreach (var columnName in missingColumns)
+        {
+            if (columnDefinitions.TryGetValue(columnName, out var columnDef))
+            {
+                var alterSql = $@"
+                    DO $$ 
+                    BEGIN 
+                        BEGIN
+                            ALTER TABLE entity ADD COLUMN {columnDef};
+                        EXCEPTION
+                            WHEN duplicate_column THEN RAISE NOTICE 'column {columnName} already exists in entity.';
+                        END;
+                    END;
+                    $$";
+                
+                try
+                {
+                    await _pgClient.Execute(alterSql);
+                    _logger.LogDebug("Ensured column {ColumnName} exists in entity table", columnName);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to ensure column {ColumnName} exists in entity table", columnName);
+                    throw;
+                }
+            }
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<T> ExecuteInTransaction<T>(Func<Task<T>> operation)
+    {
+        if (operation == null)
+            throw new ArgumentNullException(nameof(operation));
+
+        return await ExecuteTransactionWithRecovery(async () =>
+        {
+            var connection = await _pgClient.GetConnectionAsync();
+            
+            await SafeAuditEvent(
+                AuditEventTypes.TransactionStarted,
+                Guid.Empty,
+                new { Operation = "ExecuteInTransaction", OperationType = typeof(T).Name });
+
+            using var transaction = await connection.BeginTransactionAsync();
+            
+            try
+            {
+                var result = await operation();
+                await transaction.CommitAsync();
+                
+                await SafeAuditEvent(
+                    AuditEventTypes.TransactionCommitted,
+                    Guid.Empty,
+                    new { Operation = "ExecuteInTransaction", OperationType = typeof(T).Name });
+                
+                _logger.LogDebug("Transaction committed successfully for operation returning {OperationType}", typeof(T).Name);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                await SafeRollbackTransaction(transaction, ex);
+                
+                await SafeAuditError(
+                    AuditEventTypes.TransactionRolledBack,
+                    Guid.Empty,
+                    ex,
+                    new { Operation = "ExecuteInTransaction", OperationType = typeof(T).Name });
+                
+                _logger.LogError(ex, "Transaction rolled back due to error in operation returning {OperationType}", typeof(T).Name);
+                throw;
+            }
+        }, typeof(T).Name);
+    }
+
+    /// <inheritdoc/>
+    public async Task ExecuteInTransaction(Func<Task> operation)
+    {
+        if (operation == null)
+            throw new ArgumentNullException(nameof(operation));
+
+        await ExecuteTransactionWithRecovery(async () =>
+        {
+            var connection = await _pgClient.GetConnectionAsync();
+            
+            await SafeAuditEvent(
+                AuditEventTypes.TransactionStarted,
+                Guid.Empty,
+                new { Operation = "ExecuteInTransaction", OperationType = "void" });
+
+            using var transaction = await connection.BeginTransactionAsync();
+            
+            try
+            {
+                await operation();
+                await transaction.CommitAsync();
+                
+                await SafeAuditEvent(
+                    AuditEventTypes.TransactionCommitted,
+                    Guid.Empty,
+                    new { Operation = "ExecuteInTransaction", OperationType = "void" });
+                
+                _logger.LogDebug("Transaction committed successfully for void operation");
+                return true; // Dummy return for consistency
+            }
+            catch (Exception ex)
+            {
+                await SafeRollbackTransaction(transaction, ex);
+                
+                await SafeAuditError(
+                    AuditEventTypes.TransactionRolledBack,
+                    Guid.Empty,
+                    ex,
+                    new { Operation = "ExecuteInTransaction", OperationType = "void" });
+                
+                _logger.LogError(ex, "Transaction rolled back due to error in void operation");
+                throw;
+            }
+        }, "void");
+    }
+
+    /// <summary>
+    /// Executes a transaction with PostgreSQL-specific error recovery handling.
+    /// This method handles the "current transaction is aborted" error by properly recovering the connection.
+    /// </summary>
+    private async Task<T> ExecuteTransactionWithRecovery<T>(Func<Task<T>> transactionOperation, object operationType)
+    {
+        try
+        {
+            return await transactionOperation();
+        }
+        catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "25P02") // Current transaction is aborted
+        {
+            _logger.LogWarning(pgEx, "PostgreSQL transaction aborted, attempting recovery. Operation: {OperationType}", operationType);
+            
+            // Log the recovery attempt
+            await SafeAuditEvent(
+                "TRANSACTION_RECOVERY_ATTEMPTED", 
+                Guid.Empty,
+                new { 
+                    OperationType = operationType,
+                    PostgreSQLErrorCode = pgEx.SqlState,
+                    ErrorMessage = pgEx.Message 
+                });
+
+            // Force connection recovery by getting a fresh connection
+            try
+            {
+                // Force a fresh connection by calling GetConnectionAsync which should handle recovery
+                var newConnection = await _pgClient.GetConnectionAsync();
+                _logger.LogInformation("PostgreSQL connection recovered successfully for operation: {OperationType}", operationType);
+                
+                // Retry the operation once with fresh connection
+                return await transactionOperation();
+            }
+            catch (Exception retryEx)
+            {
+                _logger.LogError(retryEx, "Transaction recovery failed for operation: {OperationType}", operationType);
+                
+                await SafeAuditError(
+                    AuditEventTypes.DatabaseError,
+                    Guid.Empty,
+                    retryEx,
+                    new { 
+                        OperationType = operationType,
+                        RecoveryAttempted = true,
+                        OriginalError = pgEx.Message,
+                        RetryError = retryEx.Message
+                    });
+                
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            await SafeAuditError(
+                AuditEventTypes.DatabaseError,
+                Guid.Empty,
+                ex,
+                new { OperationType = operationType });
+
+            ErrorHandlingPolicy.LogAndRethrow(
+                ex,
+                $"Failed to execute operation in transaction: {operationType}",
+                new { OperationType = operationType });
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Safely performs a transaction rollback, handling cases where the transaction is already aborted.
+    /// </summary>
+    private async Task SafeRollbackTransaction(System.Data.Common.DbTransaction transaction, Exception originalException)
+    {
+        try
+        {
+            await transaction.RollbackAsync();
+            _logger.LogDebug("Transaction rolled back successfully");
+        }
+        catch (Npgsql.PostgresException pgEx) when (pgEx.SqlState == "25P02")
+        {
+            // Transaction is already aborted, no need to rollback
+            _logger.LogDebug("Transaction was already aborted, skipping explicit rollback");
+        }
+        catch (Exception rollbackEx)
+        {
+            _logger.LogError(rollbackEx, "Failed to rollback transaction. Original error: {OriginalError}", originalException.Message);
+            // Don't throw rollback exceptions - let the original exception propagate
+        }
+    }
+
+    /// <summary>
+    /// Safely performs audit operations without allowing audit failures to break business operations.
+    /// This method ensures that audit operations are isolated from the main transaction flow.
+    /// </summary>
+    private async Task SafeAuditError(string eventType, Guid entityId, Exception exception, object? context = null)
+    {
+        try
+        {
+            // Use fire-and-forget approach for audit operations
+            await _auditService.LogError(eventType, entityId, exception, context);
+        }
+        catch (Exception auditEx)
+        {
+            // Never let audit failures break business operations
+            // Just log the audit failure and continue
+            _logger.LogError(auditEx, 
+                "Audit operation failed for event type {EventType}, entity {EntityId}. Original exception: {OriginalException}", 
+                eventType, entityId, exception.Message);
+        }
+    }
+
+    /// <summary>
+    /// Safely performs audit events without allowing audit failures to break business operations.
+    /// </summary>
+    private async Task SafeAuditEvent(string eventType, Guid entityId, object? eventData = null)
+    {
+        try
+        {
+            await _auditService.LogEvent(eventType, entityId, eventData);
+        }
+        catch (Exception auditEx)
+        {
+            // Never let audit failures break business operations
+            _logger.LogError(auditEx, 
+                "Audit event logging failed for event type {EventType}, entity {EntityId}", 
+                eventType, entityId);
+        }
     }
 }

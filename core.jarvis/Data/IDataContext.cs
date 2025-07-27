@@ -172,4 +172,23 @@ public interface IDataContext
     /// </summary>
     /// <returns>Task representing the table creation operation.</returns>
     Task EnsureEntityTableExists();
+
+    /// <summary>
+    /// Executes the provided operation within a database transaction.
+    /// If the operation succeeds, the transaction is committed.
+    /// If an exception is thrown, the transaction is rolled back.
+    /// </summary>
+    /// <typeparam name="T">The return type of the operation.</typeparam>
+    /// <param name="operation">The operation to execute within the transaction.</param>
+    /// <returns>The result of the operation.</returns>
+    Task<T> ExecuteInTransaction<T>(Func<Task<T>> operation);
+
+    /// <summary>
+    /// Executes the provided operation within a database transaction.
+    /// If the operation succeeds, the transaction is committed.
+    /// If an exception is thrown, the transaction is rolled back.
+    /// </summary>
+    /// <param name="operation">The operation to execute within the transaction.</param>
+    /// <returns>Task representing the transaction operation.</returns>
+    Task ExecuteInTransaction(Func<Task> operation);
 }
