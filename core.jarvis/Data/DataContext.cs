@@ -24,6 +24,11 @@ public class DataContext : IDataContext
     private readonly Events.IEventEmitter _eventEmitter;
     private readonly ITableManager _tableManager;
     
+    // Transaction-aware tracking for entities and relationships
+    private readonly HashSet<Guid> _pendingEntityIds = new();
+    private readonly Dictionary<Guid, Guid> _pendingChildToParentMap = new();
+    private readonly object _pendingLock = new();
+    
     public DataContext(
         IServiceProvider serviceProvider,
         IComponentQueryHandlerRegistry queryRegistry,
@@ -92,6 +97,19 @@ public class DataContext : IDataContext
     {
         await ExecuteWithErrorHandling(async () =>
         {
+            // Track this entity as pending before validation
+            lock (_pendingLock)
+            {
+                _pendingEntityIds.Add(component.OwnerEntityId);
+            }
+            
+            // Only validate relationships for non-EntityRelationship components
+            // EntityRelationship is internal infrastructure and should not trigger validation
+            if (typeof(TComponent) != typeof(EntityRelationship))
+            {
+                await ValidatePendingRelationships();
+            }
+            
             component.LastUpdated = DateTime.UtcNow;
             var existing = await GetExistingComponent(component);
             
@@ -108,6 +126,14 @@ public class DataContext : IDataContext
             {
                 await Snapshot(component, "CREATE");
             }
+            
+            // Clear this entity from pending after successful commit
+            lock (_pendingLock)
+            {
+                _pendingEntityIds.Remove(component.OwnerEntityId);
+                // Also remove any relationships where this entity is a child
+                _pendingChildToParentMap.Remove(component.OwnerEntityId);
+            }
         }, "Commit", component.OwnerEntityId, new { ComponentType = typeof(TComponent).Name, ComponentId = component.Id });
     }
     
@@ -118,6 +144,19 @@ public class DataContext : IDataContext
     {
         try
         {
+            // Track this entity as pending before validation
+            lock (_pendingLock)
+            {
+                _pendingEntityIds.Add(component.OwnerEntityId);
+            }
+            
+            // Only validate relationships for non-EntityRelationship components
+            // EntityRelationship is internal infrastructure and should not trigger validation
+            if (typeof(TComponent) != typeof(EntityRelationship))
+            {
+                await ValidatePendingRelationships();
+            }
+            
             var originalUpdatedAt = component.LastUpdated;
             component.LastUpdated = DateTime.UtcNow;
             var existing = await GetExistingComponent(component);
@@ -132,6 +171,15 @@ public class DataContext : IDataContext
                 {
                     await Snapshot(component, "CREATE");
                 }
+                
+                // Clear this entity from pending after successful commit
+                lock (_pendingLock)
+                {
+                    _pendingEntityIds.Remove(component.OwnerEntityId);
+                    // Also remove any relationships where this entity is a child
+                    _pendingChildToParentMap.Remove(component.OwnerEntityId);
+                }
+                
                 return true;
             }
 
@@ -153,6 +201,13 @@ public class DataContext : IDataContext
                     ErrorHandlingPolicy.LogExpectedError(
                         $"Version mismatch for {typeof(TComponent).Name} ID {component.Id}. Expected version: {versionedComp.Version}, Actual version: {existingVersioned.Version}",
                         new { ComponentType = typeof(TComponent).Name, ComponentId = component.Id, ExpectedVersion = versionedComp.Version, ActualVersion = existingVersioned.Version });
+                    
+                    // Clear pending data on version conflict
+                    lock (_pendingLock)
+                    {
+                        _pendingEntityIds.Remove(component.OwnerEntityId);
+                    }
+                    
                     return false;
                 }
                 
@@ -184,10 +239,25 @@ public class DataContext : IDataContext
             
             await ExecuteDatabaseOperation(component, false);
             await AuditComponentOperation(component, existing, "UPDATED");
+            
+            // Clear this entity from pending after successful commit
+            lock (_pendingLock)
+            {
+                _pendingEntityIds.Remove(component.OwnerEntityId);
+                // Also remove any relationships where this entity is a child
+                _pendingChildToParentMap.Remove(component.OwnerEntityId);
+            }
+            
             return true;
         }
         catch (Exception ex)
         {
+            // Clear pending data on error
+            lock (_pendingLock)
+            {
+                _pendingEntityIds.Remove(component.OwnerEntityId);
+            }
+            
             await _auditService.LogError(
                 AuditEventTypes.DatabaseError,
                 component.OwnerEntityId,
@@ -482,11 +552,92 @@ public class DataContext : IDataContext
         }, "ChildOf", childId, new { ChildId = childId, ParentId = parentId }, defaultValue: false);
     }
 
+    /// <summary>
+    /// Checks if an entity exists in the database.
+    /// </summary>
+    /// <param name="entityId">The entity ID to check.</param>
+    /// <returns>True if the entity exists, false otherwise.</returns>
+    private async Task<bool> EntityExists(Guid entityId)
+    {
+        try
+        {
+            var entity = await _pgClient.From<Entity>()
+                .Filter("id", "eq", entityId)
+                .SingleOrDefault();
+            return entity != null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking entity existence for ID {EntityId}", entityId);
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// Checks if an entity exists in the database or will be created in the current batch.
+    /// </summary>
+    /// <param name="entityId">The entity ID to check.</param>
+    /// <returns>True if the entity exists or will exist, false otherwise.</returns>
+    private async Task<bool> EntityExistsOrWillExist(Guid entityId)
+    {
+        // Check if entity is being created in current batch
+        lock (_pendingLock)
+        {
+            if (_pendingEntityIds.Contains(entityId))
+            {
+                return true;
+            }
+        }
+        
+        // Check if entity already exists in database
+        return await EntityExists(entityId);
+    }
+    
+    /// <summary>
+    /// Validates all pending relationships to ensure parent entities exist or will exist.
+    /// </summary>
+    private async Task ValidatePendingRelationships()
+    {
+        Dictionary<Guid, Guid> relationshipsToValidate;
+        lock (_pendingLock)
+        {
+            relationshipsToValidate = new Dictionary<Guid, Guid>(_pendingChildToParentMap);
+        }
+        
+        foreach (var (childId, parentId) in relationshipsToValidate)
+        {
+            if (!await EntityExistsOrWillExist(parentId))
+            {
+                throw new InvalidOperationException(
+                    $"Cannot create relationship: Parent entity {parentId} does not exist and is not being created in the current batch. " +
+                    $"Child entity {childId} requires this parent to exist.");
+            }
+        }
+    }
+    
+    /// <summary>
+    /// Clears all pending transaction data. Called after successful commit or on error.
+    /// </summary>
+    private void ClearPendingData()
+    {
+        lock (_pendingLock)
+        {
+            _pendingEntityIds.Clear();
+            _pendingChildToParentMap.Clear();
+        }
+    }
+
     /// <inheritdoc/>
     public async Task LinkRelationship(Guid parentId, Guid childId, string? parentType = null, string? childType = null)
     {
         await ExecuteWithErrorHandling(async () =>
         {
+            // Track the pending relationship for validation at commit time
+            lock (_pendingLock)
+            {
+                _pendingChildToParentMap[childId] = parentId;
+            }
+
             await _auditService.LogEvent(
                 AuditEventTypes.RelationshipCreated,
                 parentId,
