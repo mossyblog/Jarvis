@@ -58,7 +58,7 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
           "flex-1 overflow-y-auto overflow-x-hidden transition-all duration-200",
           // Only push content when sidebar is in 'open' mode
           // In 'expandable' mode, sidebar overlays content
-          sidebarBehavior === 'open' ? "md:ml-64" : "md:ml-12"
+          sidebarBehavior === 'open' ? "md:ml-32" : "md:ml-12"
         )}>
           {children}
         </main>

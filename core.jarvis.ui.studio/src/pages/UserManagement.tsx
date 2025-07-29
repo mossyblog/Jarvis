@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
@@ -29,6 +30,7 @@ interface Account {
 }
 
 export default function UserManagement() {
+  const navigate = useNavigate();
   const { navigateToItem, navigation } = useNavigation();
   const [activeItem, setActiveItem] = useState('accounts');
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -64,9 +66,8 @@ export default function UserManagement() {
 
 
   const handleEdit = (account: Account) => {
-    // Open edit dialog with account data
-    console.log('Opening edit dialog for account:', account);
-    alert(`Edit account: ${account.email}\nFeature: Edit dialog implementation required`);
+    // Navigate to the edit page
+    navigate(`/accounts/${account.id}/edit`);
   };
 
   const handleDelete = (account: Account) => {

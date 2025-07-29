@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Dashboard } from './pages/Dashboard';
 import UserManagement from './pages/UserManagement';
+import AccountEdit from './pages/AccountEdit';
 import TableEditor from './pages/TableEditor';
 import SchemaVisualizer from './pages/SchemaVisualizer';
 import { Login } from './pages/Login';
@@ -28,6 +29,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserManagement />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/accounts/:id/edit" 
+            element={
+              <ProtectedRoute>
+                <AccountEdit />
               </ProtectedRoute>
             } 
           />

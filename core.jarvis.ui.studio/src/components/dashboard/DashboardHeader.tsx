@@ -24,8 +24,8 @@ export function DashboardHeader({
 
   return (
     <div className="border-b border-muted">
-      <div className="px-8 py-16">
-        <div className="max-w-7xl mx-auto">
+      <div className="px-lg py-8">
+        <div>
           <div className="flex flex-col gap-6">
             {/* Project Info */}
             <div className="flex flex-col md:flex-row md:items-center gap-6 justify-between">
