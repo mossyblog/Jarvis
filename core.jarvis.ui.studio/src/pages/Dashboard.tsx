@@ -4,7 +4,6 @@ import { DashboardHeader } from '../components/dashboard/DashboardHeader';
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { IssuesSection } from '../components/dashboard/IssuesSection';
 import { SlowQueriesTable } from '../components/dashboard/SlowQueriesTable';
-import { DevModeToggle } from '../components/ui/dev-mode-toggle';
 import { useNavigation } from '../hooks/useNavigation';
 
 // Generate mock chart data
@@ -69,13 +68,6 @@ export function Dashboard() {
               data={generateChartData(0)}
               timeLabels={['Jun 1, 3:07pm', 'Jun 1, 3:31pm']}
             />
-          </div>
-        </div>
-
-        {/* Dev Mode Indicator - Only shows in development */}
-        <div className="px-8 pb-4">
-          <div className="max-w-md">
-            <DevModeToggle />
           </div>
         </div>
 

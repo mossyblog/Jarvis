@@ -1,56 +1,104 @@
-import { mockUsers } from '../services/api/mockData';
-import type { User as BaseUser } from '../services/api/types';
-
+import React, { useState, useEffect } from 'react';
 import { Button } from '../components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { useNavigation } from '../hooks/useNavigation';
+import { graphqlService } from '../services/graphql/graphqlService';
+import { AlertCircle, RefreshCw, MoreVertical } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table';
+import { Badge } from '../components/ui/badge';
+import { NotificationCard } from '../components/ui/notification-card';
+import { cn } from '../lib/utils';
 
-// Extend User type for UI fields
-interface UserWithUIFields extends BaseUser {
-  username: string;
-  phone: string;
-  status: string;
+// Account type based on database schema
+interface Account {
+  id: string;
+  ownerEntityId: string;
+  email: string;
+  authMethod: string;
+  isActive: boolean;
+  createdAt: string;
+  lastUpdated: string;
+  ipAddress: string | null;
+  userAgent: string | null;
+  profile: {
+    name: string;
+    roleIds: string[];
+    permissionIds: string[];
+  } | null;
 }
 
 export default function UserManagement() {
-  // Temporary: Always use mock data for testing
-  const users: UserWithUIFields[] = mockUsers.map((u, i) => ({
-    ...u,
-    username: u.email.split('@')[0],
-    phone: '+1' + String(8000000000 + i * 123456).slice(0,10),
-    status: ['Active', 'Suspended', 'Inactive', 'Invited'][i % 4],
-  }));
+  const { navigateToItem, navigation } = useNavigation();
+  const [activeItem, setActiveItem] = useState('accounts');
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-
-  const handleEdit = (user: UserWithUIFields) => {
-    // Open edit dialog with user data
-    // Note: This would typically open a modal dialog with a form
-    // For now, providing more informative feedback
-    console.log('Opening edit dialog for user:', user);
-    alert(`Edit user: ${user.name} (${user.email})\nFeature: Edit dialog implementation required`);
+  const handleItemClick = (itemId: string) => {
+    setActiveItem(itemId);
+    const item = navigation.find(nav => nav.id === itemId);
+    if (item) {
+      navigateToItem(item);
+    }
   };
 
-  const handleDelete = (user: UserWithUIFields) => {
+  // Fetch accounts data on mount
+  useEffect(() => {
+    async function fetchAccounts() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await graphqlService.getAccounts();
+        setAccounts(data);
+      } catch (err) {
+        console.error('Failed to fetch accounts:', err);
+        setError('Failed to load accounts. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchAccounts();
+  }, []);
+
+
+  const handleEdit = (account: Account) => {
+    // Open edit dialog with account data
+    console.log('Opening edit dialog for account:', account);
+    alert(`Edit account: ${account.email}\nFeature: Edit dialog implementation required`);
+  };
+
+  const handleDelete = (account: Account) => {
     // Implement proper delete confirmation and API call
     const confirmed = window.confirm(
-      `Are you sure you want to delete user "${user.name}" (${user.email})?\n\n` +
+      `Are you sure you want to delete account "${account.email}"?\n\n` +
       'This action cannot be undone and will remove all associated data.'
     );
     
     if (confirmed) {
-      console.log('Deleting user:', user);
-      // Note: This would typically call an API endpoint
-      alert(`User "${user.name}" would be deleted.\nFeature: API integration required`);
+      console.log('Deleting account:', account);
+      alert(`Account "${account.email}" would be deleted.\nFeature: API integration required`);
     }
   };
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <DashboardLayout>
+    <DashboardLayout activeItem={activeItem} onItemClick={handleItemClick}>
       <section className="flex flex-col flex-1 p-lg text-xs">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-sm pb-md">
           <div className="flex flex-col gap-xs">
-            <h2 className="text-2xl font-medium m-0">Users</h2>
-            <div className="text-xs text-muted-foreground mt-xs">Manage users, roles, and permissions for your workspace.</div>
+            <h2 className="text-2xl font-medium m-0">Accounts</h2>
+            <div className="text-xs text-muted-foreground mt-xs">Manage accounts, roles, and permissions for your workspace.</div>
           </div>
           <div className="flex flex-row gap-sm items-center w-full md:w-auto mt-sm md:mt-0 justify-between md:justify-end">
             <input
@@ -71,82 +119,118 @@ export default function UserManagement() {
             <select className="bg-card border border-border rounded px-sm py-xs text-xs">
               <option>Sorted by created at</option>
             </select>
-            <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => window.location.reload()} title="Refresh">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24"><path d="M4 4v5h5M20 20v-5h-5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M5.07 19A9 9 0 1 1 12 21a9 9 0 0 0 7-3.07" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <Button 
+              size="icon" 
+              variant="ghost" 
+              className="h-8 w-8" 
+              onClick={async () => {
+                setLoading(true);
+                try {
+                  const data = await graphqlService.getAccounts();
+                  setAccounts(data);
+                  setError(null);
+                } catch (err) {
+                  setError('Failed to refresh accounts');
+                } finally {
+                  setLoading(false);
+                }
+              }} 
+              title="Refresh"
+              disabled={loading}
+            >
+              <RefreshCw className={cn("h-4 w-4", loading && "animate-spin")} />
             </Button>
           </div>
         </div>
         
-        <div className="overflow-x-auto">
-          <table className="min-w-full border border-border bg-card text-card-foreground">
-            <thead className="bg-muted">
-              <tr>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  UID <span className="inline align-middle text-muted-foreground cursor-pointer">&#8597;</span>
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Display name <span className="inline align-middle text-muted-foreground cursor-pointer">&#8597;</span>
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Email <span className="inline align-middle text-muted-foreground cursor-pointer">&#8597;</span>
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Phone <span className="inline align-middle text-muted-foreground cursor-pointer">&#8597;</span>
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Providers
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Provider type
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Created at <span className="inline align-middle text-muted-foreground cursor-pointer">&#8597;</span>
-                </th>
-                <th className="table-cell-sm text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Last sign in
-                </th>
-                <th className="table-cell-sm text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {users && users.length > 0 ? users.map(user => (
-                <tr key={user.id} className="border-b border-border last:border-0 hover:bg-muted/60 transition-colors">
-                  <td className="table-cell-sm font-mono">{user.id}</td>
-                  <td className="table-cell-sm">{user.username}</td>
-                  <td className="table-cell-sm">{user.email}</td>
-                  <td className="table-cell-sm">{user.phone}</td>
-                  <td className="table-cell-sm">Email</td>
-                  <td className="table-cell-sm">-</td>
-                  <td className="table-cell-sm font-mono">{new Date().toUTCString().slice(0, 25)}</td>
-                  <td className="table-cell-sm text-muted-foreground">Waiting for verification</td>
-                  <td className="table-cell-sm text-right">
+        {loading ? (
+          <div className="flex items-center justify-center py-8">
+            <RefreshCw className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <NotificationCard
+            variant="error"
+            icon={AlertCircle}
+            title="Error Loading Accounts"
+            description={error}
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="font-mono">Entity ID</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Profile Name</TableHead>
+                <TableHead>Auth Method</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Created</TableHead>
+                <TableHead>Last Updated</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {accounts.length > 0 ? accounts.map(account => (
+                <TableRow key={account.id}>
+                  <TableCell className="font-mono text-xs">
+                    {account.ownerEntityId.slice(0, 8)}...
+                  </TableCell>
+                  <TableCell>{account.email}</TableCell>
+                  <TableCell>
+                    {account.profile?.name || <span className="text-muted-foreground">No profile</span>}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary" className="text-xs">
+                      {account.authMethod}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={account.isActive ? "default" : "secondary"}>
+                      {account.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {formatDate(account.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {formatDate(account.lastUpdated)}
+                  </TableCell>
+                  <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button size="icon" variant="ghost" className="h-8 w-8">
                           <span className="sr-only">Open menu</span>
-                          <svg width="18" height="18" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/><circle cx="12" cy="19" r="1.5" fill="currentColor"/></svg>
+                          <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(user)}>Edit</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(user)}>Delete</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleEdit(account)}>
+                          Edit Account
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDelete(account)}
+                          className="text-destructive"
+                        >
+                          Delete Account
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               )) : (
-                <tr>
-                  <td colSpan={9} className="table-cell-sm text-center text-muted-foreground">No users found</td>
-                </tr>
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    No accounts found
+                  </TableCell>
+                </TableRow>
               )}
-            </tbody>
-          </table>
-        </div>
+            </TableBody>
+          </Table>
+        )}
         
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-sm pt-lg">
-          <div className="text-xs text-muted-foreground">{`0 of ${users?.length ?? 0} row(s) selected.`}</div>
+          <div className="text-xs text-muted-foreground">
+            {accounts.length} account{accounts.length !== 1 ? 's' : ''} total
+          </div>
           <div className="flex items-center gap-md">
             <span className="text-xs">Rows per page</span>
             <select className="bg-card border border-border rounded px-sm py-xs text-xs">

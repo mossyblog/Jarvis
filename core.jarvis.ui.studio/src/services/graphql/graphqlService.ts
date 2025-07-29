@@ -1,25 +1,23 @@
 import type { NavigationItem } from '../api/types';
+import { ACCESS_TOKEN_KEY } from '../../utils/tokenUtils';
 
 /**
- * GraphQL service for direct PostgreSQL GraphQL queries
- * Bypasses Azure Functions layer for better performance
+ * GraphQL service for querying Jarvis data through Azure Functions
+ * Uses the GraphQL endpoint in the API
  */
 export class GraphQLService {
   private readonly endpoint: string;
 
-  constructor(endpoint: string = 'postgresql://localhost:5432/jarvis_test') {
+  constructor(endpoint: string = 'http://localhost:7071/api/graphql') {
+    // Azure Functions GraphQL endpoint
     this.endpoint = endpoint;
   }
 
   /**
-   * Execute a GraphQL query via the API bridge
-   * TODO: Replace with direct PostgreSQL connection when GraphQL endpoint is exposed
+   * Execute a GraphQL query through Azure Functions
    */
   private async executeQuery<T>(query: string, variables?: Record<string, any>): Promise<T> {
-    // Temporary bridge through existing API infrastructure
-    // This will be replaced with direct PostgreSQL GraphQL connection
-    
-    const response = await fetch('http://localhost:7071/api/graphql', {
+    const response = await fetch(this.endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -48,7 +46,7 @@ export class GraphQLService {
    * Get JWT token from localStorage
    */
   private getJWTToken(): string {
-    const token = localStorage.getItem('jarvis_access_token');
+    const token = localStorage.getItem(ACCESS_TOKEN_KEY);
     if (!token) {
       throw new Error('No authentication token available');
     }
@@ -226,6 +224,52 @@ export class GraphQLService {
     } catch (error) {
       console.error('Failed to check navigation access via GraphQL:', error);
       return false;
+    }
+  }
+
+  /**
+   * Get all accounts with their security profiles
+   */
+  async getAccounts(): Promise<any[]> {
+    const query = `
+      query GetAccounts {
+        account_componentCollection {
+          edges {
+            node {
+              id
+              owner_entity_id
+              email
+              auth_method
+              is_active
+              created_at
+              last_updated
+            }
+          }
+        }
+      }
+    `;
+
+    try {
+      const result = await this.executeQuery<{
+        account_componentCollection: {
+          edges: Array<{
+            node: any;
+          }>;
+        };
+      }>(query);
+
+      return result.account_componentCollection?.edges?.map(edge => ({
+        id: edge.node.id,
+        ownerEntityId: edge.node.owner_entity_id,
+        email: edge.node.email,
+        authMethod: edge.node.auth_method,
+        isActive: edge.node.is_active,
+        createdAt: edge.node.created_at,
+        lastUpdated: edge.node.last_updated
+      })) || [];
+    } catch (error) {
+      console.error('Failed to fetch accounts via GraphQL:', error);
+      return [];
     }
   }
 

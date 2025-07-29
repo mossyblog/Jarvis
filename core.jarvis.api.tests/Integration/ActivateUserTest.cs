@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.tests.Helpers;
+using core.jarvis.Exceptions;
 using Xunit;
 using Shouldly;
 
@@ -32,7 +33,15 @@ public class ActivateUserTest : IntegrationTestBase
         var accountHandler = TestDataContext().For<AccountHandler>(entityGuid);
         
         Console.WriteLine("1. Checking if account exists...");
-        var existingAccount = await accountHandler.GetOrDefault();
+        Account? existingAccount = null;
+        try
+        {
+            existingAccount = await accountHandler.Get();
+        }
+        catch (EntityNotFoundException)
+        {
+            // Account doesn't exist
+        }
         
         if (existingAccount == null)
         {
@@ -71,7 +80,15 @@ public class ActivateUserTest : IntegrationTestBase
         
         // Verify activation by fetching again
         Console.WriteLine("3. Verifying activation...");
-        var verifiedAccount = await accountHandler.GetOrDefault();
+        Account? verifiedAccount = null;
+        try
+        {
+            verifiedAccount = await accountHandler.Get();
+        }
+        catch (EntityNotFoundException)
+        {
+            // Account doesn't exist
+        }
         
         verifiedAccount.ShouldNotBeNull();
         verifiedAccount.IsActive.ShouldBeTrue();

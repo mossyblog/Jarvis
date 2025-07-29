@@ -15,12 +15,19 @@ function App() {
         <AuthProvider>
           <Routes>
           <Route path="/login" element={<Login />} />
-          <Route path="/UserManagement" element={<UserManagement />} />
           <Route 
             path="/" 
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/accounts" 
+            element={
+              <ProtectedRoute>
+                <UserManagement />
               </ProtectedRoute>
             } 
           />
@@ -33,10 +40,32 @@ function App() {
             } 
           />
           <Route 
-            path="/SchemaVisualizer" 
+            path="/schema" 
             element={
               <ProtectedRoute requiredPermission="schema-visualizer">
                 <SchemaVisualizer />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/roles" 
+            element={
+              <ProtectedRoute>
+                <div className="p-8">
+                  <h1 className="text-2xl font-bold">Roles Management</h1>
+                  <p className="text-muted-foreground mt-2">Roles page coming soon...</p>
+                </div>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/settings" 
+            element={
+              <ProtectedRoute>
+                <div className="p-8">
+                  <h1 className="text-2xl font-bold">Settings</h1>
+                  <p className="text-muted-foreground mt-2">Settings page coming soon...</p>
+                </div>
               </ProtectedRoute>
             } 
           />

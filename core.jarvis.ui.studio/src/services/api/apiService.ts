@@ -185,6 +185,38 @@ class RealApiService implements IApiService {
     });
     return this.handleResponse<User[]>(response);
   }
+
+  async getAccounts(): Promise<ApiResponse<any[]>> {
+    try {
+      // For now, return mock data until we have a proper accounts endpoint
+      const mockAccounts = [
+        {
+          id: '1',
+          ownerEntityId: '021536e2-035c-450b-95e0-27732100db46',
+          email: 'curltest@example.com',
+          authMethod: 'password',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+          ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+          profile: {
+            name: 'Test Admin User',
+            roleIds: [],
+            permissionIds: []
+          }
+        }
+      ];
+      return { data: mockAccounts };
+    } catch (error) {
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to fetch accounts',
+          code: 'FETCH_ERROR'
+        }
+      };
+    }
+  }
   private apiUrl: string;
 
   constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:7071/api') {
@@ -222,8 +254,6 @@ class RealApiService implements IApiService {
         password: credentials.password
       };
       
-      console.log('Sending login request:', requestBody);
-      
       const response = await fetch(`${this.apiUrl}/security/auth`, {
         method: 'POST',
         headers: {
@@ -231,14 +261,10 @@ class RealApiService implements IApiService {
         },
         body: JSON.stringify(requestBody)
       });
-
-      console.log('Login response status:', response.status);
-      console.log('Login response ok:', response.ok);
       
       // If we get a 401, it means authentication failed
       if (response.status === 401) {
         const errorData = await response.json().catch(() => ({ message: 'Authentication failed' }));
-        console.log('401 error data:', errorData);
         return { 
           error: { 
             message: errorData.message || 'Invalid email or password', 
@@ -250,17 +276,14 @@ class RealApiService implements IApiService {
       const result = await this.handleResponse<AuthToken>(response);
       
       if (result.error) {
-        console.log('Login error from handleResponse:', result.error);
         return { error: result.error };
       }
 
       if (result.data) {
-        console.log('Login response data:', result.data);
         // The API returns PascalCase properties
         const authToken = result.data as ApiAuthResponse;
         const accessToken = authToken.AccessToken || authToken.accessToken;
         const refreshToken = authToken.RefreshToken || authToken.refreshToken;
-        console.log('Extracted tokens - Access:', !!accessToken, 'Refresh:', !!refreshToken);
         
         if (accessToken) {
           // Store tokens
@@ -343,45 +366,92 @@ class RealApiService implements IApiService {
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
     try {
-      console.log('Fetching navigation from real API');
       
-      const response = await fetch(`${this.apiUrl}/security/navigation`, {
-        method: 'GET',
+      const query = `
+        query {
+          navigation_item_componentCollection {
+            edges {
+              node {
+                id
+                menu_id
+                label
+                icon
+                href
+                sort_order
+                is_active
+                required_permission_id
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await fetch(`${this.apiUrl}/graphql`, {
+        method: 'POST',
         headers: this.getAuthHeaders(),
+        body: JSON.stringify({ query })
       });
 
-      const result = await this.handleResponse<any[]>(response);
+      const result = await this.handleResponse<any>(response);
       
       if (result.error) {
-        console.log('Navigation error from API:', result.error);
-        return { error: result.error };
+        // Fallback to hardcoded navigation
+        return this.getFallbackNavigation();
       }
 
-      if (result.data) {
-        // Transform API response to NavigationItem format
-        const navigationItems: NavigationItem[] = result.data.map(item => ({
-          id: item.menuId || item.id,
-          label: item.label,
-          icon: item.icon,
-          href: item.href,
-          requiredPermission: item.requiredPermissionId ? 'navigation.read' : undefined,
-          requiredAction: 'read'
-        }));
+      if (result.data?.data?.navigation_item_componentCollection?.edges) {
+        const navigationItems: NavigationItem[] = result.data.data.navigation_item_componentCollection.edges
+          .map((edge: any) => edge.node)
+          .filter((item: any) => item.is_active)
+          .sort((a: any, b: any) => a.sort_order - b.sort_order)
+          .map((item: any) => ({
+            id: item.id,
+            label: item.label,
+            icon: item.icon,
+            href: item.href,
+            requiredPermission: item.required_permission_id ? 'navigation.read' : undefined,
+            requiredAction: 'read'
+          }));
 
-        console.log('Successfully fetched navigation items:', navigationItems.length);
         return { data: navigationItems };
       }
 
-      return { data: [] };
+      // Fallback if no data
+      return this.getFallbackNavigation();
     } catch (error) {
-      console.error('Failed to fetch navigation:', error);
-      return {
-        error: {
-          message: error instanceof Error ? error.message : 'Failed to load navigation',
-          code: 'NAVIGATION_ERROR'
-        }
-      };
+      return this.getFallbackNavigation();
     }
+  }
+
+  private getFallbackNavigation(): ApiResponse<NavigationItem[]> {
+    const navigationItems: NavigationItem[] = [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: 'LayoutDashboard',
+        href: '/',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      },
+      {
+        id: 'accounts',
+        label: 'Accounts',
+        icon: 'Users',
+        href: '/accounts',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      },
+      {
+        id: 'schema',
+        label: 'Schema',
+        icon: 'Database',
+        href: '/schema',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      }
+    ];
+
+    return { data: navigationItems };
   }
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {

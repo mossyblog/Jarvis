@@ -103,7 +103,6 @@ public abstract class ApiIntegrationTestBase : IntegrationTestBase
         // Register Azure Functions
         services.AddScoped<AuthFunction>();
         services.AddScoped<DeauthFunction>();
-        services.AddScoped<RefreshFunction>();
         services.AddScoped<ValidateFunction>();
         services.AddScoped<RegisterFunction>();
         

@@ -68,6 +68,11 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
     setBehavior(newBehavior);
     localStorage.setItem(SIDEBAR_BEHAVIOR_KEY, newBehavior);
     setShowDropdown(false);
+    
+    // Dispatch a custom event to notify other components
+    window.dispatchEvent(new CustomEvent('sidebar-behavior-change', { 
+      detail: { behavior: newBehavior } 
+    }));
   };
 
   // Add click outside handler to close dropdown
@@ -98,18 +103,24 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-12 h-[calc(100vh-3.5rem)] bg-gray-900 border-r border-gray-800 z-40 flex flex-col transition-[width] duration-200 ease-out",
+          "fixed left-0 top-12 h-[calc(100vh-3.5rem)] bg-gray-900 border-r border-gray-800 flex flex-col transition-[width] duration-200 ease-out",
           isExpanded ? "w-64" : "w-12",
           "hidden md:flex",
           isMobileOpen && "flex",
-          // Add shadow when expanded on hover
-          behavior === 'expandable' && isExpanded && "shadow-2xl"
+          // Higher z-index and shadow when expanded on hover (overlay mode)
+          behavior === 'expandable' && isExpanded && "z-50 shadow-2xl",
+          // Normal z-index for other modes
+          behavior !== 'expandable' && "z-40"
         )}
         onMouseEnter={() => {
-          if (behavior === 'expandable' && !showDropdown) setIsExpanded(true);
+          if (behavior === 'expandable' && !showDropdown) {
+            setIsExpanded(true);
+          }
         }}
         onMouseLeave={() => {
-          if (behavior === 'expandable' && !showDropdown) setIsExpanded(false);
+          if (behavior === 'expandable' && !showDropdown) {
+            setIsExpanded(false);
+          }
         }}
       >
         {/* Navigation Items */}

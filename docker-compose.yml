@@ -1,13 +1,14 @@
-version: '3.8'
-
 services:
-  db:
-    image: supabase/postgres:15.8.1.060
-    container_name: pg_graphql_db
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: supabase_admin
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: jarvis_test
+  postgres:
+    container_name: jarvis-postgres
+    image: supabase/postgres:15.1.0.147
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres-data:

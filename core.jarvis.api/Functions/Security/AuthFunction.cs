@@ -120,7 +120,7 @@ public class AuthFunction
     /// POST /api/security/refresh
     /// Refreshes authentication tokens.
     /// </summary>
-    [Function("refresh")]
+    [Function("authRefresh")]
     [OpenApiOperation(operationId: "refreshToken", tags: new[] { "Security" }, Summary = "Refresh authentication token", Description = "Refreshes authentication tokens using a valid refresh token.")]
     [OpenApiRequestBody("application/json", typeof(RefreshTokenRequest), Required = true, Description = "Refresh token request")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(AuthToken), Summary = "Token refreshed successfully", Description = "Returns new JWT access token and refresh token")]
@@ -168,7 +168,7 @@ public class AuthFunction
     /// POST /api/security/validate
     /// Validates an authentication token.
     /// </summary>
-    [Function("validate")]
+    [Function("authValidate")]
     [OpenApiOperation(operationId: "validateToken", tags: new[] { "Security" }, Summary = "Validate authentication token", Description = "Validates that an authentication token is valid and not expired.")]
     [OpenApiRequestBody("application/json", typeof(ValidateTokenRequest), Required = true, Description = "Token validation request")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(TokenValidationResult), Summary = "Token is valid", Description = "Returns token validation information")]

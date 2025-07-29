@@ -24,11 +24,24 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
     // Listen for storage changes
     const handleStorageChange = () => {
       const newBehavior = localStorage.getItem(SIDEBAR_BEHAVIOR_KEY) as SidebarBehavior;
-      if (newBehavior) setSidebarBehavior(newBehavior);
+      if (newBehavior) {
+        setSidebarBehavior(newBehavior);
+      }
+    };
+
+    // Listen for custom sidebar behavior change events
+    const handleSidebarBehaviorChange = (event: CustomEvent) => {
+      const newBehavior = event.detail.behavior as SidebarBehavior;
+      setSidebarBehavior(newBehavior);
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('sidebar-behavior-change', handleSidebarBehaviorChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('sidebar-behavior-change', handleSidebarBehaviorChange as EventListener);
+    };
   }, []);
 
   return (
@@ -43,6 +56,8 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
         {/* Main Content */}
         <main className={cn(
           "flex-1 overflow-y-auto overflow-x-hidden transition-all duration-200",
+          // Only push content when sidebar is in 'open' mode
+          // In 'expandable' mode, sidebar overlays content
           sidebarBehavior === 'open' ? "md:ml-64" : "md:ml-12"
         )}>
           {children}

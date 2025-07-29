@@ -39,7 +39,7 @@ public class GraphQLFunction
     /// </summary>
     [Function("ExecuteGraphQL")]
     public async Task<HttpResponseData> ExecuteGraphQL(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "graphql")] HttpRequestData req,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "graphql")] HttpRequestData req,
         FunctionContext executionContext)
     {
         try
@@ -112,11 +112,35 @@ public class GraphQLFunction
                 return errorResponse;
             }
 
+            // Get JWT token from Authorization header
+            string? authHeader = null;
+            if (req.Headers.TryGetValues("Authorization", out var authValues))
+            {
+                authHeader = authValues.FirstOrDefault();
+            }
+            
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            {
+                var authError = new Error
+                {
+                    Code = "UNAUTHORIZED",
+                    Message = "Authorization header with Bearer token is required",
+                    StatusCode = 401
+                };
+                var errorResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(authError, _jsonOptions));
+                return errorResponse;
+            }
+
+            var jwt = authHeader.Substring("Bearer ".Length);
+
             // Execute GraphQL query using the existing infrastructure
             var graphqlQuery = _dataContext.GraphQL(graphqlRequest.Query);
             
-            // Add JWT authentication (already available in DataContext)
+            // Add JWT authentication
             var result = await graphqlQuery
+                .WithAuth(jwt)
                 .WithVariables(graphqlRequest.Variables ?? new object())
                 .Execute<object>();
 
@@ -128,11 +152,11 @@ public class GraphQLFunction
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error executing GraphQL query");
+            _logger.LogError(ex, "Error executing GraphQL query: {Message}", ex.Message);
             var serverError = new Error
             {
-                Code = "GRAPHQL_ERROR",
-                Message = "GraphQL query execution failed",
+                Code = "GRAPHQL_ERROR", 
+                Message = $"GraphQL query execution failed: {ex.Message}",
                 StatusCode = 500
             };
             var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
