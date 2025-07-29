@@ -1,9 +1,7 @@
 #!/bin/bash
 
-# Jarvis Database Setup Script
-# This script sets up the PostgreSQL database exactly as the ECS framework expects
-# 
-# Usage: ./setup.sh
+# Jarvis Database Docker Initialization Script
+# This script runs automatically when the PostgreSQL container starts for the first time
 # 
 # This script is idempotent - it can be run multiple times safely.
 # It will create tables, default users, and navigation items.
@@ -14,54 +12,40 @@
 
 set -e  # Exit on any error
 
-DB_HOST=${DB_HOST:-localhost}
-DB_PORT=${DB_PORT:-5432}
-DB_NAME=${DB_NAME:-jarvis_test}
-DB_USER=${DB_USER:-postgres}
-DB_PASSWORD=${DB_PASSWORD:-postgres}
+DB_NAME=${POSTGRES_DB:-jarvis_test}
+DB_USER=${POSTGRES_USER:-postgres}
 
 echo "========================================="
-echo "Setting up Jarvis database..."
+echo "🚀 Jarvis Database Docker Initialization"
 echo "Database: $DB_NAME"
-echo "Host: $DB_HOST:$DB_PORT"
 echo "User: $DB_USER"
 echo "========================================="
 
-# Function to execute SQL commands
+# Function to execute SQL commands (runs inside container, no docker exec needed)
 execute_sql() {
-    docker exec jarvis-postgres psql -U $DB_USER -c "$1"
+    psql -U "$DB_USER" -c "$1"
 }
 
 # Function to execute SQL commands in a specific database
 execute_sql_db() {
-    docker exec jarvis-postgres psql -U $DB_USER -d $1 -c "$2"
+    psql -U "$DB_USER" -d "$1" -c "$2"
 }
 
-# Check if Docker container is running
-if ! docker ps | grep -q jarvis-postgres; then
-    echo "Error: jarvis-postgres container is not running"
-    echo "Please run: docker-compose up -d"
-    exit 1
-fi
-
 # Create database if it doesn't exist
-echo "Creating database $DB_NAME..."
+echo "📊 Creating database $DB_NAME..."
 execute_sql "SELECT 'CREATE DATABASE $DB_NAME' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$DB_NAME')\gexec" || true
 
 # Create supabase_admin role (required for pg_graphql)
-echo "Creating supabase_admin role..."
+echo "👤 Creating supabase_admin role..."
 execute_sql "CREATE ROLE supabase_admin WITH LOGIN SUPERUSER PASSWORD 'postgres'" || true
 
-# Enable required extensions
-echo "Enabling PostgreSQL extensions..."
-execute_sql_db $DB_NAME "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";"
-execute_sql_db $DB_NAME "CREATE EXTENSION IF NOT EXISTS pg_graphql;"
-execute_sql_db $DB_NAME "CREATE EXTENSION IF NOT EXISTS pgcrypto;"
-execute_sql_db $DB_NAME "CREATE EXTENSION IF NOT EXISTS pgjwt;"
+# Enable pg_graphql extension
+echo "🔗 Enabling pg_graphql extension..."
+execute_sql_db "$DB_NAME" "CREATE EXTENSION IF NOT EXISTS pg_graphql CASCADE"
 
 # Create account_component table (based on Account.cs model)
-echo "Creating account_component table..."
-execute_sql_db $DB_NAME "
+echo "👤 Creating account_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS account_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -84,8 +68,8 @@ CREATE INDEX IF NOT EXISTS idx_account_component_email ON account_component(emai
 "
 
 # Create security_profile_component table
-echo "Creating security_profile_component table..."
-execute_sql_db $DB_NAME "
+echo "🔐 Creating security_profile_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS security_profile_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -102,8 +86,8 @@ CREATE INDEX IF NOT EXISTS idx_security_profile_component_last_updated ON securi
 "
 
 # Create navigation_item_component table
-echo "Creating navigation_item_component table..."
-execute_sql_db $DB_NAME "
+echo "🧭 Creating navigation_item_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS navigation_item_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -125,8 +109,8 @@ CREATE INDEX IF NOT EXISTS idx_navigation_item_component_sort_order ON navigatio
 "
 
 # Create role_component table
-echo "Creating role_component table..."
-execute_sql_db $DB_NAME "
+echo "👥 Creating role_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS role_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -141,8 +125,8 @@ CREATE INDEX IF NOT EXISTS idx_role_component_last_updated ON role_component(las
 "
 
 # Create permission_component table
-echo "Creating permission_component table..."
-execute_sql_db $DB_NAME "
+echo "🔑 Creating permission_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS permission_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -156,8 +140,8 @@ CREATE INDEX IF NOT EXISTS idx_permission_component_last_updated ON permission_c
 "
 
 # Create auth_token_component table
-echo "Creating auth_token_component table..."
-execute_sql_db $DB_NAME "
+echo "🎫 Creating auth_token_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS auth_token_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -184,8 +168,8 @@ CREATE INDEX IF NOT EXISTS idx_auth_token_component_session_id ON auth_token_com
 "
 
 # Create system_setup_component table
-echo "Creating system_setup_component table..."
-execute_sql_db $DB_NAME "
+echo "⚙️ Creating system_setup_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS system_setup_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -200,8 +184,8 @@ CREATE INDEX IF NOT EXISTS idx_system_setup_component_last_updated ON system_set
 "
 
 # Create token_validation_component table
-echo "Creating token_validation_component table..."
-execute_sql_db $DB_NAME "
+echo "🔍 Creating token_validation_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS token_validation_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -218,8 +202,8 @@ CREATE INDEX IF NOT EXISTS idx_token_validation_component_last_updated ON token_
 "
 
 # Create entity_relationship table (for parent-child relationships)
-echo "Creating entity_relationship table..."
-execute_sql_db $DB_NAME "
+echo "🔗 Creating entity_relationship table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS entity_relationship (
     parent_entity_id UUID NOT NULL,
     child_entity_id UUID NOT NULL,
@@ -234,8 +218,8 @@ CREATE INDEX IF NOT EXISTS idx_entity_relationship_child ON entity_relationship(
 "
 
 # Create component_snapshots table (for snapshot functionality)
-echo "Creating component_snapshots table..."
-execute_sql_db $DB_NAME "
+echo "📸 Creating component_snapshots table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS component_snapshots (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     entity_id UUID NOT NULL,
@@ -252,8 +236,8 @@ CREATE INDEX IF NOT EXISTS idx_component_snapshots_created_at ON component_snaps
 "
 
 # Create audit_event_component table
-echo "Creating audit_event_component table..."
-execute_sql_db $DB_NAME "
+echo "📋 Creating audit_event_component table..."
+execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS audit_event_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -275,162 +259,111 @@ CREATE INDEX IF NOT EXISTS idx_audit_event_component_entity_id ON audit_event_co
 CREATE INDEX IF NOT EXISTS idx_audit_event_component_timestamp ON audit_event_component(timestamp);
 "
 
-# Create test user if running in test mode
-if [ "$DB_NAME" = "jarvis_test" ]; then
-    echo "Creating test user..."
-    execute_sql_db $DB_NAME "
-    INSERT INTO account_component (
-        id, 
-        owner_entity_id, 
-        email, 
-        password_hash, 
-        auth_method, 
-        is_active,
-        created_at,
-        last_updated
-    ) VALUES (
-        'f47ac10b-58cc-4372-a567-0e02b2c3d479',
-        'f47ac10b-58cc-4372-a567-0e02b2c3d480',
-        'test@example.com',
-        '\$2a\$10\$G7V86I50b3Z0iexpJesSWuo3AlFo0tWY.GqvNbRodfdahpqv6qh0i',
-        'password',
-        true,
-        NOW(),
-        NOW()
-    ) ON CONFLICT (id) DO UPDATE SET
-        email = EXCLUDED.email,
-        password_hash = EXCLUDED.password_hash,
-        is_active = EXCLUDED.is_active,
-        last_updated = NOW();
-    "
-    
-    echo "Creating additional test accounts..."
-    execute_sql_db $DB_NAME "
-    INSERT INTO account_component (
-        id, 
-        owner_entity_id, 
-        email, 
-        password_hash, 
-        auth_method, 
-        is_active,
-        created_at,
-        last_updated
-    ) VALUES 
-    (
-        'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-        'a1b2c3d4-e5f6-7890-abcd-ef1234567891',
-        'admin@jarvis.com',
-        '\$2a\$10\$G7V86I50b3Z0iexpJesSWuo3AlFo0tWY.GqvNbRodfdahpqv6qh0i',
-        'password',
-        true,
-        NOW(),
-        NOW()
-    ),
-    (
-        'b2c3d4e5-f6a7-8901-bcde-f12345678901',
-        'b2c3d4e5-f6a7-8901-bcde-f12345678902',
-        'user@jarvis.com',
-        '\$2a\$10\$G7V86I50b3Z0iexpJesSWuo3AlFo0tWY.GqvNbRodfdahpqv6qh0i',
-        'password',
-        true,
-        NOW(),
-        NOW()
-    ),
-    (
-        'c3d4e5f6-a7b8-9012-cdef-123456789012',
-        'c3d4e5f6-a7b8-9012-cdef-123456789013',
-        'demo@jarvis.com',
-        '\$2a\$10\$G7V86I50b3Z0iexpJesSWuo3AlFo0tWY.GqvNbRodfdahpqv6qh0i',
-        'password',
-        false,
-        NOW() - INTERVAL '30 days',
-        NOW()
-    )
-    ON CONFLICT (id) DO UPDATE SET
-        email = EXCLUDED.email,
-        is_active = EXCLUDED.is_active,
-        last_updated = NOW();
-    "
-    
-    echo "Creating default navigation items..."
-    execute_sql_db $DB_NAME "
-    INSERT INTO navigation_item_component (
-        id, 
-        owner_entity_id, 
-        menu_id,
-        label, 
-        icon,
-        href,
-        sort_order,
-        is_active,
-        last_updated
-    ) VALUES 
-    (
-        '550e8400-e29b-41d4-a716-446655440001',
-        '550e8400-e29b-41d4-a716-446655440011',
-        'main',
-        'Dashboard',
-        'LayoutDashboard',
-        '/',
-        1,
-        true,
-        NOW()
-    ),
-    (
-        '550e8400-e29b-41d4-a716-446655440002',
-        '550e8400-e29b-41d4-a716-446655440012', 
-        'main',
-        'Accounts',
-        'Users',
-        '/accounts',
-        2,
-        true,
-        NOW()
-    ),
-    (
-        '550e8400-e29b-41d4-a716-446655440003',
-        '550e8400-e29b-41d4-a716-446655440013',
-        'main', 
-        'Schema',
-        'Database',
-        '/schema',
-        3,
-        true,
-        NOW()
-    )
-    ON CONFLICT (id) DO UPDATE SET
-        label = EXCLUDED.label,
-        href = EXCLUDED.href,
-        is_active = EXCLUDED.is_active,
-        last_updated = NOW();
-    "
-fi
+# Seed default test user
+echo "👤 Creating default test user..."
+execute_sql_db "$DB_NAME" "
+INSERT INTO account_component (
+    id, 
+    owner_entity_id, 
+    email, 
+    password_hash, 
+    auth_method, 
+    is_active,
+    created_at,
+    last_updated
+) VALUES (
+    'f47ac10b-58cc-4372-a567-0e02b2c3d479',
+    'f47ac10b-58cc-4372-a567-0e02b2c3d480',
+    'test@example.com',
+    '\$2a\$10\$G7V86I50b3Z0iexpJesSWuo3AlFo0tWY.GqvNbRodfdahpqv6qh0i',
+    'password',
+    true,
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    password_hash = EXCLUDED.password_hash,
+    is_active = EXCLUDED.is_active,
+    last_updated = NOW();
+"
 
-# Setup GraphQL if extension is available
-echo "Setting up GraphQL..."
-execute_sql_db $DB_NAME "
+# Seed navigation items
+echo "🧭 Creating navigation items..."
+execute_sql_db "$DB_NAME" "
+INSERT INTO navigation_item_component (
+    id, 
+    owner_entity_id, 
+    menu_id,
+    label, 
+    icon,
+    href,
+    sort_order,
+    is_active,
+    last_updated
+) VALUES 
+(
+    '550e8400-e29b-41d4-a716-446655440001',
+    '550e8400-e29b-41d4-a716-446655440011',
+    'main',
+    'Dashboard',
+    'LayoutDashboard',
+    '/',
+    1,
+    true,
+    NOW()
+),
+(
+    '550e8400-e29b-41d4-a716-446655440002',
+    '550e8400-e29b-41d4-a716-446655440012',
+    'main',
+    'Accounts',
+    'Users',
+    '/accounts',
+    2,
+    true,
+    NOW()
+),
+(
+    '550e8400-e29b-41d4-a716-446655440003',
+    '550e8400-e29b-41d4-a716-446655440013',
+    'main',
+    'Schema',
+    'Database',
+    '/schema',
+    3,
+    true,
+    NOW()
+)
+ON CONFLICT (id) DO UPDATE SET
+    label = EXCLUDED.label,
+    icon = EXCLUDED.icon,
+    href = EXCLUDED.href,
+    sort_order = EXCLUDED.sort_order,
+    is_active = EXCLUDED.is_active,
+    last_updated = NOW();
+"
+
+# Grant GraphQL permissions
+echo "🔗 Granting GraphQL permissions..."
+execute_sql_db "$DB_NAME" "
 DO \$\$
 BEGIN
-    -- Check if pg_graphql is installed
-    IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_graphql') THEN
-        -- Create GraphQL schema if it doesn't exist
-        CREATE SCHEMA IF NOT EXISTS graphql;
-        
-        -- Grant permissions
+    -- Grant necessary permissions for GraphQL if schema exists
+    IF EXISTS (SELECT 1 FROM pg_namespace WHERE nspname = 'graphql') THEN
         GRANT USAGE ON SCHEMA graphql TO postgres;
         GRANT ALL ON ALL TABLES IN SCHEMA graphql TO postgres;
         GRANT ALL ON ALL SEQUENCES IN SCHEMA graphql TO postgres;
         GRANT ALL ON ALL FUNCTIONS IN SCHEMA graphql TO postgres;
         
-        RAISE NOTICE 'GraphQL setup completed';
+        RAISE NOTICE 'GraphQL permissions granted';
     ELSE
-        RAISE NOTICE 'pg_graphql extension not found - skipping GraphQL setup';
+        RAISE NOTICE 'GraphQL schema not found - skipping permissions';
     END IF;
 END \$\$;
 "
 
 echo "========================================="
-echo "✅ Database setup completed successfully!"
+echo "✅ Database initialization completed!"
 echo "========================================="
 echo ""
 echo "📋 Summary:"
@@ -440,13 +373,4 @@ echo "  • Default test user: test@example.com / TestPassword123!"
 echo "  • Navigation items configured"
 echo "  • GraphQL extension configured (if available)"
 echo ""
-echo "🔌 Connection details:"
-echo "  Host: $DB_HOST"
-echo "  Port: $DB_PORT"
-echo "  Database: $DB_NAME"
-echo "  User: $DB_USER"
-echo ""
-echo "💡 To connect manually:"
-echo "   psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME"
-echo ""
-echo "🚀 Ready to start the API with: func start --port 7071"
+echo "🚀 Database is ready for the Jarvis API!"

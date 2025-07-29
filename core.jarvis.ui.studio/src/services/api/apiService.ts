@@ -254,6 +254,10 @@ class RealApiService implements IApiService {
         password: credentials.password
       };
       
+      console.log('DEBUG: RealApiService.login - apiUrl:', this.apiUrl);
+      console.log('DEBUG: RealApiService.login - full URL:', `${this.apiUrl}/security/auth`);
+      console.log('DEBUG: RealApiService.login - requestBody:', requestBody);
+      
       const response = await fetch(`${this.apiUrl}/security/auth`, {
         method: 'POST',
         headers: {
@@ -548,12 +552,17 @@ export function createApiService(): IApiService {
   // Check environment variable first
   const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
   
+  console.log('DEBUG: VITE_USE_MOCK_API =', import.meta.env.VITE_USE_MOCK_API);
+  console.log('DEBUG: useMockApi =', useMockApi);
+  console.log('DEBUG: VITE_API_URL =', import.meta.env.VITE_API_URL);
+  
   if (useMockApi) {
     console.warn('Using mock API service. Set VITE_USE_MOCK_API=false to use real API.');
     return new MockApiService();
   }
   
   // Always use real API in production or when env var is false
+  console.log('DEBUG: Using RealApiService');
   return new RealApiService();
 }
 

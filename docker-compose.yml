@@ -6,8 +6,11 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: jarvis_test
+      POSTGRES_USER: postgres
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./docker-init:/docker-entrypoint-initdb.d:ro
     restart: unless-stopped
 
 volumes:

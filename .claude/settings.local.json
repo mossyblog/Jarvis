@@ -24,7 +24,11 @@
       "Bash(rg:*)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:tweakcn.com)",
-      "Bash(docker exec:*)"
+      "Bash(docker exec:*)",
+      "Bash(docker-compose down:*)",
+      "Bash(docker-compose up:*)",
+      "Bash(docker-compose logs:*)",
+      "Bash(sudo mv:*)"
     ],
     "deny": []
   }
