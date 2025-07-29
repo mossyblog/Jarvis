@@ -4,7 +4,6 @@ import type { User as BaseUser } from '../services/api/types';
 import { Button } from '../components/ui/button';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/dropdown-menu';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
-import { COMPONENT_SPACING } from '../utils/spacing';
 
 // Extend User type for UI fields
 interface UserWithUIFields extends BaseUser {

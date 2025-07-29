@@ -17,7 +17,7 @@ interface SidebarItem {
 
 // Icon mapping function
 const getIcon = (iconName: string, size: number = 18) => {
-  const IconComponent = Icons[iconName as keyof typeof Icons] as any;
+  const IconComponent = Icons[iconName as keyof typeof Icons] as React.ComponentType<{ size?: number }>;
   return IconComponent ? <IconComponent size={size} /> : <FileText size={size} />;
 };
 

@@ -25,6 +25,7 @@ import { OrganizationDropdown } from './dropdowns/OrganizationDropdown'
 import { ProjectDropdown } from './dropdowns/ProjectDropdown'
 import { BranchDropdown } from './dropdowns/BranchDropdown'
 import { UserMenu } from './UserMenu'
+import { ThemeSwitcher } from '@/components/ui/theme-switcher'
 
 // Component implementations
 const HomeIcon = () => (
@@ -47,7 +48,12 @@ const EnableBranchingButton = () => (
   </Button>
 )
 
-const BreadcrumbsView = ({ defaultValue }: { defaultValue: any[] }) => {
+interface Breadcrumb {
+  label?: string;
+  value?: string;
+}
+
+const BreadcrumbsView = ({ defaultValue }: { defaultValue: (string | Breadcrumb)[] }) => {
   if (!defaultValue.length) return null
   
   return (
@@ -55,7 +61,7 @@ const BreadcrumbsView = ({ defaultValue }: { defaultValue: any[] }) => {
       {defaultValue.map((crumb, index) => (
         <span key={index} className="flex items-center">
           {index > 0 && <span className="mx-2">/</span>}
-          <span>{crumb.label || crumb}</span>
+          <span>{typeof crumb === 'string' ? crumb : crumb.label}</span>
         </span>
       ))}
     </div>
@@ -148,7 +154,7 @@ const LayoutHeaderDivider = ({ className, ...props }: React.HTMLProps<HTMLSpanEl
 
 interface LayoutHeaderProps {
   customHeaderComponents?: ReactNode
-  breadcrumbs?: any[]
+  breadcrumbs?: (string | Breadcrumb)[]
   headerTitle?: string
   showProductMenu?: boolean
 }
@@ -294,6 +300,7 @@ const LayoutHeader = ({
         <div className="flex items-center gap-x-2">
           {customHeaderComponents && customHeaderComponents}
           <>
+            <ThemeSwitcher />
             <FeedbackDropdown />
             <NotificationsPopoverV2 />
             <HelpPopover />

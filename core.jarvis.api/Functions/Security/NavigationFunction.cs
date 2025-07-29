@@ -69,7 +69,7 @@ public class NavigationFunction
     }
 
     /// <summary>
-    /// Gets all navigation items.
+    /// Gets navigation items filtered by user permissions following API→Handler→ECS pattern.
     /// </summary>
     [Function("GetNavigationItems")]
     public async Task<HttpResponseData> GetNavigationItems(
@@ -94,24 +94,35 @@ public class NavigationFunction
                 return errorResponse;
             }
 
-            // Get all navigation items
-            var navEntities = await _dataContext.Query()
-                .WithAll<NavigationItem>(n => true)
-                .ToEntityComponents();
-
-            var navigationItems = new List<NavigationItem>();
-            foreach (var kvp in navEntities)
+            // Step 1: Get user permissions via AccountProfileHandler (proper ECS pattern)
+            var profileHandler = _dataContext.For<AccountProfileHandler>(userId);
+            SecurityProfile? userProfile = null;
+            try
             {
-                var navItem = kvp.Value.Get<NavigationItem>();
-                if (navItem != null)
-                {
-                    navigationItems.Add(navItem);
-                }
+                userProfile = await profileHandler.Get();
             }
+            catch
+            {
+                // User profile doesn't exist - will be handled below
+            }
+            
+            if (userProfile == null)
+            {
+                _logger.LogWarning("No SecurityProfile found for user {UserId}", userId);
+                // Return empty navigation for users without profiles
+                var emptyResponse = req.CreateResponse(HttpStatusCode.OK);
+                emptyResponse.Headers.Add("Content-Type", "application/json");
+                await emptyResponse.WriteStringAsync(JsonSerializer.Serialize(new List<NavigationItem>(), _jsonOptions));
+                return emptyResponse;
+            }
+
+            // Step 2: Get filtered navigation via NavigationHandler (proper ECS pattern)
+            var navigationHandler = _dataContext.For<NavigationHandler>(Guid.NewGuid()); // Handler doesn't need specific entity
+            var navigationItems = await navigationHandler.GetUserNavigation(userProfile.PermissionIds);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
-            await response.WriteStringAsync(JsonSerializer.Serialize(navigationItems.OrderBy(n => n.SortOrder), _jsonOptions));
+            await response.WriteStringAsync(JsonSerializer.Serialize(navigationItems, _jsonOptions));
             return response;
         }
         catch (Exception ex)

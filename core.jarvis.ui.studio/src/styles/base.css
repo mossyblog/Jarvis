@@ -1,0 +1,24 @@
+/* Base styles and CSS custom properties for theming */
+@import './themes/default/light.css';
+@import './themes/default/dark.css';
+@import './themes/supabase/light.css';
+@import './themes/supabase/dark.css';
+
+@layer base {
+  :root {
+    /* Base radius for all themes */
+    --radius: 0.5rem;
+    
+    /* Font Variables */
+    --font-custom: 'Inter', system-ui, sans-serif;
+    --font-source-code-pro: 'Source Code Pro', 'Office Code Pro', 'Menlo', monospace;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+  }
+}

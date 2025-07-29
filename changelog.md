@@ -1,5 +1,57 @@
 # Changelog
 
+## 2.1.3
+
+### Added
+- **Registration API**: Implemented proper API→Handler pattern for user registration
+  - `RegisterFunction` follows thin API layer pattern accepting only IComponent
+  - `AccountHandler.Register()` method handles all business logic including BCrypt password hashing
+  - Users created as inactive by default, requiring manual activation for security
+  - Fixed ValidationException handling with proper Dictionary<string, string[]> format
+  
+- **Navigation System**: Complete ECS-based navigation menu implementation
+  - `NavigationItem` component model with menu metadata (icon, href, sort order, permissions)
+  - `NavigationHandler` for navigation business logic following single responsibility principle
+  - Navigation items stored in `navigation_item_component` table with automatic creation
+  - Permission-based navigation filtering integrated with security profiles
+  
+- **GraphQL Infrastructure**: Prepared foundation for direct UI→GraphQL→PostgreSQL architecture
+  - `GraphQLService` for TypeScript/React to execute GraphQL queries
+  - `GraphQLFunction` as temporary bridge endpoint until direct PostgreSQL GraphQL access
+  - GraphQL queries for navigation with permission filtering and RLS support
+  - JWT token extraction and user context propagation to GraphQL
+
+### Changed
+- **Authentication Flow**: Fixed authentication to work with real API backend
+  - Removed mock authentication in favor of real JWT-based authentication
+  - Fixed login form credentials to match actual test user (TestPassword123!)
+  - Added activation step requirement between registration and authentication
+  - Proven working with definitive curl testing (1/0 proof)
+
+- **API Service**: Migrated from mock data to real API integration
+  - Updated `apiService.ts` to fetch navigation from `/api/security/navigation`
+  - Proper error handling and data transformation for API responses
+  - JWT token management with automatic refresh scheduling
+  - Real-time navigation loading based on user permissions
+
+### Fixed
+- **Database Consistency**: Consolidated to single jarvis_test database
+  - Cleaned up multiple database references (jarvis, jarvis_graphql, etc.)
+  - All components now use consistent jarvis_test database
+  - Fixed navigation_item_component table creation through ECS auto-schema
+
+- **Compilation Errors**: Resolved multiple API project build issues
+  - Added missing `using core.jarvis.api.Middleware` for extension methods
+  - Fixed `GetUserNavigation` method not found by using profile retrieval pattern
+  - Resolved `GetOrDefault()` accessibility issues with proper try-catch approach
+
+### Architecture
+- **ECS Pattern Enforcement**: Strict adherence to API→Handler→ECS architecture
+  - API layer (Functions) remain thin, only accepting GUID or IComponent
+  - Handlers contain all business logic and component operations
+  - Systems orchestrate workflows across multiple handlers
+  - GraphQL positioned as direct data access layer bypassing Functions
+
 ## 2.1.2
 
 ### Fixed

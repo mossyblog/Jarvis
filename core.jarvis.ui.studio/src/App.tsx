@@ -5,19 +5,15 @@ import TableEditor from './pages/TableEditor';
 import SchemaVisualizer from './pages/SchemaVisualizer';
 import { Login } from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { useEffect } from 'react';
 
 function App() {
-  useEffect(() => {
-    // Apply Supabase dark theme
-    document.documentElement.classList.add('supabase-dark');
-  }, []);
-
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
+    <ThemeProvider defaultTheme="supabase" defaultMode="dark">
+      <Router>
+        <AuthProvider>
+          <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/UserManagement" element={<UserManagement />} />
           <Route 
@@ -47,6 +43,7 @@ function App() {
         </Routes>
       </AuthProvider>
     </Router>
+  </ThemeProvider>
   );
 }
 

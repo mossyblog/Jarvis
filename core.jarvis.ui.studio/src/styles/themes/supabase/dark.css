@@ -1,0 +1,55 @@
+/* Supabase Dark Theme */
+/* Based on the existing supabase-dark theme from index.css */
+
+:root[data-theme="supabase"][data-mode="dark"] {
+  /* Core colors */
+  --background: 0 0% 9%;
+  --foreground: 0 0% 98%;
+  --card: 0 0% 11%;
+  --card-foreground: 0 0% 98%;
+  --popover: 0 0% 11%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 142 75% 57%;
+  --primary-foreground: 0 0% 9%;
+  --secondary: 0 0% 13%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 0 0% 13%;
+  --muted-foreground: 0 0% 55%;
+  --accent: 142 75% 57%;
+  --accent-foreground: 0 0% 9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 0 0% 17%;
+  --input: 0 0% 13%;
+  --ring: 142 75% 57%;
+  
+  /* Additional colors */
+  --foreground-light: 0 0% 63.9%;
+  --foreground-lighter: 0 0% 45.1%;
+  --border-stronger: 0 0% 22%;
+  
+  /* Supabase specific */
+  --dash-sidebar: 0 0% 9%;
+  --default: 0 0% 17%;
+  --brand: 142 75% 57%;
+  --brand-600: 142 75% 47%;
+  --gray-100: 0 0% 94%;
+  --gray-200: 0 0% 85%;
+  --gray-300: 0 0% 74%;
+  --gray-400: 0 0% 55%;
+  --gray-500: 0 0% 45%;
+  --gray-600: 0 0% 35%;
+  --gray-700: 0 0% 25%;
+  --gray-800: 0 0% 13%;
+  --gray-900: 0 0% 9%;
+  
+  /* Sidebar colors */
+  --sidebar-background: 0 0% 9%;
+  --sidebar-foreground: 0 0% 98%;
+  --sidebar-primary: 142 75% 57%;
+  --sidebar-primary-foreground: 0 0% 9%;
+  --sidebar-accent: 0 0% 13%;
+  --sidebar-accent-foreground: 0 0% 98%;
+  --sidebar-border: 0 0% 17%;
+  --sidebar-ring: 142 75% 57%;
+}

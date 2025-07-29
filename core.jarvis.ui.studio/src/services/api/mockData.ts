@@ -47,6 +47,17 @@ export const mockRoles: Record<string, Role> = {
 
 export const mockUsers: User[] = [
   {
+    id: 'user-test',
+    email: 'test@example.com',
+    name: 'Test User',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=test',
+    roles: [mockRoles.admin],
+    preferences: {
+      theme: 'dark',
+      sidebarBehavior: 'open'
+    }
+  },
+  {
     id: 'user-1',
     email: 'admin@jarvis.io',
     name: 'Admin User',

@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(ls:*)",
+      "Bash(dotnet build)",
+      "Bash(dotnet test:*)",
+      "Bash(pwsh:*)",
+      "Bash(powershell:*)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe build)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.data.tests --verbosity normal)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.data.tests --filter \"DateTimeProperties_WithAtSuffix_MapCorrectly\" --verbosity normal)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.data.tests --filter \"DateTimeProperties_WithAtSuffix_MapCorrectly\" --verbosity quiet)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.data.tests --verbosity quiet)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.tests --verbosity quiet)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.api.tests --verbosity quiet)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.tests --filter \"ConcurrencyControlIntegrationTests\" --verbosity normal)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.tests --filter \"TryCommit_WithMatchingVersion_ShouldSucceedAndIncrementVersion\" --verbosity normal)",
+      "Bash(/mnt/c/Program Files/dotnet/dotnet.exe test core.jarvis.api.tests --filter \"Authenticate_Should_Generate_Small_Tokens\" --verbosity normal)",
+      "Bash(timeout:*)",
+      "WebFetch(domain:www.postgresql.org)",
+      "Bash(dotnet build:*)",
+      "Bash(rg:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:tweakcn.com)",
+      "Bash(docker exec:*)"
+    ],
+    "deny": []
+  }
+}

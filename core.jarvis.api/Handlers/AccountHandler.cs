@@ -1,5 +1,7 @@
 using core.jarvis.Data;
 using core.jarvis.api.Models;
+using core.jarvis.Exceptions;
+using BCrypt.Net;
 using Microsoft.Extensions.Logging;
 
 namespace core.jarvis.api.Handlers;
@@ -69,6 +71,55 @@ public class AccountHandler : ComponentHandler<Account>
         await DataContext.Commit(deactivated);
         Logger.LogInformation("Deactivated account {AccountId}", OwnerEntityId);
         return deactivated;
+    }
+
+    /// <summary>
+    /// Registers a new user account with proper validation and password hashing.
+    /// Account starts as inactive and must be manually activated.
+    /// </summary>
+    public async Task<Account> Register(Account accountComponent)
+    {
+        // Validate required fields
+        if (string.IsNullOrWhiteSpace(accountComponent.Email))
+        {
+            throw new ValidationException(new Dictionary<string, string[]> { { "email", new[] { "Email is required" } } });
+        }
+        
+        if (string.IsNullOrWhiteSpace(accountComponent.Password))
+        {
+            throw new ValidationException(new Dictionary<string, string[]> { { "password", new[] { "Password is required" } } });
+        }
+
+        // Check if email already exists
+        var existingAccountQuery = DataContext.Query()
+            .With<Account>(a => a.Email == accountComponent.Email);
+        var existingAccounts = await existingAccountQuery.ToEntityComponents();
+        
+        if (existingAccounts.Any())
+        {
+            throw new BusinessRuleException("EMAIL_EXISTS", "An account with this email already exists");
+        }
+
+        // Hash the password using BCrypt
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword(accountComponent.Password, 12);
+
+        // Create the account component - starts INACTIVE
+        var account = accountComponent with 
+        { 
+            Id = Guid.NewGuid(),
+            OwnerEntityId = OwnerEntityId,
+            PasswordHash = passwordHash,
+            Password = "", // Clear plain password
+            IsActive = false, // Starts inactive - must be manually activated
+            CreatedAt = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow
+        };
+        
+        await DataContext.Commit(account);
+        Logger.LogInformation("Registered new account {AccountId} for entity {EntityId} with email {Email} - INACTIVE", 
+            account.Id, OwnerEntityId, account.Email);
+        
+        return account;
     }
 
     /// <summary>

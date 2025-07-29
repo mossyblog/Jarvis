@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using core.jarvis;
 using core.jarvis.api.Functions.Security;
+using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.tests.Helpers;
 using core.jarvis.api.Services;
@@ -110,7 +111,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         var email = $"test_reg_{Guid.NewGuid()}@example.com";
         var password = "TestPassword123!";
         
-        // First register the user
+        // First register the user (creates inactive account)
         var registerFunction = _serviceProvider.GetRequiredService<RegisterFunction>();
         var registerBody = JsonSerializer.Serialize(new { email, password });
         
@@ -119,6 +120,23 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         
         var registerResponse = await registerFunction.Register(registerRequest);
         registerResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        
+        // Extract the registered account to get the OwnerEntityId
+        var registerResponseBody = await TestFactory.GetResponseBodyAsync(registerResponse);
+        var registeredAccount = JsonSerializer.Deserialize<Account>(registerResponseBody, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        
+        registeredAccount.ShouldNotBeNull();
+        registeredAccount.OwnerEntityId.ShouldNotBe(Guid.Empty);
+        
+        // Track entity for cleanup
+        TrackEntity(registeredAccount.OwnerEntityId);
+        
+        // Activate the account (required for authentication)
+        var accountHandler = TestDataContext().For<AccountHandler>(registeredAccount.OwnerEntityId);
+        await accountHandler.Activate();
         
         // Now authenticate
         var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
@@ -139,12 +157,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         
         authToken.ShouldNotBeNull();
         authToken.AccessToken.ShouldNotBeNullOrEmpty();
-        
-        // Track for cleanup
-        if (authToken.OwnerEntityId != Guid.Empty)
-        {
-            TrackEntity(authToken.OwnerEntityId);
-        }
+        authToken.OwnerEntityId.ShouldBe(registeredAccount.OwnerEntityId);
     }
     
     /// <summary>

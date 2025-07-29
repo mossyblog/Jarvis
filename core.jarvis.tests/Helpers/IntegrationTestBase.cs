@@ -182,6 +182,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                 await TestDataContext().Remove<WorkOrderTestComponent>(entityId);
                 await TestDataContext().Remove<Examples.WorkOrder.WorkOrderComponent>(entityId);
                 await TestDataContext().Remove<AuditEvent>(entityId);
+                await TestDataContext().Remove<Integration.HandlerIntegrationTests.NavigationItemTestComponent>(entityId);
                 
                 // Clean up API components if available
                 if (_apiAssembly != null)
@@ -230,6 +231,15 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                     catch (Exception ex)
                     {
                         _logger.LogDebug(ex, "Permission component not found or failed to remove for entity {EntityId}", entityId);
+                    }
+                    
+                    try
+                    {
+                        await TestDataContext().Remove<core.jarvis.api.Models.NavigationItem>(entityId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogDebug(ex, "NavigationItem component not found or failed to remove for entity {EntityId}", entityId);
                     }
                 }
             }

@@ -7,10 +7,28 @@ import type {
   ApiResponse
 } from './types';
 import { mockUsers, fullNavigationItems } from './mockData';
+import { 
+  storeTokens, 
+  getStoredTokens, 
+  clearTokens,
+  ACCESS_TOKEN_KEY
+} from '../../utils/tokenUtils';
 
 const MOCK_DELAY = 500; // Simulate network delay
-const TOKEN_KEY = 'jarvis_auth_token';
+const TOKEN_KEY = ACCESS_TOKEN_KEY;
 const USER_KEY = 'jarvis_current_user';
+
+// Type for API responses that may use PascalCase
+interface ApiAuthResponse {
+  AccessToken?: string;
+  accessToken?: string;
+  RefreshToken?: string;
+  refreshToken?: string;
+  OwnerEntityId?: string;
+  ownerEntityId?: string;
+  Email?: string;
+  email?: string;
+}
 
 export interface IApiService {
   login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>>;
@@ -55,7 +73,7 @@ class MockApiService implements IApiService {
     const refreshToken = this.generateToken(user.id + '-refresh');
     
     // Store auth data
-    localStorage.setItem(TOKEN_KEY, accessToken);
+    storeTokens(accessToken, refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 
     return {
@@ -70,17 +88,17 @@ class MockApiService implements IApiService {
 
   async logout(): Promise<void> {
     await this.simulateDelay();
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
   }
 
   async getCurrentUser(): Promise<ApiResponse<User | null>> {
     await this.simulateDelay();
 
-    const token = localStorage.getItem(TOKEN_KEY);
+    const { accessToken } = getStoredTokens();
     const userStr = localStorage.getItem(USER_KEY);
 
-    if (!token || !userStr) {
+    if (!accessToken || !userStr) {
       return { data: null };
     }
 
@@ -110,6 +128,7 @@ class MockApiService implements IApiService {
   }
 
   async refreshToken(_token: string): Promise<ApiResponse<AuthResponse>> {
+    // In mock mode, we don't validate the refresh token
     await this.simulateDelay();
 
     const userResult = await this.getCurrentUser();
@@ -125,7 +144,7 @@ class MockApiService implements IApiService {
     const newAccessToken = this.generateToken(userResult.data.id);
     const newRefreshToken = this.generateToken(userResult.data.id + '-refresh');
 
-    localStorage.setItem(TOKEN_KEY, newAccessToken);
+    storeTokens(newAccessToken, newRefreshToken);
 
     return {
       data: {
@@ -238,18 +257,18 @@ class RealApiService implements IApiService {
       if (result.data) {
         console.log('Login response data:', result.data);
         // The API returns PascalCase properties
-        const authToken = result.data as any;
+        const authToken = result.data as ApiAuthResponse;
         const accessToken = authToken.AccessToken || authToken.accessToken;
         const refreshToken = authToken.RefreshToken || authToken.refreshToken;
         console.log('Extracted tokens - Access:', !!accessToken, 'Refresh:', !!refreshToken);
         
         if (accessToken) {
           // Store tokens
-          localStorage.setItem(TOKEN_KEY, accessToken);
+          storeTokens(accessToken, refreshToken);
           
           // Extract user info from the auth response
           const user: User = {
-            id: authToken.OwnerEntityId || authToken.ownerEntityId,
+            id: authToken.OwnerEntityId || authToken.ownerEntityId || '',
             email: credentials.email,
             name: credentials.email.split('@')[0], // Use email prefix as name for now
             roles: []
@@ -261,7 +280,7 @@ class RealApiService implements IApiService {
             data: {
               user: user,
               accessToken: accessToken,
-              refreshToken: refreshToken,
+              refreshToken: refreshToken || '',
               expiresIn: 3600 // Default to 1 hour
             }
           };
@@ -280,9 +299,9 @@ class RealApiService implements IApiService {
   }
 
   async logout(): Promise<void> {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const { accessToken } = getStoredTokens();
     
-    if (token) {
+    if (accessToken) {
       try {
         await fetch(`${this.apiUrl}/security/deauth`, {
           method: 'POST',
@@ -293,14 +312,14 @@ class RealApiService implements IApiService {
       }
     }
     
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
   }
 
   async getCurrentUser(): Promise<ApiResponse<User | null>> {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const { accessToken } = getStoredTokens();
     
-    if (!token) {
+    if (!accessToken) {
       return { data: null };
     }
 
@@ -317,19 +336,45 @@ class RealApiService implements IApiService {
     }
 
     // If no stored user, token is invalid
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
     return { data: null };
   }
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
     try {
+      console.log('Fetching navigation from real API');
+      
       const response = await fetch(`${this.apiUrl}/security/navigation`, {
-        headers: this.getAuthHeaders()
+        method: 'GET',
+        headers: this.getAuthHeaders(),
       });
 
-      return await this.handleResponse<NavigationItem[]>(response);
+      const result = await this.handleResponse<any[]>(response);
+      
+      if (result.error) {
+        console.log('Navigation error from API:', result.error);
+        return { error: result.error };
+      }
+
+      if (result.data) {
+        // Transform API response to NavigationItem format
+        const navigationItems: NavigationItem[] = result.data.map(item => ({
+          id: item.menuId || item.id,
+          label: item.label,
+          icon: item.icon,
+          href: item.href,
+          requiredPermission: item.requiredPermissionId ? 'navigation.read' : undefined,
+          requiredAction: 'read'
+        }));
+
+        console.log('Successfully fetched navigation items:', navigationItems.length);
+        return { data: navigationItems };
+      }
+
+      return { data: [] };
     } catch (error) {
+      console.error('Failed to fetch navigation:', error);
       return {
         error: {
           message: error instanceof Error ? error.message : 'Failed to load navigation',
@@ -357,7 +402,13 @@ class RealApiService implements IApiService {
 
       if (result.data) {
         // Update stored tokens
-        localStorage.setItem(TOKEN_KEY, result.data.accessToken);
+        const authToken = result.data as ApiAuthResponse;
+        const newAccessToken = authToken.AccessToken || authToken.accessToken;
+        const newRefreshToken = authToken.RefreshToken || authToken.refreshToken;
+        
+        if (newAccessToken) {
+          storeTokens(newAccessToken, newRefreshToken);
+        }
         
         // Get updated user info
         const userInfo = await this.getCurrentUser();
@@ -366,8 +417,8 @@ class RealApiService implements IApiService {
           return {
             data: {
               user: userInfo.data,
-              accessToken: result.data.accessToken,
-              refreshToken: result.data.refreshToken,
+              accessToken: newAccessToken || '',
+              refreshToken: newRefreshToken || '',
               expiresIn: 3600
             }
           };
@@ -408,6 +459,12 @@ class RealApiService implements IApiService {
 // Factory function to create the appropriate service
 // Utility to get/set API mode
 export function getApiMode(): 'mock' | 'real' {
+  // First check environment variable
+  const envMode = import.meta.env.VITE_USE_MOCK_API;
+  if (envMode === 'false') return 'real';
+  if (envMode === 'true') return 'mock';
+  
+  // Fall back to localStorage for runtime switching
   const mode = localStorage.getItem('jarvis_api_mode');
   return mode === 'real' ? 'real' : 'mock';
 }
@@ -418,7 +475,15 @@ export function setApiMode(mode: 'mock' | 'real') {
 }
 
 export function createApiService(): IApiService {
-  if (getApiMode() === 'mock') return new MockApiService();
+  // Check environment variable first
+  const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
+  
+  if (useMockApi) {
+    console.warn('Using mock API service. Set VITE_USE_MOCK_API=false to use real API.');
+    return new MockApiService();
+  }
+  
+  // Always use real API in production or when env var is false
   return new RealApiService();
 }
 

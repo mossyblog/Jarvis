@@ -15,9 +15,36 @@ import type { Node, Edge } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useNavigation } from '../hooks/useNavigation';
 
+interface Column {
+  name: string;
+  type: string;
+  pk?: boolean;
+}
+
+interface TableNodeData {
+  label: string;
+  columns: Column[];
+}
+
+interface SchemaNode {
+  id: string;
+  position: { x: number; y: number };
+  data: TableNodeData;
+  type?: string;
+}
+
+interface SchemaEdge {
+  id: string;
+  source: string;
+  target: string;
+  type?: string;
+  animated?: boolean;
+  style?: React.CSSProperties;
+}
+
 // Fake async fetch for schema data
 function fetchFakeSchema() {
-  return new Promise<{ nodes: any[]; edges: any[] }>((resolve) => {
+  return new Promise<{ nodes: SchemaNode[]; edges: SchemaEdge[] }>((resolve) => {
     setTimeout(() => {
       resolve({
         nodes: [
@@ -62,7 +89,7 @@ function fetchFakeSchema() {
 }
 
 // Custom Table Node for ERD
-const TableNode = memo(({ data }: any) => (
+const TableNode = memo(({ data }: { data: TableNodeData }) => (
   <div className="rounded-lg bg-[#181818] border border-[#262626] shadow-md min-w-[180px] relative">
     {/* Handles for edge connections */}
     <Handle type="target" position={Position.Left} style={{ background: '#3fcf8e', width: 10, height: 10, borderRadius: 5, left: -5 }} />
@@ -72,7 +99,7 @@ const TableNode = memo(({ data }: any) => (
     </div>
     <div className="px-3 py-2">
       <ul className="space-y-1">
-        {data.columns?.map((col: any) => (
+        {data.columns?.map((col: Column) => (
           <li key={col.name} className="flex items-center text-xs text-[#bdbdbd] font-mono">
             {col.pk && <span className="text-[#3fcf8e] mr-1">◆</span>}
             <span>{col.name}</span>
@@ -102,8 +129,8 @@ const SchemaVisualizer = () => {
   useEffect(() => {
     setLoading(true);
     fetchFakeSchema().then(({ nodes, edges }) => {
-      setNodes([...nodes]);
-      setEdges([...edges]);
+      setNodes(nodes as unknown as Node[]);
+      setEdges(edges as unknown as Edge[]);
       setLoading(false);
     });
   }, [setNodes, setEdges]);

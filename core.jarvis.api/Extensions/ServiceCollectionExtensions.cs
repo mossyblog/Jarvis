@@ -98,6 +98,9 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, NavigationItemHandler>();
         services.AddScoped<NavigationItemHandler>();
         
+        services.AddScoped<IComponentHandler, NavigationHandler>();
+        services.AddScoped<NavigationHandler>();
+        
         // Add System services
         services.AddScoped<Systems.RegistrationSystem>();
         services.AddScoped<Systems.AuthSystem>();

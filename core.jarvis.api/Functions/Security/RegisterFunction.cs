@@ -4,26 +4,26 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
-using core.jarvis.api.Systems;
+using core.jarvis.api.Handlers;
 using core.jarvis.Data;
 using core.jarvis.Exceptions;
 
 namespace core.jarvis.api.Functions.Security;
 
 /// <summary>
-/// Function for user registration endpoints.
+/// Function for user registration endpoints following API->Handler pattern.
 /// </summary>
 public class RegisterFunction
 {
-    private readonly RegistrationSystem _registrationSystem;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<RegisterFunction> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RegisterFunction(
-        RegistrationSystem registrationSystem,
+        IDataContext dataContext,
         ILogger<RegisterFunction> logger)
     {
-        _registrationSystem = registrationSystem;
+        _dataContext = dataContext;
         _logger = logger;
         _jsonOptions = new JsonSerializerOptions
         {
@@ -33,8 +33,8 @@ public class RegisterFunction
     }
 
     /// <summary>
-    /// Registers a new user with email and password.
-    /// Creates both Account and SecurityProfile components.
+    /// Registers a new user - API takes IComponent only as per Jarvis pattern.
+    /// Thin API layer delegates to AccountHandler.
     /// </summary>
     [Function("RegisterUser")]
     public async Task<HttpResponseData> Register(
@@ -42,7 +42,7 @@ public class RegisterFunction
     {
         try
         {
-            // Get request body
+            // Parse JSON request to Account component
             var requestBody = await req.ReadAsStringAsync();
             if (string.IsNullOrEmpty(requestBody))
             {
@@ -58,34 +58,53 @@ public class RegisterFunction
                 return errorResponse;
             }
 
-            // Get client IP address
-            string? ipAddress = null;
-            if (req.Headers.TryGetValues("X-Forwarded-For", out var forwardedFor))
+            // Deserialize to Account IComponent - API only accepts IComponent or GUID
+            Account accountComponent;
+            try
             {
-                ipAddress = forwardedFor.FirstOrDefault();
+                accountComponent = JsonSerializer.Deserialize<Account>(requestBody, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                }) ?? throw new ValidationException(new Dictionary<string, string[]> { { "body", new[] { "Invalid request body" } } });
             }
-            else if (req.Headers.TryGetValues("X-Real-IP", out var realIp))
+            catch (JsonException ex)
             {
-                ipAddress = realIp.FirstOrDefault();
+                var badRequestError = new Error
+                {
+                    Code = "INVALID_JSON",
+                    Message = $"Invalid JSON: {ex.Message}",
+                    StatusCode = 400
+                };
+                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(badRequestError, _jsonOptions));
+                return errorResponse;
             }
-            ipAddress ??= "unknown";
 
-            // Execute registration through System - returns [Account, SecurityProfile]
-            var components = await _registrationSystem.RegisterUser(requestBody, ipAddress);
+            // Enrich with client metadata
+            accountComponent = accountComponent with
+            {
+                IpAddress = req.Headers.TryGetValues("X-Forwarded-For", out var forwardedFor) 
+                    ? forwardedFor.FirstOrDefault() 
+                    : req.Headers.TryGetValues("X-Real-IP", out var realIp) 
+                        ? realIp.FirstOrDefault() 
+                        : "unknown",
+                UserAgent = req.Headers.TryGetValues("User-Agent", out var userAgent) 
+                    ? userAgent.FirstOrDefault() 
+                    : "unknown"
+            };
 
-            // The first component is Account, second is SecurityProfile
-            var account = components[0] as Account;
-            var profile = components[1] as SecurityProfile;
+            // Create new entity for the user
+            var entityId = Guid.NewGuid();
             
-            if (account == null || profile == null)
-            {
-                throw new InvalidOperationException("Registration did not return expected components");
-            }
+            // Use AccountHandler to register the account (thin API layer)
+            var accountHandler = _dataContext.For<AccountHandler>(entityId);
+            var registeredAccount = await accountHandler.Register(accountComponent);
 
-            // Return the created components
+            // Return the registered Account component
             var response = req.CreateResponse(HttpStatusCode.Created);
             response.Headers.Add("Content-Type", "application/json");
-            await response.WriteStringAsync(JsonSerializer.Serialize(components, _jsonOptions));
+            await response.WriteStringAsync(JsonSerializer.Serialize(registeredAccount, _jsonOptions));
             return response;
         }
         catch (ValidationException vex)
