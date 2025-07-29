@@ -2,6 +2,17 @@
 
 # Jarvis Database Setup Script
 # This script sets up the PostgreSQL database exactly as the ECS framework expects
+# 
+# Usage: ./setup.sh
+# 
+# This script is idempotent - it can be run multiple times safely.
+# It will create tables, default users, and navigation items.
+#
+# Default test user created:
+# - Email: test@example.com
+# - Password: TestPassword123!
+
+set -e  # Exit on any error
 
 DB_HOST=${DB_HOST:-localhost}
 DB_PORT=${DB_PORT:-5432}
@@ -9,7 +20,12 @@ DB_NAME=${DB_NAME:-jarvis_test}
 DB_USER=${DB_USER:-postgres}
 DB_PASSWORD=${DB_PASSWORD:-postgres}
 
+echo "========================================="
 echo "Setting up Jarvis database..."
+echo "Database: $DB_NAME"
+echo "Host: $DB_HOST:$DB_PORT"
+echo "User: $DB_USER"
+echo "========================================="
 
 # Function to execute SQL commands
 execute_sql() {
@@ -367,12 +383,24 @@ BEGIN
 END \$\$;
 "
 
-echo "Database setup completed successfully!"
+echo "========================================="
+echo "✅ Database setup completed successfully!"
+echo "========================================="
 echo ""
-echo "Connection details:"
+echo "📋 Summary:"
+echo "  • Database created: $DB_NAME"
+echo "  • Tables created with proper indexes"
+echo "  • Default test user: test@example.com / TestPassword123!"
+echo "  • Navigation items configured"
+echo "  • GraphQL extension configured (if available)"
+echo ""
+echo "🔌 Connection details:"
 echo "  Host: $DB_HOST"
 echo "  Port: $DB_PORT"
 echo "  Database: $DB_NAME"
 echo "  User: $DB_USER"
 echo ""
-echo "To connect: psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME"
+echo "💡 To connect manually:"
+echo "   psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME"
+echo ""
+echo "🚀 Ready to start the API with: func start --port 7071"

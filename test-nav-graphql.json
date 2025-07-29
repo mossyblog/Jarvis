@@ -1,3 +1,0 @@
-{
-  "query": "query { navigationItemComponentCollection { edges { node { id menuId label icon href sortOrder isActive requiredPermissionId } } } }"
-}
