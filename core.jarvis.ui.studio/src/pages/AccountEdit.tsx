@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
-import { ArrowLeft, Save, X, Upload, User } from 'lucide-react';
+import { ArrowLeft, Save, X, Upload, User, UserCog, Shield, Activity, Key, AlertTriangle } from 'lucide-react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
+import { ContentHeader } from '../components/layout/ContentHeader';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
 import { 
   Select, 
   SelectContent, 
@@ -56,6 +56,7 @@ export default function AccountEdit() {
   const [account, setAccount] = useState<AccountData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'details' | 'security' | 'activity' | 'api' | 'danger'>('details');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -237,91 +238,137 @@ export default function AccountEdit() {
 
   return (
     <DashboardLayout activeItem={activeItem} onItemClick={() => {}}>
-      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between px-lg py-md border-b">
-          <div className="flex items-center gap-md">
-            <Button
+      <form onSubmit={handleSubmit(onSubmit)} className="@container">
+        {/* Content Header */}
+        <ContentHeader
+          title="Edit Account"
+          description={`Manage account details and settings for ${account?.email || 'user'}`}
+          breadcrumbs={
+            <button
               type="button"
-              variant="ghost"
-              size="icon"
               onClick={() => navigate('/accounts')}
-              className="h-8 w-8"
+              className="flex items-center text-sm text-muted-foreground hover:text-foreground"
             >
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex flex-col gap-xs">
-              <h1 className="text-xl font-medium">Edit Account</h1>
-              <div className="text-xs text-muted-foreground">
-                User Management &gt; {account?.email || 'Loading...'}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-sm">
-            {isDirty && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleDiscard}
+              <ArrowLeft className="h-4 w-4 mr-1" />
+              Back to Accounts
+            </button>
+          }
+          actions={
+            <div className="flex items-center gap-sm">
+              {isDirty && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDiscard}
+                  className="gap-xs"
+                >
+                  <X className="h-4 w-4" />
+                  Discard
+                </Button>
+              )}
+              <Button 
+                type="submit" 
+                size="sm" 
+                disabled={saving || !isDirty}
                 className="gap-xs"
               >
-                <X className="h-4 w-4" />
-                Discard
+                <Save className="h-4 w-4" />
+                Save Changes
               </Button>
-            )}
-            <Button 
-              type="submit" 
-              size="sm" 
-              disabled={saving || !isDirty}
-              className="gap-xs"
-            >
-              <Save className="h-4 w-4" />
-              Save
-            </Button>
-          </div>
-        </div>
+            </div>
+          }
+        />
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto p-lg">
-          <div className="max-w-5xl mx-auto">
-            <Tabs defaultValue="details" className="w-full">
-              <div className="relative">
-                <TabsList className="relative z-10 inline-flex h-10 items-center justify-start p-0 bg-transparent border-b border-border w-full">
-                  <TabsTrigger 
-                    value="details" 
-                    className="relative rounded-none rounded-t-md border-b-2 border-transparent px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-b-0 data-[state=active]:border-border data-[state=inactive]:hover:bg-muted/50"
-                  >
-                    Details
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="security" 
-                    className="relative rounded-none rounded-t-md border-b-2 border-transparent px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-b-0 data-[state=active]:border-border data-[state=inactive]:hover:bg-muted/50"
-                  >
-                    Security
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="activity" 
-                    className="relative rounded-none rounded-t-md border-b-2 border-transparent px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-b-0 data-[state=active]:border-border data-[state=inactive]:hover:bg-muted/50"
-                  >
-                    Activity
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="api" 
-                    className="relative rounded-none rounded-t-md border-b-2 border-transparent px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-b-0 data-[state=active]:border-border data-[state=inactive]:hover:bg-muted/50"
-                  >
-                    API
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="danger" 
-                    className="relative rounded-none rounded-t-md border-b-2 border-transparent px-6 py-2.5 text-sm font-medium transition-all data-[state=active]:border-primary data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:border data-[state=active]:border-b-0 data-[state=active]:border-border data-[state=inactive]:hover:bg-muted/50"
-                  >
-                    Danger Zone
-                  </TabsTrigger>
-                </TabsList>
-                
-                <div className="border border-t-0 rounded-lg rounded-tl-none bg-background">
-                  <TabsContent value="details" className="p-0 m-0">
+        {/* Content Body */}
+        <div className="px-lg py-lg space-y-lg">
+          {/* Dashboard-Style Tabs */}
+          <div className="space-y-0">
+            <div className="flex items-center gap-1 relative">
+              <button
+                type="button"
+                onClick={() => setActiveTab('details')}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 text-sm rounded-t-md transition-colors",
+                  activeTab === 'details' 
+                    ? "bg-blue-500/20 text-blue-500" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <UserCog size={16} />
+                <span className="uppercase tracking-wide text-xs font-medium">Details</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setActiveTab('security')}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 text-sm rounded-t-md transition-colors",
+                  activeTab === 'security' 
+                    ? "bg-green-500/20 text-green-500" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Shield size={16} />
+                <span className="uppercase tracking-wide text-xs font-medium">Security</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('activity')}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 text-sm rounded-t-md transition-colors",
+                  activeTab === 'activity' 
+                    ? "bg-purple-500/20 text-purple-500" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Activity size={16} />
+                <span className="uppercase tracking-wide text-xs font-medium">Activity</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('api')}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 text-sm rounded-t-md transition-colors",
+                  activeTab === 'api' 
+                    ? "bg-orange-500/20 text-orange-500" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Key size={16} />
+                <span className="uppercase tracking-wide text-xs font-medium">API</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('danger')}
+                className={cn(
+                  "flex items-center gap-2 px-6 py-3 text-sm rounded-t-md transition-colors",
+                  activeTab === 'danger' 
+                    ? "bg-red-500/20 text-red-500" 
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <AlertTriangle size={16} />
+                <span className="uppercase tracking-wide text-xs font-medium">Danger Zone</span>
+              </button>
+              
+              {/* Full width line under all tabs */}
+              <div className={cn(
+                "absolute bottom-0 left-0 right-0 h-0.5 transition-colors",
+                activeTab === 'details' && "bg-blue-500",
+                activeTab === 'security' && "bg-green-500",
+                activeTab === 'activity' && "bg-purple-500",
+                activeTab === 'api' && "bg-orange-500",
+                activeTab === 'danger' && "bg-red-500"
+              )} />
+            </div>
+
+            {/* Tab Content */}
+            <div className="border border-t-0 rounded-b-lg bg-card">
+            {activeTab === 'details' && (
                     <div className="p-lg space-y-lg">
                       {/* Account Information Card */}
                       <Card>
@@ -341,7 +388,7 @@ export default function AccountEdit() {
                                     id="email"
                                     type="email"
                                     disabled
-                                    className="bg-muted max-w-sm"
+                                    className="bg-muted w-64"
                                   />
                                 )}
                               />
@@ -358,7 +405,7 @@ export default function AccountEdit() {
                                     {...field}
                                     id="displayName"
                                     placeholder="Enter display name"
-                                    className={cn("max-w-sm", errors.displayName && "border-destructive")}
+                                    className={cn("w-64", errors.displayName && "border-destructive")}
                                   />
                                 )}
                               />
@@ -377,7 +424,7 @@ export default function AccountEdit() {
                                     value={field.value}
                                     onValueChange={field.onChange}
                                   >
-                                    <SelectTrigger id="status" className="max-w-sm">
+                                    <SelectTrigger id="status" className="w-40">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -399,7 +446,7 @@ export default function AccountEdit() {
                                     value={field.value}
                                     onValueChange={field.onChange}
                                   >
-                                    <SelectTrigger id="authMethod" className="max-w-sm">
+                                    <SelectTrigger id="authMethod" className="w-40">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -503,7 +550,7 @@ export default function AccountEdit() {
                                       value={field.value}
                                       onValueChange={field.onChange}
                                     >
-                                      <SelectTrigger id="theme" className="w-full">
+                                      <SelectTrigger id="theme" className="w-32">
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
@@ -595,73 +642,71 @@ export default function AccountEdit() {
                         </div>
                       </div>
                     </div>
-                  </TabsContent>
+            )}
 
-                  <TabsContent value="security" className="p-0 m-0">
-                    <div className="p-lg">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Security Settings</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground">
-                            Security settings will be implemented here.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="activity" className="p-0 m-0">
-                    <div className="p-lg">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>Activity Log</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground">
-                            User activity log will be displayed here.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="api" className="p-0 m-0">
-                    <div className="p-lg">
-                      <Card>
-                        <CardHeader>
-                          <CardTitle>API Access</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground">
-                            API keys and access tokens will be managed here.
-                          </p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="danger" className="p-0 m-0">
-                    <div className="p-lg">
-                      <Card className="border-destructive">
-                        <CardHeader>
-                          <CardTitle className="text-destructive">Danger Zone</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <p className="text-sm text-muted-foreground mb-md">
-                            Irreversible and destructive actions.
-                          </p>
-                          <Button variant="destructive" size="sm">
-                            Delete Account
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </TabsContent>
-                </div>
+            {activeTab === 'security' && (
+              <div className="p-lg">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Security Settings</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Security settings will be implemented here.
+                    </p>
+                  </CardContent>
+                </Card>
               </div>
-            </Tabs>
+            )}
+
+            {activeTab === 'activity' && (
+              <div className="p-lg">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Activity Log</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      User activity log will be displayed here.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === 'api' && (
+              <div className="p-lg">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>API Access</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      API keys and access tokens will be managed here.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {activeTab === 'danger' && (
+              <div className="p-lg">
+                <Card className="border-destructive">
+                  <CardHeader>
+                    <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground mb-md">
+                      Irreversible and destructive actions.
+                    </p>
+                    <Button variant="destructive" size="sm">
+                      Delete Account
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+            </div>
           </div>
         </div>
       </form>
