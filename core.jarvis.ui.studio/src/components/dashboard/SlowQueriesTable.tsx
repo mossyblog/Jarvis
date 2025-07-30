@@ -43,18 +43,17 @@ const mockQueries: SlowQuery[] = [
 
 export function SlowQueriesTable() {
   return (
-    <div className="px-8 pb-12">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium uppercase tracking-wide">Slow Queries</h3>
-          <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <ExternalLink size={14} />
-          </button>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-medium uppercase tracking-wide">Slow Queries</h3>
+        <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ExternalLink size={14} />
+        </button>
+      </div>
 
-        {/* Table */}
-        <div className="border border-default rounded-lg overflow-hidden">
+      {/* Table */}
+      <div className="border border-default rounded-lg overflow-hidden">
           <table className="w-full">
             <thead>
               <tr className="border-b border-default bg-muted/50">
@@ -94,7 +93,6 @@ export function SlowQueriesTable() {
             </tbody>
           </table>
         </div>
-      </div>
     </div>
   );
 }

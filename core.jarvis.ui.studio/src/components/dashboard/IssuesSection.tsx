@@ -53,17 +53,16 @@ export function IssuesSection() {
   const issueCount = issues.filter(i => i.severity === 'warning').length;
 
   return (
-    <div className="px-8 py-12">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center gap-2 mb-6">
-          <span className="text-2xl font-light">{issueCount}</span>
-          <span className="text-base">issues need</span>
-          <span className="text-base text-yellow-500">attention</span>
-        </div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-2">
+        <span className="text-2xl font-light">{issueCount}</span>
+        <span className="text-base">issues need</span>
+        <span className="text-base text-yellow-500">attention</span>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-1 mb-4">
+      {/* Tabs */}
+      <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveTab('security')}
             className={cn(
@@ -101,47 +100,46 @@ export function IssuesSection() {
               {issues.filter(i => i.type === 'performance' && i.severity === 'warning').length}
             </span>
           </button>
-        </div>
+      </div>
 
-        {/* Issues List */}
-        <div className="border border-default rounded-lg overflow-hidden">
-          {filteredIssues.map((issue, index) => (
-            <div
-              key={issue.id}
-              className={cn(
-                "flex items-start gap-4 p-4 bg-card",
-                index !== filteredIssues.length - 1 && "border-b border-default"
-              )}
-            >
-              {/* Icon */}
-              <div className="mt-0.5">
-                {issue.severity === 'warning' ? (
-                  <AlertCircle size={16} className="text-yellow-500" />
-                ) : (
-                  <Info size={16} className="text-muted-foreground" />
-                )}
-              </div>
-
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="text-sm font-medium">{issue.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {issue.description}
-                  </span>
-                </div>
-              </div>
-
-              {/* Action */}
-              {issue.action && (
-                <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                  <span>{issue.action}</span>
-                  <ExternalLink size={12} />
-                </button>
+      {/* Issues List */}
+      <div className="border border-default rounded-lg overflow-hidden">
+        {filteredIssues.map((issue, index) => (
+          <div
+            key={issue.id}
+            className={cn(
+              "flex items-start gap-4 p-4 bg-card",
+              index !== filteredIssues.length - 1 && "border-b border-default"
+            )}
+          >
+            {/* Icon */}
+            <div className="mt-0.5">
+              {issue.severity === 'warning' ? (
+                <AlertCircle size={16} className="text-yellow-500" />
+              ) : (
+                <Info size={16} className="text-muted-foreground" />
               )}
             </div>
-          ))}
-        </div>
+
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-sm font-medium">{issue.title}</span>
+                <span className="text-xs text-muted-foreground">
+                  {issue.description}
+                </span>
+              </div>
+            </div>
+
+            {/* Action */}
+            {issue.action && (
+              <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                <span>{issue.action}</span>
+                <ExternalLink size={12} />
+              </button>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );
