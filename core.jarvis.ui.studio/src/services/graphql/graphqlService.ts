@@ -8,7 +8,7 @@ import { ACCESS_TOKEN_KEY } from '../../utils/tokenUtils';
 export class GraphQLService {
   private readonly endpoint: string;
 
-  constructor(endpoint: string = 'http://localhost:7071/api/graphql') {
+  constructor(endpoint: string = '/api/graphql') {
     // Azure Functions GraphQL endpoint
     this.endpoint = endpoint;
   }
@@ -274,6 +274,25 @@ export class GraphQLService {
   }
 
   /**
+   * Search accounts by email, phone, or entity ID
+   */
+  async searchAccounts(searchTerm: string): Promise<any[]> {
+    // For now, let's use client-side filtering until we understand the GraphQL filter syntax
+    const allAccounts = await this.getAccounts();
+    
+    if (!searchTerm.trim()) {
+      return allAccounts;
+    }
+    
+    const searchLower = searchTerm.toLowerCase();
+    
+    return allAccounts.filter(account => 
+      account.email.toLowerCase().includes(searchLower) ||
+      account.ownerEntityId.toLowerCase().includes(searchLower)
+    );
+  }
+
+  /**
    * Get navigation statistics (for admin dashboard)
    */
   async getNavigationStats(): Promise<{
@@ -335,4 +354,8 @@ export class GraphQLService {
 }
 
 // Export singleton instance
-export const graphqlService = new GraphQLService();
+// Always use relative URL for GraphQL to work with proxy
+const graphqlEndpoint = '/api/graphql';
+
+console.log('GraphQL Service: Using endpoint:', graphqlEndpoint);
+export const graphqlService = new GraphQLService(graphqlEndpoint);

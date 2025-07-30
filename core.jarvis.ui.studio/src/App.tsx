@@ -7,14 +7,19 @@ import SchemaVisualizer from './pages/SchemaVisualizer';
 import { Login } from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import { ApiStatusProvider } from './contexts/ApiStatusContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
+import { ApiStatusBanner } from './components/layout/ApiStatusBanner';
+import { NetworkMonitor } from './components/ui/network-monitor-simple';
 
 function App() {
   return (
     <ThemeProvider defaultTheme="supabase" defaultMode="dark">
       <Router>
-        <AuthProvider>
-          <Routes>
+        <ApiStatusProvider>
+          <AuthProvider>
+            <ApiStatusBanner />
+            <Routes>
           <Route path="/login" element={<Login />} />
           <Route 
             path="/" 
@@ -79,9 +84,11 @@ function App() {
             } 
           />
         </Routes>
-      </AuthProvider>
-    </Router>
-  </ThemeProvider>
+          </AuthProvider>
+          <NetworkMonitor />
+        </ApiStatusProvider>
+      </Router>
+    </ThemeProvider>
   );
 }
 

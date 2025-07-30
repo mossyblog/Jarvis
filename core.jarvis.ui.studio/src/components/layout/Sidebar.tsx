@@ -23,7 +23,7 @@ const getIcon = (iconName: string, size: number = 18) => {
 
 type SidebarBehavior = 'expandable' | 'open' | 'closed';
 const DEFAULT_SIDEBAR_BEHAVIOR: SidebarBehavior = 'expandable';
-const SIDEBAR_BEHAVIOR_KEY = 'supabase-sidebar-behavior';
+const SIDEBAR_BEHAVIOR_KEY = 'jarvis-sidebar-behavior';
 
 interface SidebarProps {
   activeItem?: string;

@@ -33,7 +33,7 @@ const issues: Issue[] = [
     type: 'security',
     severity: 'info',
     title: 'Email Provider',
-    description: 'We have detected that you have enabled the email provider with the OTP expiry set to more than 24hrs. Supabase Auth prevents the use of compromised passwords by checking against them with the HaveIBeenPwned Passwords API.',
+    description: 'We have detected that you have enabled the email provider with the OTP expiry set to more than 24hrs. Jarvis Auth prevents the use of compromised passwords by checking against them with the HaveIBeenPwned Passwords API.',
     action: 'Learn more'
   },
   {
@@ -41,7 +41,7 @@ const issues: Issue[] = [
     type: 'performance',
     severity: 'info',
     title: 'Auth',
-    description: 'Supabase Auth prevents the use of compromised passwords by checking against them with the HaveIBeenPwned Passwords API.',
+    description: 'Jarvis Auth prevents the use of compromised passwords by checking against them with the HaveIBeenPwned Passwords API.',
     action: 'Learn more'
   }
 ];

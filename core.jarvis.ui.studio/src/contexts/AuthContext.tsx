@@ -95,26 +95,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      // Create a timeout promise
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('API timeout')), 5000); // 5 second timeout
+      });
+
       // Check if access token is expired
       if (isTokenExpired(accessToken)) {
         console.log('Access token expired, attempting refresh...');
         
         if (refreshToken) {
-          const result = await apiService.refreshToken(refreshToken);
-          
-          if (result.data) {
-            console.log('Token refreshed on startup');
-            setUser(result.data.user);
+          try {
+            const result = await Promise.race([
+              apiService.refreshToken(refreshToken),
+              timeoutPromise
+            ]);
             
-            // Load navigation
-            const navResult = await apiService.getNavigation();
-            if (navResult.data) {
-              setNavigation(navResult.data);
+            if (result.data) {
+              console.log('Token refreshed on startup');
+              setUser(result.data.user);
+              
+              // Load navigation with timeout
+              try {
+                const navResult = await Promise.race([
+                  apiService.getNavigation(),
+                  timeoutPromise
+                ]);
+                if (navResult.data) {
+                  setNavigation(navResult.data);
+                }
+              } catch (navError) {
+                console.error('Failed to load navigation:', navError);
+              }
+              
+              // Schedule next refresh
+              scheduleTokenRefresh(result.data.accessToken);
+              return;
             }
-            
-            // Schedule next refresh
-            scheduleTokenRefresh(result.data.accessToken);
-            return;
+          } catch (refreshError) {
+            console.error('Token refresh error:', refreshError);
           }
         }
         
@@ -125,11 +144,38 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      // Token is still valid, load current user
-      await loadCurrentUser();
-      
-      // Schedule refresh
-      scheduleTokenRefresh(accessToken);
+      // Token is still valid, load current user with timeout
+      try {
+        await Promise.race([
+          loadCurrentUser(),
+          timeoutPromise
+        ]);
+        
+        // Schedule refresh
+        scheduleTokenRefresh(accessToken);
+      } catch (loadError) {
+        console.error('Failed to load current user:', loadError);
+        // If API is down, we'll still show the user as logged in
+        // but with limited functionality
+        const storedUser = localStorage.getItem('jarvis_current_user');
+        const storedNav = localStorage.getItem('jarvis_navigation');
+        
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch (e) {
+            console.error('Failed to parse stored user:', e);
+          }
+        }
+        
+        if (storedNav) {
+          try {
+            setNavigation(JSON.parse(storedNav));
+          } catch (e) {
+            console.error('Failed to parse stored navigation:', e);
+          }
+        }
+      }
       
     } catch (error) {
       console.error('Failed to initialize auth:', error);
@@ -144,15 +190,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       if (userResult.data) {
         setUser(userResult.data);
+        // Store user data for offline access
+        localStorage.setItem('jarvis_current_user', JSON.stringify(userResult.data));
         
         // Load navigation for the user
         const navResult = await apiService.getNavigation();
         if (navResult.data) {
           setNavigation(navResult.data);
+          // Store navigation for offline access
+          localStorage.setItem('jarvis_navigation', JSON.stringify(navResult.data));
         }
       }
     } catch (error) {
       console.error('Failed to load user:', error);
+      throw error; // Re-throw to be caught by Promise.race
     }
   };
 
@@ -168,12 +219,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (result.data) {
       console.log('AuthContext: Login successful, setting user:', result.data.user);
       setUser(result.data.user);
+      // Store user data for offline access
+      localStorage.setItem('jarvis_current_user', JSON.stringify(result.data.user));
       
       // Load navigation for the newly logged in user
       const navResult = await apiService.getNavigation();
       if (navResult.data) {
         console.log('AuthContext: Setting navigation:', navResult.data);
         setNavigation(navResult.data);
+        // Store navigation for offline access
+        localStorage.setItem('jarvis_navigation', JSON.stringify(navResult.data));
       }
       
       // Schedule token refresh
@@ -191,6 +246,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     await apiService.logout();
     setUser(null);
     setNavigation([]);
+    
+    // Clear stored data
+    localStorage.removeItem('jarvis_current_user');
+    localStorage.removeItem('jarvis_navigation');
   };
 
   const hasPermission = (resource: string, action: string = 'read'): boolean => {

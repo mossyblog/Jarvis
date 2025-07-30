@@ -219,8 +219,9 @@ class RealApiService implements IApiService {
   }
   private apiUrl: string;
 
-  constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:7071/api') {
-    this.apiUrl = apiUrl;
+  constructor(apiUrl: string = '/api') {
+    // Always use relative URL to work with Vite proxy
+    this.apiUrl = '/api';
   }
 
   private getAuthHeaders(): HeadersInit {

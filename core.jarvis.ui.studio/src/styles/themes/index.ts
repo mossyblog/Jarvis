@@ -21,8 +21,8 @@ export const themes: Record<string, ThemeDefinition> = {
   },
   supabase: {
     name: 'supabase',
-    displayName: 'Supabase',
-    description: 'Supabase-inspired green accent theme',
+    displayName: 'Jarvis',
+    description: 'Jarvis green accent theme',
     modes: {
       light: true,
       dark: true,

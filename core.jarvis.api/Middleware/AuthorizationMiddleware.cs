@@ -36,7 +36,8 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         "/api/auth/register",      // Registration endpoint
         "/api/security/validate",  // Token validation endpoint
         "/api/swagger",           // Swagger documentation
-        "/api/swagger/ui"         // Swagger UI
+        "/api/swagger/ui",        // Swagger UI
+        "/api/health"             // Health check endpoint
     };
 
     public AuthorizationMiddleware(ILogger<AuthorizationMiddleware> logger)
