@@ -37,8 +37,13 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "relative inline-flex items-center justify-center whitespace-nowrap rounded-t-md border border-b-0 border-transparent px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
-      "data-[state=active]:border-border data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-[-1px] data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-[2px] data-[state=active]:after:bg-background",
+      "relative inline-flex items-center justify-center whitespace-nowrap rounded-t-md border border-transparent px-4 py-2 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+      "data-[state=active]:border-border data-[state=active]:border-b-0 data-[state=active]:bg-card data-[state=active]:text-foreground",
+      // Horizontal tabs - accent line on top
+      "data-[orientation=horizontal]:data-[state=active]:before:absolute data-[orientation=horizontal]:data-[state=active]:before:top-[1px] data-[orientation=horizontal]:data-[state=active]:before:left-[1px] data-[orientation=horizontal]:data-[state=active]:before:right-[1px] data-[orientation=horizontal]:data-[state=active]:before:h-[1px] data-[orientation=horizontal]:data-[state=active]:before:bg-accent",
+      // Vertical tabs - accent line on right
+      "data-[orientation=vertical]:rounded-t-none data-[orientation=vertical]:rounded-l-md data-[orientation=vertical]:data-[state=active]:border-r-0 data-[orientation=vertical]:data-[state=active]:border-b-border",
+      "data-[orientation=vertical]:data-[state=active]:before:absolute data-[orientation=vertical]:data-[state=active]:before:top-[1px] data-[orientation=vertical]:data-[state=active]:before:bottom-[1px] data-[orientation=vertical]:data-[state=active]:before:right-[1px] data-[orientation=vertical]:data-[state=active]:before:w-[1px] data-[orientation=vertical]:data-[state=active]:before:bg-accent",
       "data-[state=inactive]:border-transparent data-[state=inactive]:bg-transparent",
       "hover:text-foreground hover:bg-muted/50",
       className

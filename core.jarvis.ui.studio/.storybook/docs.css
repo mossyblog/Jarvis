@@ -1,0 +1,66 @@
+/* Force Storybook docs to respect our theme system */
+
+/* Dark theme styling for docs */
+.dark .sbdocs,
+.dark .docs-story,
+.dark #storybook-docs,
+.dark .sbdocs-wrapper,
+.dark .sb-show-main,
+body.dark {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Light theme styling for docs */
+.light .sbdocs,
+.light .docs-story,
+.light #storybook-docs,
+.light .sbdocs-wrapper,
+.light .sb-show-main,
+body.light {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Ensure all docs content respects theme */
+.dark .sbdocs-content,
+.dark .docblock-source,
+.dark .docblock-argstable,
+.dark .docblock-preview {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.light .sbdocs-content,
+.light .docblock-source,
+.light .docblock-argstable,
+.light .docblock-preview {
+  background-color: hsl(var(--background)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Theme docs cards and panels */
+.dark .docblock-argstable table,
+.dark .docblock-argstable th,
+.dark .docblock-argstable td {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+.light .docblock-argstable table,
+.light .docblock-argstable th,
+.light .docblock-argstable td {
+  background-color: hsl(var(--card)) !important;
+  border-color: hsl(var(--border)) !important;
+  color: hsl(var(--foreground)) !important;
+}
+
+/* Force theme on any remaining white backgrounds */
+.dark * {
+  --docs-bg: hsl(var(--background)) !important;
+}
+
+.light * {
+  --docs-bg: hsl(var(--background)) !important;
+}

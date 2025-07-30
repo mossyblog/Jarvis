@@ -29,7 +29,8 @@
       "Bash(docker-compose up:*)",
       "Bash(docker-compose logs:*)",
       "Bash(sudo mv:*)",
-      "mcp__shadcn-ui__list_components"
+      "mcp__shadcn-ui__list_components",
+      "mcp__playwright__browser_navigate"
     ],
     "deny": []
   }

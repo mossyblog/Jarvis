@@ -1,0 +1,7 @@
+{
+  "devDependencies": {
+    "@storybook/addon-backgrounds": "^9.0.8",
+    "@storybook/addon-controls": "^9.0.8",
+    "@storybook/addon-toolbars": "^9.0.8"
+  }
+}
