@@ -48,6 +48,9 @@ export interface GridComponentProps {
   
   /** Called when component is resized */
   onResize?: (componentId: string, newSize: { w: number; h: number; x?: number; y?: number }) => void;
+  
+  /** Called when component properties should be shown */
+  onShowProperties?: (componentId: string) => void;
 }
 
 interface ResizeHandle {
@@ -85,6 +88,7 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   onSelect,
   onDelete,
   onResize,
+  onShowProperties,
 }) => {
   const [isResizing, setIsResizing] = useState(false);
   const [resizePreview, setResizePreview] = useState<{ w: number; h: number } | null>(null);
@@ -136,6 +140,12 @@ export const GridComponent: React.FC<GridComponentProps> = ({
     event.stopPropagation();
     onDelete?.(component.id);
   }, [component.id, onDelete]);
+
+  // Handle show properties
+  const handleShowProperties = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    onShowProperties?.(component.id);
+  }, [component.id, onShowProperties]);
 
   // Handle resize start
   const handleResizeStart = useCallback((event: React.MouseEvent, direction: string, cursor: string) => {
@@ -360,6 +370,8 @@ export const GridComponent: React.FC<GridComponentProps> = ({
               variant="secondary"
               size="sm"
               className="h-6 w-6 p-0"
+              onClick={handleShowProperties}
+              title="Component Properties"
             >
               <MoreHorizontal className="h-3 w-3" />
             </Button>

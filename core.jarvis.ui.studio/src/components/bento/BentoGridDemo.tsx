@@ -7,6 +7,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { BentoGrid } from './BentoGrid';
+import { ComponentPropertiesPanel } from './ComponentPropertiesPanel';
 import type { BentoGrid as BentoGridType, GridComponent } from '@/types/bento';
 import { DeviceType } from '@/types/bento';
 import { Button } from '@/components/ui/button';
@@ -109,6 +110,7 @@ export const BentoGridDemo: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [deviceType, setDeviceType] = useState<DeviceType>(DeviceType.Desktop);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
+  const [propertiesPanelComponent, setPropertiesPanelComponent] = useState<GridComponent | null>(null);
 
   // Check for collisions
   const checkCollision = useCallback((position: { x: number; y: number; w: number; h: number }, excludeId: string, components: GridComponent[]): boolean => {
@@ -192,6 +194,36 @@ export const BentoGridDemo: React.FC = () => {
       updatedAt: new Date().toISOString()
     }));
     setSelectedComponentId(null);
+  }, []);
+
+  // Handle show properties
+  const handleShowProperties = useCallback((componentId: string) => {
+    console.log('Show properties for component:', componentId);
+    setSelectedComponentId(componentId);
+    
+    const component = grid.components.find(c => c.id === componentId);
+    if (component) {
+      setPropertiesPanelComponent(component);
+    }
+  }, [grid.components]);
+
+  // Handle close properties panel
+  const handleClosePropertiesPanel = useCallback(() => {
+    setPropertiesPanelComponent(null);
+    setSelectedComponentId(null);
+  }, []);
+
+  // Handle component update from properties panel
+  const handleComponentUpdate = useCallback((componentId: string, updates: Partial<GridComponent>) => {
+    setGrid(prevGrid => ({
+      ...prevGrid,
+      components: prevGrid.components.map(component =>
+        component.id === componentId
+          ? { ...component, ...updates }
+          : component
+      ),
+      updatedAt: new Date().toISOString()
+    }));
   }, []);
 
   // Find empty position for new component
@@ -367,10 +399,21 @@ export const BentoGridDemo: React.FC = () => {
               onComponentResize={handleComponentResize}
               onComponentSelect={handleComponentSelect}
               onComponentDelete={handleComponentDelete}
+              onShowProperties={handleShowProperties}
             />
           </div>
         </CardContent>
       </Card>
+
+      {/* Component Properties Panel */}
+      {propertiesPanelComponent && (
+        <ComponentPropertiesPanel
+          component={propertiesPanelComponent}
+          isOpen={!!propertiesPanelComponent}
+          onClose={handleClosePropertiesPanel}
+          onUpdate={handleComponentUpdate}
+        />
+      )}
     </div>
   );
 };

@@ -16,7 +16,7 @@ export class GraphQLService {
   /**
    * Execute a GraphQL query through Azure Functions
    */
-  private async executeQuery<T>(query: string, variables?: Record<string, any>): Promise<T> {
+  private async executeQuery<T>(query: string, variables?: Record<string, unknown>): Promise<T> {
     const response = await fetch(this.endpoint, {
       method: 'POST',
       headers: {
@@ -62,7 +62,7 @@ export class GraphQLService {
       // Simple JWT decode (just for payload, no verification needed here)
       const payload = JSON.parse(atob(token.split('.')[1]));
       return payload.nameid || payload.sub;
-    } catch (error) {
+    } catch {
       throw new Error('Invalid JWT token format');
     }
   }
@@ -216,7 +216,7 @@ export class GraphQLService {
     try {
       const result = await this.executeQuery<{
         navigationItemCollection: {
-          edges: any[];
+          edges: unknown[];
         };
       }>(query, { menuId, userId });
 
@@ -230,7 +230,7 @@ export class GraphQLService {
   /**
    * Get all accounts with their security profiles
    */
-  async getAccounts(): Promise<any[]> {
+  async getAccounts(): Promise<unknown[]> {
     const query = `
       query GetAccounts {
         account_componentCollection {
@@ -253,7 +253,7 @@ export class GraphQLService {
       const result = await this.executeQuery<{
         account_componentCollection: {
           edges: Array<{
-            node: any;
+            node: unknown;
           }>;
         };
       }>(query);
@@ -276,7 +276,7 @@ export class GraphQLService {
   /**
    * Search accounts by email, phone, or entity ID
    */
-  async searchAccounts(searchTerm: string): Promise<any[]> {
+  async searchAccounts(searchTerm: string): Promise<unknown[]> {
     // For now, let's use client-side filtering until we understand the GraphQL filter syntax
     const allAccounts = await this.getAccounts();
     
@@ -332,9 +332,9 @@ export class GraphQLService {
 
     try {
       const result = await this.executeQuery<{
-        total: { edges: any[] };
-        active: { edges: any[] };
-        protected: { edges: any[] };
+        total: { edges: unknown[] };
+        active: { edges: unknown[] };
+        protected: { edges: unknown[] };
       }>(query);
 
       return {

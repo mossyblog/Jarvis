@@ -1,5 +1,5 @@
 import { Skeleton } from "./skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "./table";
 
 interface TableSkeletonProps {
   rows?: number;

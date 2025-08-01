@@ -317,7 +317,7 @@ const LayoutCard: React.FC<LayoutCardProps> = ({
 // ============================================================================
 
 export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
-  layouts = [],
+  layouts = [], // Will be used when integrating with backend
   selectedLayoutId,
   onLayoutSelect,
   onCreateLayout,
@@ -331,8 +331,9 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
   const allTemplates = useMemo(() => {
     // For now, we'll use the mock templates
     // In a real implementation, you'd convert BentoLayout[] to LayoutTemplate[]
+    // The layouts prop will be used here when backend integration is complete
     return LAYOUT_TEMPLATES;
-  }, []);
+  }, [layouts]);
 
   // Filter templates
   const filteredTemplates = useMemo(() => {
@@ -370,10 +371,10 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
     return grouped;
   }, [filteredTemplates]);
 
-  // Get available categories
-  const availableCategories = useMemo(() => {
-    return [...new Set(allTemplates.map(t => t.category))];
-  }, [allTemplates]);
+  // Get available categories (unused for now)
+  // const availableCategories = useMemo(() => {
+  //   return [...new Set(allTemplates.map(t => t.category))];
+  // }, [allTemplates]);
 
   const handleTemplateSelect = useCallback((layoutId: string) => {
     onLayoutSelect?.(layoutId);

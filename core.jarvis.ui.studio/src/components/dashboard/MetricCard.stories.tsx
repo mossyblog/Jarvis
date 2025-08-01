@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { MetricCard, MetricCardBase } from './MetricCard';
 import { useState } from 'react';
 

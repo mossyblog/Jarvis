@@ -40,7 +40,7 @@ export default function UserManagement() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'inactive'>('all');
-  const [authMethodFilter, setAuthMethodFilter] = useState<'all' | 'email' | 'oauth'>('all');
+  // const [authMethodFilter, setAuthMethodFilter] = useState<'all' | 'email' | 'oauth'>('all'); // TODO: implement auth method filtering
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
 

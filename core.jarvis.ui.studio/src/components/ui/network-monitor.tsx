@@ -216,7 +216,7 @@ export function NetworkMonitor() {
                     {activity.method}
                   </span>
                   <span className="text-xs truncate flex-1">
-                    {activity.url.replace(/^https?:\/\/[^\/]+/, '')}
+                    {activity.url.replace(/^https?:\/\/[^/]+/, '')}
                   </span>
                   {activity.duration && (
                     <span className="font-mono text-xs text-muted-foreground">

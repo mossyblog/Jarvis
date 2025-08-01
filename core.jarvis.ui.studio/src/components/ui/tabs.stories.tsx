@@ -1,7 +1,6 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './card';
-import { Button } from './button';
 import { Input } from './input';
 import { Label } from './label';
 
@@ -33,6 +32,67 @@ export const Default: Story = {
         <p className="text-sm text-muted-foreground">
           Change your password here. After saving, you'll be logged out.
         </p>
+      </TabsContent>
+    </Tabs>
+  ),
+};
+
+export const Connected: Story = {
+  render: () => (
+    <Tabs defaultValue="overview" className="w-[500px]">
+      <TabsList className="grid w-full grid-cols-3">
+        <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="analytics">Analytics</TabsTrigger>  
+        <TabsTrigger value="settings">Settings</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Overview</h3>
+          <p className="text-sm text-muted-foreground">
+            This tab content is visually connected to the selected tab above. 
+            Notice how the tab and content form a cohesive card-like container.
+          </p>
+          <div className="space-y-2">
+            <Label htmlFor="name">Project Name</Label>
+            <Input id="name" placeholder="Enter project name" />
+          </div>
+        </div>
+      </TabsContent>
+      <TabsContent value="analytics">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Analytics</h3>
+          <p className="text-sm text-muted-foreground">
+            View your project analytics and performance metrics here.
+          </p>
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <div className="p-4 border rounded-md">
+              <div className="text-2xl font-bold">1,234</div>
+              <div className="text-xs text-muted-foreground">Page Views</div>
+            </div>
+            <div className="p-4 border rounded-md">
+              <div className="text-2xl font-bold">567</div>
+              <div className="text-xs text-muted-foreground">Unique Users</div>
+            </div>
+          </div>
+        </div>
+      </TabsContent>
+      <TabsContent value="settings">
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Settings</h3>
+          <p className="text-sm text-muted-foreground">
+            Configure your project settings and preferences.
+          </p>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label htmlFor="api">API Endpoint</Label>
+              <Input id="api" placeholder="https://api.example.com" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="timeout">Timeout (ms)</Label>
+              <Input id="timeout" type="number" placeholder="5000" />
+            </div>
+          </div>
+        </div>
       </TabsContent>
     </Tabs>
   ),

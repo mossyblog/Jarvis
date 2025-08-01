@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { NetworkMonitor } from './network-monitor-simple';
 
 const meta: Meta<typeof NetworkMonitor> = {

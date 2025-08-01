@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ArrowDown, ArrowUp } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 export function NetworkMonitor() {
   const [requestCount, setRequestCount] = useState(0);
@@ -15,13 +15,9 @@ export function NetworkMonitor() {
       console.log('Fetch intercepted:', args[0]);
       setRequestCount(prev => prev + 1);
       
-      try {
-        const response = await originalFetch(...args);
-        setResponseCount(prev => prev + 1);
-        return response;
-      } catch (error) {
-        throw error;
-      }
+      const response = await originalFetch(...args);
+      setResponseCount(prev => prev + 1);
+      return response;
     };
 
     return () => {

@@ -127,7 +127,7 @@ class MockApiService implements IApiService {
     return { data: filteredItems };
   }
 
-  async refreshToken(_token: string): Promise<ApiResponse<AuthResponse>> {
+  async refreshToken(): Promise<ApiResponse<AuthResponse>> {
     // In mock mode, we don't validate the refresh token
     await this.simulateDelay();
 
@@ -186,7 +186,7 @@ class RealApiService implements IApiService {
     return this.handleResponse<User[]>(response);
   }
 
-  async getAccounts(): Promise<ApiResponse<any[]>> {
+  async getAccounts(): Promise<ApiResponse<Record<string, unknown>[]>> {
     try {
       // For now, return mock data until we have a proper accounts endpoint
       const mockAccounts = [
@@ -219,7 +219,7 @@ class RealApiService implements IApiService {
   }
   private apiUrl: string;
 
-  constructor(apiUrl: string = '/api') {
+  constructor() {
     // Always use relative URL to work with Vite proxy
     this.apiUrl = '/api';
   }
@@ -397,7 +397,7 @@ class RealApiService implements IApiService {
         body: JSON.stringify({ query })
       });
 
-      const result = await this.handleResponse<any>(response);
+      const result = await this.handleResponse<Record<string, unknown>>(response);
       
       if (result.error) {
         // Fallback to hardcoded navigation
@@ -406,10 +406,10 @@ class RealApiService implements IApiService {
 
       if (result.data?.data?.navigation_item_componentCollection?.edges) {
         const navigationItems: NavigationItem[] = result.data.data.navigation_item_componentCollection.edges
-          .map((edge: any) => edge.node)
-          .filter((item: any) => item.is_active)
-          .sort((a: any, b: any) => a.sort_order - b.sort_order)
-          .map((item: any) => ({
+          .map((edge: Record<string, unknown>) => edge.node)
+          .filter((item: Record<string, unknown>) => item.is_active)
+          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.sort_order as number) - (b.sort_order as number))
+          .map((item: Record<string, unknown>) => ({
             id: item.id,
             label: item.label,
             icon: item.icon,
@@ -423,7 +423,7 @@ class RealApiService implements IApiService {
 
       // Fallback if no data
       return this.getFallbackNavigation();
-    } catch (error) {
+    } catch {
       return this.getFallbackNavigation();
     }
   }

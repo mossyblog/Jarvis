@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { NotificationCard } from './notification-card';
 import { AlertCircle, CheckCircle, Info, AlertTriangle, X } from 'lucide-react';
 

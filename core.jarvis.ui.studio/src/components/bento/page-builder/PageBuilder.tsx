@@ -29,7 +29,7 @@ import type {
 } from '@/types/bento';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { BentoGrid as BentoGridComponent } from '../BentoGrid';
@@ -244,7 +244,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
     }));
     
     onComponentDelete?.(componentId);
-  }, [currentGrid, state.currentDevice, grids, state.selectedComponent, onComponentDelete]);
+  }, [currentGrid, state.currentDevice, grids, onComponentDelete]);
 
   // Handle toolbar actions
   const handleSave = useCallback(() => {

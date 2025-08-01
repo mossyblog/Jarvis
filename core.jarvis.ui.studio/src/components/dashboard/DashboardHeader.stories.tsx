@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { DashboardHeader } from './DashboardHeader';
 
 const meta: Meta<typeof DashboardHeader> = {

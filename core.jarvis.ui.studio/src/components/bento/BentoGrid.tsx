@@ -18,7 +18,6 @@ import {
 import type {
   DragEndEvent,
   DragStartEvent,
-  DragOverEvent,
   CollisionDetection,
 } from '@dnd-kit/core';
 // Removed SortableContext - we'll use DndContext directly for grid positioning
@@ -67,6 +66,9 @@ export interface BentoGridProps {
   
   /** Called when the grid configuration changes */
   onGridUpdate?: (updatedGrid: BentoGridType) => void;
+  
+  /** Called when component properties should be shown */
+  onShowProperties?: (componentId: string) => void;
 }
 
 interface DragState {
@@ -108,6 +110,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   onComponentResize,
   onComponentSelect,
   onComponentDelete,
+  onShowProperties,
   // onGridUpdate,
 }) => {
   // State for drag operations
@@ -221,7 +224,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   }, [dragState.isDragging, dragState.draggedComponent, dragState.previewPosition, grid.columns, grid.gap, grid.rowHeight]);
 
   // Handle drag over (simplified - real tracking happens via mousemove)
-  const handleDragOver = useCallback((_event: DragOverEvent) => {
+  const handleDragOver = useCallback(() => {
     // Keep this for DnD compatibility but use mousemove for immediate feedback
     if (!dragState.draggedComponent) return;
     // The actual preview update happens in mousemove listener for speed
@@ -323,6 +326,11 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   const handleComponentResize = useCallback((componentId: string, newSize: { w: number; h: number; x?: number; y?: number }) => {
     onComponentResize?.(componentId, newSize);
   }, [onComponentResize]);
+
+  // Handle show properties
+  const handleShowProperties = useCallback((componentId: string) => {
+    onShowProperties?.(componentId);
+  }, [onShowProperties]);
 
   // Add mousemove listener for immediate drag feedback
   useEffect(() => {
@@ -427,6 +435,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                 onSelect={handleComponentSelect}
                 onDelete={handleComponentDelete}
                 onResize={handleComponentResize}
+                onShowProperties={handleShowProperties}
               >
                 <ComponentRenderer
                   component={component}

@@ -7,19 +7,13 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import {
-  Globe,
-  Lock,
-  Eye,
-  EyeOff,
   Shield,
   Navigation,
   Tag,
   Settings,
   AlertCircle,
-  Check,
   X,
-  Plus,
-  Trash2
+  Plus
 } from 'lucide-react';
 
 import type { BentoPage, PageStatus } from '@/types/bento';
@@ -127,7 +121,7 @@ const validatePageSettings = (page: BentoPage): ValidationError[] => {
     if (!page.route.startsWith('/')) {
       errors.push({ field: 'route', message: 'Route must start with /' });
     }
-    if (!/^\/[a-z0-9-\/]*$/.test(page.route)) {
+    if (!/^\/[a-z0-9-/]*$/.test(page.route)) {
       errors.push({ field: 'route', message: 'Route can only contain lowercase letters, numbers, hyphens, and slashes' });
     }
   }

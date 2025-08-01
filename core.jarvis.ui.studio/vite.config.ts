@@ -1,28 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import { execSync } from 'child_process'
+// import { execSync } from 'child_process'
 
-// Function to get Windows host IP dynamically
-function getWindowsHostIP(): string {
-  try {
-    // Try to get Windows host IP from WSL
-    const result = execSync('ip route show | grep default | awk \'{print $3}\'', { 
-      encoding: 'utf8' 
-    }).trim();
-    
-    if (result && result.match(/^\d+\.\d+\.\d+\.\d+$/)) {
-      console.log(`Detected Windows host IP: ${result}`);
-      return result;
-    }
-  } catch (error) {
-    console.warn('Could not detect Windows host IP, falling back to localhost');
-  }
-  
-  return 'localhost';
-}
+// Function to get Windows host IP dynamically (currently unused)
+// function getWindowsHostIP(): string {
+//   try {
+//     // Try to get Windows host IP from WSL
+//     const result = execSync('ip route show | grep default | awk \'{print $3}\'', { 
+//       encoding: 'utf8' 
+//     }).trim();
+//     
+//     if (result && result.match(/^\d+\.\d+\.\d+\.\d+$/)) {
+//       console.log(`Detected Windows host IP: ${result}`);
+//       return result;
+//     }
+//   } catch {
+//     console.warn('Could not detect Windows host IP, falling back to localhost');
+//   }
+//   
+//   return 'localhost';
+// }
 
-const windowsHostIP = getWindowsHostIP();
+// const windowsHostIP = getWindowsHostIP(); // TODO: Use for dev server configuration
 
 // https://vite.dev/config/
 export default defineConfig({

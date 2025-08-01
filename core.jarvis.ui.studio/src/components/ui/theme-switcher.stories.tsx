@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/react';
+import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ThemeSwitcher, ThemeSwitcherCompact } from './theme-switcher';
 
 const meta: Meta<typeof ThemeSwitcher> = {
