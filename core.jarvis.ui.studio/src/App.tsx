@@ -4,6 +4,7 @@ import UserManagement from './pages/UserManagement';
 import AccountEdit from './pages/AccountEdit';
 import TableEditor from './pages/TableEditor';
 import SchemaVisualizer from './pages/SchemaVisualizer';
+import BentoDemo from './pages/BentoDemo';
 import { Login } from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -69,6 +70,14 @@ function App() {
                   <h1 className="text-2xl font-bold">Roles Management</h1>
                   <p className="text-muted-foreground mt-2">Roles page coming soon...</p>
                 </div>
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/bento" 
+            element={
+              <ProtectedRoute>
+                <BentoDemo />
               </ProtectedRoute>
             } 
           />

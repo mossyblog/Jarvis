@@ -3,6 +3,7 @@
 @import './fonts/fonts.css';
 @import './styles/spacing.css';
 @import './styles/base.css';
+@import './styles/bento.css';
 
 @tailwind base;
 @tailwind components;

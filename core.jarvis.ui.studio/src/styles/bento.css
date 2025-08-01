@@ -1,0 +1,300 @@
+/**
+ * Bento Grid System Styles
+ * 
+ * CSS styles for the Bento grid system components, including
+ * grid layout, drag-and-drop states, and responsive behavior.
+ */
+
+/* ============================================================================
+   Grid Container Styles
+   ============================================================================ */
+
+.bento-grid-wrapper {
+  @apply relative w-full h-full;
+}
+
+.bento-grid {
+  @apply relative w-full min-h-full;
+  /* Grid styles are applied via inline styles for dynamic columns */
+}
+
+.bento-grid--editing {
+  @apply cursor-default;
+}
+
+.bento-grid--show-grid {
+  /* Grid overlay is rendered as a separate component */
+}
+
+/* ============================================================================
+   Grid Overlay Styles
+   ============================================================================ */
+
+.grid-overlay {
+  @apply pointer-events-none;
+}
+
+/* ============================================================================
+   Grid Component Styles
+   ============================================================================ */
+
+.bento-component {
+  @apply relative bg-card border border-border rounded-lg overflow-hidden;
+  transition: all 0.2s ease-in-out;
+  /* Ensure components fill their grid area */
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+}
+
+.bento-component:hover {
+  @apply shadow-md;
+}
+
+.bento-component--editing {
+  @apply cursor-pointer;
+}
+
+.bento-component--editing:hover {
+  @apply ring-2 ring-primary/20;
+}
+
+.bento-component--selected {
+  @apply ring-2 ring-primary;
+}
+
+.bento-component--dragging {
+  @apply opacity-50 shadow-lg;
+  z-index: 1000;
+}
+
+.bento-component--resizing {
+  @apply ring-2 ring-blue-500;
+  user-select: none;
+  z-index: 100 !important;
+}
+
+/* Prevent text selection during resize globally */
+body.resizing {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.bento-component--locked {
+  @apply cursor-not-allowed opacity-75;
+}
+
+.bento-component--locked:hover {
+  @apply shadow-none ring-0;
+}
+
+/* Component content */
+.bento-component__content {
+  @apply relative z-0;
+}
+
+/* Drag handle */
+.bento-component__drag-handle {
+  @apply bg-background/90 backdrop-blur-sm border border-border;
+  border-radius: 4px;
+}
+
+.bento-component__drag-handle:hover {
+  @apply bg-background border-primary;
+}
+
+/* Component actions */
+.bento-component__actions {
+  @apply bg-background/90 backdrop-blur-sm border border-border rounded-md p-1;
+}
+
+/* Resize handles */
+.bento-component__resize-handle {
+  @apply bg-primary hover:bg-primary/80 border border-primary-foreground/20;
+  transition: all 0.15s ease-in-out;
+  /* Add invisible larger hit area */
+  box-shadow: 0 0 0 8px transparent;
+}
+
+.bento-component__resize-handle:hover {
+  @apply scale-125;
+  box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.1);
+}
+
+/* Active resize handle */
+.bento-component--resizing .bento-component__resize-handle {
+  @apply opacity-100 bg-primary;
+}
+
+/* Resize ghost overlay */
+.bento-component__resize-ghost {
+  @apply absolute inset-0 bg-primary/10 border-2 border-primary border-dashed rounded-md pointer-events-none;
+}
+
+/* Selection border */
+.bento-component__selection-border {
+  animation: selection-pulse 2s ease-in-out infinite;
+}
+
+@keyframes selection-pulse {
+  0%, 100% {
+    @apply border-primary;
+  }
+  50% {
+    @apply border-primary/60;
+  }
+}
+
+/* ============================================================================
+   Grid Overlay Styles
+   ============================================================================ */
+
+.grid-overlay {
+  /* Background pattern for grid visualization */
+}
+
+/* ============================================================================
+   Drag Preview Styles
+   ============================================================================ */
+
+.drag-preview {
+  @apply pointer-events-none select-none;
+  filter: drop-shadow(0 10px 15px -3px rgb(0 0 0 / 0.1)) drop-shadow(0 4px 6px -4px rgb(0 0 0 / 0.1));
+}
+
+/* ============================================================================
+   Responsive Styles
+   ============================================================================ */
+
+/* Desktop styles (default) */
+@media (min-width: 1024px) {
+  .bento-component__drag-handle,
+  .bento-component__actions {
+    @apply opacity-0 group-hover:opacity-100;
+  }
+  
+  .bento-component__resize-handle {
+    @apply opacity-0 group-hover:opacity-100;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .bento-grid {
+    /* Tablet-specific grid adjustments */
+  }
+  
+  .bento-component__drag-handle,
+  .bento-component__actions,
+  .bento-component__resize-handle {
+    /* Always visible on tablet for touch interaction */
+    @apply opacity-70;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .bento-grid {
+    /* Mobile-specific grid adjustments */
+    @apply gap-2;
+  }
+  
+  .bento-component {
+    @apply rounded-md;
+  }
+  
+  .bento-component__drag-handle,
+  .bento-component__actions,
+  .bento-component__resize-handle {
+    /* Always visible on mobile for touch interaction */
+    @apply opacity-100;
+  }
+  
+  .bento-component__resize-handle {
+    /* Larger resize handles for touch */
+    width: 12px !important;
+    height: 12px !important;
+  }
+}
+
+/* ============================================================================
+   Animation Styles
+   ============================================================================ */
+
+/* Component enter animation */
+.bento-component-enter {
+  @apply opacity-0 scale-95;
+}
+
+.bento-component-enter-active {
+  @apply opacity-100 scale-100;
+  transition: all 0.3s ease-out;
+}
+
+/* Component exit animation */
+.bento-component-exit {
+  @apply opacity-100 scale-100;
+}
+
+.bento-component-exit-active {
+  @apply opacity-0 scale-95;
+  transition: all 0.2s ease-in;
+}
+
+/* Drag start animation */
+.bento-component--drag-start {
+  animation: drag-start 0.2s ease-out;
+}
+
+@keyframes drag-start {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ============================================================================
+   Dark Mode Styles
+   ============================================================================ */
+
+.dark .bento-component {
+  @apply border-border;
+}
+
+.dark .bento-component:hover {
+  @apply shadow-lg shadow-black/20;
+}
+
+.dark .bento-component__drag-handle,
+.dark .bento-component__actions {
+  @apply bg-background/95 border-border;
+}
+
+.dark .grid-overlay {
+  /* Dark mode grid overlay adjustments */
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+  .bento-component__drag-handle,
+  .bento-component__actions,
+  .bento-component__resize-handle,
+  .bento-component__selection-border,
+  .grid-overlay {
+    @apply hidden;
+  }
+  
+  .bento-component {
+    @apply break-inside-avoid shadow-none border border-gray-300;
+  }
+}
