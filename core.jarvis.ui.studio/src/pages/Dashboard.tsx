@@ -1,6 +1,7 @@
 import React from 'react';
 import { DashboardLayout } from '../components/layout/DashboardLayout';
 import { ContentHeader } from '../components/layout/ContentHeader';
+import { EditableContent } from '../components/layout/EditableContent';
 import { MetricCard } from '../components/dashboard/MetricCard';
 import { IssuesSection } from '../components/dashboard/IssuesSection';
 import { SlowQueriesTable } from '../components/dashboard/SlowQueriesTable';
@@ -36,7 +37,7 @@ export function Dashboard() {
 
   return (
     <DashboardLayout activeItem={activeItem} onItemClick={handleItemClick}>
-      <div className="@container">
+      <EditableContent pageId="dashboard" className="@container">
         {/* Content Header */}
         <ContentHeader
           title="Dashboard"
@@ -122,7 +123,7 @@ export function Dashboard() {
           {/* Slow Queries */}
           <SlowQueriesTable />
         </div>
-      </div>
+      </EditableContent>
     </DashboardLayout>
   );
 }

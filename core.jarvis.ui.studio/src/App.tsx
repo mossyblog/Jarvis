@@ -9,6 +9,7 @@ import { Login } from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ApiStatusProvider } from './contexts/ApiStatusContext';
+import { EditModeProvider } from './contexts/EditModeContext';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ApiStatusBanner } from './components/layout/ApiStatusBanner';
 import { NetworkMonitor } from './components/ui/network-monitor-simple';
@@ -19,8 +20,10 @@ function App() {
       <Router>
         <ApiStatusProvider>
           <AuthProvider>
-            <ApiStatusBanner />
-            <Routes>
+            <EditModeProvider>
+              <div id="app-container">
+                <ApiStatusBanner />
+              <Routes>
           <Route path="/login" element={<Login />} />
           <Route 
             path="/" 
@@ -92,7 +95,9 @@ function App() {
               </ProtectedRoute>
             } 
           />
-        </Routes>
+              </Routes>
+              </div>
+            </EditModeProvider>
           </AuthProvider>
           <NetworkMonitor />
         </ApiStatusProvider>

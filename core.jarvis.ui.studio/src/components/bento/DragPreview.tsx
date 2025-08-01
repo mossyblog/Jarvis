@@ -72,19 +72,20 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
       <div
         className={cn(
           'drag-preview',
-          'bg-card border border-dashed border-primary',
+          'bg-card/90 border border-border',
           'rounded-md shadow-lg',
-          'flex items-center justify-center',
+          'p-4',
           className
         )}
-        style={previewStyle}
+        style={{
+          ...previewStyle,
+          opacity: 0.9,
+        }}
       >
-        <div className="text-center text-muted-foreground">
-          <div className="text-sm font-medium">
-            {component.componentType}
-          </div>
-          <div className="text-xs">
-            {component.position.w}×{component.position.h}
+        {/* Just show component type name as placeholder */}
+        <div className="h-full w-full flex items-center justify-center">
+          <div className="text-muted-foreground text-sm font-medium">
+            {component.componentType.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </div>
         </div>
       </div>

@@ -44,6 +44,14 @@ export interface BentoGridProps {
   /** Whether the grid is in edit mode (allows drag/drop) */
   isEditing?: boolean;
   
+  /** Whether to show grid overlay */
+  showGrid?: boolean;
+  
+  /** External drag preview (from toolbar) */
+  externalDragPreview?: {
+    position: { x: number; y: number; w: number; h: number };
+    componentType: string;
+  } | null;
   
   /** Additional CSS classes */
   className?: string;
@@ -104,6 +112,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   grid,
   deviceType = DeviceType.Desktop,
   isEditing = false,
+  showGrid = false,
+  externalDragPreview,
   className,
   style,
   onComponentMove,
@@ -332,6 +342,36 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     onShowProperties?.(componentId);
   }, [onShowProperties]);
 
+  // Render icon based on component type - matches toolbar icons
+  const renderComponentSkeleton = (componentType: string) => {
+    const iconMap: Record<string, string> = {
+      'metric-card': '📊',
+      'chart': '📈',
+      'kpi': '🎯',
+      'gauge': '🌡️',
+      'table': '📋',
+      'list': '📝',
+      'grid-view': '🗂️',
+      'text-block': '📄',
+      'heading': '🔤',
+      'card': '🎴',
+      'image': '🖼️',
+      'video': '🎬',
+      'gallery': '🖼️',
+      'button': '🔘',
+      'button-group': '🎛️',
+      'form': '📝'
+    };
+
+    const icon = iconMap[componentType] || '📦';
+    
+    return (
+      <div className="h-full w-full flex items-center justify-center">
+        <div className="text-4xl opacity-50">{icon}</div>
+      </div>
+    );
+  };
+
   // Add mousemove listener for immediate drag feedback
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
@@ -360,8 +400,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         onDragEnd={handleDragEnd}
       >
         <div className="relative">
-          {/* Render grid overlay - always visible in edit mode */}
-          {isEditing && (
+          {/* Render grid overlay - visible when editing AND showGrid is true */}
+          {isEditing && showGrid && (
             <GridOverlay
               columns={grid.columns}
               gap={grid.gap}
@@ -377,7 +417,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               'relative',
               {
                 'bento-grid--editing': isEditing,
-                'bento-grid--show-grid': isEditing, // Grid visible when editing
+                'bento-grid--show-grid': showGrid, // Grid visible when showGrid is true
               }
             )}
             style={gridStyle}
@@ -395,29 +435,30 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                     backgroundColor: isValidPlacement ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
                   }}
                 >
-                  {/* Skeleton component with minimal re-renders */}
-                  <div className="h-full w-full opacity-50 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-border/50">
-                    <ComponentRenderer
-                      component={dragState.draggedComponent}
-                      gridSize={{
-                        w: dragState.previewPosition.w,
-                        h: dragState.previewPosition.h,
-                      }}
-                      deviceType={deviceType}
-                    />
-                    
-                    {/* Simple validity indicator */}
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div 
-                        className={`px-2 py-1 rounded text-xs font-medium transition-none ${
-                          isValidPlacement 
-                            ? 'bg-green-500/90 text-white' 
-                            : 'bg-red-500/90 text-white'
-                        }`}
-                      >
-                        {isValidPlacement ? 'Drop here' : 'Invalid'}
-                      </div>
-                    </div>
+                  {/* Skeleton preview */}
+                  <div className="h-full w-full opacity-70 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-border/50">
+                    {renderComponentSkeleton(dragState.draggedComponent.componentType)}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* External drag preview (from toolbar) */}
+            {externalDragPreview && (() => {
+              const isValidPlacement = !checkCollision(externalDragPreview.position);
+              return (
+                <div
+                  className="pointer-events-none z-10 rounded-lg border-2 border-dashed transition-none"
+                  style={{
+                    gridColumn: `${externalDragPreview.position.x + 1} / span ${externalDragPreview.position.w}`,
+                    gridRow: `${externalDragPreview.position.y + 1} / span ${externalDragPreview.position.h}`,
+                    borderColor: isValidPlacement ? '#22c55e' : '#ef4444',
+                    backgroundColor: isValidPlacement ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  }}
+                >
+                  {/* Preview skeleton */}
+                  <div className="h-full w-full opacity-70 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-border/50">
+                    {renderComponentSkeleton(externalDragPreview.componentType)}
                   </div>
                 </div>
               );
@@ -456,6 +497,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             <DragPreview
               component={dragState.draggedComponent}
               deviceType={deviceType}
+              simplified={true}
             />
           ) : null}
         </DragOverlay>

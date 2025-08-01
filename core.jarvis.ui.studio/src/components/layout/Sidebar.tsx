@@ -2,11 +2,25 @@ import React, { useState, useEffect } from 'react';
 import { 
   FileText,
   Menu,
-  PanelLeftClose
+  PanelLeftClose,
+  Plus
 } from 'lucide-react';
 import * as Icons from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEditMode } from '../../contexts/EditModeContext';
+import { Button } from '../ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../ui/dialog';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 interface SidebarItem {
   id: string;
@@ -35,7 +49,10 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showNewPageDialog, setShowNewPageDialog] = useState(false);
+  const [newPageData, setNewPageData] = useState({ name: '', route: '' });
   const { navigation } = useAuth();
+  const { isEditMode, createPage } = useEditMode();
 
   // Convert navigation items to sidebar items
   const sidebarItems: SidebarItem[] = navigation.map(item => ({
@@ -89,6 +106,22 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
   }, [showDropdown]);
+
+  // Handle new page creation
+  const handleCreatePage = async () => {
+    if (!newPageData.name || !newPageData.route) return;
+    
+    try {
+      await createPage({
+        displayName: newPageData.name,
+        route: newPageData.route.startsWith('/') ? newPageData.route : `/${newPageData.route}`
+      });
+      setShowNewPageDialog(false);
+      setNewPageData({ name: '', route: '' });
+    } catch (error) {
+      console.error('Failed to create page:', error);
+    }
+  };
 
   return (
     <>
@@ -161,6 +194,82 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                 </div>
               </button>
             ))}
+            
+            {/* New Page Button - Only visible in edit mode */}
+            {isEditMode && (
+              <Dialog open={showNewPageDialog} onOpenChange={setShowNewPageDialog}>
+                <DialogTrigger asChild>
+                  <button
+                    className={cn(
+                      "w-full flex items-center h-9 rounded-md transition-colors relative group",
+                      "hover:bg-gray-800 border-2 border-dashed border-gray-700",
+                      "mt-2"
+                    )}
+                  >
+                    {/* Icon container - fixed position */}
+                    <div className="absolute left-2 w-5 h-5 flex items-center justify-center">
+                      <Plus size={18} className="text-gray-400 group-hover:text-gray-200" />
+                    </div>
+                    
+                    {/* Label - only visible when expanded */}
+                    <div className={cn(
+                      "ml-9 mr-3 overflow-hidden transition-opacity duration-200",
+                      isExpanded ? "opacity-100" : "opacity-0"
+                    )}>
+                      <span className="text-sm whitespace-nowrap text-gray-400 group-hover:text-gray-200">
+                        New Page
+                      </span>
+                    </div>
+                  </button>
+                </DialogTrigger>
+                
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Create New Page</DialogTitle>
+                    <DialogDescription>
+                      Add a new page to your application. Choose a display name and route.
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="page-name" className="text-right">
+                        Name
+                      </Label>
+                      <Input
+                        id="page-name"
+                        value={newPageData.name}
+                        onChange={(e) => setNewPageData({ ...newPageData, name: e.target.value })}
+                        placeholder="My New Page"
+                        className="col-span-3"
+                      />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="page-route" className="text-right">
+                        Route
+                      </Label>
+                      <Input
+                        id="page-route"
+                        value={newPageData.route}
+                        onChange={(e) => setNewPageData({ ...newPageData, route: e.target.value })}
+                        placeholder="/my-new-page"
+                        className="col-span-3"
+                      />
+                    </div>
+                  </div>
+                  
+                  <DialogFooter>
+                    <Button
+                      variant="default"
+                      onClick={handleCreatePage}
+                      disabled={!newPageData.name || !newPageData.route}
+                    >
+                      Create Page
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </nav>
 

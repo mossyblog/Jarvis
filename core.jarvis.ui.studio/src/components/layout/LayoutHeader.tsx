@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from 'framer-motion'
 import { useState } from 'react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
@@ -14,18 +13,14 @@ import {
 import { 
   Home, 
   HelpCircle, 
-  MessageSquare,
-  Bell,
-  Plug,
-  FileEdit,
-  Sparkles,
-  GitBranch
+  Bell
 } from 'lucide-react'
 import { OrganizationDropdown } from './dropdowns/OrganizationDropdown'
-import { ProjectDropdown } from './dropdowns/ProjectDropdown'
-import { BranchDropdown } from './dropdowns/BranchDropdown'
 import { UserMenu } from './UserMenu'
 import { ThemeSwitcher } from '@/components/ui/theme-switcher'
+import { Switch } from '@/components/ui/switch'
+import { useEditMode } from '@/contexts/EditModeContext'
+import { DeviceSelector } from './DeviceSelector'
 
 // Component implementations
 const HomeIcon = () => (
@@ -34,55 +29,6 @@ const HomeIcon = () => (
   </a>
 )
 
-const Connect = () => (
-  <Button variant="outline" size="sm" className="h-auto px-2 py-1">
-    <Plug className="mr-2 h-4 w-4" />
-    Connect
-  </Button>
-)
-
-const EnableBranchingButton = () => (
-  <Button variant="outline" size="sm" className="h-auto px-2 py-1">
-    <GitBranch className="mr-2 h-4 w-4" />
-    Enable Branching
-  </Button>
-)
-
-interface Breadcrumb {
-  label?: string;
-  value?: string;
-}
-
-const BreadcrumbsView = ({ defaultValue }: { defaultValue: (string | Breadcrumb)[] }) => {
-  if (!defaultValue.length) return null
-  
-  return (
-    <div className="flex items-center ml-4 text-sm text-muted-foreground">
-      {defaultValue.map((crumb, index) => (
-        <span key={index} className="flex items-center">
-          {index > 0 && <span className="mx-2">/</span>}
-          <span>{typeof crumb === 'string' ? crumb : crumb.label}</span>
-        </span>
-      ))}
-    </div>
-  )
-}
-
-const FeedbackDropdown = () => (
-  <DropdownMenu>
-    <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="icon">
-        <MessageSquare className="h-4 w-4" />
-      </Button>
-    </DropdownMenuTrigger>
-    <DropdownMenuContent align="end">
-      <DropdownMenuLabel>Feedback</DropdownMenuLabel>
-      <DropdownMenuSeparator />
-      <DropdownMenuItem>Report an issue</DropdownMenuItem>
-      <DropdownMenuItem>Share feedback</DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-)
 
 const NotificationsPopoverV2 = () => (
   <DropdownMenu>
@@ -121,17 +67,28 @@ const HelpPopover = () => (
 
 // Replaced with UserMenu component
 
-const InlineEditorButton = () => (
-  <Button variant="ghost" size="icon">
-    <FileEdit className="h-4 w-4" />
-  </Button>
-)
+const EditModeToggle = () => {
+  const { isEditMode, toggleEditMode, hasUnsavedChanges } = useEditMode();
 
-const AssistantButton = () => (
-  <Button variant="ghost" size="icon">
-    <Sparkles className="h-4 w-4" />
-  </Button>
-)
+  return (
+    <div className="flex items-center gap-3">
+      {hasUnsavedChanges && (
+        <span className="text-xs text-amber-500 font-medium">
+          Unsaved
+        </span>
+      )}
+      <label htmlFor="edit-mode-switch" className="flex items-center gap-2 cursor-pointer">
+        <span className="text-sm font-medium">Edit</span>
+        <Switch
+          id="edit-mode-switch"
+          checked={isEditMode}
+          onCheckedChange={toggleEditMode}
+          className="data-[state=checked]:bg-blue-600"
+        />
+      </label>
+    </div>
+  );
+};
 
 const LayoutHeaderDivider = ({ className, ...props }: React.HTMLProps<HTMLSpanElement>) => (
   <span className={cn('px-2', className)} {...props}>
@@ -154,47 +111,15 @@ const LayoutHeaderDivider = ({ className, ...props }: React.HTMLProps<HTMLSpanEl
 
 interface LayoutHeaderProps {
   customHeaderComponents?: ReactNode
-  breadcrumbs?: (string | Breadcrumb)[]
-  headerTitle?: string
   showProductMenu?: boolean
 }
 
-// Hardcoded data for now
-const HARDCODED_DATA = {
-  organization: {
-    name: 'Risksec',
-    slug: 'risksec'
-  },
-  project: {
-    name: 'Jarvis Core',
-    ref: 'jarvis-core',
-    is_branch_enabled: true
-  },
-  branch: {
-    name: 'main',
-    branches: ['main', 'develop', 'feature/ui-update']
-  },
-  user: {
-    name: 'John Doe',
-    email: 'john.doe@risksec.com',
-    avatar: null
-  }
-}
 
 const LayoutHeader = ({
   customHeaderComponents,
-  breadcrumbs = [],
-  headerTitle,
   showProductMenu,
 }: LayoutHeaderProps) => {
   const [, setMobileMenuOpen] = useState(false)
-  
-  // Hardcoded values
-  const projectRef = HARDCODED_DATA.project.ref
-  const selectedProject = HARDCODED_DATA.project
-  const isBranchingEnabled = selectedProject?.is_branch_enabled === true
-  const exceedingLimits = false // Hardcoded for now
-  const showOrgSelection = true
 
   return (
     <header className={cn('flex h-12 items-center flex-shrink-0 border-b bg-background')}>
@@ -219,114 +144,26 @@ const LayoutHeader = ({
       >
         <div className="flex items-center text-sm gap-1">
           <HomeIcon />
-          <div className="flex items-center">
-            {showOrgSelection && (
-              <>
-                <LayoutHeaderDivider className="hidden md:block" />
-                <OrganizationDropdown />
-              </>
-            )}
-            <AnimatePresence>
-              {projectRef && (
-                <motion.div
-                  className="flex items-center"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{
-                    duration: 0.15,
-                    ease: 'easeOut',
-                  }}
-                >
-                  <LayoutHeaderDivider />
-                  <ProjectDropdown />
-
-                  {exceedingLimits && (
-                    <div className="ml-2">
-                      <span className="inline-flex items-center rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/10">
-                        Exceeding usage limits
-                      </span>
-                    </div>
-                  )}
-
-                  {selectedProject && isBranchingEnabled && (
-                    <>
-                      <LayoutHeaderDivider />
-                      <BranchDropdown />
-                    </>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-              {headerTitle && (
-                <motion.div
-                  className="flex items-center"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{
-                    duration: 0.15,
-                    ease: 'easeOut',
-                  }}
-                >
-                  <LayoutHeaderDivider />
-                  <span className="text-foreground">{headerTitle}</span>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          <AnimatePresence>
-            {projectRef && (
-              <motion.div
-                className="ml-3 items-center gap-x-3 flex"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{
-                  duration: 0.15,
-                  ease: 'easeOut',
-                }}
-              >
-                <Connect />
-                {!isBranchingEnabled && <EnableBranchingButton />}
-              </motion.div>
-            )}
-          </AnimatePresence>
-          <BreadcrumbsView defaultValue={breadcrumbs} />
+          <LayoutHeaderDivider />
+          <OrganizationDropdown />
         </div>
-        <div className="flex items-center gap-x-2">
+        
+        <div className="flex items-center gap-x-1">
           {customHeaderComponents && customHeaderComponents}
           <>
             <ThemeSwitcher />
-            <FeedbackDropdown />
+            <LayoutHeaderDivider />
+            <DeviceSelector />
+            <LayoutHeaderDivider />
             <NotificationsPopoverV2 />
             <HelpPopover />
+            <LayoutHeaderDivider />
             <UserMenu />
+            <LayoutHeaderDivider />
+            <EditModeToggle />
           </>
         </div>
       </div>
-
-      <AnimatePresence initial={false}>
-        {!!projectRef && (
-          <motion.div
-            className="border-l h-full flex items-center justify-center flex-shrink-0"
-            initial={{ opacity: 0, x: 0, width: 0 }}
-            animate={{ opacity: 1, x: 0, width: 'auto' }}
-            exit={{ opacity: 0, x: 0, width: 0 }}
-            transition={{ duration: 0.15, ease: 'easeOut' }}
-          >
-            <div className="border-r h-full flex items-center justify-center px-2">
-              <InlineEditorButton />
-            </div>
-            <div className="px-2">
-              <AssistantButton />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </header>
   )
 }

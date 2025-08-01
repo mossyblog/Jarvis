@@ -49,4 +49,18 @@
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }
+
+  /* Device Emulation Styles */
+  .device-emulation-container {
+    @apply p-5 bg-muted/30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100%;
+  }
+
+  .device-emulation-container > * {
+    width: 100%;
+    max-width: var(--device-max-width, 100%);
+  }
 }

@@ -40,9 +40,6 @@ export interface GridComponentProps {
   children: React.ReactNode;
   
   // Event handlers
-  /** Called when component is selected */
-  onSelect?: (componentId: string) => void;
-  
   /** Called when component is deleted */
   onDelete?: (componentId: string) => void;
   
@@ -85,7 +82,6 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   isDragging = false,
   deviceType = DeviceType.Desktop,
   children,
-  onSelect,
   onDelete,
   onResize,
   onShowProperties,
@@ -127,13 +123,6 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [component.position, transform, isDragging, isDraggableDragging]);
 
-  // Handle component selection
-  const handleSelect = useCallback((event: React.MouseEvent) => {
-    if (!isEditing) return;
-    
-    event.stopPropagation();
-    onSelect?.(component.id);
-  }, [isEditing, component.id, onSelect]);
 
   // Handle component deletion
   const handleDelete = useCallback((event: React.MouseEvent) => {
@@ -234,7 +223,8 @@ export const GridComponent: React.FC<GridComponentProps> = ({
       if (direction.includes('w') || direction.includes('n')) {
         onResize?.(component.id, { w: newW, h: newH, x: newX, y: newY });
       } else {
-        onResize?.(component.id, { w: newW, h: newH });
+        // For east/south resizes, maintain original position
+        onResize?.(component.id, { w: newW, h: newH, x: component.position.x, y: component.position.y });
       }
     };
     
@@ -317,8 +307,9 @@ export const GridComponent: React.FC<GridComponentProps> = ({
       style={{
         ...gridStyles,
         ...component.display?.style,
+        // Hide the original component completely while dragging
+        opacity: isDragging || isDraggableDragging ? 0 : 1,
       }}
-      onClick={handleSelect}
       {...attributes}
     >
       {/* Component content */}
