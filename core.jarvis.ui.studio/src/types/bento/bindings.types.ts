@@ -566,7 +566,7 @@ export const isDataSource = (obj: any): obj is DataSource => {
 /**
  * Type guard for DataField validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isDataField = (obj: any): obj is DataField => {
   return obj &&
@@ -578,7 +578,7 @@ export const isDataField = (obj: any): obj is DataField => {
 /**
  * Type guard for ComponentBindings validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isComponentBindings = (obj: any): obj is ComponentBindings => {
   return obj &&
@@ -589,7 +589,7 @@ export const isComponentBindings = (obj: any): obj is ComponentBindings => {
 /**
  * Type guard for EventBinding validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isEventBinding = (obj: any): obj is EventBinding => {
   return obj &&

@@ -281,12 +281,13 @@ export const GridComponent: React.FC<GridComponentProps> = ({
     
     return false;
   }, [component.display, deviceType]);
-
+  
+  
   // Don't render if component is hidden on current device
   if (isHidden) {
     return null;
   }
-
+  
   return (
     <div
       ref={setNodeRef}

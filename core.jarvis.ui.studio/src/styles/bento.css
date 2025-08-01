@@ -11,6 +11,7 @@
 
 .bento-grid-wrapper {
   @apply relative w-full h-full;
+  /* Clean foundation - no distracting patterns */
 }
 
 .bento-grid {
@@ -20,10 +21,12 @@
 
 .bento-grid--editing {
   @apply cursor-default;
+  /* Subtle background for edit mode */
+  background-color: rgba(0, 0, 0, 0.01);
 }
 
 .bento-grid--show-grid {
-  /* Grid overlay is rendered as a separate component */
+  /* Grid overlay handles visualization */
 }
 
 /* ============================================================================
@@ -32,6 +35,43 @@
 
 .grid-overlay {
   @apply pointer-events-none;
+  /* Progressive visibility handled by component */
+}
+
+/* Grid dots and lines transitions */
+.grid-overlay > div {
+  will-change: opacity, background-color;
+}
+
+/* Alignment guides */
+.grid-alignment-guide {
+  @apply absolute pointer-events-none;
+  animation: guide-appear 150ms ease-out;
+}
+
+@keyframes guide-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Drop zone preview */
+.grid-drop-zone {
+  animation: drop-zone-pulse 1s ease-in-out infinite;
+}
+
+@keyframes drop-zone-pulse {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 
 /* ============================================================================
@@ -45,6 +85,8 @@
   height: 100%;
   width: 100%;
   min-height: 0;
+  /* Components sit above grid dots */
+  z-index: 1;
 }
 
 .bento-component:hover {
@@ -64,8 +106,10 @@
 }
 
 .bento-component--dragging {
-  @apply opacity-50 shadow-lg;
+  @apply opacity-80 shadow-2xl;
   z-index: 1000;
+  /* Add subtle scale for depth */
+  transform: scale(1.02);
 }
 
 .bento-component--resizing {
@@ -126,6 +170,16 @@ body.resizing {
 /* Active resize handle */
 .bento-component--resizing .bento-component__resize-handle {
   @apply opacity-100 bg-primary;
+}
+
+/* Grid interaction states */
+.bento-grid[data-interaction="hover"] {
+  /* Grid subtly responds to hover */
+}
+
+.bento-grid[data-interaction="dragging"],
+.bento-grid[data-interaction="resizing"] {
+  /* Grid becomes more visible during active manipulation */
 }
 
 /* Resize ghost overlay */
@@ -279,6 +333,11 @@ body.resizing {
 
 .dark .grid-overlay {
   /* Dark mode grid overlay adjustments */
+}
+
+/* Dark mode adjustments */
+.dark .bento-grid--editing {
+  background-color: rgba(255, 255, 255, 0.01);
 }
 
 /* ============================================================================

@@ -107,7 +107,6 @@ const createSampleGrid = (): BentoGridType => ({
 export const BentoGridDemo: React.FC = () => {
   const [grid, setGrid] = useState<BentoGridType>(createSampleGrid);
   const [isEditing, setIsEditing] = useState(false);
-  const [showGrid, setShowGrid] = useState(false);
   const [deviceType, setDeviceType] = useState<DeviceType>(DeviceType.Desktop);
   const [selectedComponentId, setSelectedComponentId] = useState<string | null>(null);
 
@@ -269,17 +268,7 @@ export const BentoGridDemo: React.FC = () => {
               </label>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-grid"
-                checked={showGrid}
-                onCheckedChange={setShowGrid}
-                disabled={!isEditing}
-              />
-              <label htmlFor="show-grid" className="text-sm font-medium">
-                Show Grid
-              </label>
-            </div>
+            {/* Removed show grid toggle - grid is progressive now */}
 
             <div className="flex items-center space-x-2">
               <label htmlFor="device-type" className="text-sm font-medium">
@@ -369,12 +358,11 @@ export const BentoGridDemo: React.FC = () => {
       {/* Bento Grid */}
       <Card>
         <CardContent className="p-6">
-          <div className="min-h-[600px] border border-dashed border-muted-foreground/20 rounded-lg p-4 bg-slate-50 dark:bg-slate-900/50">
+          <div className="min-h-[600px] border border-border rounded-lg p-4 bg-muted/30">
             <BentoGrid
               grid={grid}
               deviceType={deviceType}
               isEditing={isEditing}
-              showGrid={showGrid}
               onComponentMove={handleComponentMove}
               onComponentResize={handleComponentResize}
               onComponentSelect={handleComponentSelect}

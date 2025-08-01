@@ -135,7 +135,7 @@ const extractFieldsFromQuery = (query: string): QueryField[] => {
   
   // Simple field extraction - in a real implementation, this would use a proper GraphQL parser
   const lines = query.split('\n');
-  let currentPath: string[] = [];
+  const currentPath: string[] = [];
   
   lines.forEach(line => {
     const trimmed = line.trim();

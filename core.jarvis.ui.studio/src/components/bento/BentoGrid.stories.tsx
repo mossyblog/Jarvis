@@ -4,7 +4,7 @@
  * Stories demonstrating the BentoGrid component in various configurations.
  */
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { BentoGrid } from './BentoGrid';
 import type { BentoGrid as BentoGridType, GridPosition } from '@/types/bento';
@@ -57,7 +57,6 @@ const sampleGrid: BentoGridType = {
     }
   ],
   settings: {
-    showGrid: false,
     snapToGrid: true,
     gridColor: '#e5e7eb',
     allowOverlap: false,
@@ -102,10 +101,6 @@ It provides a flexible, responsive layout engine with drag-and-drop functionalit
     isEditing: {
       description: 'Whether the grid is in edit mode (enables drag/drop)',
       control: { type: 'boolean' }
-    },
-    showGrid: {
-      description: 'Whether to show visual grid lines',
-      control: { type: 'boolean' }
     }
   }
 };
@@ -119,7 +114,6 @@ export const Default: Story = {
     grid: sampleGrid,
     deviceType: DeviceType.Desktop,
     isEditing: false,
-    showGrid: false
   }
 };
 
@@ -129,7 +123,6 @@ export const EditMode: Story = {
     grid: sampleGrid,
     deviceType: DeviceType.Desktop,
     isEditing: true,
-    showGrid: true
   }
 };
 
@@ -143,7 +136,6 @@ export const TabletView: Story = {
     },
     deviceType: DeviceType.Tablet,
     isEditing: false,
-    showGrid: false
   }
 };
 
@@ -165,7 +157,6 @@ export const MobileView: Story = {
     },
     deviceType: DeviceType.Mobile,
     isEditing: false,
-    showGrid: false
   }
 };
 
@@ -178,7 +169,6 @@ export const EmptyGrid: Story = {
     },
     deviceType: DeviceType.Desktop,
     isEditing: true,
-    showGrid: true
   }
 };
 
@@ -203,7 +193,6 @@ export const DenseLayout: Story = {
     },
     deviceType: DeviceType.Desktop,
     isEditing: true,
-    showGrid: true
   }
 };
 
@@ -274,6 +263,5 @@ export const DragAndDropTest: Story = {
     grid: sampleGrid,
     deviceType: DeviceType.Desktop,
     isEditing: true,
-    showGrid: true
   }
 };

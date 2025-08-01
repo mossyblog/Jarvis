@@ -6,7 +6,7 @@
  * responsive grid behavior.
  */
 
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import {
   DndContext,
   PointerSensor,
@@ -18,6 +18,7 @@ import {
 import type {
   DragEndEvent,
   DragStartEvent,
+  DragOverEvent,
   CollisionDetection,
 } from '@dnd-kit/core';
 // Removed SortableContext - we'll use DndContext directly for grid positioning
@@ -44,8 +45,6 @@ export interface BentoGridProps {
   /** Whether the grid is in edit mode (allows drag/drop) */
   isEditing?: boolean;
   
-  /** Whether to show visual grid lines */
-  showGrid?: boolean;
   
   /** Additional CSS classes */
   className?: string;
@@ -74,6 +73,7 @@ interface DragState {
   activeId: string | null;
   draggedComponent: GridComponent | null;
   isDragging: boolean;
+  previewPosition: GridPosition | null;
 }
 
 // ============================================================================
@@ -102,7 +102,6 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   grid,
   deviceType = DeviceType.Desktop,
   isEditing = false,
-  showGrid = false,
   className,
   style,
   onComponentMove,
@@ -116,7 +115,11 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     activeId: null,
     draggedComponent: null,
     isDragging: false,
+    previewPosition: null,
   });
+
+  // Refs for immediate mouse tracking
+  const gridContainerRef = useRef<HTMLDivElement>(null);
 
   // Configure drag sensors
   const sensors = useSensors(
@@ -159,15 +162,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         activeId: componentId,
         draggedComponent: { ...component }, // Create a copy to avoid stale reference
         isDragging: true,
+        previewPosition: { ...component.position }, // Start with current position
       });
     }
   }, [grid.components]);
-
-  // Handle drag over (while dragging)
-  const handleDragOver = useCallback(() => {
-    // Handle preview updates during drag if needed
-    // This is where you might update visual feedback
-  }, []);
 
   // Check for collisions
   const checkCollision = useCallback((position: GridPosition, excludeId?: string): boolean => {
@@ -185,6 +183,50 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     });
   }, [grid.components]);
 
+  // Real-time mouse position tracker for immediate feedback
+  const updatePreviewPosition = useCallback((mouseX: number, mouseY: number) => {
+    if (!dragState.isDragging || !dragState.draggedComponent || !gridContainerRef.current) return;
+    
+    const gridRect = gridContainerRef.current.getBoundingClientRect();
+    const cellWidth = (gridRect.width - (grid.gap * (grid.columns - 1))) / grid.columns;
+    const cellHeight = grid.rowHeight || 100;
+    
+    // Calculate which cell the mouse is over
+    const relativeX = mouseX - gridRect.left;
+    const relativeY = mouseY - gridRect.top;
+    
+    const cellSizeX = cellWidth + grid.gap;
+    const cellSizeY = cellHeight + grid.gap;
+    
+    // Calculate target cell (snap to grid immediately)
+    const targetCellX = Math.floor(relativeX / cellSizeX);
+    const targetCellY = Math.floor(relativeY / cellSizeY);
+    
+    const newPosition: GridPosition = {
+      x: Math.max(0, Math.min(targetCellX, grid.columns - dragState.draggedComponent.position.w)),
+      y: Math.max(0, targetCellY),
+      w: dragState.draggedComponent.position.w,
+      h: dragState.draggedComponent.position.h,
+    };
+    
+    // Update immediately if position changed
+    if (!dragState.previewPosition || 
+        newPosition.x !== dragState.previewPosition.x || 
+        newPosition.y !== dragState.previewPosition.y) {
+      setDragState(prev => ({
+        ...prev,
+        previewPosition: newPosition,
+      }));
+    }
+  }, [dragState.isDragging, dragState.draggedComponent, dragState.previewPosition, grid.columns, grid.gap, grid.rowHeight]);
+
+  // Handle drag over (simplified - real tracking happens via mousemove)
+  const handleDragOver = useCallback((_event: DragOverEvent) => {
+    // Keep this for DnD compatibility but use mousemove for immediate feedback
+    if (!dragState.draggedComponent) return;
+    // The actual preview update happens in mousemove listener for speed
+  }, [dragState.draggedComponent]);
+
   // Handle drag end
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { delta } = event;
@@ -193,6 +235,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       activeId: null,
       draggedComponent: null,
       isDragging: false,
+      previewPosition: null,
     });
 
     if (!dragState.draggedComponent) {
@@ -281,6 +324,24 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     onComponentResize?.(componentId, newSize);
   }, [onComponentResize]);
 
+  // Add mousemove listener for immediate drag feedback
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (dragState.isDragging) {
+        updatePreviewPosition(event.clientX, event.clientY);
+      }
+    };
+
+    if (dragState.isDragging) {
+      // Add mousemove listener to document for global tracking
+      document.addEventListener('mousemove', handleMouseMove, { passive: true });
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+      };
+    }
+  }, [dragState.isDragging, updatePreviewPosition]);
+
   return (
     <div className={cn('bento-grid-wrapper', className)}>
       <DndContext
@@ -291,27 +352,69 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         onDragEnd={handleDragEnd}
       >
         <div className="relative">
-          {/* Render grid overlay behind the grid */}
-          {isEditing && showGrid && (
+          {/* Render grid overlay - always visible in edit mode */}
+          {isEditing && (
             <GridOverlay
               columns={grid.columns}
-              rows={grid.rows}
               gap={grid.gap}
               rowHeight={grid.rowHeight}
             />
           )}
           
+          
           <div
+            ref={gridContainerRef}
             className={cn(
               'bento-grid',
               'relative',
               {
                 'bento-grid--editing': isEditing,
-                'bento-grid--show-grid': showGrid,
+                'bento-grid--show-grid': isEditing, // Grid visible when editing
               }
             )}
             style={gridStyle}
           >
+            {/* Drop zone preview - skeleton version with hard snapping */}
+            {dragState.isDragging && dragState.previewPosition && dragState.draggedComponent && (() => {
+              const isValidPlacement = !checkCollision(dragState.previewPosition, dragState.activeId!);
+              return (
+                <div
+                  className="pointer-events-none z-10 rounded-lg border-2 border-dashed transition-none"
+                  style={{
+                    gridColumn: `${dragState.previewPosition.x + 1} / span ${dragState.previewPosition.w}`,
+                    gridRow: `${dragState.previewPosition.y + 1} / span ${dragState.previewPosition.h}`,
+                    borderColor: isValidPlacement ? '#22c55e' : '#ef4444',
+                    backgroundColor: isValidPlacement ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                  }}
+                >
+                  {/* Skeleton component with minimal re-renders */}
+                  <div className="h-full w-full opacity-50 bg-background/80 backdrop-blur-sm rounded-lg p-4 border border-border/50">
+                    <ComponentRenderer
+                      component={dragState.draggedComponent}
+                      gridSize={{
+                        w: dragState.previewPosition.w,
+                        h: dragState.previewPosition.h,
+                      }}
+                      deviceType={deviceType}
+                    />
+                    
+                    {/* Simple validity indicator */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div 
+                        className={`px-2 py-1 rounded text-xs font-medium transition-none ${
+                          isValidPlacement 
+                            ? 'bg-green-500/90 text-white' 
+                            : 'bg-red-500/90 text-white'
+                        }`}
+                      >
+                        {isValidPlacement ? 'Drop here' : 'Invalid'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Render grid components */}
             {grid.components.map((component) => (
               <GridComponentWrapper
