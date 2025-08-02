@@ -21,7 +21,7 @@ function App() {
         <ApiStatusProvider>
           <AuthProvider>
             <EditModeProvider>
-              <div id="app-container">
+              <div id="app-container" className="h-screen overflow-hidden">
                 <ApiStatusBanner />
               <Routes>
           <Route path="/login" element={<Login />} />

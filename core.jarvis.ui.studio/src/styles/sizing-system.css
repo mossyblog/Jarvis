@@ -1,0 +1,497 @@
+/**
+ * T-Shirt Sizing System - Rule of 8
+ * 
+ * Comprehensive sizing system where all dimensions are divisible by 8
+ * for consistent spacing, component sizes, and visual hierarchy.
+ * 
+ * Sizes: xs, sm, md, lg, xl, 2xl, 3xl
+ * Base unit: 8px
+ */
+
+:root {
+  /* ============================================================================ */
+  /* BASE UNIT & SCALE */
+  /* ============================================================================ */
+  
+  --size-unit: 8px;
+  
+  /* T-shirt size multipliers (divisible by 8) */
+  --size-xs-multiplier: 1;    /* 8px */
+  --size-sm-multiplier: 2;    /* 16px */
+  --size-md-multiplier: 3;    /* 24px */
+  --size-lg-multiplier: 4;    /* 32px */
+  --size-xl-multiplier: 5;    /* 40px */
+  --size-2xl-multiplier: 6;   /* 48px */
+  --size-3xl-multiplier: 8;   /* 64px */
+
+  /* ============================================================================ */
+  /* SPACING SYSTEM */
+  /* ============================================================================ */
+  
+  --spacing-xs: calc(var(--size-unit) * var(--size-xs-multiplier));   /* 8px */
+  --spacing-sm: calc(var(--size-unit) * var(--size-sm-multiplier));   /* 16px */
+  --spacing-md: calc(var(--size-unit) * var(--size-md-multiplier));   /* 24px */
+  --spacing-lg: calc(var(--size-unit) * var(--size-lg-multiplier));   /* 32px */
+  --spacing-xl: calc(var(--size-unit) * var(--size-xl-multiplier));   /* 40px */
+  --spacing-2xl: calc(var(--size-unit) * var(--size-2xl-multiplier)); /* 48px */
+  --spacing-3xl: calc(var(--size-unit) * var(--size-3xl-multiplier)); /* 64px */
+
+  /* ============================================================================ */
+  /* COMPONENT HEIGHTS */
+  /* ============================================================================ */
+  
+  --height-xs: calc(var(--size-unit) * 4);   /* 32px */
+  --height-sm: calc(var(--size-unit) * 5);   /* 40px */
+  --height-md: calc(var(--size-unit) * 6);   /* 48px */
+  --height-lg: calc(var(--size-unit) * 7);   /* 56px */
+  --height-xl: calc(var(--size-unit) * 8);   /* 64px */
+  --height-2xl: calc(var(--size-unit) * 10); /* 80px */
+  --height-3xl: calc(var(--size-unit) * 12); /* 96px */
+
+  /* ============================================================================ */
+  /* COMPONENT WIDTHS */
+  /* ============================================================================ */
+  
+  --width-xs: calc(var(--size-unit) * 4);   /* 32px */
+  --width-sm: calc(var(--size-unit) * 6);   /* 48px */
+  --width-md: calc(var(--size-unit) * 8);   /* 64px */
+  --width-lg: calc(var(--size-unit) * 10);  /* 80px */
+  --width-xl: calc(var(--size-unit) * 12);  /* 96px */
+  --width-2xl: calc(var(--size-unit) * 16); /* 128px */
+  --width-3xl: calc(var(--size-unit) * 20); /* 160px */
+
+  /* ============================================================================ */
+  /* FONT SIZES (8px scale) */
+  /* ============================================================================ */
+  
+  --font-size-xs: calc(var(--size-unit) * 1.5);  /* 12px */
+  --font-size-sm: calc(var(--size-unit) * 1.75); /* 14px */
+  --font-size-md: calc(var(--size-unit) * 2);    /* 16px */
+  --font-size-lg: calc(var(--size-unit) * 2.25); /* 18px */
+  --font-size-xl: calc(var(--size-unit) * 2.5);  /* 20px */
+  --font-size-2xl: calc(var(--size-unit) * 3);   /* 24px */
+  --font-size-3xl: calc(var(--size-unit) * 4);   /* 32px */
+
+  /* ============================================================================ */
+  /* ICON SIZES */
+  /* ============================================================================ */
+  
+  --icon-size-xs: calc(var(--size-unit) * 2);   /* 16px */
+  --icon-size-sm: calc(var(--size-unit) * 2.5); /* 20px */
+  --icon-size-md: calc(var(--size-unit) * 3);   /* 24px */
+  --icon-size-lg: calc(var(--size-unit) * 4);   /* 32px */
+  --icon-size-xl: calc(var(--size-unit) * 5);   /* 40px */
+  --icon-size-2xl: calc(var(--size-unit) * 6);  /* 48px */
+  --icon-size-3xl: calc(var(--size-unit) * 8);  /* 64px */
+
+  /* ============================================================================ */
+  /* BORDER RADIUS */
+  /* ============================================================================ */
+  
+  --radius-xs: calc(var(--size-unit) * 0.5);  /* 4px */
+  --radius-sm: calc(var(--size-unit) * 1);    /* 8px */
+  --radius-md: calc(var(--size-unit) * 1.5);  /* 12px */
+  --radius-lg: calc(var(--size-unit) * 2);    /* 16px */
+  --radius-xl: calc(var(--size-unit) * 2.5);  /* 20px */
+  --radius-2xl: calc(var(--size-unit) * 3);   /* 24px */
+  --radius-3xl: calc(var(--size-unit) * 4);   /* 32px */
+
+  /* ============================================================================ */
+  /* TOUCH TARGETS (Minimum 44px for accessibility) */
+  /* ============================================================================ */
+  
+  --touch-target-min: calc(var(--size-unit) * 5.5); /* 44px - iOS minimum */
+  --touch-target-sm: calc(var(--size-unit) * 6);    /* 48px - Material minimum */
+  --touch-target-md: calc(var(--size-unit) * 7);    /* 56px - Comfortable */
+  --touch-target-lg: calc(var(--size-unit) * 8);    /* 64px - Large targets */
+
+  /* ============================================================================ */
+  /* LINE HEIGHTS */
+  /* ============================================================================ */
+  
+  --line-height-xs: calc(var(--size-unit) * 2);   /* 16px */
+  --line-height-sm: calc(var(--size-unit) * 2.5); /* 20px */
+  --line-height-md: calc(var(--size-unit) * 3);   /* 24px */
+  --line-height-lg: calc(var(--size-unit) * 3.5); /* 28px */
+  --line-height-xl: calc(var(--size-unit) * 4);   /* 32px */
+  --line-height-2xl: calc(var(--size-unit) * 5);  /* 40px */
+  --line-height-3xl: calc(var(--size-unit) * 6);  /* 48px */
+
+  /* ============================================================================ */
+  /* SHADOWS & ELEVATIONS */
+  /* ============================================================================ */
+  
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1), 0 4px 6px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.1), 0 10px 10px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px rgba(0, 0, 0, 0.25);
+}
+
+/* ============================================================================ */
+/* UTILITY CLASSES - SPACING */
+/* ============================================================================ */
+
+/* Padding utilities */
+.p-xs { padding: var(--spacing-xs); }
+.p-sm { padding: var(--spacing-sm); }
+.p-md { padding: var(--spacing-md); }
+.p-lg { padding: var(--spacing-lg); }
+.p-xl { padding: var(--spacing-xl); }
+.p-2xl { padding: var(--spacing-2xl); }
+.p-3xl { padding: var(--spacing-3xl); }
+
+/* Horizontal padding */
+.px-xs { padding-left: var(--spacing-xs); padding-right: var(--spacing-xs); }
+.px-sm { padding-left: var(--spacing-sm); padding-right: var(--spacing-sm); }
+.px-md { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+.px-lg { padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
+.px-xl { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
+.px-2xl { padding-left: var(--spacing-2xl); padding-right: var(--spacing-2xl); }
+.px-3xl { padding-left: var(--spacing-3xl); padding-right: var(--spacing-3xl); }
+
+/* Vertical padding */
+.py-xs { padding-top: var(--spacing-xs); padding-bottom: var(--spacing-xs); }
+.py-sm { padding-top: var(--spacing-sm); padding-bottom: var(--spacing-sm); }
+.py-md { padding-top: var(--spacing-md); padding-bottom: var(--spacing-md); }
+.py-lg { padding-top: var(--spacing-lg); padding-bottom: var(--spacing-lg); }
+.py-xl { padding-top: var(--spacing-xl); padding-bottom: var(--spacing-xl); }
+.py-2xl { padding-top: var(--spacing-2xl); padding-bottom: var(--spacing-2xl); }
+.py-3xl { padding-top: var(--spacing-3xl); padding-bottom: var(--spacing-3xl); }
+
+/* Margin utilities */
+.m-xs { margin: var(--spacing-xs); }
+.m-sm { margin: var(--spacing-sm); }
+.m-md { margin: var(--spacing-md); }
+.m-lg { margin: var(--spacing-lg); }
+.m-xl { margin: var(--spacing-xl); }
+.m-2xl { margin: var(--spacing-2xl); }
+.m-3xl { margin: var(--spacing-3xl); }
+
+/* Horizontal margin */
+.mx-xs { margin-left: var(--spacing-xs); margin-right: var(--spacing-xs); }
+.mx-sm { margin-left: var(--spacing-sm); margin-right: var(--spacing-sm); }
+.mx-md { margin-left: var(--spacing-md); margin-right: var(--spacing-md); }
+.mx-lg { margin-left: var(--spacing-lg); margin-right: var(--spacing-lg); }
+.mx-xl { margin-left: var(--spacing-xl); margin-right: var(--spacing-xl); }
+.mx-2xl { margin-left: var(--spacing-2xl); margin-right: var(--spacing-2xl); }
+.mx-3xl { margin-left: var(--spacing-3xl); margin-right: var(--spacing-3xl); }
+
+/* Vertical margin */
+.my-xs { margin-top: var(--spacing-xs); margin-bottom: var(--spacing-xs); }
+.my-sm { margin-top: var(--spacing-sm); margin-bottom: var(--spacing-sm); }
+.my-md { margin-top: var(--spacing-md); margin-bottom: var(--spacing-md); }
+.my-lg { margin-top: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
+.my-xl { margin-top: var(--spacing-xl); margin-bottom: var(--spacing-xl); }
+.my-2xl { margin-top: var(--spacing-2xl); margin-bottom: var(--spacing-2xl); }
+.my-3xl { margin-top: var(--spacing-3xl); margin-bottom: var(--spacing-3xl); }
+
+/* Gap utilities */
+.gap-xs { gap: var(--spacing-xs); }
+.gap-sm { gap: var(--spacing-sm); }
+.gap-md { gap: var(--spacing-md); }
+.gap-lg { gap: var(--spacing-lg); }
+.gap-xl { gap: var(--spacing-xl); }
+.gap-2xl { gap: var(--spacing-2xl); }
+.gap-3xl { gap: var(--spacing-3xl); }
+
+/* ============================================================================ */
+/* UTILITY CLASSES - DIMENSIONS */
+/* ============================================================================ */
+
+/* Height utilities */
+.h-xs { height: var(--height-xs); }
+.h-sm { height: var(--height-sm); }
+.h-md { height: var(--height-md); }
+.h-lg { height: var(--height-lg); }
+.h-xl { height: var(--height-xl); }
+.h-2xl { height: var(--height-2xl); }
+.h-3xl { height: var(--height-3xl); }
+
+/* Width utilities */
+.w-xs { width: var(--width-xs); }
+.w-sm { width: var(--width-sm); }
+.w-md { width: var(--width-md); }
+.w-lg { width: var(--width-lg); }
+.w-xl { width: var(--width-xl); }
+.w-2xl { width: var(--width-2xl); }
+.w-3xl { width: var(--width-3xl); }
+
+/* Min-height utilities */
+.min-h-xs { min-height: var(--height-xs); }
+.min-h-sm { min-height: var(--height-sm); }
+.min-h-md { min-height: var(--height-md); }
+.min-h-lg { min-height: var(--height-lg); }
+.min-h-xl { min-height: var(--height-xl); }
+.min-h-2xl { min-height: var(--height-2xl); }
+.min-h-3xl { min-height: var(--height-3xl); }
+
+/* Min-width utilities */
+.min-w-xs { min-width: var(--width-xs); }
+.min-w-sm { min-width: var(--width-sm); }
+.min-w-md { min-width: var(--width-md); }
+.min-w-lg { min-width: var(--width-lg); }
+.min-w-xl { min-width: var(--width-xl); }
+.min-w-2xl { min-width: var(--width-2xl); }
+.min-w-3xl { min-width: var(--width-3xl); }
+
+/* ============================================================================ */
+/* UTILITY CLASSES - TYPOGRAPHY */
+/* ============================================================================ */
+
+.text-xs { 
+  font-size: var(--font-size-xs); 
+  line-height: var(--line-height-xs); 
+}
+.text-sm { 
+  font-size: var(--font-size-sm); 
+  line-height: var(--line-height-sm); 
+}
+.text-md { 
+  font-size: var(--font-size-md); 
+  line-height: var(--line-height-md); 
+}
+.text-lg { 
+  font-size: var(--font-size-lg); 
+  line-height: var(--line-height-lg); 
+}
+.text-xl { 
+  font-size: var(--font-size-xl); 
+  line-height: var(--line-height-xl); 
+}
+.text-2xl { 
+  font-size: var(--font-size-2xl); 
+  line-height: var(--line-height-2xl); 
+}
+.text-3xl { 
+  font-size: var(--font-size-3xl); 
+  line-height: var(--line-height-3xl); 
+}
+
+/* ============================================================================ */
+/* UTILITY CLASSES - BORDER RADIUS */
+/* ============================================================================ */
+
+.rounded-xs { border-radius: var(--radius-xs); }
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }
+.rounded-xl { border-radius: var(--radius-xl); }
+.rounded-2xl { border-radius: var(--radius-2xl); }
+.rounded-3xl { border-radius: var(--radius-3xl); }
+
+/* ============================================================================ */
+/* UTILITY CLASSES - TOUCH TARGETS */
+/* ============================================================================ */
+
+.touch-target-min {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+}
+
+.touch-target-sm {
+  min-height: var(--touch-target-sm);
+  min-width: var(--touch-target-sm);
+}
+
+.touch-target-md {
+  min-height: var(--touch-target-md);
+  min-width: var(--touch-target-md);
+}
+
+.touch-target-lg {
+  min-height: var(--touch-target-lg);
+  min-width: var(--touch-target-lg);
+}
+
+/* ============================================================================ */
+/* UTILITY CLASSES - SHADOWS */
+/* ============================================================================ */
+
+.shadow-xs { box-shadow: var(--shadow-xs); }
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+.shadow-xl { box-shadow: var(--shadow-xl); }
+.shadow-2xl { box-shadow: var(--shadow-2xl); }
+
+/* ============================================================================ */
+/* ICON SIZE UTILITIES */
+/* ============================================================================ */
+
+.icon-xs { 
+  width: var(--icon-size-xs); 
+  height: var(--icon-size-xs); 
+}
+.icon-sm { 
+  width: var(--icon-size-sm); 
+  height: var(--icon-size-sm); 
+}
+.icon-md { 
+  width: var(--icon-size-md); 
+  height: var(--icon-size-md); 
+}
+.icon-lg { 
+  width: var(--icon-size-lg); 
+  height: var(--icon-size-lg); 
+}
+.icon-xl { 
+  width: var(--icon-size-xl); 
+  height: var(--icon-size-xl); 
+}
+.icon-2xl { 
+  width: var(--icon-size-2xl); 
+  height: var(--icon-size-2xl); 
+}
+.icon-3xl { 
+  width: var(--icon-size-3xl); 
+  height: var(--icon-size-3xl); 
+}
+
+/* ============================================================================ */
+/* RESPONSIVE ADJUSTMENTS */
+/* ============================================================================ */
+
+/* Mobile breakpoint - increase sizes for better touch targets */
+@media (max-width: 768px) {
+  :root {
+    --touch-target-min: calc(var(--size-unit) * 6);    /* 48px */
+    --touch-target-sm: calc(var(--size-unit) * 7);     /* 56px */
+    --touch-target-md: calc(var(--size-unit) * 8);     /* 64px */
+    --touch-target-lg: calc(var(--size-unit) * 9);     /* 72px */
+  }
+  
+  /* Mobile-specific utilities */
+  .mobile\:p-xs { padding: var(--spacing-xs); }
+  .mobile\:p-sm { padding: var(--spacing-sm); }
+  .mobile\:p-md { padding: var(--spacing-md); }
+  .mobile\:p-lg { padding: var(--spacing-lg); }
+  
+  .mobile\:h-xs { height: var(--height-xs); }
+  .mobile\:h-sm { height: var(--height-sm); }
+  .mobile\:h-md { height: var(--height-md); }
+  .mobile\:h-lg { height: var(--height-lg); }
+  
+  .mobile\:text-xs { font-size: var(--font-size-xs); }
+  .mobile\:text-sm { font-size: var(--font-size-sm); }
+  .mobile\:text-md { font-size: var(--font-size-md); }
+  .mobile\:text-lg { font-size: var(--font-size-lg); }
+}
+
+/* Tablet breakpoint */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .tablet\:p-xs { padding: var(--spacing-xs); }
+  .tablet\:p-sm { padding: var(--spacing-sm); }
+  .tablet\:p-md { padding: var(--spacing-md); }
+  .tablet\:p-lg { padding: var(--spacing-lg); }
+  
+  .tablet\:h-xs { height: var(--height-xs); }
+  .tablet\:h-sm { height: var(--height-sm); }
+  .tablet\:h-md { height: var(--height-md); }
+  .tablet\:h-lg { height: var(--height-lg); }
+}
+
+/* Desktop breakpoint */
+@media (min-width: 1024px) {
+  .desktop\:p-xs { padding: var(--spacing-xs); }
+  .desktop\:p-sm { padding: var(--spacing-sm); }
+  .desktop\:p-md { padding: var(--spacing-md); }
+  .desktop\:p-lg { padding: var(--spacing-lg); }
+  
+  .desktop\:h-xs { height: var(--height-xs); }
+  .desktop\:h-sm { height: var(--height-sm); }
+  .desktop\:h-md { height: var(--height-md); }
+  .desktop\:h-lg { height: var(--height-lg); }
+}
+
+/* ============================================================================ */
+/* COMPONENT PRESETS */
+/* ============================================================================ */
+
+/* Button presets using the sizing system */
+.btn-xs {
+  height: var(--height-xs);
+  padding: 0 var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  min-width: var(--touch-target-min);
+}
+
+.btn-sm {
+  height: var(--height-sm);
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+  min-width: var(--touch-target-sm);
+}
+
+.btn-md {
+  height: var(--height-md);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-md);
+  border-radius: var(--radius-md);
+  min-width: var(--touch-target-md);
+}
+
+.btn-lg {
+  height: var(--height-lg);
+  padding: 0 var(--spacing-xl);
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-lg);
+  min-width: var(--touch-target-lg);
+}
+
+/* Input presets */
+.input-xs {
+  height: var(--height-xs);
+  padding: 0 var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+}
+
+.input-sm {
+  height: var(--height-sm);
+  padding: 0 var(--spacing-md);
+  font-size: var(--font-size-sm);
+  border-radius: var(--radius-sm);
+}
+
+.input-md {
+  height: var(--height-md);
+  padding: 0 var(--spacing-lg);
+  font-size: var(--font-size-md);
+  border-radius: var(--radius-md);
+}
+
+.input-lg {
+  height: var(--height-lg);
+  padding: 0 var(--spacing-xl);
+  font-size: var(--font-size-lg);
+  border-radius: var(--radius-lg);
+}
+
+/* Card presets */
+.card-xs {
+  padding: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-sm {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+}
+
+.card-md {
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-lg {
+  padding: var(--spacing-xl);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}

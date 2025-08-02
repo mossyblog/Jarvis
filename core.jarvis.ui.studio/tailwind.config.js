@@ -124,15 +124,9 @@ export default {
         '7xl': '1280px',
       },
   		fontFamily: {
-  			sans: [
-  				'var(--font-custom)'
-  			],
-  			custom: [
-  				'var(--font-custom)'
-  			],
-  			mono: [
-  				'var(--font-source-code-pro)'
-  			]
+  			sans: 'var(--font-custom)',
+  			custom: 'var(--font-custom)',
+  			mono: 'var(--font-mono)'
   		},
   		colors: {
   			border: {

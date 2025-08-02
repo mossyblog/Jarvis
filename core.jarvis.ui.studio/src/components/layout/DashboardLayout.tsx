@@ -48,7 +48,7 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
   }, []);
 
   return (
-    <div className="flex flex-col h-screen bg-background">
+    <div className="flex flex-col h-screen bg-background overflow-hidden">
       {/* Top Header Bar - Always full width */}
       <LayoutHeader showProductMenu />
       
@@ -66,13 +66,13 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
         </div>
         
         {/* Main Content Area with Sidebar */}
-        <div className="flex flex-1 overflow-hidden">
+        <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* Hide sidebar in device emulation modes */}
           {!isEmulating && <Sidebar activeItem={activeItem} onItemClick={onItemClick} />}
           
           {/* Main Content */}
           <main className={cn(
-            "flex-1 overflow-y-auto overflow-x-hidden transition-all duration-200",
+            "flex-1 min-h-0 overflow-y-auto overflow-x-hidden transition-all duration-200",
             // Only push content when sidebar is in 'open' mode and not emulating
             !isEmulating && sidebarBehavior === 'open' ? "md:ml-32" : !isEmulating && "md:ml-12",
             isEmulating && "ml-0 w-full"

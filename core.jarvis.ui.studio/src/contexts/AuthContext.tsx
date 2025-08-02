@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
 import type { User, LoginCredentials, NavigationItem } from '../services/api/types';
 import { apiService } from '../services/api/apiService';
@@ -22,6 +22,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
@@ -50,9 +51,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
+  }, []); // Remove initializeAuth dependency to break circular dependency
+
+  const logout = useCallback(async () => {
+    // Clear refresh timeout
+    if (refreshTimeoutRef.current) {
+      clearTimeout(refreshTimeoutRef.current);
+      refreshTimeoutRef.current = null;
+    }
+    
+    await apiService.logout();
+    setUser(null);
+    setNavigation([]);
+    
+    // Clear stored data
+    localStorage.removeItem('jarvis_current_user');
+    localStorage.removeItem('jarvis_navigation');
   }, []);
 
-  const scheduleTokenRefresh = (accessToken: string) => {
+  const scheduleTokenRefresh = useCallback((accessToken: string) => {
     // Clear any existing timeout
     if (refreshTimeoutRef.current) {
       clearTimeout(refreshTimeoutRef.current);
@@ -83,9 +100,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       }, refreshTime);
     }
-  };
+  }, [logout]);
 
-  const initializeAuth = async () => {
+  const initializeAuth = useCallback(async () => {
     try {
       setIsLoading(true);
       const { accessToken, refreshToken } = getStoredTokens();
@@ -182,7 +199,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [scheduleTokenRefresh]);
 
   const loadCurrentUser = async () => {
     try {
@@ -234,22 +251,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Schedule token refresh
       scheduleTokenRefresh(result.data.accessToken);
     }
-  };
-
-  const logout = async () => {
-    // Clear refresh timeout
-    if (refreshTimeoutRef.current) {
-      clearTimeout(refreshTimeoutRef.current);
-      refreshTimeoutRef.current = null;
-    }
-    
-    await apiService.logout();
-    setUser(null);
-    setNavigation([]);
-    
-    // Clear stored data
-    localStorage.removeItem('jarvis_current_user');
-    localStorage.removeItem('jarvis_navigation');
   };
 
   const hasPermission = (resource: string, action: string = 'read'): boolean => {

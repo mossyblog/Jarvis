@@ -173,12 +173,12 @@ export function NetworkMonitor() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
-                  <ArrowUp size={10} className="text-blue-500" />
+                  <ArrowUp size={10} className="text-primary" />
                   <span className="text-muted-foreground">Out:</span>
                   <span className="font-mono">{stats.requestsOut}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <ArrowDown size={10} className="text-green-500" />
+                  <ArrowDown size={10} className="text-success" />
                   <span className="text-muted-foreground">In:</span>
                   <span className="font-mono">{stats.requestsIn}</span>
                 </div>
@@ -208,9 +208,9 @@ export function NetworkMonitor() {
               {recentActivity.slice(0, 5).map((activity, index) => (
                 <div key={index} className="flex items-center gap-2 text-xs">
                   {activity.type === 'request' ? (
-                    <ArrowUp size={8} className="text-blue-500 flex-shrink-0" />
+                    <ArrowUp size={8} className="text-primary flex-shrink-0" />
                   ) : (
-                    <ArrowDown size={8} className="text-green-500 flex-shrink-0" />
+                    <ArrowDown size={8} className="text-success flex-shrink-0" />
                   )}
                   <span className="font-mono text-muted-foreground text-xs">
                     {activity.method}
@@ -234,9 +234,9 @@ export function NetworkMonitor() {
               stats.activeRequests > 0 ? "text-amber-500 animate-pulse" : "text-muted-foreground"
             )} />
             <div className="flex items-center gap-1 text-xs font-mono">
-              <ArrowDown size={10} className="text-green-500" />
+              <ArrowDown size={10} className="text-success" />
               <span>{stats.requestsIn}</span>
-              <ArrowUp size={10} className="text-blue-500" />
+              <ArrowUp size={10} className="text-primary" />
               <span>{stats.requestsOut}</span>
             </div>
             {stats.activeRequests > 0 && (

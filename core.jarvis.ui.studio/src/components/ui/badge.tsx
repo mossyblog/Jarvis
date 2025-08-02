@@ -13,8 +13,8 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
         variant === "default" && "bg-primary text-primary-foreground",
         variant === "secondary" && "bg-muted text-muted-foreground",
         variant === "destructive" && "bg-destructive text-destructive-foreground",
-        variant === "success" && "bg-green-600 text-white dark:bg-green-400 dark:text-black",
-        variant === "warning" && "bg-yellow-500 text-black dark:bg-yellow-300 dark:text-black",
+        variant === "success" && "bg-success text-success-foreground",
+        variant === "warning" && "bg-warning text-warning-foreground",
         variant === "outline" && "border border-border bg-transparent",
         className
       )}

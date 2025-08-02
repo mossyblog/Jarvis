@@ -317,7 +317,8 @@ const LayoutCard: React.FC<LayoutCardProps> = ({
 // ============================================================================
 
 export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
-  layouts = [], // Will be used when integrating with backend
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  layouts: _layouts = [], // Will be used when integrating with backend
   selectedLayoutId,
   onLayoutSelect,
   onCreateLayout,
@@ -333,7 +334,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
     // In a real implementation, you'd convert BentoLayout[] to LayoutTemplate[]
     // The layouts prop will be used here when backend integration is complete
     return LAYOUT_TEMPLATES;
-  }, [layouts]);
+  }, []);
 
   // Filter templates
   const filteredTemplates = useMemo(() => {

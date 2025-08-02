@@ -9,12 +9,21 @@
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
-import { Trash2, Move, MoreHorizontal } from 'lucide-react';
+import { Trash2, MoreHorizontal } from 'lucide-react';
+
+// Mobile touch support
+import { useTouchTargetValidation } from '@/hooks/useTouchGestures';
 
 import type { GridComponent as GridComponentType } from '@/types/bento';
 import { DeviceType } from '@/types/bento';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import {
+  getTooltipText,
+  getContextualHelp,
+  // applyComponentSnapping, // Not used yet
+  type HelpMessage
+} from '@/utils/gridHelpers';
 
 // ============================================================================
 // Types
@@ -38,6 +47,23 @@ export interface GridComponentProps {
   
   /** Component content to render */
   children: React.ReactNode;
+  
+  // Mobile-specific props
+  /** Whether we're on a mobile device */
+  isMobile?: boolean;
+  
+  /** Whether this is a touch device */
+  isTouchDevice?: boolean;
+  
+  /** Whether mobile drag mode is active */
+  dragMode?: boolean;
+  
+  // Delightful props
+  /** Whether this component should wobble for personality */
+  shouldWobble?: boolean;
+  
+  /** Animation delay for staggered entrances */
+  animationDelay?: number;
   
   // Event handlers
   /** Called when component is deleted */
@@ -82,17 +108,46 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   isDragging = false,
   deviceType = DeviceType.Desktop,
   children,
+  isMobile = false,
+  isTouchDevice = false,
+  dragMode = false,
+  shouldWobble = false,
   onDelete,
   onResize,
   onShowProperties,
+  ...otherProps
 }) => {
   const [isResizing, setIsResizing] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const [resizePreview, setResizePreview] = useState<{ w: number; h: number } | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
+  const [celebrateResize] = useState(false);  // setCelebrateResize removed as unused
+  
+  // Trigger entry animation for new components
+  useEffect(() => {
+    if (!component.id.includes('temp') && !justAdded) {
+      setJustAdded(true);
+      const timer = setTimeout(() => setJustAdded(false), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [component.id, justAdded]);
+  const [helpMessage, setHelpMessage] = useState<HelpMessage | null>(null);
   
   // Use ref to track resize state and avoid stale closures
   const isResizingRef = useRef(false);
+  const componentRef = useRef<HTMLElement>(null!);
+  
+  // Touch target validation for mobile
+  const { isValidTarget } = useTouchTargetValidation(componentRef);
+  
+  // Calculate minimum touch-friendly sizes using the sizing system
+  const shouldEnforceTouchTargets = isTouchDevice && isEditing;
+  
+  // Use CSS custom properties for consistent sizing
+  const touchTargetSize = 'var(--touch-target-min)';
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Setup draggable functionality
+  // Setup draggable functionality with enhanced options
   const {
     attributes,
     listeners,
@@ -102,6 +157,12 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   } = useDraggable({
     id: component.id,
     disabled: !isEditing || component.locked,
+    // Enhanced drag data for better feedback
+    data: {
+      type: 'grid-component',
+      component,
+      originalPosition: component.position,
+    },
   });
 
   // Calculate grid positioning styles
@@ -124,10 +185,20 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   }, [component.position, transform, isDragging, isDraggableDragging]);
 
 
-  // Handle component deletion
+  // Handle component deletion with a playful farewell
   const handleDelete = useCallback((event: React.MouseEvent) => {
     event.stopPropagation();
-    onDelete?.(component.id);
+    
+    // Add a little bounce before deletion
+    const element = event.currentTarget.closest('.bento-component') as HTMLElement;
+    if (element) {
+      element.style.animation = 'farewell-bounce 0.3s ease-out';
+      setTimeout(() => {
+        onDelete?.(component.id);
+      }, 300);
+    } else {
+      onDelete?.(component.id);
+    }
   }, [component.id, onDelete]);
 
   // Handle show properties
@@ -136,15 +207,42 @@ export const GridComponent: React.FC<GridComponentProps> = ({
     onShowProperties?.(component.id);
   }, [component.id, onShowProperties]);
 
+  // Handle mouse interactions for enhanced hover states with immediate response
+  const handleMouseEnter = useCallback(() => {
+    if (!isEditing || component.locked) return;
+    
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    
+    setIsHovering(true);
+  }, [isEditing, component.locked]);
+  
+  const handleMouseLeave = useCallback(() => {
+    if (!isEditing || component.locked) return;
+    
+    // Immediate response for better UX - no delay
+    setIsHovering(false);
+  }, [isEditing, component.locked]);
+
   // Handle resize start
   const handleResizeStart = useCallback((event: React.MouseEvent, direction: string, cursor: string) => {
     // Prevent default behaviors
     event.preventDefault();
     event.stopPropagation();
     
-    // Set resize state
+    // Set resize state and show contextual help
     isResizingRef.current = true;
     setIsResizing(true);
+    
+    // Show contextual help for resize operation
+    const helpMsg = getContextualHelp('resize-start', {
+      isResizing: true,
+      componentCount: 1
+    });
+    if (helpMsg) {
+      setHelpMessage(helpMsg);
+    }
     
     const startSize = { w: component.position.w, h: component.position.h };
     const startPosition = { x: component.position.x, y: component.position.y };
@@ -252,8 +350,20 @@ export const GridComponent: React.FC<GridComponentProps> = ({
     document.addEventListener('mouseup', handleMouseUp);
   }, [component.id, component.position, onResize]);
 
+  // Auto-hide help messages
+  useEffect(() => {
+    if (helpMessage && helpMessage.duration) {
+      const timer = setTimeout(() => {
+        setHelpMessage(null);
+      }, helpMessage.duration);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [helpMessage]);
+
   // Cleanup effect to ensure resize is stopped on unmount
   useEffect(() => {
+    const hoverTimeout = hoverTimeoutRef.current;
     return () => {
       // Clean up any active resize operation
       if (isResizingRef.current) {
@@ -261,6 +371,11 @@ export const GridComponent: React.FC<GridComponentProps> = ({
         document.body.style.cursor = '';
         document.body.classList.remove('resizing');
         document.body.style.userSelect = '';
+      }
+      
+      // Clean up hover timeout
+      if (hoverTimeout) {
+        clearTimeout(hoverTimeout);
       }
     };
   }, []);
@@ -290,7 +405,10 @@ export const GridComponent: React.FC<GridComponentProps> = ({
   
   return (
     <div
-      ref={setNodeRef}
+      ref={(node) => {
+        setNodeRef(node);
+        componentRef.current = node as HTMLElement;
+      }}
       className={cn(
         'bento-component',
         'relative',
@@ -301,107 +419,240 @@ export const GridComponent: React.FC<GridComponentProps> = ({
           'bento-component--dragging': isDragging || isDraggableDragging,
           'bento-component--resizing': isResizing,
           'bento-component--locked': component.locked,
+          'bento-component--hovering': isHovering && isEditing && !component.locked,
+          'bento-component--wobble': shouldWobble,
+          'bento-component--celebrate-resize': celebrateResize,
+          'bento-component--just-added': justAdded,
+          'bento-component--mobile': isMobile,
+          'bento-component--touch-device': isTouchDevice,
+          'bento-component--drag-mode': dragMode,
+          'bento-component--invalid-target': shouldEnforceTouchTargets && !isValidTarget,
         },
         component.display?.className
       )}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         ...gridStyles,
         ...component.display?.style,
-        // Hide the original component completely while dragging
-        opacity: isDragging || isDraggableDragging ? 0 : 1,
+        // Smooth opacity transition during drag with better visual feedback
+        opacity: isDragging || isDraggableDragging ? 0.3 : 1,
+        transform: isDragging || isDraggableDragging ? 'scale(0.95)' : 'scale(1)',
+        transition: isDragging || isDraggableDragging ? 'none' : 'opacity 0.2s ease, transform 0.2s ease',
+        // Ensure touch-friendly sizing on mobile
+        ...(shouldEnforceTouchTargets && {
+          minHeight: touchTargetSize,
+          minWidth: touchTargetSize,
+        }),
       }}
       {...attributes}
+      {...otherProps}
+      data-component-type={component.componentType}
+      data-component-id={component.id}
+      data-mobile={isMobile}
+      data-touch-device={isTouchDevice}
+      data-drag-mode={dragMode}
     >
-      {/* Component content */}
-      <div className="bento-component__content h-full w-full overflow-hidden">
+      {/* Context-aware help messages */}
+      {helpMessage && (
+        <div
+          className={cn(
+            'absolute top-0 left-0 z-30 p-2 rounded-md shadow-md typography-caption max-w-48',
+            'transition-all duration-300 ease-in-out transform -translate-y-full',
+            {
+              'bg-success/10 border border-success text-success': helpMessage.type === 'success',
+              'bg-primary/10 border border-primary text-primary': helpMessage.type === 'info',
+              'bg-warning/10 border border-warning text-warning': helpMessage.type === 'warning',
+              'bg-destructive/10 border border-destructive text-destructive': helpMessage.type === 'error',
+            }
+          )}
+        >
+          {helpMessage.message}
+        </div>
+      )}
+
+      {/* Component content with top margin for handle bar in edit mode */}
+      <div 
+        className={cn(
+          "bento-component__content h-full w-full overflow-hidden transition-all duration-200",
+          {
+            'pt-lg md:pt-xl': isEditing && !component.locked, // Add top padding for handle bar
+            'pt-0': !isEditing || component.locked,
+          }
+        )}
+      >
         {children}
       </div>
 
       {/* Edit mode overlays */}
       {isEditing && !component.locked && (
         <>
-          {/* Drag handle */}
+          {/* Full-width drag handle bar */}
           <div
             className={cn(
-              'bento-component__drag-handle',
-              'absolute top-1 left-1 opacity-0 group-hover:opacity-100',
-              'transition-opacity duration-200',
-              'cursor-move z-10'
+              'bento-component__handle-bar',
+              'absolute top-0 left-0 right-0',
+              'transition-all duration-200 ease-out',
+              'cursor-grab active:cursor-grabbing z-20',
+              'flex items-center justify-center',
+              {
+                'opacity-100 translate-y-0': isHovering || isSelected || dragMode || isEditing,
+                'opacity-90 -translate-y-1': !isHovering && !isSelected && !dragMode && isEditing,
+              }
             )}
             {...listeners}
+            style={{
+              height: isTouchDevice ? 'var(--height-sm)' : 'var(--spacing-md)',
+              minHeight: shouldEnforceTouchTargets ? touchTargetSize : undefined,
+            }}
+            title="Drag to move component"
           >
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-6 w-6 p-0"
-            >
-              <Move className="h-3 w-3" />
-            </Button>
+            {/* Handle bar background with subtle gradient */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-primary/20 to-primary/10 backdrop-blur-sm border-b border-primary/20 rounded-t-sm" />
+            
+            {/* Grip indicators spanning full width */}
+            <div className="grip-container px-lg">
+              {[...Array(16)].map((_, i) => (
+                <div 
+                  key={i} 
+                  className="grip-dot" 
+                />
+              ))}
+            </div>
           </div>
 
-          {/* Component actions */}
+
+          {/* Component actions with enhanced animation and mobile touch targets */}
           <div
             className={cn(
               'bento-component__actions',
-              'absolute top-1 right-1 opacity-0 group-hover:opacity-100',
-              'transition-opacity duration-200',
-              'flex gap-1 z-10'
+              'absolute top-0 right-0',
+              'transition-all duration-150 ease-out',
+              'flex bg-background/95 backdrop-blur-sm border border-border rounded-sm shadow-lg',
+              isTouchDevice ? 'gap-sm p-xs' : 'gap-xs p-xs',
+              {
+                'opacity-100 scale-100 translate-x-0 translate-y-0': isHovering || isSelected || dragMode || isEditing,
+                'opacity-80 scale-95 translate-x-1 -translate-y-1': !isHovering && !isSelected && !dragMode && isEditing,
+              }
             )}
           >
             <Button
               variant="secondary"
-              size="sm"
-              className="h-6 w-6 p-0"
+              size={isTouchDevice ? "default" : "xs"}
+              className={cn(
+                isTouchDevice ? "h-lg w-lg p-0" : "h-sm w-sm p-0",
+                "touch-manipulation"
+              )}
+              style={{
+                minHeight: shouldEnforceTouchTargets ? touchTargetSize : undefined,
+                minWidth: shouldEnforceTouchTargets ? touchTargetSize : undefined,
+              }}
               onClick={handleDelete}
+              title={getTooltipText('delete-button')}
             >
-              <Trash2 className="h-3 w-3" />
+              <Trash2 className={isTouchDevice ? "icon-sm" : "icon-xs"} />
             </Button>
             
             <Button
               variant="secondary"
-              size="sm"
-              className="h-6 w-6 p-0"
+              size={isTouchDevice ? "default" : "xs"}
+              className={cn(
+                isTouchDevice ? "h-lg w-lg p-0" : "h-sm w-sm p-0",
+                "touch-manipulation"
+              )}
+              style={{
+                minHeight: shouldEnforceTouchTargets ? touchTargetSize : undefined,
+                minWidth: shouldEnforceTouchTargets ? touchTargetSize : undefined,
+              }}
               onClick={handleShowProperties}
-              title="Component Properties"
+              title={getTooltipText('properties-button')}
             >
-              <MoreHorizontal className="h-3 w-3" />
+              <MoreHorizontal className={isTouchDevice ? "icon-sm" : "icon-xs"} />
             </Button>
           </div>
 
-          {/* Resize handles */}
-          {RESIZE_HANDLES.map((handle) => (
-            <div
-              key={handle.direction}
-              className={cn(
-                'bento-component__resize-handle',
-                handle.className,
-                'absolute opacity-0 group-hover:opacity-100',
-                'transition-opacity duration-200',
-                'bg-primary rounded-sm',
-                'z-20'
-              )}
-              style={{
-                cursor: handle.cursor,
-                // Corner handles are larger
-                width: handle.direction.length === 2 ? '16px' : '12px',
-                height: handle.direction.length === 2 ? '16px' : '12px',
-                // Position based on direction
-                ...(handle.direction.includes('n') && { top: handle.direction.length === 2 ? '-8px' : '-6px' }),
-                ...(handle.direction.includes('s') && { bottom: handle.direction.length === 2 ? '-8px' : '-6px' }),
-                ...(handle.direction.includes('e') && { right: handle.direction.length === 2 ? '-8px' : '-6px' }),
-                ...(handle.direction.includes('w') && { left: handle.direction.length === 2 ? '-8px' : '-6px' }),
-                ...(handle.direction === 'n' && { left: '50%', transform: 'translateX(-50%)' }),
-                ...(handle.direction === 's' && { left: '50%', transform: 'translateX(-50%)' }),
-                ...(handle.direction === 'e' && { top: '50%', transform: 'translateY(-50%)' }),
-                ...(handle.direction === 'w' && { top: '50%', transform: 'translateY(-50%)' }),
-              }}
-              onMouseDown={(e) => handleResizeStart(e, handle.direction, handle.cursor)}
-              // Prevent any default drag behavior
-              draggable={false}
-              onDragStart={(e) => e.preventDefault()}
-              data-no-dnd="true"
-            />
-          ))}
+          {/* Enhanced resize handles with better grabbability */}
+          {RESIZE_HANDLES.map((handle) => {
+            const isCorner = handle.direction.length === 2;
+            const handleSize = {
+              width: isTouchDevice 
+                ? (isCorner ? 'var(--height-sm)' : 'var(--spacing-3xl)')
+                : (isCorner ? 'var(--spacing-md)' : 'var(--spacing-sm)'),
+              height: isTouchDevice 
+                ? (isCorner ? 'var(--height-sm)' : 'var(--spacing-3xl)')
+                : (isCorner ? 'var(--spacing-md)' : 'var(--spacing-sm)'),
+            };
+            
+            const handleOffset = isTouchDevice ? 'calc(var(--spacing-sm) * -1)' : 'calc(var(--spacing-xs) * -1.25)';
+            
+            return (
+              <div
+                key={handle.direction}
+                className={cn(
+                  'bento-component__resize-handle',
+                  handle.className,
+                  'absolute',
+                  'transition-all duration-150 ease-out',
+                  'bg-gradient-to-br from-primary to-primary/80',
+                  'border-2 border-primary-foreground/30',
+                  'shadow-sm hover:shadow-md',
+                  'z-20',
+                  'touch-manipulation',
+                  {
+                    'opacity-100 scale-100': isHovering || isSelected || isResizing || dragMode || isEditing,
+                    'opacity-60 scale-90': !isHovering && !isSelected && !isResizing && !dragMode && isEditing,
+                    'rounded-full': !isCorner,
+                    'rounded-md': isCorner,
+                  }
+                )}
+                style={{
+                  cursor: handle.cursor,
+                  ...handleSize,
+                  // Position based on direction with better spacing
+                  ...(handle.direction.includes('n') && { top: handleOffset }),
+                  ...(handle.direction.includes('s') && { bottom: handleOffset }),
+                  ...(handle.direction.includes('e') && { right: handleOffset }),
+                  ...(handle.direction.includes('w') && { left: handleOffset }),
+                  ...(handle.direction === 'n' && { left: '50%', transform: 'translateX(-50%)' }),
+                  ...(handle.direction === 's' && { left: '50%', transform: 'translateX(-50%)' }),
+                  ...(handle.direction === 'e' && { top: '50%', transform: 'translateY(-50%)' }),
+                  ...(handle.direction === 'w' && { top: '50%', transform: 'translateY(-50%)' }),
+                  // Ensure minimum touch target size
+                  ...(shouldEnforceTouchTargets && {
+                    minWidth: touchTargetSize,
+                    minHeight: touchTargetSize,
+                  }),
+                }}
+                onMouseDown={(e) => handleResizeStart(e, handle.direction, handle.cursor)}
+                onTouchStart={(e) => {
+                  e.preventDefault();
+                  const touch = e.touches[0];
+                  const mouseEvent = new MouseEvent('mousedown', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY,
+                    bubbles: true,
+                  });
+                  handleResizeStart(mouseEvent as React.MouseEvent, handle.direction, handle.cursor);
+                }}
+                title={getTooltipText('resize-handle')}
+                draggable={false}
+                onDragStart={(e) => e.preventDefault()}
+                data-no-dnd="true"
+              >
+                {/* Visual indicator for resize direction */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className={cn(
+                    "bg-primary-foreground/60 transition-all duration-150",
+                    {
+                      "w-xs h-md": handle.direction === 'e' || handle.direction === 'w',
+                      "w-md h-xs": handle.direction === 'n' || handle.direction === 's',
+                      "w-sm h-sm rounded-full": isCorner,
+                    }
+                  )} />
+                </div>
+              </div>
+            );
+          })}
 
           {/* Selection border */}
           {isSelected && (
@@ -417,7 +668,7 @@ export const GridComponent: React.FC<GridComponentProps> = ({
           
           {/* Resize preview */}
           {isResizing && resizePreview && (
-            <div className="absolute bottom-2 right-2 bg-background/90 backdrop-blur-sm border border-border rounded px-2 py-1 text-xs font-mono z-20">
+            <div className="absolute bottom-sm right-sm bg-background/90 backdrop-blur-sm border border-border rounded-sm px-sm py-xs text-xs z-20">
               {resizePreview.w} × {resizePreview.h}
             </div>
           )}

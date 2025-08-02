@@ -33,6 +33,9 @@ export interface DragPreviewProps {
   
   /** Whether to show a simplified preview */
   simplified?: boolean;
+  
+  /** Whether to add playful rotation */
+  playful?: boolean;
 }
 
 // ============================================================================
@@ -47,22 +50,23 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
   className,
   simplified = false,
 }) => {
-  // Calculate preview dimensions
+  // Calculate enhanced preview dimensions with better proportions
   const previewStyle = useMemo(() => {
-    const baseWidth = 200; // Base width in pixels for preview
-    const baseHeight = 150; // Base height in pixels for preview
+    const baseWidth = 240; // Increased base width for better visibility
+    const baseHeight = 180; // Increased base height for better visibility
     
-    // Calculate dimensions based on component size
-    const width = Math.max(baseWidth, component.position.w * 100);
-    const height = Math.max(baseHeight, component.position.h * 80);
+    // Calculate dimensions based on component size with better scaling
+    const width = Math.max(baseWidth, component.position.w * 120);
+    const height = Math.max(baseHeight, component.position.h * 100);
     
     return {
       width: `${width * scale}px`,
       height: `${height * scale}px`,
       opacity,
       transform: `scale(${scale})`,
-      transformOrigin: 'top left',
+      transformOrigin: 'center center', // Better transform origin
       pointerEvents: 'none' as const,
+      willChange: 'transform', // Optimize for animations
     };
   }, [component.position.w, component.position.h, scale, opacity]);
 
@@ -72,44 +76,83 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
       <div
         className={cn(
           'drag-preview',
-          'bg-card/90 border border-border',
-          'rounded-md shadow-lg',
-          'p-4',
+          'bg-gradient-to-br from-primary/20 to-brand/20 border-2 border-primary/50',
+          'rounded-lg shadow-2xl',
+          'p-4 backdrop-blur-sm',
+          'animate-drag-preview',
           className
         )}
         style={{
           ...previewStyle,
-          opacity: 0.9,
+          opacity: 0.95,
         }}
       >
-        {/* Just show component type name as placeholder */}
-        <div className="h-full w-full flex items-center justify-center">
-          <div className="text-muted-foreground text-sm font-medium">
+        {/* Playful preview with bouncing emoji */}
+        <div className="h-full w-full flex flex-col items-center justify-center gap-2">
+          <div className="text-4xl animate-bounce">
+            {(() => {
+              const iconMap: Record<string, string> = {
+                'metric-card': '📊',
+                'chart': '📈',
+                'kpi': '🎯',
+                'gauge': '🌡️',
+                'table': '📋',
+                'list': '📝',
+                'grid-view': '🗋️',
+                'text-block': '📄',
+                'heading': '🔤',
+                'card': '🎴',
+                'image': '🖼️',
+                'video': '🎦',
+                'gallery': '🖼️',
+                'button': '🔘',
+                'button-group': '🎛️',
+                'form': '📝'
+              };
+              return iconMap[component.componentType] || '📦';
+            })()
+          }</div>
+          <div className="typography-ui-small text-center">
             {component.componentType.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
           </div>
+          <div className="typography-caption">
+            {component.position.w} × {component.position.h}
+          </div>
+        </div>
+        
+        {/* Dragging indicator */}
+        <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+          <div className="w-2 h-2 bg-primary-foreground rounded-full animate-bounce"></div>
         </div>
       </div>
     );
   }
 
-  // Render full component preview
+  // Render full component preview with enhanced styling
   return (
     <div
       className={cn(
         'drag-preview',
-        'bg-card border border-primary',
-        'rounded-md shadow-lg',
+        'bg-card/95 border-2 border-primary/70',
+        'rounded-lg shadow-2xl backdrop-blur-sm',
         'overflow-hidden',
+        'ring-4 ring-primary/20',
+        'animate-drag-float',
         className
       )}
       style={previewStyle}
     >
-      {/* Preview badge */}
-      <div className="absolute top-1 left-1 z-10 bg-primary text-primary-foreground text-xs px-1 py-0.5 rounded">
+      {/* Enhanced preview badge */}
+      <div className="absolute top-2 left-2 z-10 bg-primary/90 text-primary-foreground typography-button-small px-2 py-1 rounded-md backdrop-blur-sm">
         Preview
       </div>
       
-      {/* Component content */}
+      {/* Drag indicator */}
+      <div className="absolute top-2 right-2 z-10 w-3 h-3 bg-primary rounded-full animate-pulse">
+        <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-75"></div>
+      </div>
+      
+      {/* Component content with overlay */}
       <div className="h-full w-full relative">
         <ComponentRenderer
           component={component}
@@ -120,8 +163,13 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
           deviceType={deviceType}
         />
         
-        {/* Overlay to prevent interactions */}
-        <div className="absolute inset-0 bg-transparent pointer-events-none" />
+        {/* Enhanced interaction overlay */}
+        <div className="absolute inset-0 bg-primary/5 backdrop-blur-[0.5px] pointer-events-none" />
+      </div>
+      
+      {/* Size indicator */}
+      <div className="absolute bottom-2 right-2 z-10 bg-background/90 text-foreground typography-code-small px-2 py-1 rounded-md backdrop-blur-sm">
+        {component.position.w} × {component.position.h}
       </div>
     </div>
   );

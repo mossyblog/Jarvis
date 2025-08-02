@@ -18,8 +18,8 @@ export function DashboardHeader({
 }: DashboardHeaderProps) {
   const statusColors = {
     active: 'text-brand',
-    paused: 'text-yellow-500',
-    inactive: 'text-gray-500'
+    paused: 'text-warning',
+    inactive: 'text-muted-foreground'
   };
 
   return (

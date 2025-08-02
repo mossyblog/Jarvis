@@ -15,17 +15,17 @@ interface NotificationCardProps {
 }
 
 const variantStyles: Record<NotificationVariant, string> = {
-  warning: 'border-yellow-500/20 bg-yellow-500/5',
-  info: 'border-blue-500/20 bg-blue-500/5',
-  success: 'border-green-500/20 bg-green-500/5',
-  error: 'border-red-500/20 bg-red-500/5',
+  warning: 'border-warning/20 bg-warning/5',
+  info: 'border-primary/20 bg-primary/5',
+  success: 'border-success/20 bg-success/5',
+  error: 'border-destructive/20 bg-destructive/5',
 };
 
 const iconStyles: Record<NotificationVariant, string> = {
-  warning: 'text-yellow-500',
-  info: 'text-blue-500',
-  success: 'text-green-500',
-  error: 'text-red-500',
+  warning: 'text-warning',
+  info: 'text-primary',
+  success: 'text-success',
+  error: 'text-destructive',
 };
 
 export function NotificationCard({

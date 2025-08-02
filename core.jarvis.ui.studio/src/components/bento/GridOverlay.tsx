@@ -23,6 +23,12 @@ export interface GridOverlayProps {
   /** Height of each row in pixels */
   rowHeight?: number;
   
+  /** Current interaction state for progressive visibility */
+  interactionState?: 'idle' | 'hovering' | 'interacting';
+  
+  /** Force grid to be visible regardless of interaction state */
+  forceVisible?: boolean;
+  
   /** Additional CSS classes */
   className?: string;
 }
@@ -35,17 +41,42 @@ export const GridOverlay: React.FC<GridOverlayProps> = ({
   columns,
   gap = 16,
   rowHeight = 100,
+  interactionState = 'idle',
+  forceVisible = false,
   className,
 }) => {
+  // Calculate progressive opacity based on interaction state
+  const getGridOpacity = () => {
+    if (forceVisible) return 0.6;
+    
+    switch (interactionState) {
+      case 'idle': return 0;
+      case 'hovering': return 0.15;
+      case 'interacting': return 0.4;
+      default: return 0;
+    }
+  };
+  
+  const gridOpacity = getGridOpacity();
   // Simple grid pattern - just dots at intersections
   return (
     <div
-      className={cn('grid-overlay', className)}
+      className={cn(
+        'grid-overlay',
+        'transition-opacity duration-300 ease-out',
+        {
+          'grid-overlay--visible': gridOpacity > 0,
+          'grid-overlay--hovering': interactionState === 'hovering',
+          'grid-overlay--interacting': interactionState === 'interacting',
+        },
+        className
+      )}
       style={{
         position: 'absolute',
         inset: 0,
         pointerEvents: 'none',
         zIndex: 0,
+        opacity: gridOpacity,
       }}
     >
       {/* Create a simple dot pattern */}
@@ -60,10 +91,11 @@ export const GridOverlay: React.FC<GridOverlayProps> = ({
             patternUnits="userSpaceOnUse"
           >
             <circle
-              cx="1"
-              cy="1"
-              r="1"
-              fill="rgba(148, 163, 184, 0.3)"
+              cx="2"
+              cy="2"
+              r="1.5"
+              fill="currentColor"
+              className="text-primary/60"
             />
           </pattern>
         </defs>

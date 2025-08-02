@@ -13,7 +13,18 @@ import {
   Database,
   FileText,
   Image,
-  MousePointer2
+  MousePointer2,
+  TrendingUp,
+  Target,
+  Gauge,
+  Table,
+  Grid3X3 as GridView,
+  Type,
+  CreditCard,
+  Video,
+  Circle,
+  Sliders,
+  Edit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -47,7 +58,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Metric Card',
     category: 'Dashboard',
     description: 'Display key metrics with charts',
-    icon: '📊',
+    icon: <BarChart3 size={16} />,
     defaultSize: { w: 2, h: 2 }
   },
   {
@@ -55,7 +66,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Chart',
     category: 'Dashboard',
     description: 'Data visualization component',
-    icon: '📈',
+    icon: <TrendingUp size={16} />,
     defaultSize: { w: 4, h: 3 }
   },
   {
@@ -63,7 +74,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'KPI',
     category: 'Dashboard',
     description: 'Key performance indicator',
-    icon: '🎯',
+    icon: <Target size={16} />,
     defaultSize: { w: 2, h: 1 }
   },
   {
@@ -71,7 +82,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Gauge',
     category: 'Dashboard',
     description: 'Progress gauge visualization',
-    icon: '🌡️',
+    icon: <Gauge size={16} />,
     defaultSize: { w: 2, h: 2 }
   },
   
@@ -81,7 +92,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Data Table',
     category: 'Data',
     description: 'Tabular data display',
-    icon: '📋',
+    icon: <Table size={16} />,
     defaultSize: { w: 6, h: 4 }
   },
   {
@@ -89,7 +100,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'List View',
     category: 'Data',
     description: 'Scrollable list of items',
-    icon: '📝',
+    icon: <FileText size={16} />,
     defaultSize: { w: 3, h: 4 }
   },
   {
@@ -97,7 +108,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Grid View',
     category: 'Data',
     description: 'Card grid layout',
-    icon: '🗂️',
+    icon: <GridView size={16} />,
     defaultSize: { w: 4, h: 3 }
   },
   
@@ -107,7 +118,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Text Block',
     category: 'Content',
     description: 'Rich text content',
-    icon: '📄',
+    icon: <FileText size={16} />,
     defaultSize: { w: 3, h: 2 }
   },
   {
@@ -115,7 +126,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Heading',
     category: 'Content',
     description: 'Section heading',
-    icon: '🔤',
+    icon: <Type size={16} />,
     defaultSize: { w: 4, h: 1 }
   },
   {
@@ -123,7 +134,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Card',
     category: 'Content',
     description: 'Content card container',
-    icon: '🎴',
+    icon: <CreditCard size={16} />,
     defaultSize: { w: 2, h: 3 }
   },
   
@@ -133,7 +144,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Image',
     category: 'Media',
     description: 'Image display component',
-    icon: '🖼️',
+    icon: <Image size={16} />,
     defaultSize: { w: 2, h: 2 }
   },
   {
@@ -141,7 +152,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Video',
     category: 'Media',
     description: 'Video player component',
-    icon: '🎬',
+    icon: <Video size={16} />,
     defaultSize: { w: 3, h: 2 }
   },
   {
@@ -149,7 +160,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Gallery',
     category: 'Media',
     description: 'Image gallery',
-    icon: '🖼️',
+    icon: <Image size={16} />,
     defaultSize: { w: 4, h: 3 }
   },
   
@@ -159,7 +170,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Button',
     category: 'Actions',
     description: 'Action button',
-    icon: '🔘',
+    icon: <Circle size={16} />,
     defaultSize: { w: 1, h: 1 }
   },
   {
@@ -167,7 +178,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Button Group',
     category: 'Actions',
     description: 'Group of action buttons',
-    icon: '🎛️',
+    icon: <Sliders size={16} />,
     defaultSize: { w: 2, h: 1 }
   },
   {
@@ -175,7 +186,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Form',
     category: 'Actions',
     description: 'Input form',
-    icon: '📝',
+    icon: <Edit size={16} />,
     defaultSize: { w: 3, h: 4 }
   }
 ];

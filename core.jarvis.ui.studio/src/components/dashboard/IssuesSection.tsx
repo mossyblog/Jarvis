@@ -58,7 +58,7 @@ export function IssuesSection() {
       <div className="flex items-center gap-2">
         <span className="text-2xl font-light">{issueCount}</span>
         <span className="text-base">issues need</span>
-        <span className="text-base text-yellow-500">attention</span>
+        <span className="text-base text-warning">attention</span>
       </div>
 
       {/* Tabs */}
@@ -68,7 +68,7 @@ export function IssuesSection() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
               activeTab === 'security' 
-                ? "bg-yellow-500/20 text-yellow-500" 
+                ? "bg-warning/20 text-warning" 
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -76,7 +76,7 @@ export function IssuesSection() {
             <span className="uppercase tracking-wide text-xs font-medium">Security</span>
             <span className={cn(
               "px-1.5 py-0.5 rounded text-xs",
-              activeTab === 'security' ? "bg-yellow-500 text-black" : "bg-muted"
+              activeTab === 'security' ? "bg-warning text-warning-foreground" : "bg-muted"
             )}>
               {issues.filter(i => i.type === 'security' && i.severity === 'warning').length}
             </span>
@@ -87,7 +87,7 @@ export function IssuesSection() {
             className={cn(
               "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
               activeTab === 'performance' 
-                ? "bg-yellow-500/20 text-yellow-500" 
+                ? "bg-warning/20 text-warning" 
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -95,7 +95,7 @@ export function IssuesSection() {
             <span className="uppercase tracking-wide text-xs font-medium">Performance</span>
             <span className={cn(
               "px-1.5 py-0.5 rounded text-xs",
-              activeTab === 'performance' ? "bg-yellow-500 text-black" : "bg-muted"
+              activeTab === 'performance' ? "bg-warning text-warning-foreground" : "bg-muted"
             )}>
               {issues.filter(i => i.type === 'performance' && i.severity === 'warning').length}
             </span>
@@ -115,7 +115,7 @@ export function IssuesSection() {
             {/* Icon */}
             <div className="mt-0.5">
               {issue.severity === 'warning' ? (
-                <AlertCircle size={16} className="text-yellow-500" />
+                <AlertCircle size={16} className="text-warning" />
               ) : (
                 <Info size={16} className="text-muted-foreground" />
               )}

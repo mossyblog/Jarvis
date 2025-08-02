@@ -377,5 +377,6 @@ export {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
+  // eslint-disable-next-line react-refresh/only-export-components
   useSidebar,
 }

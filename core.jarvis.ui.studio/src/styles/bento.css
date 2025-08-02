@@ -211,17 +211,56 @@ body.resizing {
   @apply relative z-0;
 }
 
-/* Enhanced drag handle with micro-animations */
-.bento-component__drag-handle {
-  @apply bg-background/95 backdrop-blur-sm border border-border;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
-  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+/* Full-width handle bar for improved dragging */
+.bento-component__handle-bar {
+  @apply relative overflow-hidden;
+  will-change: transform, opacity;
+  touch-action: none; /* Prevent scrolling while dragging on touch devices */
+  /* Ensure the entire handle bar is clickable and grippable */
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.bento-component__drag-handle:hover {
-  @apply bg-background border-primary shadow-md;
-  transform: scale(1.05);
+.bento-component__handle-bar:hover {
+  transform: translateY(0) scale(1.002);
+  /* Enhanced hover effect for better feedback */
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+.bento-component__handle-bar:active {
+  cursor: grabbing;
+  transform: translateY(1px) scale(0.998);
+  /* Visual feedback when actively dragging */
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+/* Improved grip indicator spacing and visibility */
+.bento-component__handle-bar .grip-container {
+  @apply flex items-center justify-center w-full;
+  /* Better distribution of grip dots across the width */
+  gap: clamp(0.25rem, 2vw, 0.5rem);
+}
+
+.bento-component__handle-bar .grip-dot {
+  @apply w-1 h-1 bg-primary/40 rounded-full transition-all duration-200;
+  /* Subtle animation on hover */
+  will-change: background-color, transform;
+}
+
+.bento-component__handle-bar:hover .grip-dot {
+  @apply bg-primary/70;
+  transform: scale(1.1);
+}
+
+.bento-component__handle-bar:active .grip-dot {
+  @apply bg-primary/80;
+  transform: scale(0.9);
+}
+
+/* Simplified drag handle styles - removed since using full-width handle bar */
+/* These styles are kept for potential future use but not currently applied */
+.bento-component__drag-handle {
+  display: none; /* Hidden since we're using full-width handle bar */
 }
 
 /* Enhanced component actions */
@@ -442,7 +481,17 @@ body.resizing {
 
 /* Desktop styles with better visibility */
 @media (min-width: 1024px) {
-  .bento-component__drag-handle,
+  .bento-component__handle-bar {
+    /* Subtle visibility by default, full visibility on hover */
+    @apply opacity-0 group-hover:opacity-100;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  
+  .bento-component--editing .bento-component__handle-bar {
+    /* More visible in edit mode */
+    @apply opacity-40 group-hover:opacity-100;
+  }
+  
   .bento-component__actions {
     /* Always slightly visible for better discoverability */
     @apply opacity-30 group-hover:opacity-100;
@@ -455,7 +504,6 @@ body.resizing {
     transition: opacity 150ms ease;
   }
   
-  .bento-component--editing .bento-component__drag-handle,
   .bento-component--editing .bento-component__actions,
   .bento-component--editing .bento-component__resize-handle {
     /* More visible in edit mode */
@@ -469,7 +517,12 @@ body.resizing {
     /* Tablet-specific grid adjustments */
   }
   
-  .bento-component__drag-handle,
+  .bento-component__handle-bar {
+    /* Always visible on tablet for touch interaction */
+    @apply opacity-80;
+    height: 28px !important; /* Slightly taller for easier touch */
+  }
+  
   .bento-component__actions,
   .bento-component__resize-handle {
     /* Always visible on tablet for touch interaction */
@@ -488,7 +541,12 @@ body.resizing {
     @apply rounded-md;
   }
   
-  .bento-component__drag-handle,
+  .bento-component__handle-bar {
+    /* Always visible and taller on mobile for touch interaction */
+    @apply opacity-100;
+    height: 36px !important; /* Taller for easier touch */
+  }
+  
   .bento-component__actions,
   .bento-component__resize-handle {
     /* Always visible on mobile for touch interaction */
@@ -618,7 +676,6 @@ body.resizing {
   @apply shadow-lg shadow-black/20;
 }
 
-.dark .bento-component__drag-handle,
 .dark .bento-component__actions {
   @apply bg-background/95 border-border;
 }
@@ -747,14 +804,34 @@ body.resizing {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Handle bar interactions - enhanced for full-width dragging */
+.bento-component__handle-bar:hover {
+  /* Gradient background for better visual feedback */
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(59, 130, 246, 0.08) 100%);
+}
+
+/* Enhanced grip dot hover states */
+.bento-component__handle-bar:hover .grip-dot {
+  @apply bg-primary/70;
+  transform: scale(1.15);
+  animation: grip-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes grip-pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
 /* Playful button interactions */
-.bento-component__drag-handle:hover,
 .bento-component__actions button:hover {
   transform: scale(1.1);
   transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.bento-component__drag-handle:active,
 .bento-component__actions button:active {
   transform: scale(0.95);
   transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
@@ -900,7 +977,7 @@ body.resizing {
    ============================================================================ */
 
 @media print {
-  .bento-component__drag-handle,
+  .bento-component__handle-bar,
   .bento-component__actions,
   .bento-component__resize-handle,
   .bento-component__selection-border,
@@ -909,6 +986,6 @@ body.resizing {
   }
   
   .bento-component {
-    @apply break-inside-avoid shadow-none border border-gray-300;
+    @apply break-inside-avoid shadow-none border border-border;
   }
 }

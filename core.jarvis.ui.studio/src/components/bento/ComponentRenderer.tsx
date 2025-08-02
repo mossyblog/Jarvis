@@ -8,7 +8,7 @@
  */
 
 import React, { Suspense, useMemo, useCallback } from 'react';
-import { AlertCircle, Box, Loader2 } from 'lucide-react';
+import { Box, Loader2 } from 'lucide-react';
 
 import type { GridComponent, Size } from '@/types/bento';
 import { DeviceType } from '@/types/bento';
@@ -214,48 +214,82 @@ class ComponentErrorBoundary extends React.Component<
 // ============================================================================
 
 /**
- * Loading fallback component
+ * Loading fallback component with personality
  */
-const ComponentLoadingFallback: React.FC<{ className?: string }> = ({ className }) => (
-  <Card className={cn('h-full', className)}>
-    <CardContent className="flex items-center justify-center h-full">
-      <div className="text-center">
-        <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-muted-foreground" />
-        <p className="text-xs text-muted-foreground">Loading...</p>
-      </div>
-    </CardContent>
-  </Card>
-);
+const ComponentLoadingFallback: React.FC<{ className?: string }> = ({ className }) => {
+  const loadingMessages = [
+    '🎨 Crafting something beautiful...',
+    '✨ Sprinkling some magic...',
+    '🚀 Getting ready for launch...',
+    '🎯 Preparing the perfect component...',
+    '🔮 Consulting the component oracle...',
+  ];
+  
+  const [message] = React.useState(() => 
+    loadingMessages[Math.floor(Math.random() * loadingMessages.length)]
+  );
+  
+  return (
+    <Card className={cn('h-full loading-shimmer', className)}>
+      <CardContent className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="relative">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-blue-500" />
+            <div className="absolute inset-0 h-8 w-8 mx-auto mb-3 border-2 border-transparent border-t-purple-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
+          </div>
+          <p className="text-sm text-muted-foreground animate-pulse">{message}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 /**
- * Error fallback component
+ * Error fallback component with friendly personality
  */
 const ComponentErrorFallback: React.FC<{ 
   error?: Error; 
   className?: string;
   onRetry?: () => void;
-}> = ({ error, className, onRetry }) => (
-  <Card className={cn('h-full border-destructive', className)}>
-    <CardContent className="flex items-center justify-center h-full p-4">
-      <div className="text-center">
-        <AlertCircle className="h-6 w-6 mx-auto mb-2 text-destructive" />
-        <p className="text-xs text-destructive mb-2">
-          {error?.message || 'Component failed to load'}
-        </p>
-        {onRetry && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onRetry}
-            className="text-xs"
-          >
-            Retry
-          </Button>
-        )}
-      </div>
-    </CardContent>
-  </Card>
-);
+}> = ({ error, className, onRetry }) => {
+  const errorPersonalities = [
+    { emoji: '🤖', message: 'Oops! This component had a robot malfunction.' },
+    { emoji: '🎭', message: 'This component is having stage fright.' },
+    { emoji: '🔧', message: 'Something needs a little fixing here.' },
+    { emoji: '🎪', message: 'The show must go on, but this act needs work.' },
+    { emoji: '🎨', message: 'This masterpiece is still in progress.' },
+  ];
+  
+  const [personality] = React.useState(() => 
+    errorPersonalities[Math.floor(Math.random() * errorPersonalities.length)]
+  );
+  
+  return (
+    <Card className={cn('h-full border-orange-300 bg-orange-50/50', className)}>
+      <CardContent className="flex items-center justify-center h-full p-4">
+        <div className="text-center">
+          <div className="text-4xl mb-2 animate-bounce">{personality.emoji}</div>
+          <p className="text-sm font-medium text-orange-700 mb-1">
+            {personality.message}
+          </p>
+          <p className="text-xs text-orange-600 mb-3">
+            {error?.message || 'No worries, these things happen!'}
+          </p>
+          {onRetry && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              className="text-xs border-orange-300 text-orange-700 hover:bg-orange-100"
+            >
+              ✨ Try Again
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 /**
  * Unknown component type fallback

@@ -325,6 +325,7 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({ children }) 
 // Hook
 // ============================================================================
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useEditMode = (): EditModeContextValue => {
   const context = useContext(EditModeContext);
   if (!context) {

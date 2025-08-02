@@ -179,7 +179,7 @@ export default function UserManagement() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
                     activeFilter === 'all' 
-                      ? "bg-blue-500/20 text-blue-500" 
+                      ? "bg-primary/20 text-primary" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -187,7 +187,7 @@ export default function UserManagement() {
                   <span className="uppercase tracking-wide text-xs font-medium">All Users</span>
                   <span className={cn(
                     "px-1.5 py-0.5 rounded text-xs",
-                    activeFilter === 'all' ? "bg-blue-500 text-white" : "bg-muted"
+                    activeFilter === 'all' ? "bg-primary text-primary-foreground" : "bg-muted"
                   )}>
                     {loading ? (
                       <Skeleton className="h-3 w-4" />
@@ -202,7 +202,7 @@ export default function UserManagement() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
                     activeFilter === 'active' 
-                      ? "bg-green-500/20 text-green-500" 
+                      ? "bg-success/20 text-success" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -210,7 +210,7 @@ export default function UserManagement() {
                   <span className="uppercase tracking-wide text-xs font-medium">Active</span>
                   <span className={cn(
                     "px-1.5 py-0.5 rounded text-xs",
-                    activeFilter === 'active' ? "bg-green-500 text-white" : "bg-muted"
+                    activeFilter === 'active' ? "bg-success text-success-foreground" : "bg-muted"
                   )}>
                     {loading ? (
                       <Skeleton className="h-3 w-4" />
@@ -225,7 +225,7 @@ export default function UserManagement() {
                   className={cn(
                     "flex items-center gap-2 px-4 py-2 text-sm rounded-md transition-colors",
                     activeFilter === 'inactive' 
-                      ? "bg-gray-500/20 text-gray-500" 
+                      ? "bg-muted-foreground/20 text-muted-foreground" 
                       : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -233,7 +233,7 @@ export default function UserManagement() {
                   <span className="uppercase tracking-wide text-xs font-medium">Inactive</span>
                   <span className={cn(
                     "px-1.5 py-0.5 rounded text-xs",
-                    activeFilter === 'inactive' ? "bg-gray-500 text-white" : "bg-muted"
+                    activeFilter === 'inactive' ? "bg-muted-foreground text-muted-foreground-foreground" : "bg-muted"
                   )}>
                     {loading ? (
                       <Skeleton className="h-3 w-4" />

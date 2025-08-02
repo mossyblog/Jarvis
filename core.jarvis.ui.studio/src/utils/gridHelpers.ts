@@ -263,7 +263,9 @@ export const applyComponentSnapping = (
   existingComponents: GridComponent[],
   threshold: number = 1
 ): GridPosition => {
-  let { x, y, w, h } = position;
+  const { x: initialX, y: initialY, w, h } = position;
+  let x = initialX;
+  let y = initialY;
   
   // Find components that could provide snap targets
   existingComponents.forEach(comp => {
@@ -490,9 +492,6 @@ export const getContextualHelp = (
 ): HelpMessage | null => {
   const { isDragging, isResizing, hasCollision, componentCount, gridFull, snapActive } = context;
   
-  // Use the context parameter to suppress unused warning
-  void context;
-  
   if (isDragging) {
     if (hasCollision) {
       return {
@@ -572,8 +571,7 @@ export const getContextualHelp = (
  * Get tooltip text for various UI elements
  */
 export const getTooltipText = (
-  element: string,
-  context?: Record<string, unknown>
+  element: string
 ): string => {
   const tooltips: Record<string, string> = {
     'drag-handle': 'Drag to move component',
@@ -633,7 +631,7 @@ export const debounce = <T extends (...args: unknown[]) => void>(
 /**
  * Enhanced throttle function with immediate first call and trailing execution
  */
-export const throttle = <T extends (...args: any[]) => void>(
+export const throttle = <T extends (...args: unknown[]) => void>(
   func: T,
   limit: number
 ): ((...args: Parameters<T>) => void) => {

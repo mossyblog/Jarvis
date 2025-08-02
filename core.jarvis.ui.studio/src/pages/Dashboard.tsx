@@ -6,7 +6,7 @@ import { MetricCard } from '../components/dashboard/MetricCard';
 import { IssuesSection } from '../components/dashboard/IssuesSection';
 import { SlowQueriesTable } from '../components/dashboard/SlowQueriesTable';
 import { useNavigation } from '../hooks/useNavigation';
-import { Circle } from 'lucide-react';
+import { Circle, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 // Generate mock chart data
@@ -31,8 +31,8 @@ export function Dashboard() {
   const projectStatus = 'active' as const;
   const statusColors = {
     active: 'text-brand',
-    paused: 'text-yellow-500',
-    inactive: 'text-gray-500'
+    paused: 'text-warning',
+    inactive: 'text-muted-foreground'
   };
 
   return (
@@ -59,27 +59,25 @@ export function Dashboard() {
           <div className="space-y-6">
             <div className="flex flex-wrap gap-8 text-sm">
               <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground">Tables</span>
-                <span className="text-2xl font-light">5</span>
+                <span className="typography-caption">Tables</span>
+                <span className="text-2xl font-light font-custom">5</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground">Functions</span>
-                <span className="text-2xl font-light">0</span>
+                <span className="typography-caption">Functions</span>
+                <span className="text-2xl font-light font-custom">0</span>
               </div>
               <div className="flex flex-col gap-1">
-                <span className="text-muted-foreground">Replicas</span>
-                <span className="text-2xl font-light">0</span>
+                <span className="typography-caption">Replicas</span>
+                <span className="text-2xl font-light font-custom">0</span>
               </div>
             </div>
 
             <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Last 60 minutes</span>
+              <span className="typography-caption">Last 60 minutes</span>
               <button className="text-muted-foreground hover:text-foreground">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+                <ChevronDown size={16} strokeWidth={1.5} />
               </button>
-              <span className="text-muted-foreground ml-4">
+              <span className="typography-caption ml-4">
                 Statistics for last 60 minutes
               </span>
             </div>

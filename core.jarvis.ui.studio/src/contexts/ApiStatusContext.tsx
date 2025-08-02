@@ -9,6 +9,7 @@ interface ApiStatusContextType {
 
 const ApiStatusContext = createContext<ApiStatusContextType | null>(null);
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useApiStatus = () => {
   const context = useContext(ApiStatusContext);
   if (!context) {

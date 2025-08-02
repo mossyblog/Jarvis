@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 export type ThemeMode = 'light' | 'dark';
 export type ThemeName = 'default' | 'supabase';
@@ -27,7 +27,7 @@ export function ThemeProvider({
   defaultTheme = 'supabase',
   defaultMode = 'dark' 
 }: ThemeProviderProps) {
-  const availableThemes: readonly ThemeName[] = ['default', 'supabase'] as const;
+  const availableThemes = useMemo(() => ['default', 'supabase'] as const, []);
   
   const [theme, setThemeState] = useState<ThemeName>(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
@@ -82,6 +82,7 @@ export function ThemeProvider({
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {

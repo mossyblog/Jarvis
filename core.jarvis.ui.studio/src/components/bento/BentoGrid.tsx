@@ -8,6 +8,30 @@
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import {
+  BarChart3,
+  TrendingUp,
+  Target,
+  Gauge,
+  Table2,
+  List,
+  Grid3X3 as GridView,
+  FileText,
+  Type,
+  CreditCard,
+  Image,
+  Video,
+  Images,
+  Circle,
+  Sliders,
+  Edit,
+  Package,
+  Sparkles,
+  Star,
+  Rocket,
+  Paintbrush,
+  Building2
+} from 'lucide-react';
+import {
   DndContext,
   PointerSensor,
   useSensor,
@@ -37,7 +61,7 @@ import { GridOverlay } from './GridOverlay';
 import { DragPreview } from './DragPreview';
 import {
   applyMagneticSnapping,
-  getOptimizedDropZones,
+  // getOptimizedDropZones,  // Unused import
   generateStrategicDropZones,
   isValidPlacement,
   getContextualHelp,
@@ -152,7 +176,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   style,
   onComponentMove,
   onComponentResize,
-  onComponentSelect,
+  // onComponentSelect,  // Unused prop
   onComponentDelete,
   onShowProperties,
   // onGridUpdate,
@@ -190,15 +214,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   // Bottom sheet for mobile palette
   const mobilePalette = useBottomSheet();
   const [successMessage, setSuccessMessage] = useState<string>('');
-  const [wobbleComponents, setWobbleComponents] = useState<Set<string>>(new Set());
+  const [wobbleComponents] = useState<Set<string>>(new Set());  // setWobbleComponents removed as unused
   
   // Grid interaction state for progressive visibility
   const [gridInteractionState, setGridInteractionState] = useState<'idle' | 'hovering' | 'interacting'>('idle');
 
   // Refs for immediate mouse tracking
   const gridContainerRef = useRef<HTMLDivElement>(null);
-  const touchStartTimeRef = useRef<number>(0);
-  const longPressTimerRef = useRef<NodeJS.Timeout>();
+  // const touchStartTimeRef = useRef<number>(0);  // Unused variable
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Configure enhanced drag sensors with better mobile support
@@ -257,7 +281,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
   // Touch gesture handlers
   const touchGestureHandlers = {
-    onLongPress: useCallback((detail, event) => {
+    onLongPress: useCallback((detail: { x: number; y: number }, event: TouchEvent) => {
       if (!isEditing || !isMobile) return;
       
       // Find the component under the touch point
@@ -265,7 +289,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       const componentElement = element?.closest('[data-component-id]') as HTMLElement;
       
       if (componentElement) {
-        const componentId = componentElement.dataset.componentId;
+        const componentId = componentElement.dataset.componentId ?? null;
         const component = grid.components.find(c => c.id === componentId);
         
         if (component) {
@@ -288,7 +312,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       }
     }, [isEditing, isMobile, grid.components]),
     
-    onPinch: useCallback((detail, event) => {
+    onPinch: useCallback((detail: { scale: number }, event: TouchEvent) => {
       if (!isMobile) return;
       
       const newZoom = Math.max(0.5, Math.min(2, mobileState.zoomLevel * detail.scale));
@@ -297,7 +321,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       event.preventDefault();
     }, [isMobile, mobileState.zoomLevel]),
     
-    onSwipe: useCallback((detail, event) => {
+    onSwipe: useCallback((detail: { direction: string; velocity: number }, event: TouchEvent) => {
       if (!isMobile) return;
       
       // Swipe up to show component palette
@@ -319,7 +343,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   };
 
   // Touch gesture hook
-  const { attachListeners, isValidTouchTarget } = useTouchGestures(
+  const { attachListeners } = useTouchGestures(
     touchGestureConfig,
     touchGestureHandlers
   );
@@ -365,7 +389,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       // Update interaction state for enhanced grid visibility
       setGridInteractionState('interacting');
     }
-  }, [grid.components]);
+  }, [grid]);
 
   // Check for collisions
   const checkCollision = useCallback((position: GridPosition, excludeId?: string): boolean => {
@@ -503,11 +527,11 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         const centerY = rect.top + (rect.height / 2);
         
         const celebrationMessages = [
-          '🎯 Perfect snap!',
-          '✨ Smooth move!',
-          '🎨 Great positioning!',
-          '🚀 Nailed it!',
-          '⭐ Perfect fit!',
+          'Perfect snap!',
+          'Smooth move!',
+          'Great positioning!',
+          'Nailed it!',
+          'Perfect fit!',
         ];
         
         const message = celebrationMessages[Math.floor(Math.random() * celebrationMessages.length)];
@@ -516,15 +540,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     } else {
       // Position is invalid - component snaps back to original position automatically
       // Show feedback about why the move failed
-      setSuccessMessage('❌ Cannot place there - position is occupied');
+      setSuccessMessage('Cannot place there - position is occupied');
       setTimeout(() => setSuccessMessage(''), 2000);
     }
   }, [dragState.draggedComponent, dragState.previewPosition, grid.components, grid.columns, onComponentMove, triggerCelebration]);
 
   // Handle component selection
-  const handleComponentSelect = useCallback((componentId: string) => {
-    onComponentSelect?.(componentId);
-  }, [onComponentSelect]);
+  // const handleComponentSelect = useCallback((componentId: string) => {
+  //   onComponentSelect?.(componentId);
+  // }, [onComponentSelect]);  // Unused function
 
   // Handle component deletion
   const handleComponentDelete = useCallback((componentId: string) => {
@@ -543,30 +567,30 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
   // Render icon based on component type - matches toolbar icons
   const renderComponentSkeleton = (componentType: string) => {
-    const iconMap: Record<string, string> = {
-      'metric-card': '📊',
-      'chart': '📈',
-      'kpi': '🎯',
-      'gauge': '🌡️',
-      'table': '📋',
-      'list': '📝',
-      'grid-view': '🗂️',
-      'text-block': '📄',
-      'heading': '🔤',
-      'card': '🎴',
-      'image': '🖼️',
-      'video': '🎬',
-      'gallery': '🖼️',
-      'button': '🔘',
-      'button-group': '🎛️',
-      'form': '📝'
+    const iconMap: Record<string, React.ReactNode> = {
+      'metric-card': <BarChart3 size={32} />,
+      'chart': <TrendingUp size={32} />,
+      'kpi': <Target size={32} />,
+      'gauge': <Gauge size={32} />,
+      'table': <Table2 size={32} />,
+      'list': <List size={32} />,
+      'grid-view': <GridView size={32} />,
+      'text-block': <FileText size={32} />,
+      'heading': <Type size={32} />,
+      'card': <CreditCard size={32} />,
+      'image': <Image size={32} />,
+      'video': <Video size={32} />,
+      'gallery': <Images size={32} />,
+      'button': <Circle size={32} />,
+      'button-group': <Sliders size={32} />,
+      'form': <Edit size={32} />
     };
 
-    const icon = iconMap[componentType] || '📦';
+    const icon = iconMap[componentType] || <Package size={32} />;
     
     return (
       <div className="h-full w-full flex items-center justify-center">
-        <div className="text-4xl opacity-50 animate-bounce">{icon}</div>
+        <div className="text-muted-foreground/50 animate-bounce">{icon}</div>
       </div>
     );
   };
@@ -574,10 +598,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   // Render empty state with personality
   const renderEmptyState = () => {
     const emptyMessages = [
-      { emoji: '🎨', title: 'Ready to create?', subtitle: 'Drag components here to start building' },
-      { emoji: '✨', title: 'Your canvas awaits', subtitle: 'Time to make something amazing' },
-      { emoji: '🚀', title: 'Launch pad ready', subtitle: 'Drop components to begin your journey' },
-      { emoji: '🏗️', title: 'Construction zone', subtitle: 'Build your dream layout here' },
+      { icon: <Paintbrush size={48} />, title: 'Ready to create?', subtitle: 'Drag components here to start building' },
+      { icon: <Sparkles size={48} />, title: 'Your canvas awaits', subtitle: 'Time to make something amazing' },
+      { icon: <Rocket size={48} />, title: 'Launch pad ready', subtitle: 'Drop components to begin your journey' },
+      { icon: <Building2 size={48} />, title: 'Construction zone', subtitle: 'Build your dream layout here' },
     ];
     
     const message = emptyMessages[Math.floor(Math.random() * emptyMessages.length)];
@@ -585,7 +609,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     return (
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div className="text-center p-8">
-          <div className="text-6xl mb-4 animate-bounce">{message.emoji}</div>
+          <div className="text-muted-foreground/50 mb-4 animate-bounce flex justify-center">{message.icon}</div>
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">{message.title}</h3>
           <p className="text-sm text-muted-foreground">{message.subtitle}</p>
         </div>
@@ -615,9 +639,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   
   // Cleanup timeout on unmount
   useEffect(() => {
+    const timeoutRef = hoverTimeoutRef.current;
     return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
+      if (timeoutRef) {
+        clearTimeout(timeoutRef);
       }
     };
   }, []);
@@ -696,9 +721,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
   // Clear long press timer on component mount/unmount
   useEffect(() => {
+    const timerRef = longPressTimerRef.current;
     return () => {
-      if (longPressTimerRef.current) {
-        clearTimeout(longPressTimerRef.current);
+      if (timerRef) {
+        clearTimeout(timerRef);
       }
     };
   }, []);
@@ -712,10 +738,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             'fixed top-4 right-4 z-50 p-3 rounded-lg shadow-lg max-w-sm',
             'transition-all duration-300 ease-in-out',
             {
-              'bg-green-50 border border-green-200 text-green-800': dragState.helpMessage.type === 'success',
-              'bg-blue-50 border border-blue-200 text-blue-800': dragState.helpMessage.type === 'info',
-              'bg-yellow-50 border border-yellow-200 text-yellow-800': dragState.helpMessage.type === 'warning',
-              'bg-red-50 border border-red-200 text-red-800': dragState.helpMessage.type === 'error',
+              'bg-success/10 border border-success text-success': dragState.helpMessage.type === 'success',
+              'bg-primary/10 border border-primary text-primary': dragState.helpMessage.type === 'info',
+              'bg-warning/10 border border-warning text-warning': dragState.helpMessage.type === 'warning',
+              'bg-destructive/10 border border-destructive text-destructive': dragState.helpMessage.type === 'error',
             }
           )}
         >
@@ -778,7 +804,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   key={`drop-zone-${zone.position.x}-${zone.position.y}-${index}`}
                   className={cn(
                     "pointer-events-none z-[3] rounded-lg border-2 border-dashed transition-all duration-200",
-                    "border-green-400 bg-green-400/8 shadow-sm"
+                    "border-success bg-success/8 shadow-sm"
                   )}
                   style={{
                     gridColumn: `${zone.position.x + 1} / span ${zone.position.w}`,
@@ -789,7 +815,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   title={getTooltipText('drop-zone-valid')}
                 >
                   {/* Subtle indicator dot */}
-                  <div className="absolute top-2 left-2 w-2 h-2 bg-green-500 rounded-full opacity-60" />
+                  <div className="absolute top-2 left-2 w-2 h-2 bg-success rounded-full opacity-60" />
                 </div>
               );
             })}
@@ -826,8 +852,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                     
                     {/* Enhanced snapping indicator */}
                     {dragState.isSnapping && (
-                      <div className="absolute top-2 left-2 flex items-center gap-1 text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full border border-blue-200">
-                        <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse" />
+                      <div className="absolute top-2 left-2 flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary">
+                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
                         Snapped
                       </div>
                     )}
@@ -838,8 +864,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                       'flex items-center justify-center text-sm font-bold',
                       'transition-all duration-150 shadow-md',
                       isValidPos 
-                        ? 'bg-green-500 border-green-400 text-white animate-pulse' 
-                        : 'bg-red-500 border-red-400 text-white'
+                        ? 'bg-success border-success text-success-foreground animate-pulse' 
+                        : 'bg-destructive border-destructive text-destructive-foreground'
                     )}>
                       {isValidPos ? '✓' : '✕'}
                     </div>
@@ -881,8 +907,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                       'absolute top-2 right-2 w-5 h-5 rounded-full border',
                       'flex items-center justify-center text-xs font-bold shadow-sm',
                       isValidPlacement 
-                        ? 'bg-green-500 border-green-400 text-white' 
-                        : 'bg-red-500 border-red-400 text-white'
+                        ? 'bg-success border-success text-success-foreground' 
+                        : 'bg-destructive border-destructive text-destructive-foreground'
                     )}>
                       {isValidPlacement ? '✓' : '✕'}
                     </div>
@@ -903,7 +929,6 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                 isMobile={isMobile}
                 isTouchDevice={isTouchDevice}
                 dragMode={mobileState.dragMode}
-                onSelect={handleComponentSelect}
                 onDelete={handleComponentDelete}
                 onResize={handleComponentResize}
                 onShowProperties={handleShowProperties}
@@ -945,7 +970,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   fontSize: '1.5rem',
                 }}
               >
-                {['🎉', '✨', '🌟', '🎊', '💫'][Math.floor(Math.random() * 5)]}
+                <Star className="text-yellow-500" size={20} />
               </div>
             ))}
           </div>
@@ -954,7 +979,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         {/* Success message overlay */}
         {successMessage && (
           <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-[9999] pointer-events-none">
-            <div className="bg-green-500 text-white px-4 py-2 rounded-full shadow-lg animate-bounce-in font-medium">
+            <div className="bg-success text-success-foreground px-4 py-2 rounded-full shadow-lg animate-bounce-in font-medium">
               {successMessage}
             </div>
           </div>
@@ -987,14 +1012,14 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             <div className="grid grid-cols-2 gap-4">
               {/* Component palette items with proper touch targets */}
               {[
-                { type: 'metric-card', icon: '📊', name: 'Metric Card' },
-                { type: 'chart', icon: '📈', name: 'Chart' },
-                { type: 'kpi', icon: '🎯', name: 'KPI' },
-                { type: 'gauge', icon: '🌡️', name: 'Gauge' },
-                { type: 'table', icon: '📋', name: 'Table' },
-                { type: 'list', icon: '📝', name: 'List' },
-                { type: 'text-block', icon: '📄', name: 'Text Block' },
-                { type: 'button', icon: '🔘', name: 'Button' },
+                { type: 'metric-card', icon: <BarChart3 size={24} />, name: 'Metric Card' },
+                { type: 'chart', icon: <TrendingUp size={24} />, name: 'Chart' },
+                { type: 'kpi', icon: <Target size={24} />, name: 'KPI' },
+                { type: 'gauge', icon: <Gauge size={24} />, name: 'Gauge' },
+                { type: 'table', icon: <Table2 size={24} />, name: 'Table' },
+                { type: 'list', icon: <List size={24} />, name: 'List' },
+                { type: 'text-block', icon: <FileText size={24} />, name: 'Text Block' },
+                { type: 'button', icon: <Circle size={24} />, name: 'Button' },
               ].map((componentType) => (
                 <button
                   key={componentType.type}
@@ -1006,7 +1031,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                     mobilePalette.close();
                   }}
                 >
-                  <div className="text-2xl mb-2">{componentType.icon}</div>
+                  <div className="mb-2 text-muted-foreground">{componentType.icon}</div>
                   <div className="text-xs text-center font-medium">{componentType.name}</div>
                 </button>
               ))}
@@ -1022,7 +1047,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   mobilePalette.close();
                 }}
               >
-                {mobileState.dragMode ? '🔒 Exit Drag Mode' : '✋ Enable Drag Mode'}
+                {mobileState.dragMode ? 'Exit Drag Mode' : 'Enable Drag Mode'}
               </button>
               
               <button
@@ -1032,7 +1057,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   setMobileState(prev => ({ ...prev, zoomLevel: prev.zoomLevel === 1 ? 0.8 : 1 }));
                 }}
               >
-                {mobileState.zoomLevel === 1 ? '🔍 Zoom Out' : '🔍 Reset Zoom'}
+                {mobileState.zoomLevel === 1 ? 'Zoom Out' : 'Reset Zoom'}
               </button>
             </div>
           </div>

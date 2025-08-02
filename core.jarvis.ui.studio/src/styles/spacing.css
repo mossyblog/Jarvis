@@ -1,19 +1,9 @@
-/* Spacing System - Based on 8px grid */
+/* Legacy Spacing System - Now integrated with sizing-system.css */
 :root {
-  /* Base unit */
-  --spacing-unit: 8px;
+  /* Legacy compatibility - these now reference the main sizing system */
+  --spacing-unit: var(--size-unit);
   
-  /* T-shirt sizes for spacing */
-  --spacing-xs: calc(var(--spacing-unit) * 0.5);  /* 4px */
-  --spacing-sm: calc(var(--spacing-unit) * 1);    /* 8px */
-  --spacing-md: calc(var(--spacing-unit) * 2);    /* 16px */
-  --spacing-lg: calc(var(--spacing-unit) * 3);    /* 24px */
-  --spacing-xl: calc(var(--spacing-unit) * 4);    /* 32px */
-  --spacing-2xl: calc(var(--spacing-unit) * 5);   /* 40px */
-  --spacing-3xl: calc(var(--spacing-unit) * 6);   /* 48px */
-  --spacing-4xl: calc(var(--spacing-unit) * 8);   /* 64px */
-  
-  /* Component-specific spacing */
+  /* Component-specific spacing - referencing the new sizing system */
   --spacing-page: var(--spacing-lg);              /* Page padding */
   --spacing-section: var(--spacing-xl);           /* Section spacing */
   --spacing-card: var(--spacing-md);              /* Card padding */
@@ -25,7 +15,7 @@
   --spacing-table-cell-y: var(--spacing-sm);      /* Vertical cell padding */
   --spacing-table-cell-compact: var(--spacing-xs); /* Compact table cells */
   
-  /* Gaps */
+  /* Legacy gap variables - use new system instead */
   --gap-xs: var(--spacing-xs);
   --gap-sm: var(--spacing-sm);
   --gap-md: var(--spacing-md);

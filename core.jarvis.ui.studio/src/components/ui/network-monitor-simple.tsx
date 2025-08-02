@@ -33,12 +33,12 @@ export function NetworkMonitor() {
         <span className="text-muted-foreground">:</span>
         <div className="flex items-center gap-1">
           <span className="font-mono">{requestCount}</span>
-          <span className="text-blue-500">↑</span>
+          <span className="text-primary">↑</span>
         </div>
         <span className="text-muted-foreground">|</span>
         <div className="flex items-center gap-1">
           <span className="font-mono">{responseCount}</span>
-          <span className="text-green-500">↓</span>
+          <span className="text-success">↓</span>
         </div>
       </div>
     </div>

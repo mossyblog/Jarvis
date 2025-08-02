@@ -152,14 +152,14 @@ export const ComponentTile: React.FC<ComponentTileProps> = ({
       </div>
       
       {/* Name */}
-      <span className="component-tile__name text-[10px] font-medium text-center line-clamp-1">
+      <span className="component-tile__name text-micro font-medium text-center line-clamp-1">
         {name}
       </span>
       
       {/* Size indicator on hover */}
       <div className={cn(
         "absolute -bottom-6 left-1/2 transform -translate-x-1/2",
-        "text-[10px] text-muted-foreground bg-background px-1.5 py-0.5 rounded",
+        "text-tiny typography-caption bg-background px-1.5 py-0.5 rounded",
         "opacity-0 group-hover:opacity-100 transition-opacity",
         "pointer-events-none whitespace-nowrap"
       )}>

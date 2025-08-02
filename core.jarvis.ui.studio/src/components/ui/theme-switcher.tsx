@@ -25,9 +25,9 @@ export function ThemeSwitcher() {
       {/* Mode Toggle Button */}
       <Button
         variant="ghost"
-        size="icon"
+        size="sm"
         onClick={handleModeToggle}
-        className="h-8 w-8"
+        className="h-8 w-8 p-0"
         title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}
       >
         {mode === 'light' ? (
@@ -43,8 +43,8 @@ export function ThemeSwitcher() {
         <DropdownMenuTrigger asChild>
           <Button 
             variant="ghost" 
-            size="icon" 
-            className="h-8 w-8"
+            size="sm" 
+            className="h-8 w-8 p-0"
             title="Select theme"
           >
             <Palette className="h-4 w-4" />
