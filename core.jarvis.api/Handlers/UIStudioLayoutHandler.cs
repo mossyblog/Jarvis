@@ -250,6 +250,113 @@ public class UIStudioLayoutHandler : ComponentHandler<UIStudioLayout>
     }
 
     /// <summary>
+    /// Generates a grid preview based on configuration.
+    /// </summary>
+    /// <param name="gridConfig">Grid configuration</param>
+    /// <returns>Grid preview data</returns>
+    public async Task<Dictionary<string, object>> GenerateGridPreview(Dictionary<string, object> gridConfig)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        
+        var columns = gridConfig.ContainsKey("columns") && gridConfig["columns"] is int cols ? cols : 12;
+        var rows = gridConfig.ContainsKey("rows") && gridConfig["rows"] is int rowCount ? rowCount : 8;
+        var cellWidth = gridConfig.ContainsKey("cellWidth") && gridConfig["cellWidth"] is int width ? width : 100;
+        var cellHeight = gridConfig.ContainsKey("cellHeight") && gridConfig["cellHeight"] is int height ? height : 100;
+        
+        return new Dictionary<string, object>
+        {
+            { "gridData", new { columns, rows, totalCells = columns * rows } },
+            { "dimensions", new { width = columns * cellWidth, height = rows * cellHeight } },
+            { "cellSize", new { width = cellWidth, height = cellHeight } },
+            { "configuration", gridConfig }
+        };
+    }
+
+    /// <summary>
+    /// Calculates layout metrics for this layout.
+    /// </summary>
+    /// <returns>Layout metrics information</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<Dictionary<string, object>> CalculateLayoutMetrics()
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("CalculateLayoutMetrics method not yet implemented");
+    }
+
+    /// <summary>
+    /// Gets layout templates.
+    /// </summary>
+    /// <param name="category">Optional category filter</param>
+    /// <returns>List of layout templates</returns>
+    public async Task<List<UIStudioLayout>> GetLayoutTemplates(string? category = null)
+    {
+        return await GetTemplates(category);
+    }
+
+    /// <summary>
+    /// Gets layouts by type (alias for GetByType for test compatibility).
+    /// </summary>
+    /// <param name="layoutType">Type of layout to filter by</param>
+    /// <returns>List of layouts of the specified type</returns>
+    public async Task<List<UIStudioLayout>> GetLayoutsByType(string layoutType)
+    {
+        return await GetByType(layoutType);
+    }
+
+    /// <summary>
+    /// Validates grid configuration for a layout.
+    /// </summary>
+    /// <param name="gridConfig">Grid configuration to validate</param>
+    /// <returns>Validation result</returns>
+    public async Task<Dictionary<string, object>> ValidateGridConfig(Dictionary<string, object> gridConfig)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        
+        try
+        {
+            ValidateGridConfiguration(gridConfig);
+            return new Dictionary<string, object>
+            {
+                { "isValid", true },
+                { "errors", new List<string>() },
+                { "warnings", new List<string>() }
+            };
+        }
+        catch (ArgumentException ex)
+        {
+            return new Dictionary<string, object>
+            {
+                { "isValid", false },
+                { "errors", new List<string> { ex.Message } },
+                { "warnings", new List<string>() }
+            };
+        }
+    }
+
+    /// <summary>
+    /// Creates this layout as a template.
+    /// </summary>
+    /// <param name="templateName">Name for the template</param>
+    /// <param name="category">Template category</param>
+    /// <param name="isPublic">Whether the template should be public</param>
+    /// <returns>The created template layout</returns>
+    public async Task<UIStudioLayout> CreateAsTemplate(string templateName, string category, bool isPublic = false)
+    {
+        return await CreateTemplate(templateName, category, isPublic);
+    }
+
+    /// <summary>
+    /// Duplicates this layout to create a new layout entity.
+    /// </summary>
+    /// <param name="newLayoutName">Name for the duplicated layout</param>
+    /// <param name="newEntityId">Entity ID for the new layout</param>
+    /// <returns>The duplicated layout component</returns>
+    public async Task<UIStudioLayout> DuplicateLayout(string newLayoutName, Guid newEntityId)
+    {
+        return await CloneLayout(newLayoutName, newEntityId);
+    }
+
+    /// <summary>
     /// Validates grid configuration.
     /// </summary>
     /// <param name="gridConfig">Grid configuration to validate</param>

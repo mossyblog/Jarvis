@@ -632,7 +632,7 @@ export const GridComponent: React.FC<GridComponentProps> = ({
                     clientY: touch.clientY,
                     bubbles: true,
                   });
-                  handleResizeStart(mouseEvent as React.MouseEvent, handle.direction, handle.cursor);
+                  handleResizeStart(mouseEvent as unknown as React.MouseEvent, handle.direction, handle.cursor);
                 }}
                 title={getTooltipText('resize-handle')}
                 draggable={false}

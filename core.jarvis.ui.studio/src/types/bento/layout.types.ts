@@ -7,7 +7,9 @@
  * @module BentoLayoutTypes
  */
 
-import type { ID, Timestamp } from './index';
+// Core types defined locally to avoid circular imports
+type ID = string;
+type Timestamp = string;
 
 // ============================================================================
 // Core Layout Types

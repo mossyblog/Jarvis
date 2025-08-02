@@ -282,10 +282,15 @@ describe('Mobile Gesture Integration', () => {
     })
     
     // Mock PerformanceObserver
-    global.PerformanceObserver = vi.fn().mockImplementation((callback) => ({
+    const MockPerformanceObserver = vi.fn().mockImplementation((callback) => ({
       observe: vi.fn(),
       disconnect: vi.fn()
     }))
+    Object.defineProperty(MockPerformanceObserver, 'supportedEntryTypes', {
+      value: ['measure', 'navigation'],
+      writable: true
+    })
+    global.PerformanceObserver = MockPerformanceObserver as any
     
     vi.useFakeTimers()
   })

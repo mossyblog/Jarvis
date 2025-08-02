@@ -231,7 +231,7 @@ describe('BentoGrid Drag and Drop', () => {
       const components = createGridComponents(1)
       const grid = createMockBentoGrid({ 
         components,
-        settings: { ...grid.settings, enableSnapping: true, snapThreshold: 15 }
+        settings: { enableSnapping: true, snapThreshold: 15 }
       })
       
       render(

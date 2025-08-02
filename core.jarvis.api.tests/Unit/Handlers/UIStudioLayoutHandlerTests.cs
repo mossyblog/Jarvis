@@ -318,7 +318,7 @@ public class UIStudioLayoutHandlerTests : ApiIntegrationTestBase
         // Assert
         result.ShouldNotBeNull();
         result.IsTemplate.ShouldBeTrue();
-        result.TemplateName.ShouldBe("Dashboard Template");
+        result.LayoutName.ShouldBe("Dashboard Template");
         result.TemplateCategory.ShouldBe("dashboard");
     }
 
@@ -359,7 +359,7 @@ public class UIStudioLayoutHandlerTests : ApiIntegrationTestBase
         await sourceHandler.CreateLayout(sourceLayout);
 
         // Act
-        var result = await targetHandler.DuplicateLayout(sourceEntityId, "Duplicated Layout");
+        var result = await targetHandler.DuplicateLayout("Duplicated Layout", sourceEntityId);
 
         // Assert
         result.ShouldNotBeNull();
@@ -393,7 +393,8 @@ public class UIStudioLayoutHandlerTests : ApiIntegrationTestBase
         var result = await handler.ValidateGridConfig(validConfig);
 
         // Assert
-        result.ShouldBeTrue();
+        result.ShouldNotBeNull();
+        ((bool)result["isValid"]).ShouldBeTrue();
     }
 
     /// <summary>
@@ -417,7 +418,8 @@ public class UIStudioLayoutHandlerTests : ApiIntegrationTestBase
         var result = await handler.ValidateGridConfig(invalidConfig);
 
         // Assert
-        result.ShouldBeFalse();
+        result.ShouldNotBeNull();
+        ((bool)result["isValid"]).ShouldBeFalse();
     }
 
     /// <summary>
@@ -511,7 +513,6 @@ public class UIStudioLayoutHandlerTests : ApiIntegrationTestBase
             GridConfig = new Dictionary<string, object> { { "type", "bento" } },
             CreatedByEntityId = creatorEntityId,
             IsTemplate = true,
-            TemplateName = "Dashboard Template",
             TemplateCategory = "dashboard"
         };
 
@@ -537,7 +538,7 @@ public class UIStudioLayoutHandlerTests : ApiIntegrationTestBase
         result.Count.ShouldBe(1);
         result[0].IsTemplate.ShouldBeTrue();
         result[0].LayoutName.ShouldBe("Template Layout");
-        result[0].TemplateName.ShouldBe("Dashboard Template");
+        result[0].LayoutName.ShouldBe("Template Layout");
     }
 
     /// <summary>

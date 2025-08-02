@@ -103,68 +103,12 @@ export interface Bounds {
 // Re-exports from specific modules
 // ============================================================================
 
-// Page types
-export type {
-  BentoPage,
-  PageBindings,
-  SecurityBindings,
-  SecurityRule,
-  VisibilityBindings,
-  VisibilityCondition,
-  DataBindings
-} from './page.types';
-
-// Layout types
-export type {
-  BentoLayout,
-  LayoutSettings,
-  SpacingConfig,
-  BackgroundConfig,
-  BreakpointConfig
-} from './layout.types';
-
-// Grid types
-export type {
-  BentoGrid,
-  GridSettings,
-  GridZone,
-  GridComponent,
-  ComponentDisplay,
-  AnimationConfig
-} from './grid.types';
-
-// Component types
-export type {
-  ComponentConfig,
-  PropTypeDefinition,
-  ComponentConstraints,
-  ComponentVariant,
-  ComponentExample,
-  ResizeHandle
-} from './component.types';
-
-// Binding types
-export type {
-  DataBindingConfig,
-  DataField,
-  DataFieldType,
-  DataSourceType,
-  DataSource,
-  DataTransform,
-  RefreshConfig,
-  RefreshTrigger,
-  CacheConfig,
-  ComponentBindings,
-  EventBinding,
-  InteractionConfig,
-  ComponentEvent,
-  ComponentAction,
-  PayloadDefinition,
-  ActionParameter,
-  StateConfig,
-  StateField,
-  StateUpdater
-} from './bindings.types';
+// Forward type exports to prevent circular dependencies
+export type { BentoPage, PageBindings, SecurityBindings, SecurityRule, VisibilityBindings, VisibilityCondition, DataBindings } from './page.types';
+export type { BentoLayout, LayoutSettings, SpacingConfig, BackgroundConfig, BreakpointConfig } from './layout.types';
+export type { BentoGrid, GridSettings, GridZone, GridComponent, ComponentDisplay, AnimationConfig } from './grid.types';
+export type { ComponentConfig, PropTypeDefinition, ComponentConstraints, ComponentVariant, ComponentExample, ResizeHandle } from './component.types';
+export type { DataBindingConfig, DataField, DataFieldType, DataSourceType, DataSource, DataTransform, RefreshConfig, RefreshTrigger, CacheConfig, ComponentBindings, EventBinding, InteractionConfig, ComponentEvent, ComponentAction, PayloadDefinition, ActionParameter, StateConfig, StateField, StateUpdater } from './bindings.types';
 
 // ============================================================================
 // Validation Types
@@ -235,10 +179,10 @@ export interface PageExport {
   version: string;
   timestamp: Timestamp;
   
-  // Page data
-  page: BentoPage;
-  layout: BentoLayout;
-  grids: BentoGrid[];
+  // Page data (will be properly typed when imported)
+  page: any;
+  layout: any;
+  grids: any[];
   
   // Component information
   components: ComponentReference[];
@@ -258,7 +202,7 @@ export interface ComponentReference {
   type: string;
   version?: string;
   source?: 'registry' | 'custom';
-  definition?: ComponentConfig;
+  definition?: any;
 }
 
 /**
@@ -381,7 +325,7 @@ export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
  * Type guard for GridComponent validation
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isGridComponent = (obj: any): obj is GridComponent => {
+export const isGridComponent = (obj: any): boolean => {
   return obj && 
     typeof obj.id === 'string' &&
     typeof obj.componentType === 'string' &&
@@ -433,7 +377,7 @@ export const createDefaultGridPosition = (): GridPosition => ({
 /**
  * Create a default page configuration
  */
-export const createDefaultPage = (displayName: string, route: string): Partial<BentoPage> => ({
+export const createDefaultPage = (displayName: string, route: string): any => ({
   displayName,
   route,
   status: PageStatus.Draft,
@@ -446,7 +390,7 @@ export const createDefaultPage = (displayName: string, route: string): Partial<B
 /**
  * Create a default component constraints object
  */
-export const createDefaultConstraints = (): ComponentConstraints => ({
+export const createDefaultConstraints = (): any => ({
   minSize: { w: 1, h: 1 },
   maxSize: { w: 12, h: 12 },
   defaultSize: { w: 2, h: 2 },

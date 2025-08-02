@@ -258,7 +258,7 @@ export class GraphQLService {
         };
       }>(query);
 
-      return result.account_componentCollection?.edges?.map(edge => ({
+      return result.account_componentCollection?.edges?.map((edge: any) => ({
         id: edge.node.id,
         ownerEntityId: edge.node.owner_entity_id,
         email: edge.node.email,
@@ -286,7 +286,7 @@ export class GraphQLService {
     
     const searchLower = searchTerm.toLowerCase();
     
-    return allAccounts.filter(account => 
+    return allAccounts.filter((account: any) => 
       account.email.toLowerCase().includes(searchLower) ||
       account.ownerEntityId.toLowerCase().includes(searchLower)
     );

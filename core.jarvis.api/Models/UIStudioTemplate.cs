@@ -87,6 +87,18 @@ public record UIStudioTemplate : IComponent, IVersionedComponent
     public int UsageCount { get; init; } = 0;
 
     /// <summary>
+    /// When this template was last used.
+    /// Maps to last_used_at in database.
+    /// </summary>
+    public DateTime? LastUsedAt { get; init; }
+
+    /// <summary>
+    /// Usage history stored as JSON with monthly/daily counts.
+    /// Maps to usage_history in database.
+    /// </summary>
+    public Dictionary<string, object>? UsageHistory { get; init; }
+
+    /// <summary>
     /// Average rating given by users (1-5 scale).
     /// Maps to average_rating in database.
     /// </summary>
@@ -100,9 +112,9 @@ public record UIStudioTemplate : IComponent, IVersionedComponent
 
     /// <summary>
     /// Tags for template searchability.
-    /// Stored as comma-separated string.
+    /// Stored as string array for easier manipulation.
     /// </summary>
-    public string? Tags { get; init; }
+    public string[]? Tags { get; init; }
 
     /// <summary>
     /// Required component types for this template to work.
@@ -134,6 +146,12 @@ public record UIStudioTemplate : IComponent, IVersionedComponent
     /// Maps to created_at in database.
     /// </summary>
     public DateTime CreatedAt { get; init; } = DateTime.UtcNow;
+
+    /// <summary>
+    /// When the template was published (if applicable).
+    /// Maps to published_at in database.
+    /// </summary>
+    public DateTime? PublishedAt { get; init; }
 
     /// <summary>
     /// When the template was last updated.

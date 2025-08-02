@@ -37,7 +37,7 @@ export const handlers = [
   }),
 
   http.post('/api/users', async ({ request }) => {
-    const newUser = await request.json()
+    const newUser = await request.json() as Record<string, any>
     return HttpResponse.json({
       id: '3',
       ...newUser,
@@ -46,7 +46,7 @@ export const handlers = [
   }),
 
   http.put('/api/users/:id', async ({ request, params }) => {
-    const updatedUser = await request.json()
+    const updatedUser = await request.json() as Record<string, any>
     return HttpResponse.json({
       id: params.id,
       ...updatedUser,

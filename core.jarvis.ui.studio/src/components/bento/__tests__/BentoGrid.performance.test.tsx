@@ -182,7 +182,7 @@ describe('BentoGrid Performance Tests', () => {
         }
       }))
       
-      let grid = createMockBentoGrid({ components })
+      const grid = createMockBentoGrid({ components })
       
       const { rerender } = render(
         <MockDndProvider>

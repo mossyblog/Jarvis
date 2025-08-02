@@ -59,7 +59,7 @@ export default function UserManagement() {
         setLoading(true);
         setError(null);
         const data = await graphqlService.getAccounts();
-        setAccounts(data);
+        setAccounts(data as unknown as Account[]);
       } catch (err) {
         console.error('Failed to fetch accounts:', err);
         setError('Failed to load accounts. Please try again later.');
@@ -79,7 +79,7 @@ export default function UserManagement() {
         setSearchLoading(true);
         setError(null);
         const data = await graphqlService.getAccounts();
-        setAccounts(data);
+        setAccounts(data as unknown as Account[]);
       } catch (err) {
         console.error('Failed to fetch accounts:', err);
         setError('Failed to load accounts. Please try again later.');
@@ -93,7 +93,7 @@ export default function UserManagement() {
       setSearchLoading(true);
       setError(null);
       const data = await graphqlService.searchAccounts(searchQuery);
-      setAccounts(data);
+      setAccounts(data as unknown as Account[]);
     } catch (err) {
       console.error('Failed to search accounts:', err);
       setError('Failed to search accounts. Please try again later.');

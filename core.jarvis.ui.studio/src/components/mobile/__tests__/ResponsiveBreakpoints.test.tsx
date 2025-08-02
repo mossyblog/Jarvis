@@ -99,7 +99,7 @@ const ResponsiveTestComponent: React.FC<{
   const mainRef = useRef<HTMLDivElement>(null)
   const buttonRef = useRef<HTMLButtonElement>(null)
   
-  const { isValidTarget, suggestions } = useTouchTargetValidation(buttonRef)
+  const { isValidTarget, suggestions } = useTouchTargetValidation(buttonRef as React.RefObject<HTMLElement>)
 
   const { attachListeners } = useTouchGestures({
     enableSwipe: testGestures,

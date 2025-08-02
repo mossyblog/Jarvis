@@ -39,6 +39,12 @@ public record UIStudioComponentBinding : IComponent, IVersionedComponent
     public string ComponentInstanceId { get; init; } = string.Empty;
 
     /// <summary>
+    /// Component ID for easier identification.
+    /// Maps to component_id in database.
+    /// </summary>
+    public string ComponentId { get; init; } = string.Empty;
+
+    /// <summary>
     /// Name of the ECS component type this UI component is bound to.
     /// Maps to bound_component_type in database.
     /// </summary>
@@ -59,11 +65,23 @@ public record UIStudioComponentBinding : IComponent, IVersionedComponent
     public Dictionary<string, object>? DataSourceConfig { get; init; }
 
     /// <summary>
+    /// Type of data source: "api", "static", "computed", "database".
+    /// Maps to data_source_type in database.
+    /// </summary>
+    public string DataSourceType { get; init; } = "api";
+
+    /// <summary>
     /// Component positioning in the layout stored as JSON.
     /// Includes grid coordinates, size, z-index, etc.
     /// Maps to position_config in database.
     /// </summary>
     public Dictionary<string, object>? PositionConfig { get; init; }
+
+    /// <summary>
+    /// Grid position configuration for easier access.
+    /// Maps to grid_position in database.
+    /// </summary>
+    public Dictionary<string, object>? GridPosition { get; init; }
 
     /// <summary>
     /// Component-specific styling configuration stored as JSON.
@@ -116,6 +134,12 @@ public record UIStudioComponentBinding : IComponent, IVersionedComponent
     /// Maps to created_by_entity_id in database.
     /// </summary>
     public Guid CreatedByEntityId { get; init; }
+
+    /// <summary>
+    /// Entity ID of the user who last modified this binding.
+    /// Maps to modified_by_entity_id in database.
+    /// </summary>
+    public Guid? ModifiedByEntityId { get; init; }
 
     /// <summary>
     /// When the binding was created.

@@ -13,12 +13,26 @@ const meta: Meta<typeof DashboardHeader> = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Default: Story = {};
+export const Default: Story = {
+  args: {
+    projectName: 'My Awesome Project',
+    projectStatus: 'active',
+    tables: 12,
+    functions: 8,
+    replicas: 3
+  }
+};
 
 export const InDashboardLayout: Story = {
   render: () => (
     <div className="min-h-screen bg-background">
-      <DashboardHeader />
+      <DashboardHeader 
+        projectName="Dashboard Example"
+        projectStatus="active"
+        tables={15}
+        functions={12}
+        replicas={5}
+      />
       <div className="p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 4 }).map((_, i) => (

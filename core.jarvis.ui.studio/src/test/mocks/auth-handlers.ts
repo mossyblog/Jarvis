@@ -446,7 +446,7 @@ export const authHandlers = [
       )
     }
     
-    const updates = await request.json()
+    const updates = await request.json() as Record<string, any>
     
     // In a real app, you'd update the user in the database
     const updatedUser = { ...user, ...updates }

@@ -122,8 +122,7 @@ describe('BentoGrid Component', () => {
         ...createMockBentoGrid(),
         columns: 0, // Invalid
         components: [
-          // @ts-ignore - Testing invalid component
-          { id: 'invalid', position: null }
+          { id: 'invalid', position: null as any, componentType: 'test' } as any
         ]
       }
       

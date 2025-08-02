@@ -7,7 +7,20 @@
  * @module BentoBindingsTypes
  */
 
-import type { ID } from './index';
+// Core types defined locally to avoid circular imports
+type ID = string;
+
+/**
+ * Property mapping for data binding
+ */
+export interface PropertyMapping {
+  /** Component property name */
+  componentProp: string;
+  /** Query result path */
+  queryPath: string;
+  /** Optional transformation function */
+  transform?: string;
+}
 
 // ============================================================================
 // Data Binding Types
@@ -207,10 +220,37 @@ export interface ComponentBindings {
   dataPath?: string;
   /** Data transformation expression */
   dataTransform?: string;
+  /** Read query configuration */
+  readQuery?: string;
+  /** Property mappings for data binding */
+  propertyMappings?: PropertyMapping[];
+  
+  // Write operations
+  /** Write operation configuration */
+  write?: {
+    /** Write operation type */
+    operation?: string;
+    /** Target for write operations */
+    target?: string;
+    /** Write data mapping */
+    mapping?: Record<string, unknown>;
+    /** ECS component for write operations */
+    ecsComponent?: string;
+    /** Field mappings for write operations */
+    fieldMappings?: Record<string, string>;
+    /** Triggers for write operations */
+    triggers?: string[];
+  };
   
   // Event bindings
   /** Event handler configurations */
   events?: EventBinding[];
+  
+  // State management
+  /** State configuration */
+  state?: Record<string, unknown>;
+  /** Data binding configuration */
+  data?: Record<string, unknown>;
   
   // Visibility rules
   /** Visibility and security configuration */

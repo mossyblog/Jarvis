@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook, act, fireEvent } from '@testing-library/react'
 import { useTouchGestures, useTouchTargetValidation } from '../useTouchGestures'
 import {
   createMockTouchEvent,
@@ -780,7 +780,7 @@ describe('useTouchGestures Hook', () => {
       }
 
       // Should not accumulate event listeners
-      expect(mockElement.eventListenerCount).toBeUndefined()
+      // expect(mockElement.eventListenerCount).toBeUndefined() // Non-standard property
     })
 
     it('properly removes event listeners on cleanup', () => {
@@ -1214,7 +1214,7 @@ describe('useTouchTargetValidation Hook', () => {
   })
 
   it('handles null element reference', () => {
-    const nullRef = { current: null }
+    const nullRef = { current: null } as unknown as React.RefObject<HTMLElement>
 
     const { result } = renderHook(() => 
       useTouchTargetValidation(nullRef)

@@ -267,7 +267,7 @@ describe('LoginForm', () => {
         resolveLogin = resolve
       })
       
-      mockApiService.login.mockReturnValue(loginPromise)
+      mockApiService.login.mockReturnValue(loginPromise as Promise<any>)
 
       renderLoginForm()
       

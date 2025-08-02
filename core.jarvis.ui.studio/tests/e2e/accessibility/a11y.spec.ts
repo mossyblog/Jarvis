@@ -57,7 +57,7 @@ test.describe('Accessibility Tests', () => {
     await page.goto('/');
     
     // Test tab navigation
-    let currentElement = page.locator(':focus');
+    const currentElement = page.locator(':focus');
     const focusableElements = [];
     
     // Tab through first 10 focusable elements

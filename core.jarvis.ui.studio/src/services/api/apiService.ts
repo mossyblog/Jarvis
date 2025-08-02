@@ -40,7 +40,7 @@ export interface IApiService {
   getUsers(): Promise<ApiResponse<User[]>>;
 }
 
-class MockApiService implements IApiService {
+export class MockApiService implements IApiService {
   async getUsers(): Promise<ApiResponse<User[]>> {
     await this.simulateDelay();
     return { data: mockUsers };
@@ -127,7 +127,7 @@ class MockApiService implements IApiService {
     return { data: filteredItems };
   }
 
-  async refreshToken(): Promise<ApiResponse<AuthResponse>> {
+  async refreshToken(token: string): Promise<ApiResponse<AuthResponse>> {
     // In mock mode, we don't validate the refresh token
     await this.simulateDelay();
 
@@ -177,7 +177,7 @@ class MockApiService implements IApiService {
 }
 
 // Real API service implementation
-class RealApiService implements IApiService {
+export class RealApiService implements IApiService {
   async getUsers(): Promise<ApiResponse<User[]>> {
     const response = await fetch(`${this.apiUrl}/users`, {
       method: 'GET',
@@ -404,8 +404,9 @@ class RealApiService implements IApiService {
         return this.getFallbackNavigation();
       }
 
-      if (result.data?.data?.navigation_item_componentCollection?.edges) {
-        const navigationItems: NavigationItem[] = result.data.data.navigation_item_componentCollection.edges
+      const data = result.data?.data as any;
+      if (data?.navigation_item_componentCollection?.edges) {
+        const navigationItems: NavigationItem[] = data.navigation_item_componentCollection.edges
           .map((edge: Record<string, unknown>) => edge.node)
           .filter((item: Record<string, unknown>) => item.is_active)
           .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.sort_order as number) - (b.sort_order as number))

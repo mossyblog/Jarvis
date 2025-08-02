@@ -20,12 +20,18 @@ import {
 } from '@/test/utils/bento-test-utils'
 
 // Performance monitoring utilities
+interface MemoryUsage {
+  used: number;
+  total: number;
+  timestamp: number;
+}
+
 const createPerformanceMonitor = () => {
   const metrics = {
-    memoryUsage: [],
-    executionTimes: [],
+    memoryUsage: [] as MemoryUsage[],
+    executionTimes: [] as number[],
     eventCounts: { total: 0, processed: 0, throttled: 0 },
-    frameRates: []
+    frameRates: [] as number[]
   }
 
   const startTime = performance.now()
@@ -37,10 +43,10 @@ const createPerformanceMonitor = () => {
     },
     
     recordMemory: () => {
-      if (performance.memory) {
+      if ((performance as any).memory) {
         metrics.memoryUsage.push({
-          used: performance.memory.usedJSHeapSize,
-          total: performance.memory.totalJSHeapSize,
+          used: (performance as any).memory.usedJSHeapSize,
+          total: (performance as any).memory.totalJSHeapSize,
           timestamp: performance.now() - startTime
         })
       }
@@ -137,7 +143,7 @@ describe('Touch Gestures Performance Tests', () => {
     
     performanceMonitor = createPerformanceMonitor()
     
-    // Mock performance.memory for memory monitoring
+    // Mock (performance as any).memory for memory monitoring
     Object.defineProperty(performance, 'memory', {
       value: {
         usedJSHeapSize: 1000000,
@@ -830,15 +836,15 @@ describe('Touch Gestures Performance Tests', () => {
 
       const memoryMeasurements: number[] = []
       
-      if (performance.memory) {
-        memoryMeasurements.push(performance.memory.usedJSHeapSize)
+      if ((performance as any).memory) {
+        memoryMeasurements.push((performance as any).memory.usedJSHeapSize)
 
         // Perform standard gesture set
         for (let i = 0; i < 50; i++) {
           await simulateSwipeGesture(mockElement, 'left', { distance: 100, duration: 100 })
           
           if (i % 10 === 0) {
-            memoryMeasurements.push(performance.memory.usedJSHeapSize)
+            memoryMeasurements.push((performance as any).memory.usedJSHeapSize)
           }
         }
 

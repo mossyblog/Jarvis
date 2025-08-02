@@ -42,13 +42,13 @@ const TouchTargetTestComponent: React.FC<{
   const linkRef = useRef<HTMLAnchorElement>(null)
   
   const { isValidTarget: isSmallValid, suggestions: smallSuggestions } = 
-    useTouchTargetValidation(smallButtonRef)
+    useTouchTargetValidation(smallButtonRef as React.RefObject<HTMLElement>)
   const { isValidTarget: isMediumValid, suggestions: mediumSuggestions } = 
-    useTouchTargetValidation(mediumButtonRef)
+    useTouchTargetValidation(mediumButtonRef as React.RefObject<HTMLElement>)
   const { isValidTarget: isLargeValid, suggestions: largeSuggestions } = 
-    useTouchTargetValidation(largeButtonRef)
+    useTouchTargetValidation(largeButtonRef as React.RefObject<HTMLElement>)
   const { isValidTarget: isLinkValid, suggestions: linkSuggestions } = 
-    useTouchTargetValidation(linkRef)
+    useTouchTargetValidation(linkRef as React.RefObject<HTMLElement>)
 
   const { attachListeners } = useTouchGestures({}, {
     onTap: () => setGestureCount(prev => prev + 1)
@@ -617,7 +617,7 @@ describe('Touch Target Size Compliance', () => {
     it('handles missing or invalid element references', () => {
       const TestComponentWithNullRef: React.FC = () => {
         const nullRef = useRef<HTMLButtonElement>(null)
-        const { isValidTarget, suggestions } = useTouchTargetValidation(nullRef)
+        const { isValidTarget, suggestions } = useTouchTargetValidation(nullRef as React.RefObject<HTMLElement>)
         
         return (
           <div>
@@ -637,7 +637,7 @@ describe('Touch Target Size Compliance', () => {
     it('handles elements with zero or negative dimensions', () => {
       const TestComponentWithZeroDimensions: React.FC = () => {
         const zeroRef = useRef<HTMLDivElement>(null)
-        const { isValidTarget, suggestions } = useTouchTargetValidation(zeroRef)
+        const { isValidTarget, suggestions } = useTouchTargetValidation(zeroRef as React.RefObject<HTMLElement>)
         
         return (
           <div>

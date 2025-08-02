@@ -552,14 +552,14 @@ public class UIStudioPageHandlerTests : ApiIntegrationTestBase
         await handler1.CreatePage(dynamicPage);
         await handler2.CreatePage(fixedPage);
 
-        var filters = new PageQueryFilters
+        var filters = new Dictionary<string, object>
         {
-            PageType = "dynamic",
-            IsPublished = true,
-            Limit = 10,
-            Offset = 0,
-            SortBy = "name",
-            SortOrder = "asc"
+            { "PageType", "dynamic" },
+            { "IsPublished", true },
+            { "Limit", 10 },
+            { "Offset", 0 },
+            { "SortBy", "name" },
+            { "SortOrder", "asc" }
         };
 
         // Act
@@ -567,12 +567,10 @@ public class UIStudioPageHandlerTests : ApiIntegrationTestBase
 
         // Assert
         result.ShouldNotBeNull();
-        result.Items.Count.ShouldBe(1);
-        result.Items[0].PageName.ShouldBe("Dynamic Page");
-        result.Items[0].PageType.ShouldBe("dynamic");
-        result.Items[0].IsPublished.ShouldBeTrue();
-        result.TotalCount.ShouldBe(1);
-        result.HasMore.ShouldBeFalse();
+        result.Count.ShouldBe(1);
+        result[0].PageName.ShouldBe("Dynamic Page");
+        result[0].PageType.ShouldBe("dynamic");
+        result[0].IsPublished.ShouldBeTrue();
     }
 
     /// <summary>

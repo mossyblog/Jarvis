@@ -7,7 +7,22 @@
  * @module BentoGridTypes
  */
 
-import type { ID, Timestamp, DeviceType, GridPosition } from './index';
+// Core types defined locally to avoid circular imports
+type ID = string;
+type Timestamp = string;
+
+enum DeviceType {
+  Desktop = 'desktop',
+  Tablet = 'tablet',
+  Mobile = 'mobile'
+}
+
+interface GridPosition {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
 import type { ComponentBindings } from './bindings.types';
 
 // ============================================================================
@@ -47,6 +62,10 @@ export interface BentoGrid {
   /** Additional grid configuration and behavior */
   settings: GridSettings;
   
+  // Zones (optional predefined areas)
+  /** Predefined zones within the grid for organized layout */
+  zones?: GridZone[];
+  
   // Metadata
   /** ISO timestamp when grid was created */
   createdAt: Timestamp;
@@ -61,6 +80,8 @@ export interface GridSettings {
   // Visual settings
   /** Whether to show grid lines in edit mode */
   showGrid?: boolean;
+  /** Whether to show grid lines in edit mode (alternative name) */
+  showGridLines?: boolean;
   /** Whether components snap to grid positions */
   snapToGrid?: boolean;
   /** Color of grid lines (CSS color value) */
@@ -69,18 +90,26 @@ export interface GridSettings {
   // Behavior
   /** Whether components can overlap each other */
   allowOverlap?: boolean;
+  /** Whether components can overflow the container */
+  allowOverflow?: boolean;
   /** How to handle automatic compacting of components */
   compactMode?: 'none' | 'vertical' | 'horizontal';
+  /** Whether snapping behavior is enabled */
+  enableSnapping?: boolean;
+  /** Distance threshold for snapping in pixels */
+  snapThreshold?: number;
+  /** Whether grid should auto-resize based on content */
+  autoResize?: boolean;
+  /** Whether to show guides during editing */
+  enableGuides?: boolean;
   
   // Constraints
   /** Minimum number of columns allowed */
   minColumns?: number;
   /** Maximum number of columns allowed */
   maxColumns?: number;
-  
-  // Zones (optional predefined areas)
-  /** Predefined zones within the grid for organized layout */
-  zones?: GridZone[];
+  /** Maximum height of the grid in pixels */
+  maxHeight?: number;
 }
 
 /**
@@ -166,6 +195,12 @@ export interface ComponentDisplay {
   hideOn?: DeviceType[];
   /** Device types where component should be shown (exclusive) */
   showOnly?: DeviceType[];
+  
+  // Visibility and z-index
+  /** Whether the component is visible */
+  visible?: boolean;
+  /** Z-index for layering */
+  zIndex?: number;
   
   // Animation
   /** Animation configuration for component transitions */

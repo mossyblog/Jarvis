@@ -20,20 +20,27 @@ afterAll(() => {
 })
 
 // Mock IntersectionObserver
-global.IntersectionObserver = class IntersectionObserver {
+class MockIntersectionObserver {
+  root: Element | null = null
+  rootMargin: string = '0px'
+  thresholds: ReadonlyArray<number> = []
+  
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
+  takeRecords(): IntersectionObserverEntry[] { return [] }
 }
+(global as any).IntersectionObserver = MockIntersectionObserver
 
 // Mock ResizeObserver  
-global.ResizeObserver = class ResizeObserver {
+class MockResizeObserver {
   constructor() {}
   disconnect() {}
   observe() {}
   unobserve() {}
 }
+(global as any).ResizeObserver = MockResizeObserver
 
 // Mock matchMedia
 Object.defineProperty(window, 'matchMedia', {
@@ -57,55 +64,101 @@ Object.defineProperty(window, 'scrollTo', {
 })
 
 // Mock HTMLElement.scrollIntoView
-Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-  value: () => {},
-  writable: true,
-})
+if (typeof HTMLElement !== 'undefined') {
+  Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    value: () => {},
+    writable: true,
+  })
+}
 
 // Mock PointerEvent for drag and drop tests
-global.PointerEvent = class PointerEvent extends Event {
-  pointerId: number
-  width: number
-  height: number
-  pressure: number
-  tangentialPressure: number
-  tiltX: number
-  tiltY: number
-  twist: number
-  pointerType: string
-  isPrimary: boolean
+class MockPointerEvent extends Event {
+  pointerId: number = 0
+  width: number = 0
+  height: number = 0
+  pressure: number = 0
+  tangentialPressure: number = 0
+  tiltX: number = 0
+  tiltY: number = 0
+  twist: number = 0
+  pointerType: string = 'mouse'
+  isPrimary: boolean = true
+  altitudeAngle?: number
+  azimuthAngle?: number
+  clientX: number = 0
+  clientY: number = 0
+  pageX: number = 0
+  pageY: number = 0
+  screenX: number = 0
+  screenY: number = 0
+  movementX: number = 0
+  movementY: number = 0
+  offsetX: number = 0
+  offsetY: number = 0
+  x: number = 0
+  y: number = 0
+  button: number = 0
+  buttons: number = 0
+  ctrlKey: boolean = false
+  shiftKey: boolean = false
+  altKey: boolean = false
+  metaKey: boolean = false
+  relatedTarget: EventTarget | null = null
 
   constructor(type: string, eventInitDict: any = {}) {
     super(type, eventInitDict)
-    this.pointerId = eventInitDict.pointerId || 0
-    this.width = eventInitDict.width || 0
-    this.height = eventInitDict.height || 0
-    this.pressure = eventInitDict.pressure || 0
-    this.tangentialPressure = eventInitDict.tangentialPressure || 0
-    this.tiltX = eventInitDict.tiltX || 0
-    this.tiltY = eventInitDict.tiltY || 0
-    this.twist = eventInitDict.twist || 0
-    this.pointerType = eventInitDict.pointerType || ''
-    this.isPrimary = eventInitDict.isPrimary || false
+    Object.assign(this, eventInitDict)
   }
+
+  getCoalescedEvents() { return [] }
+  getPredictedEvents() { return [] }
 }
+(global as any).PointerEvent = MockPointerEvent
 
 // Mock DragEvent for drag and drop tests
-global.DragEvent = class DragEvent extends Event {
-  dataTransfer: DataTransfer | null
+class MockDragEvent extends Event {
+  dataTransfer: DataTransfer | null = null
+  altKey: boolean = false
+  button: number = 0
+  buttons: number = 0
+  clientX: number = 0
+  clientY: number = 0
+  ctrlKey: boolean = false
+  metaKey: boolean = false
+  pageX: number = 0
+  pageY: number = 0
+  screenX: number = 0
+  screenY: number = 0
+  shiftKey: boolean = false
+  x: number = 0
+  y: number = 0
+  offsetX: number = 0
+  offsetY: number = 0
+  movementX: number = 0
+  movementY: number = 0
+  relatedTarget: EventTarget | null = null
 
   constructor(type: string, eventInitDict: any = {}) {
     super(type, eventInitDict)
-    this.dataTransfer = eventInitDict.dataTransfer || null
+    Object.assign(this, eventInitDict)
   }
+
+  getModifierState() { return false }
+  initMouseEvent() {}
 }
+(global as any).DragEvent = MockDragEvent
 
 // Mock DataTransfer for drag and drop tests
-global.DataTransfer = class DataTransfer {
-  dropEffect: string = 'none'
+class MockDataTransfer {
+  dropEffect: 'none' | 'copy' | 'move' | 'link' = 'none'
   effectAllowed: string = 'uninitialized'
-  files: FileList = new FileList()
-  items: DataTransferItemList = {} as DataTransferItemList
+  files: FileList = Object.assign([], { item: () => null, length: 0 }) as FileList
+  items: DataTransferItemList = Object.assign([], { 
+    add: () => null, 
+    clear: () => {}, 
+    remove: () => {},
+    length: 0
+  }) as DataTransferItemList
   types: string[] = []
 
   clearData() {}
@@ -113,6 +166,7 @@ global.DataTransfer = class DataTransfer {
   setData() {}
   setDragImage() {}
 }
+(global as any).DataTransfer = MockDataTransfer
 
 // Set environment variables for testing
 process.env.NODE_ENV = 'test'

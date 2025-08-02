@@ -583,7 +583,7 @@ describe('Authentication Integration Tests', () => {
     it('should handle multiple simultaneous login attempts', async () => {
       const user = userEvent.setup()
 
-      let loginResolvers: Array<(value: any) => void> = []
+      const loginResolvers: Array<(value: any) => void> = []
       
       mockApiService.login.mockImplementation(() => {
         return new Promise((resolve) => {

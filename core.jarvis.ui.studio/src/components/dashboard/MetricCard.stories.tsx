@@ -62,6 +62,13 @@ export const Loading: Story = {
 };
 
 export const AllTypes: Story = {
+  args: {
+    title: "Database",
+    type: "database",
+    requests: 45231,
+    data: [100, 200, 150, 300],
+    timeLabels: ["12 AM", "6 AM", "12 PM", "6 PM"]
+  },
   render: () => {
     const data = generateData(24, 100, 500);
     const timeLabels = generateTimeLabels(24);
@@ -102,6 +109,13 @@ export const AllTypes: Story = {
 };
 
 export const Interactive: Story = {
+  args: {
+    title: "Interactive Demo",
+    type: "database",
+    requests: 45231,
+    data: [100, 200, 150, 300],
+    timeLabels: ["12 AM", "6 AM", "12 PM", "6 PM"]
+  },
   render: () => {
     const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
     const data = generateData(24, 100, 500);
@@ -146,6 +160,13 @@ export const CustomFormatting: Story = {
 };
 
 export const RealTimeUpdates: Story = {
+  args: {
+    title: "Real-time Updates",
+    type: "realtime",
+    requests: 45231,
+    data: [100, 200, 150, 300],
+    timeLabels: ["12 AM", "6 AM", "12 PM", "6 PM"]
+  },
   render: () => {
     const [data, setData] = useState(generateData(24, 100, 500));
     const [requests, setRequests] = useState(45231);
@@ -180,6 +201,13 @@ export const RealTimeUpdates: Story = {
 };
 
 export const PerformanceComparison: Story = {
+  args: {
+    title: "Performance Comparison",
+    type: "database",
+    requests: 45231,
+    data: [100, 200, 150, 300],
+    timeLabels: ["12 AM", "6 AM", "12 PM", "6 PM"]
+  },
   render: () => {
     const [count, setCount] = useState(0);
     const data = generateData(24, 100, 500);

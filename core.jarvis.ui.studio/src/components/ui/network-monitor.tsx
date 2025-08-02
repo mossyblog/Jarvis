@@ -31,7 +31,7 @@ export function NetworkMonitor() {
   });
   const [recentActivity, setRecentActivity] = useState<NetworkActivity[]>([]);
   const [isVisible, setIsVisible] = useState(false);
-  const originalFetch = useRef<typeof fetch>();
+  const originalFetch = useRef<typeof fetch>(window.fetch);
   const startTime = useRef<{ [key: string]: number }>({});
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export function NetworkMonitor() {
 
     // Intercept fetch requests
     window.fetch = async (...args) => {
-      const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+      const url = typeof args[0] === 'string' ? args[0] : (args[0] instanceof Request ? args[0].url : args[0].toString());
       const method = args[1]?.method || 'GET';
       const requestId = `${Date.now()}-${Math.random()}`;
       

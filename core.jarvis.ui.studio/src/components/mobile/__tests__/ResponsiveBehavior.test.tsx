@@ -24,7 +24,7 @@ const ResponsiveTestComponent: React.FC = () => {
   })
   
   const elementRef = useRef<HTMLDivElement>(null)
-  const { isValidTarget, suggestions } = useTouchTargetValidation(elementRef)
+  const { isValidTarget, suggestions } = useTouchTargetValidation(elementRef as React.RefObject<HTMLElement>)
   
   const { isTouchDevice, attachListeners } = useTouchGestures({}, {
     onTap: () => console.log('tap'),

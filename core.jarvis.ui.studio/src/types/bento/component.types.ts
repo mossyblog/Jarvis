@@ -7,7 +7,28 @@
  * @module BentoComponentTypes
  */
 
-import type { ComponentCategory, DeviceType, Size } from './index';
+// Core types defined locally to avoid circular imports
+enum ComponentCategory {
+  Analytics = 'Analytics',
+  Data = 'Data',
+  Status = 'Status',
+  Navigation = 'Navigation',
+  Forms = 'Forms',
+  Layout = 'Layout',
+  Media = 'Media',
+  Custom = 'Custom'
+}
+
+enum DeviceType {
+  Desktop = 'desktop',
+  Tablet = 'tablet',
+  Mobile = 'mobile'
+}
+
+interface Size {
+  w: number;
+  h: number;
+}
 import type { DataBindingConfig, InteractionConfig } from './bindings.types';
 import * as React from 'react';
 

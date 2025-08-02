@@ -1,12 +1,12 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { createApiService, MockApiService, RealApiService } from '../apiService'
+import { createApiService, apiService, MockApiService, RealApiService } from '../apiService'
 import { mockUsers } from '../mockData'
 import type { LoginCredentials, User, NavigationItem } from '../types'
 
 // Mock dependencies
 vi.mock('../../../utils/tokenUtils')
 
-const mockTokenUtils = await import('../../../utils/tokenUtils')
+const mockTokenUtils = vi.mocked(await import('../../../utils/tokenUtils'))
 
 // Mock fetch for RealApiService tests
 const mockFetch = vi.fn()
@@ -601,7 +601,7 @@ describe('ApiService Authentication', () => {
         expect(result.data).toBeDefined()
         expect(result.data!.length).toBeGreaterThan(0)
         // Should return fallback navigation
-        expect(result.data!.some(item => item.label === 'Dashboard')).toBe(true)
+        expect(result.data!.some((item: any) => item.label === 'Dashboard')).toBe(true)
       })
 
       it('should filter inactive navigation items', async () => {

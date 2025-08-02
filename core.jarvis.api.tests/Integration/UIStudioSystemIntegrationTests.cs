@@ -8,6 +8,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.tests.Helpers;
 using core.jarvis.Data;
 using core.jarvis.Exceptions;
+using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
 

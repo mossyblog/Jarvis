@@ -10,6 +10,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { ApiStatusProvider } from './contexts/ApiStatusContext';
 import { EditModeProvider } from './contexts/EditModeContext';
+import { QueryProvider } from './providers/QueryProvider';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { ApiStatusBanner } from './components/layout/ApiStatusBanner';
 import { NetworkMonitor } from './components/ui/network-monitor-simple';
@@ -17,10 +18,11 @@ import { NetworkMonitor } from './components/ui/network-monitor-simple';
 function App() {
   return (
     <ThemeProvider defaultTheme="supabase" defaultMode="dark">
-      <Router>
-        <ApiStatusProvider>
-          <AuthProvider>
-            <EditModeProvider>
+      <QueryProvider>
+        <Router>
+          <ApiStatusProvider>
+            <AuthProvider>
+              <EditModeProvider>
               <div id="app-container" className="h-screen overflow-hidden">
                 <ApiStatusBanner />
               <Routes>
@@ -85,6 +87,22 @@ function App() {
             } 
           />
           <Route 
+            path="/studio" 
+            element={
+              <ProtectedRoute>
+                <UIStudioInterface />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/studio/page/:pageId" 
+            element={
+              <ProtectedRoute>
+                <PageBuilderInterface />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/settings" 
             element={
               <ProtectedRoute>
@@ -102,6 +120,7 @@ function App() {
           <NetworkMonitor />
         </ApiStatusProvider>
       </Router>
+      </QueryProvider>
     </ThemeProvider>
   );
 }

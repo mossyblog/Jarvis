@@ -27,6 +27,7 @@ import type {
   GridComponent,
   BentoLayout 
 } from '@/types/bento';
+import { PageStatus } from '@/types/bento';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -88,7 +89,7 @@ const createDefaultPage = (): BentoPage => ({
   displayName: 'New Page',
   route: '/new-page',
   layoutId: 'default',
-  status: 'draft' as const,
+  status: PageStatus.Draft,
   version: 1,
   bindings: {
     security: {
@@ -111,7 +112,6 @@ const createDefaultGrid = (device: DeviceType): BentoGrid => ({
   id: crypto.randomUUID(),
   name: `${device} Grid`,
   device,
-  layoutId: 'default',
   columns: device === 'mobile' ? 4 : device === 'tablet' ? 8 : 12,
   rows: 20,
   gap: 16,
@@ -121,8 +121,10 @@ const createDefaultGrid = (device: DeviceType): BentoGrid => ({
     enableSnapping: true,
     snapToGrid: true,
     enableGuides: true,
-    compactMode: false
-  }
+    compactMode: 'none' as any
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
 });
 
 // ============================================================================
@@ -246,14 +248,15 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
     onComponentDelete?.(componentId);
   }, [currentGrid, state.currentDevice, grids, onComponentDelete]);
 
-  // Handle toolbar actions
+  // Handle manual save (placeholder - UIStudio integration not complete)
   const handleSave = useCallback(() => {
-    setState(prev => ({ ...prev, hasUnsavedChanges: false }));
+    // TODO: Implement snapshot creation with UIStudio API
     onSave?.(page);
+    console.log('Save functionality placeholder');
   }, [page, onSave]);
 
   const handlePublish = useCallback(() => {
-    const publishedPage = { ...page, status: 'published' as const };
+    const publishedPage = { ...page, status: PageStatus.Published };
     setPage(publishedPage);
     setState(prev => ({ ...prev, hasUnsavedChanges: false }));
     onPublish?.(publishedPage);

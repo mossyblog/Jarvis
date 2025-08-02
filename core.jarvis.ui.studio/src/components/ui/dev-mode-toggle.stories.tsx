@@ -30,8 +30,8 @@ const action = (name: string) => (...args: unknown[]) => {
 const userEvent = {
   click: async (element: unknown) => {
     console.log('Simulating click on:', element);
-    if (element?.click) {
-      element.click();
+    if (element && typeof element === 'object' && 'click' in element && typeof (element as any).click === 'function') {
+      (element as any).click();
     }
     await new Promise(resolve => setTimeout(resolve, 100));
   },
@@ -39,7 +39,9 @@ const userEvent = {
 
 const within = (element: unknown) => ({
   getByTestId: (testId: string) => {
-    const found = element.querySelector(`[data-testid="${testId}"]`);
+    const found = element && typeof element === 'object' && 'querySelector' in element 
+      ? (element as any).querySelector(`[data-testid="${testId}"]`) 
+      : null;
     console.log(`Found element with testId ${testId}:`, found);
     return found;
   },

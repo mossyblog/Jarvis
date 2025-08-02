@@ -128,9 +128,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               timeoutPromise
             ]);
             
-            if (result.data) {
+            if ((result as { data?: any }).data) {
               console.log('Token refreshed on startup');
-              setUser(result.data.user);
+              setUser((result as { data: { user: any } }).data.user);
               
               // Load navigation with timeout
               try {
@@ -138,15 +138,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   apiService.getNavigation(),
                   timeoutPromise
                 ]);
-                if (navResult.data) {
-                  setNavigation(navResult.data);
+                if ((navResult as { data?: any }).data) {
+                  setNavigation((navResult as { data: any }).data);
                 }
               } catch (navError) {
                 console.error('Failed to load navigation:', navError);
               }
               
               // Schedule next refresh
-              scheduleTokenRefresh(result.data.accessToken);
+              scheduleTokenRefresh((result as { data: { accessToken: string } }).data.accessToken);
               return;
             }
           } catch (refreshError) {

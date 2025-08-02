@@ -245,7 +245,8 @@ public class UIStudioSystem
 
             // Create published version snapshot
             var pageData = await GetPageSnapshot(pageId);
-            var versionHandler = _dataContext.For<UIStudioVersionHandler>(Guid.NewGuid());
+            var versionEntity = _dataContext.NewEntity();
+            var versionHandler = _dataContext.For<UIStudioVersionHandler>(versionEntity.Id);
             var publishedVersion = await versionHandler.CreatePublishedVersion(
                 pageId,
                 "page",
@@ -601,6 +602,8 @@ public class UIStudioSystem
                 {
                     OwnerEntityId = bindingEntity.Id,
                     PageSlug = pageSlug,
+                    ComponentInstanceId = $"template-{Guid.NewGuid()}",
+                    BoundComponentType = "TemplateComponent",
                     // Map other properties from template data
                     CreatedByEntityId = createdById
                 };

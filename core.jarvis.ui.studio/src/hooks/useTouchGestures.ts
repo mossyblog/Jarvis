@@ -168,7 +168,7 @@ export const useTouchGestures = (
 ) => {
   const mergedConfig = useMemo(() => ({ ...DEFAULT_CONFIG, ...config }), [config]);
   const touchPoints = useRef<Map<number, TouchPoint>>(new Map());
-  const longPressTimer = useRef<NodeJS.Timeout | undefined>();
+  const longPressTimer = useRef<number | undefined>(undefined);
   const lastTapTime = useRef<number>(0);
   const tapCount = useRef<number>(0);
   const initialDistance = useRef<number>(0);
@@ -183,7 +183,7 @@ export const useTouchGestures = (
   // Clear long press timer
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimer.current) {
-      clearTimeout(longPressTimer.current);
+      window.clearTimeout(longPressTimer.current);
       longPressTimer.current = undefined;
     }
     setIsLongPressing(false);
@@ -212,7 +212,7 @@ export const useTouchGestures = (
       // Start long press timer
       if (mergedConfig.enableLongPress) {
         clearLongPressTimer();
-        longPressTimer.current = setTimeout(() => {
+        longPressTimer.current = window.setTimeout(() => {
           setIsLongPressing(true);
           handlers.onLongPress?.({
             x: touch.x,
@@ -347,7 +347,7 @@ export const useTouchGestures = (
           tapCount.current = 0; // Reset after double tap
         } else {
           // Single tap - wait a bit to see if there's a second tap
-          setTimeout(() => {
+          window.setTimeout(() => {
             if (tapCount.current === 1) {
               handlers.onTap?.(tapDetail, event);
               tapCount.current = 0;

@@ -712,7 +712,7 @@ describe('BentoGrid Snap-to-Grid Behavior', () => {
       results.forEach(result => {
         expect(result.position).toEqual(firstResult.position)
         expect(result.snapped).toBe(firstResult.snapped)
-        expect(result.snapStrength).toBeCloseTo(firstResult.snapStrength, 5)
+        expect(result.snapStrength).toBeCloseTo(firstResult.snapStrength || 0, 5)
       })
     })
   })

@@ -556,6 +556,162 @@ public class UIStudioAuditLogHandler : ComponentHandler<UIStudioAuditLog>
     }
 
     /// <summary>
+    /// Gets failed actions (alias for GetFailedAuditLogs for test compatibility).
+    /// </summary>
+    /// <param name="startDate">Start date for filtering (optional)</param>
+    /// <param name="endDate">End date for filtering (optional)</param>
+    /// <param name="actionType">Action type filter (optional)</param>
+    /// <returns>List of failed audit logs</returns>
+    public async Task<List<UIStudioAuditLog>> GetFailedActions(
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        string? actionType = null)
+    {
+        return await GetFailedAuditLogs(startDate, endDate, actionType);
+    }
+
+    /// <summary>
+    /// Gets correlation chain for related audit logs.
+    /// </summary>
+    /// <param name="correlationId">Correlation ID to search for</param>
+    /// <returns>List of related audit logs in correlation chain</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<List<UIStudioAuditLog>> GetCorrelationChain(string correlationId)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("GetCorrelationChain method not yet implemented");
+    }
+
+    /// <summary>
+    /// Gets audit logs by action type.
+    /// </summary>
+    /// <param name="actionType">Action type to filter by</param>
+    /// <param name="startDate">Start date for filtering (optional)</param>
+    /// <param name="endDate">End date for filtering (optional)</param>
+    /// <returns>List of audit logs with the specified action type</returns>
+    public async Task<List<UIStudioAuditLog>> GetAuditLogsByActionType(
+        string actionType,
+        DateTime? startDate = null,
+        DateTime? endDate = null)
+    {
+        var query = DataContext.Query()
+            .WithAll<UIStudioAuditLog>(a => a.ActionType == actionType);
+
+        if (startDate.HasValue)
+        {
+            query = query.WithAll<UIStudioAuditLog>(a => a.OccurredAt >= startDate.Value);
+        }
+
+        if (endDate.HasValue)
+        {
+            query = query.WithAll<UIStudioAuditLog>(a => a.OccurredAt <= endDate.Value);
+        }
+
+        var results = await query.ToEntityComponents();
+        var auditLogs = new List<UIStudioAuditLog>();
+
+        foreach (var result in results)
+        {
+            var handler = DataContext.For<UIStudioAuditLogHandler>(result.Key);
+            var auditLog = await handler.Get();
+            if (auditLog != null)
+            {
+                auditLogs.Add(auditLog);
+            }
+        }
+
+        return auditLogs.OrderByDescending(a => a.OccurredAt).ToList();
+    }
+
+    /// <summary>
+    /// Gets audit logs in a date range.
+    /// </summary>
+    /// <param name="startDate">Start date</param>
+    /// <param name="endDate">End date</param>
+    /// <returns>List of audit logs in the date range</returns>
+    public async Task<List<UIStudioAuditLog>> GetAuditLogsInDateRange(DateTime startDate, DateTime endDate)
+    {
+        var query = DataContext.Query()
+            .WithAll<UIStudioAuditLog>(a => a.OccurredAt >= startDate && a.OccurredAt <= endDate);
+
+        var results = await query.ToEntityComponents();
+        var auditLogs = new List<UIStudioAuditLog>();
+
+        foreach (var result in results)
+        {
+            var handler = DataContext.For<UIStudioAuditLogHandler>(result.Key);
+            var auditLog = await handler.Get();
+            if (auditLog != null)
+            {
+                auditLogs.Add(auditLog);
+            }
+        }
+
+        return auditLogs.OrderByDescending(a => a.OccurredAt).ToList();
+    }
+
+    /// <summary>
+    /// Gets audit logs by user (alias for GetUserAuditLogs for test compatibility).
+    /// </summary>
+    /// <param name="userEntityId">Entity ID of the user</param>
+    /// <param name="startDate">Start date for filtering (optional)</param>
+    /// <param name="endDate">End date for filtering (optional)</param>
+    /// <param name="actionType">Action type filter (optional)</param>
+    /// <param name="limit">Maximum number of records to return (optional)</param>
+    /// <returns>List of audit logs for the user</returns>
+    public async Task<List<UIStudioAuditLog>> GetAuditLogsByUser(
+        Guid userEntityId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        string? actionType = null,
+        int? limit = null)
+    {
+        return await GetUserAuditLogs(userEntityId, startDate, endDate, actionType, limit);
+    }
+
+    /// <summary>
+    /// Gets audit logs by resource (alias for GetResourceAuditLogs for test compatibility).
+    /// </summary>
+    /// <param name="resourceEntityId">Entity ID of the resource</param>
+    /// <param name="startDate">Start date for filtering (optional)</param>
+    /// <param name="endDate">End date for filtering (optional)</param>
+    /// <param name="actionType">Action type filter (optional)</param>
+    /// <returns>List of audit logs for the resource</returns>
+    public async Task<List<UIStudioAuditLog>> GetAuditLogsByResource(
+        Guid resourceEntityId,
+        DateTime? startDate = null,
+        DateTime? endDate = null,
+        string? actionType = null)
+    {
+        return await GetResourceAuditLogs(resourceEntityId, startDate, endDate, actionType);
+    }
+
+    /// <summary>
+    /// Gets audit summary statistics for a date range.
+    /// </summary>
+    /// <param name="startDate">Start date</param>
+    /// <param name="endDate">End date</param>
+    /// <returns>Audit summary statistics</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<Dictionary<string, object>> GetAuditSummary(DateTime startDate, DateTime endDate)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("GetAuditSummary method not yet implemented");
+    }
+
+    /// <summary>
+    /// Purges old audit logs based on retention policy.
+    /// </summary>
+    /// <param name="retentionPolicy">Retention policy to apply</param>
+    /// <returns>Purge operation results</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<Dictionary<string, object>> PurgeOldLogs(Dictionary<string, object> retentionPolicy)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("PurgeOldLogs method not yet implemented");
+    }
+
+    /// <summary>
     /// Validates the audit log configuration.
     /// </summary>
     /// <param name="auditLog">Audit log to validate</param>

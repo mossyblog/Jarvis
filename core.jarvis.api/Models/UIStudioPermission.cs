@@ -65,6 +65,12 @@ public record UIStudioPermission : IComponent, IVersionedComponent
     public bool IsInherited { get; init; } = false;
 
     /// <summary>
+    /// Whether this permission can be inherited by child resources.
+    /// Maps to is_inheritable in database.
+    /// </summary>
+    public bool IsInheritable { get; init; } = false;
+
+    /// <summary>
     /// Entity ID of the parent resource if permission is inherited.
     /// Maps to inherited_from_entity_id in database.
     /// </summary>
@@ -88,6 +94,12 @@ public record UIStudioPermission : IComponent, IVersionedComponent
     /// Maps to conditions in database.
     /// </summary>
     public Dictionary<string, object>? Conditions { get; init; }
+
+    /// <summary>
+    /// Additional metadata about the permission stored as JSON.
+    /// Maps to permission_metadata in database.
+    /// </summary>
+    public Dictionary<string, object>? PermissionMetadata { get; init; }
 
     /// <summary>
     /// Entity ID of the user who granted this permission.
@@ -123,4 +135,16 @@ public record UIStudioPermission : IComponent, IVersionedComponent
     /// Maps to is_active in database.
     /// </summary>
     public bool IsActive { get; init; } = true;
+
+    /// <summary>
+    /// When this permission was revoked (if applicable).
+    /// Maps to revoked_at in database.
+    /// </summary>
+    public DateTime? RevokedAt { get; init; }
+
+    /// <summary>
+    /// Reason for revoking this permission.
+    /// Maps to revocation_reason in database.
+    /// </summary>
+    public string? RevocationReason { get; init; }
 }

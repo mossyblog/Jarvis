@@ -1,6 +1,6 @@
 import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { BrowserRouter } from 'react-router-dom'
 import { AuthProvider, useAuth } from '../AuthContext'
@@ -402,9 +402,7 @@ describe('AuthContext', () => {
 
   describe('Token Refresh', () => {
     it('should handle token refresh', async () => {
-      const user = userEvent.setup()
-      
-      mockApiService.refreshAuth = vi.fn().mockResolvedValue(undefined)
+      (mockApiService as any).refreshAuth = vi.fn().mockResolvedValue(undefined)
       mockApiService.getCurrentUser.mockResolvedValue({
         data: mockUser
       })
@@ -414,7 +412,7 @@ describe('AuthContext', () => {
 
       renderWithAuth(<div>test</div>)
       
-      await user.click(screen.getByText('Refresh'))
+      fireEvent.click(screen.getByText('Refresh'))
       
       await waitFor(() => {
         expect(mockApiService.getCurrentUser).toHaveBeenCalled()

@@ -8,6 +8,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { PageStatus } from '@/types/bento';
 import type { BentoPage, GridComponent } from '@/types/bento';
 
 // ============================================================================
@@ -105,7 +106,7 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({ children }) 
       displayName: getPageNameFromRoute(route),
       route,
       layoutId: 'default',
-      status: 'draft' as const,
+      status: PageStatus.Draft,
       version: 1,
       bindings: {
         security: {
@@ -268,7 +269,7 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({ children }) 
         displayName: pageData.displayName || 'New Page',
         route: pageData.route || '/new-page',
         layoutId: pageData.layoutId || 'default',
-        status: 'draft' as const,
+        status: PageStatus.Draft,
         version: 1,
         bindings: pageData.bindings || {
           security: {

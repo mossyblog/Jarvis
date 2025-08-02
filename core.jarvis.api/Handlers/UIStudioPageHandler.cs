@@ -327,4 +327,16 @@ public class UIStudioPageHandler : ComponentHandler<UIStudioPage>
             }
         }
     }
+
+    /// <summary>
+    /// Gets pages with applied filters.
+    /// </summary>
+    /// <param name="filters">Filters to apply</param>
+    /// <returns>List of filtered pages</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<List<UIStudioPage>> GetPagesWithFilters(Dictionary<string, object> filters)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("GetPagesWithFilters method not yet implemented");
+    }
 }

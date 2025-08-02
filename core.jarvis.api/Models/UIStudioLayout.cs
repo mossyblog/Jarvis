@@ -90,6 +90,12 @@ public record UIStudioLayout : IComponent, IVersionedComponent
     public Guid CreatedByEntityId { get; init; }
 
     /// <summary>
+    /// Entity ID of the user who last modified this layout.
+    /// Maps to modified_by_entity_id in database.
+    /// </summary>
+    public Guid? ModifiedByEntityId { get; init; }
+
+    /// <summary>
     /// When the layout was created.
     /// Maps to created_at in database.
     /// </summary>

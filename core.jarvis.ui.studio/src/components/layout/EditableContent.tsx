@@ -15,14 +15,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 // Type for external drag data
 interface ExternalDragData {
   type: string;
-  componentType?: string;
-  defaultSize?: { w: number; h: number };
-}
-
-declare global {
-  interface Window {
-    __bentoExternalDrag?: ExternalDragData;
-  }
+  componentType: string;
+  defaultSize: { w: number; h: number };
 }
 
 // ============================================================================
@@ -46,7 +40,6 @@ const createMockGrid = (device: DeviceType): BentoGridType => ({
   id: `grid-${device}`,
   name: `${device} Grid`,
   device,
-  layoutId: 'default',
   columns: device === 'mobile' ? 4 : device === 'tablet' ? 8 : 12,
   rows: 20,
   gap: 16,
@@ -103,7 +96,9 @@ const createMockGrid = (device: DeviceType): BentoGridType => ({
     snapToGrid: true,
     enableGuides: true,
     compactMode: 'none' as const
-  }
+  },
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString()
 });
 
 // ============================================================================
@@ -152,6 +147,28 @@ export const EditableContent: React.FC<EditableContentProps> = ({
       comp.id === componentId ? { ...comp, position: newPosition } : comp
     ));
     moveComponent(componentId, newPosition);
+  }, [moveComponent]);
+
+  const handleComponentResize = React.useCallback((
+    componentId: string, 
+    newSize: { w: number; h: number; x?: number; y?: number }
+  ) => {
+    setGridComponents(prev => prev.map(comp => {
+      if (comp.id === componentId) {
+        return { 
+          ...comp, 
+          position: { 
+            ...comp.position, 
+            w: newSize.w, 
+            h: newSize.h,
+            ...(newSize.x !== undefined && { x: newSize.x }),
+            ...(newSize.y !== undefined && { y: newSize.y })
+          } 
+        };
+      }
+      return comp;
+    }));
+    moveComponent(componentId, { x: newSize.x ?? 0, y: newSize.y ?? 0, w: newSize.w, h: newSize.h });
   }, [moveComponent]);
 
   const handleComponentSelect = React.useCallback((componentId: string | null) => {
@@ -285,7 +302,7 @@ export const EditableContent: React.FC<EditableContentProps> = ({
                 isEditing={true}
                 showGrid={showGrid}
                 onComponentMove={handleComponentMove}
-                onComponentResize={handleComponentMove}
+                onComponentResize={handleComponentResize}
                 onComponentSelect={handleComponentSelect}
                 onComponentDelete={handleComponentDelete}
                 onShowProperties={handleComponentSelect}
@@ -296,13 +313,16 @@ export const EditableContent: React.FC<EditableContentProps> = ({
           </div>
 
           {/* Properties Panel */}
-          {selectedComponentId && (
-            <ComponentPropertiesPanel
-              isOpen={true}
-              onClose={() => selectComponent(null)}
-              component={currentGrid.components.find(c => c.id === selectedComponentId)}
-            />
-          )}
+          {selectedComponentId && (() => {
+            const component = currentGrid.components.find(c => c.id === selectedComponentId);
+            return component ? (
+              <ComponentPropertiesPanel
+                isOpen={true}
+                onClose={() => selectComponent(null)}
+                component={component}
+              />
+            ) : null;
+          })()}
         </motion.div>
       )}
     </AnimatePresence>

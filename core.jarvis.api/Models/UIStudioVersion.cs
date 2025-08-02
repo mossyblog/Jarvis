@@ -33,6 +33,12 @@ public record UIStudioVersion : IComponent
     public string ResourceType { get; init; } = string.Empty;
 
     /// <summary>
+    /// Type of version: "auto", "manual", "published", "restore", "branch", "merge".
+    /// Maps to version_type in database.
+    /// </summary>
+    public string VersionType { get; init; } = "auto";
+
+    /// <summary>
     /// Version number for this snapshot.
     /// Maps to version_number in database.
     /// </summary>
@@ -77,10 +83,22 @@ public record UIStudioVersion : IComponent
     public string? VersionLabel { get; init; }
 
     /// <summary>
+    /// Optional version tag (e.g., "v1.0.0", "v2.1.3").
+    /// Maps to version_tag in database.
+    /// </summary>
+    public string? VersionTag { get; init; }
+
+    /// <summary>
     /// Whether this version represents a published state.
     /// Maps to is_published in database.
     /// </summary>
     public bool IsPublished { get; init; } = false;
+
+    /// <summary>
+    /// When this version was published (if applicable).
+    /// Maps to published_at in database.
+    /// </summary>
+    public DateTime? PublishedAt { get; init; }
 
     /// <summary>
     /// Whether this version is marked for auto-deletion.
@@ -93,6 +111,18 @@ public record UIStudioVersion : IComponent
     /// Maps to parent_version_number in database.
     /// </summary>
     public int? ParentVersionNumber { get; init; }
+
+    /// <summary>
+    /// Parent version ID if this is based on another version.
+    /// Maps to parent_version_id in database.
+    /// </summary>
+    public Guid? ParentVersionId { get; init; }
+
+    /// <summary>
+    /// Branch version ID for merge operations.
+    /// Maps to branch_version_id in database.
+    /// </summary>
+    public Guid? BranchVersionId { get; init; }
 
     /// <summary>
     /// Branch name for version branching scenarios.

@@ -7,8 +7,16 @@
  * @module BentoPageTypes
  */
 
-import type { ID, Timestamp } from './index';
-import { PageStatus } from './index';
+// Core types defined locally to avoid circular imports
+type ID = string;
+type Timestamp = string;
+
+export enum PageStatus {
+  Draft = 'draft',
+  Published = 'published',
+  Archived = 'archived',
+  Scheduled = 'scheduled'
+}
 // Forward declarations needed for DataBindings
 interface DataSource {
   id: string;

@@ -20,6 +20,7 @@ import type { GridComponent, DeviceType } from '@/types/bento';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { ComponentRenderer } from '../ComponentRenderer';
 import { BindingsPanel } from './BindingsPanel';
 import { PreviewPanel } from './PreviewPanel';
@@ -323,7 +324,14 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
     handleComponentUpdate({
       bindings: {
         ...component.bindings,
-        write: writeConfig
+        write: writeConfig as {
+          operation?: string;
+          target?: string;
+          mapping?: Record<string, unknown>;
+          ecsComponent?: string;
+          fieldMappings?: Record<string, string>;
+          triggers?: string[];
+        }
       }
     });
     handleCloseWriteConfig();

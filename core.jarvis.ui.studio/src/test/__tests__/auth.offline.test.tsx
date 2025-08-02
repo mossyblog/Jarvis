@@ -218,7 +218,7 @@ describe('Authentication Offline/Online Behavior', () => {
       })
 
       // Mock refresh to fail while offline
-      mockApiService.refreshAuth.mockRejectedValueOnce(new Error('Network error'))
+      mockApiService.refreshToken.mockRejectedValueOnce(new Error('Network error'))
 
       // Attempt refresh while offline
       await user.click(screen.getByTestId('refresh'))
@@ -229,7 +229,7 @@ describe('Authentication Offline/Online Behavior', () => {
       })
 
       // Come back online
-      mockApiService.refreshAuth.mockResolvedValue(undefined)
+      mockApiService.refreshToken.mockResolvedValue({ data: null } as any)
       mockApiService.getCurrentUser.mockResolvedValue({ 
         data: { ...mockUser, name: 'Updated User' } 
       })
@@ -257,7 +257,7 @@ describe('Authentication Offline/Online Behavior', () => {
         loginResolve = resolve
       })
 
-      mockApiService.login.mockReturnValue(loginPromise)
+      mockApiService.login.mockReturnValue(loginPromise as Promise<any>)
 
       await user.click(screen.getByTestId('login'))
 
@@ -590,7 +590,7 @@ describe('Authentication Offline/Online Behavior', () => {
 
       renderOfflineTest()
 
-      const networkChanges = []
+      const networkChanges: string[] = []
       const originalDispatchEvent = window.dispatchEvent
 
       window.dispatchEvent = vi.fn((event) => {

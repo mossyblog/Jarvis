@@ -387,7 +387,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
             readOnly={readOnly}
           />
           
-          {validationResult?.estimatedFields.length > 0 && (
+          {validationResult && validationResult.estimatedFields && validationResult.estimatedFields.length > 0 && (
             <div className="mt-3">
               <Label className="text-sm font-medium">Detected Fields:</Label>
               <div className="flex flex-wrap gap-1 mt-1">

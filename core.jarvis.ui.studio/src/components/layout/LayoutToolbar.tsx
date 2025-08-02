@@ -369,7 +369,9 @@ export const LayoutToolbar: React.FC = () => {
           <div className="px-4 py-2">
             {/* Show components for active tab */}
             <div className="flex flex-wrap gap-2">
-              {componentsByCategory[categories.find(c => c.toLowerCase() === activeTab)]?.map(component => (
+              {(() => {
+                const category = categories.find(c => c.toLowerCase() === activeTab);
+                return category ? componentsByCategory[category]?.map((component: any) => (
                 <ComponentTile
                   key={component.id}
                   id={component.id}
@@ -378,7 +380,8 @@ export const LayoutToolbar: React.FC = () => {
                   icon={component.icon}
                   defaultSize={component.defaultSize}
                 />
-              ))}
+              )) : null;
+              })()}
             </div>
           </div>
         </motion.div>

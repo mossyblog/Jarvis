@@ -142,7 +142,7 @@ export const Loading: Story = {
 };
 
 // Error state story
-export const Error: Story = {
+export const ErrorState: Story = {
   args: {
     component: {
       id: 'error-1',

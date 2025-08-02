@@ -17,6 +17,7 @@ import { render, screen, waitFor, fireEvent, cleanup } from '@/test/utils/test-u
 import userEvent from '@testing-library/user-event'
 
 import { GridComponent } from '../GridComponent'
+import type { GridComponent as GridComponentType } from '@/types/bento'
 import { DeviceType } from '@/types/bento'
 import {
   createMockGridComponent,
@@ -507,7 +508,7 @@ describe('GridComponent Wrapper', () => {
       await user.click(deleteButton)
 
       // Should apply farewell animation
-      expect(wrapper.style.animation).toContain('farewell-bounce')
+      expect((wrapper as HTMLElement).style.animation).toContain('farewell-bounce')
     })
 
     it('prevents event propagation on delete button click', async () => {
@@ -1324,9 +1325,8 @@ describe('GridComponent Wrapper', () => {
     it('handles invalid component data gracefully', () => {
       const invalidComponent = {
         ...createMockGridComponent({ id: 'invalid' }),
-        // @ts-ignore - Testing invalid data
-        position: null
-      }
+        position: null as any
+      } as GridComponentType
       
       expect(() => {
         render(

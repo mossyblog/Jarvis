@@ -416,6 +416,149 @@ public class UIStudioTemplateHandler : ComponentHandler<UIStudioTemplate>
     }
 
     /// <summary>
+    /// Gets template statistics.
+    /// </summary>
+    /// <returns>Template statistics</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<Dictionary<string, object>> GetTemplateStats()
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("GetTemplateStats method not yet implemented");
+    }
+
+    /// <summary>
+    /// Validates template data configuration.
+    /// </summary>
+    /// <param name="templateData">Template data to validate</param>
+    /// <returns>True if valid, false otherwise</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<bool> ValidateTemplateData(Dictionary<string, object> templateData)
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("ValidateTemplateData method not yet implemented");
+    }
+
+    /// <summary>
+    /// Increments usage count for this template.
+    /// </summary>
+    /// <returns>The updated template with incremented usage count</returns>
+    /// <exception cref="NotImplementedException">Method not yet implemented</exception>
+    public async Task<UIStudioTemplate> IncrementUsageCount()
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        throw new NotImplementedException("IncrementUsageCount method not yet implemented");
+    }
+
+    /// <summary>
+    /// Gets usage history for this template.
+    /// </summary>
+    /// <returns>Usage history summary</returns>
+    public async Task<Dictionary<string, object>> GetUsageHistory()
+    {
+        await Task.CompletedTask; // Suppress compiler warnings
+        
+        var template = await Get();
+        if (template == null)
+        {
+            return new Dictionary<string, object>
+            {
+                { "totalUsage", 0 },
+                { "monthlyUsage", new Dictionary<string, int>() },
+                { "trends", new List<object>() }
+            };
+        }
+        
+        return new Dictionary<string, object>
+        {
+            { "totalUsage", template.UsageCount },
+            { "monthlyUsage", template.UsageHistory ?? new Dictionary<string, object>() },
+            { "trends", new List<object>() } // Placeholder for trend analysis
+        };
+    }
+
+
+    /// <summary>
+    /// Gets templates by category.
+    /// </summary>
+    /// <param name="category">Category to filter by</param>
+    /// <returns>List of templates in the category</returns>
+    public async Task<List<UIStudioTemplate>> GetTemplatesByCategory(string category)
+    {
+        var query = DataContext.Query()
+            .WithAll<UIStudioTemplate>(t => t.Category == category);
+
+        var results = await query.ToEntityComponents();
+        var templates = new List<UIStudioTemplate>();
+
+        foreach (var result in results)
+        {
+            var handler = DataContext.For<UIStudioTemplateHandler>(result.Key);
+            var template = await handler.Get();
+            if (template != null)
+            {
+                templates.Add(template);
+            }
+        }
+
+        return templates.OrderBy(t => t.TemplateName).ToList();
+    }
+
+    /// <summary>
+    /// Gets public templates.
+    /// </summary>
+    /// <returns>List of public templates</returns>
+    public async Task<List<UIStudioTemplate>> GetPublicTemplates()
+    {
+        var query = DataContext.Query()
+            .WithAll<UIStudioTemplate>(t => t.IsPublic);
+
+        var results = await query.ToEntityComponents();
+        var templates = new List<UIStudioTemplate>();
+
+        foreach (var result in results)
+        {
+            var handler = DataContext.For<UIStudioTemplateHandler>(result.Key);
+            var template = await handler.Get();
+            if (template != null)
+            {
+                templates.Add(template);
+            }
+        }
+
+        return templates.OrderBy(t => t.TemplateName).ToList();
+    }
+
+    /// <summary>
+    /// Clones this template to create a new template entity.
+    /// </summary>
+    /// <param name="newTemplateName">Name for the cloned template</param>
+    /// <param name="targetEntityId">Entity ID for the new template</param>
+    /// <param name="clonerEntityId">Entity ID of the user cloning the template</param>
+    /// <returns>The cloned template component</returns>
+    public async Task<UIStudioTemplate> CloneTemplate(string newTemplateName, Guid targetEntityId, Guid clonerEntityId)
+    {
+        var template = await Get() ?? throw new InvalidOperationException("Template not found");
+        
+        var clonedTemplate = template with 
+        { 
+            Id = Guid.NewGuid(),
+            OwnerEntityId = targetEntityId,
+            TemplateName = newTemplateName,
+            Description = $"Personal copy of {template.TemplateName} template",
+            IsPublic = false, // Clones are private by default
+            CreatedByEntityId = clonerEntityId,
+            CreatedAt = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow,
+            UsageCount = 0, // Reset usage count for clone
+            UsageHistory = new Dictionary<string, object>() // Reset usage history
+        };
+
+        var newHandler = DataContext.For<UIStudioTemplateHandler>(targetEntityId);
+        await DataContext.Commit(clonedTemplate);
+        return clonedTemplate;
+    }
+
+    /// <summary>
     /// Validates the template configuration.
     /// </summary>
     /// <param name="template">Template to validate</param>

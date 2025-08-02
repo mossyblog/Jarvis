@@ -13,11 +13,13 @@
 import React from 'react'
 import { vi } from 'vitest'
 import { DndContext, DragOverlay, closestCenter } from '@dnd-kit/core'
-import { 
+import type { 
   BentoGrid, 
   GridComponent, 
   GridPosition, 
-  Size, 
+  Size 
+} from '@/types/bento'
+import {
   DeviceType,
   ComponentCategory,
   createDefaultGridPosition,
@@ -46,14 +48,8 @@ export const createMockGridComponent = (
   },
   bindings: {
     data: {},
-    events: {},
+    events: [] as any[],
     state: {}
-  },
-  animation: {
-    entrance: 'fadeIn',
-    duration: 300,
-    delay: 0,
-    easing: 'ease-out'
   },
   ...overrides
 })
@@ -67,7 +63,6 @@ export const createMockBentoGrid = (
   id: `grid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
   name: 'Test Grid',
   device: DeviceType.Desktop,
-  layoutId: 'test-layout',
   columns: GRID_DEFAULTS.COLUMNS,
   gap: GRID_DEFAULTS.GAP,
   rowHeight: GRID_DEFAULTS.ROW_HEIGHT,
@@ -78,9 +73,18 @@ export const createMockBentoGrid = (
     showGridLines: false,
     allowOverflow: false,
     maxHeight: undefined,
-    autoResize: true
+    autoResize: true,
+    showGrid: false,
+    snapToGrid: true,
+    gridColor: '#e5e7eb',
+    allowOverlap: false,
+    compactMode: 'vertical' as const,
+    minColumns: 1,
+    maxColumns: 24
   },
   zones: [],
+  createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
   ...overrides
 })
 
@@ -210,16 +214,34 @@ export const createMockDragEndEvent = (componentId: string, delta = { x: 50, y: 
 /**
  * Create a mock touch event
  */
+interface MockTouch {
+  clientX: number;
+  clientY: number;
+  identifier?: number;
+  pageX?: number;
+  pageY?: number;
+  screenX?: number;
+  screenY?: number;
+}
+
 export const createMockTouchEvent = (
   type: string, 
-  touches: Array<{ clientX: number; clientY: number; identifier?: number }> = []
+  touches: MockTouch[] = []
 ): TouchEvent => {
   const touchList = touches.map((touch, index) => ({
+    ...touch,
     identifier: touch.identifier ?? index,
     clientX: touch.clientX,
     clientY: touch.clientY,
-    target: document.body,
-    ...touch
+    pageX: touch.pageX ?? touch.clientX,
+    pageY: touch.pageY ?? touch.clientY,
+    screenX: touch.screenX ?? touch.clientX,
+    screenY: touch.screenY ?? touch.clientY,
+    radiusX: 20,
+    radiusY: 20,
+    rotationAngle: 0,
+    force: 1,
+    target: document.body
   })) as Touch[]
 
   const mockTouchList = {
@@ -235,9 +257,9 @@ export const createMockTouchEvent = (
   return new TouchEvent(type, {
     bubbles: true,
     cancelable: true,
-    touches: mockTouchList,
-    changedTouches: mockTouchList,
-    targetTouches: mockTouchList
+    touches: mockTouchList as any,
+    changedTouches: mockTouchList as any,
+    targetTouches: mockTouchList as any
   })
 }
 
@@ -632,7 +654,9 @@ export const setupBentoTestEnvironment = () => {
     disableTouchDevice: () => {
       Object.defineProperty(window, 'ontouchstart', { value: undefined, writable: true })
       Object.defineProperty(navigator, 'maxTouchPoints', { value: 0, writable: true })
-    }
+    },
+    
+    mockResizeObserver: mockResizeObserver
   }
 }
 

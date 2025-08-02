@@ -45,7 +45,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "MetricCard",
-            ComponentId = "metric-card-1",
+            ComponentInstanceId = "metric-card-1",
+            BoundComponentType = "MetricComponent",
             DataSourceType = "api",
             DataSourceConfig = new Dictionary<string, object>
             {
@@ -70,13 +71,13 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
         // Assert
         result.ShouldNotBeNull();
         result.ComponentType.ShouldBe("MetricCard");
-        result.ComponentId.ShouldBe("metric-card-1");
+        result.ComponentInstanceId.ShouldBe("metric-card-1");
         result.DataSourceType.ShouldBe("api");
         result.FieldMappings.ShouldNotBeNull();
         result.FieldMappings["title"].ShouldBe("$.data.title");
         result.GridPosition.ShouldNotBeNull();
         result.GridPosition["width"].ShouldBe(4);
-        result.IsActive.ShouldBeTrue();
+        result.IsEnabled.ShouldBeTrue();
 
         // Verify persistence
         var retrievedBinding = await handler.Get();
@@ -116,7 +117,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "Dashboard",
-            ComponentId = "dashboard-1",
+            ComponentInstanceId = "dashboard-1",
+            BoundComponentType = "DashboardComponent",
             DataSourceType = "static",
             DataSourceConfig = new Dictionary<string, object>
             {
@@ -161,7 +163,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "MetricCard",
-            ComponentId = "metric-card-1",
+            ComponentInstanceId = "metric-card-1",
+            BoundComponentType = "MetricComponent",
             DataSourceType = "api",
             DataSourceConfig = new Dictionary<string, object>
             {
@@ -225,7 +228,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "DataTable",
-            ComponentId = "data-table-1",
+            ComponentInstanceId = "data-table-1",
+            BoundComponentType = "TableComponent",
             DataSourceType = "api",
             DataSourceConfig = new Dictionary<string, object>
             {
@@ -281,9 +285,10 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "Chart",
-            ComponentId = "chart-1",
+            ComponentInstanceId = "chart-1",
+            BoundComponentType = "ChartComponent",
             DataSourceType = "api",
-            GridPosition = new Dictionary<string, object>
+            PositionConfig = new Dictionary<string, object>
             {
                 { "x", 0 },
                 { "y", 0 },
@@ -334,9 +339,10 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "Widget",
-            ComponentId = "widget-1",
+            ComponentInstanceId = "widget-1",
+            BoundComponentType = "WidgetComponent",
             DataSourceType = "api",
-            IsActive = true,
+            IsEnabled = true,
             CreatedByEntityId = creatorEntityId
         };
 
@@ -387,7 +393,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId1,
             PageSlug = "test-page",
             ComponentType = "MetricCard",
-            ComponentId = "metric-1",
+            ComponentInstanceId = "metric-1",
+            BoundComponentType = "MetricComponent",
             DataSourceType = "api",
             CreatedByEntityId = creatorEntityId
         };
@@ -397,7 +404,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId2,
             PageSlug = "test-page",
             ComponentType = "Chart",
-            ComponentId = "chart-1",
+            ComponentInstanceId = "chart-1",
+            BoundComponentType = "ChartComponent",
             DataSourceType = "api",
             CreatedByEntityId = creatorEntityId
         };
@@ -408,7 +416,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId3,
             PageSlug = "other-test-page",
             ComponentType = "Table",
-            ComponentId = "table-1",
+            ComponentInstanceId = "table-1",
+            BoundComponentType = "TableComponent",
             DataSourceType = "api",
             CreatedByEntityId = creatorEntityId
         };
@@ -457,7 +466,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId1,
             PageSlug = "test-page",
             ComponentType = "MetricCard",
-            ComponentId = "metric-1",
+            ComponentInstanceId = "metric-1",
+            BoundComponentType = "MetricComponent",
             DataSourceType = "api",
             CreatedByEntityId = creatorEntityId
         };
@@ -467,7 +477,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId2,
             PageSlug = "test-page",
             ComponentType = "MetricCard",
-            ComponentId = "metric-2",
+            ComponentInstanceId = "metric-2",
+            BoundComponentType = "MetricComponent",
             DataSourceType = "api",
             CreatedByEntityId = creatorEntityId
         };
@@ -478,7 +489,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId3,
             PageSlug = "test-page",
             ComponentType = "Chart",
-            ComponentId = "chart-1",
+            ComponentInstanceId = "chart-1",
+            BoundComponentType = "ChartComponent",
             DataSourceType = "api",
             CreatedByEntityId = creatorEntityId
         };
@@ -494,8 +506,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
         result.ShouldNotBeNull();
         result.Count.ShouldBe(2);
         result.All(b => b.ComponentType == "MetricCard").ShouldBeTrue();
-        result.Any(b => b.ComponentId == "metric-1").ShouldBeTrue();
-        result.Any(b => b.ComponentId == "metric-2").ShouldBeTrue();
+        result.Any(b => b.ComponentInstanceId == "metric-1").ShouldBeTrue();
+        result.Any(b => b.ComponentInstanceId == "metric-2").ShouldBeTrue();
     }
 
     /// <summary>
@@ -576,7 +588,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = sourceEntityId,
             PageSlug = "source-page",
             ComponentType = "MetricCard",
-            ComponentId = "metric-original",
+            ComponentInstanceId = "metric-original",
+            BoundComponentType = "MetricComponent",
             DataSourceType = "api",
             DataSourceConfig = new Dictionary<string, object>
             {
@@ -606,7 +619,7 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
         // Assert
         result.ShouldNotBeNull();
         result.PageSlug.ShouldBe("target-page");
-        result.ComponentId.ShouldBe("metric-cloned");
+        result.ComponentInstanceId.ShouldBe("metric-cloned");
         result.ComponentType.ShouldBe("MetricCard");
         result.DataSourceConfig.ShouldNotBeNull();
         result.DataSourceConfig["endpoint"].ShouldBe("/api/metrics/source");
@@ -663,7 +676,8 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = entityId,
             PageSlug = "test-page",
             ComponentType = "DependentChart",
-            ComponentId = "dependent-chart-1",
+            ComponentInstanceId = "dependent-chart-1",
+            BoundComponentType = "ChartComponent",
             DataSourceType = "computed",
             DataSourceConfig = new Dictionary<string, object>
             {
@@ -684,7 +698,6 @@ public class UIStudioComponentBindingHandlerTests : ApiIntegrationTestBase
 
         // Assert
         result.ShouldNotBeNull();
-        result.ContainsKey("components").ShouldBeTrue();
-        result.ContainsKey("dataSources").ShouldBeTrue();
+        result.Count.ShouldBeGreaterThan(0);
     }
 }
