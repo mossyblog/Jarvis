@@ -4,6 +4,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Systems;
 using core.jarvis.api.Extensions;
 using core.jarvis.api.Exceptions;
+using core.jarvis.api.Handlers;
 using core.jarvis.Data;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
@@ -22,11 +23,13 @@ namespace core.jarvis.api.Functions.UIStudio;
 public class UIStudioFunction
 {
     private readonly UIStudioSystem _uiStudioSystem;
+    private readonly IDataContext _dataContext;
     private readonly ILogger<UIStudioFunction> _logger;
 
-    public UIStudioFunction(UIStudioSystem uiStudioSystem, ILogger<UIStudioFunction> logger)
+    public UIStudioFunction(UIStudioSystem uiStudioSystem, IDataContext dataContext, ILogger<UIStudioFunction> logger)
     {
         _uiStudioSystem = uiStudioSystem;
+        _dataContext = dataContext;
         _logger = logger;
     }
 
@@ -327,10 +330,39 @@ public class UIStudioFunction
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "CreatedByEntityId is required");
             }
 
-            // Set the page entity ID from the route
-            bindingComponent = bindingComponent with { PageEntityId = entityId };
+            // Get the page to find its slug
+            var pageHandler = _dataContext.For<UIStudioPageHandler>(entityId);
+            var page = await pageHandler.Get();
+            if (page == null)
+            {
+                return await req.CreateErrorResponse(HttpStatusCode.NotFound, "Page not found");
+            }
+
+            // Set the page slug from the page
+            bindingComponent = bindingComponent with { PageSlug = page.PageSlug };
             
-            var components = await _uiStudioSystem.CreateBindingFromComponent(bindingComponent);
+            // Create the binding with proper parent-child relationship
+            var bindingEntity = _dataContext.NewEntity();
+            var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(bindingEntity.Id);
+            
+            var binding = bindingComponent with 
+            { 
+                OwnerEntityId = bindingEntity.Id,
+                CreatedAt = DateTime.UtcNow,
+                LastUpdated = DateTime.UtcNow
+            };
+            
+            var createdBinding = await bindingHandler.CreateBinding(binding);
+            
+            // Link page -> binding (parent -> child)
+            await _dataContext.LinkRelationship(
+                entityId,                      // parent (page)
+                bindingEntity.Id,              // child (binding)
+                "UIStudioPage",                // parent type
+                "UIStudioComponentBinding"     // child type
+            );
+            
+            var components = new List<IComponent> { createdBinding };
 
             var response = req.CreateResponse(HttpStatusCode.Created);
             response.Headers.Add("Content-Type", "application/json");

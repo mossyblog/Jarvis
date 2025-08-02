@@ -271,9 +271,17 @@ public class UIStudioQueryFunction
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid pageEntityId format");
             }
 
-            // Get bindings
+            // Get page to find its slug
+            var pageHandler = _dataContext.For<UIStudioPageHandler>(entityId);
+            var page = await pageHandler.Get();
+            if (page == null)
+            {
+                return await req.CreateErrorResponse(HttpStatusCode.NotFound, "Page not found");
+            }
+            
+            // Get bindings by page slug
             var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(Guid.NewGuid());
-            var bindings = await bindingHandler.GetByPage(entityId);
+            var bindings = await bindingHandler.GetByPageSlug(page.PageSlug);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");

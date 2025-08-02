@@ -30,7 +30,7 @@ public class UIStudioComponentBindingHandler : ComponentHandler<UIStudioComponen
         ValidateBindingConfiguration(binding);
         
         // Check for duplicate component instance ID on the same page
-        var existingBinding = await FindByComponentInstanceId(binding.PageEntityId, binding.ComponentInstanceId);
+        var existingBinding = await FindByComponentInstanceId(binding.PageSlug, binding.ComponentInstanceId);
         if (existingBinding != null)
         {
             throw new InvalidOperationException($"Component instance ID '{binding.ComponentInstanceId}' already exists on this page");
@@ -56,7 +56,7 @@ public class UIStudioComponentBindingHandler : ComponentHandler<UIStudioComponen
         // Check for duplicate component instance ID if it changed
         if (binding.ComponentInstanceId != existingBinding.ComponentInstanceId)
         {
-            var conflictingBinding = await FindByComponentInstanceId(binding.PageEntityId, binding.ComponentInstanceId);
+            var conflictingBinding = await FindByComponentInstanceId(binding.PageSlug, binding.ComponentInstanceId);
             if (conflictingBinding != null && conflictingBinding.Id != binding.Id)
             {
                 throw new InvalidOperationException($"Component instance ID '{binding.ComponentInstanceId}' already exists on this page");
@@ -170,12 +170,12 @@ public class UIStudioComponentBindingHandler : ComponentHandler<UIStudioComponen
     /// <summary>
     /// Gets all component bindings for a specific page.
     /// </summary>
-    /// <param name="pageEntityId">Entity ID of the page</param>
+    /// <param name="pageSlug">Slug of the page</param>
     /// <returns>List of component bindings for the page</returns>
-    public async Task<List<UIStudioComponentBinding>> GetByPage(Guid pageEntityId)
+    public async Task<List<UIStudioComponentBinding>> GetByPageSlug(string pageSlug)
     {
         var query = DataContext.Query()
-            .WithAll<UIStudioComponentBinding>(b => b.PageEntityId == pageEntityId);
+            .WithAll<UIStudioComponentBinding>(b => b.PageSlug == pageSlug);
 
         var results = await query.ToEntityComponents();
         var bindings = new List<UIStudioComponentBinding>();
@@ -196,20 +196,20 @@ public class UIStudioComponentBindingHandler : ComponentHandler<UIStudioComponen
     /// <summary>
     /// Gets component bindings for a specific page, optionally filtered by component type.
     /// </summary>
-    /// <param name="pageEntityId">Entity ID of the page</param>
+    /// <param name="pageSlug">Slug of the page</param>
     /// <param name="componentType">Optional component type filter</param>
     /// <returns>List of component bindings for the page</returns>
-    public async Task<List<UIStudioComponentBinding>> GetByPage(Guid pageEntityId, string? componentType)
+    public async Task<List<UIStudioComponentBinding>> GetByPageSlug(string pageSlug, string? componentType)
     {
         var query = DataContext.Query();
         
         if (string.IsNullOrEmpty(componentType))
         {
-            query = query.WithAll<UIStudioComponentBinding>(b => b.PageEntityId == pageEntityId);
+            query = query.WithAll<UIStudioComponentBinding>(b => b.PageSlug == pageSlug);
         }
         else
         {
-            query = query.WithAll<UIStudioComponentBinding>(b => b.PageEntityId == pageEntityId && b.ComponentType == componentType);
+            query = query.WithAll<UIStudioComponentBinding>(b => b.PageSlug == pageSlug && b.ComponentType == componentType);
         }
 
         var results = await query.ToEntityComponents();
@@ -331,13 +331,13 @@ public class UIStudioComponentBindingHandler : ComponentHandler<UIStudioComponen
     /// <summary>
     /// Finds a component binding by component instance ID within a page.
     /// </summary>
-    /// <param name="pageEntityId">Entity ID of the page</param>
+    /// <param name="pageSlug">Slug of the page</param>
     /// <param name="componentInstanceId">Component instance ID to search for</param>
     /// <returns>The component binding if found, null otherwise</returns>
-    public async Task<UIStudioComponentBinding?> FindByComponentInstanceId(Guid pageEntityId, string componentInstanceId)
+    public async Task<UIStudioComponentBinding?> FindByComponentInstanceId(string pageSlug, string componentInstanceId)
     {
         var query = DataContext.Query()
-            .WithAll<UIStudioComponentBinding>(b => b.PageEntityId == pageEntityId && b.ComponentInstanceId == componentInstanceId);
+            .WithAll<UIStudioComponentBinding>(b => b.PageSlug == pageSlug && b.ComponentInstanceId == componentInstanceId);
 
         var results = await query.ToEntityComponents();
         var bindingEntity = results.FirstOrDefault();
@@ -355,9 +355,9 @@ public class UIStudioComponentBindingHandler : ComponentHandler<UIStudioComponen
     /// <exception cref="ArgumentException">Thrown when validation fails</exception>
     private static void ValidateBindingConfiguration(UIStudioComponentBinding binding)
     {
-        if (binding.PageEntityId == Guid.Empty)
+        if (string.IsNullOrWhiteSpace(binding.PageSlug))
         {
-            throw new ArgumentException("Page entity ID is required");
+            throw new ArgumentException("Page slug is required");
         }
 
         if (string.IsNullOrWhiteSpace(binding.ComponentType))

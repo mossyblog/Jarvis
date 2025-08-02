@@ -44,12 +44,6 @@ public record UIStudioPage : IComponent, IVersionedComponent
     public string? Description { get; init; }
 
     /// <summary>
-    /// Entity ID of the layout component used by this page.
-    /// Maps to layout_entity_id in database.
-    /// </summary>
-    public Guid? LayoutEntityId { get; init; }
-
-    /// <summary>
     /// Whether the page is published and accessible to users.
     /// Maps to is_published in database.
     /// </summary>

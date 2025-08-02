@@ -47,7 +47,24 @@ public class UIStudioSystem
 
         try
         {
-            // Create layout entity first
+            // Create page entity first
+            var pageEntity = _dataContext.NewEntity();
+            var pageHandler = _dataContext.For<UIStudioPageHandler>(pageEntity.Id);
+
+            var page = new UIStudioPage
+            {
+                OwnerEntityId = pageEntity.Id,
+                PageName = pageName,
+                PageSlug = pageSlug,
+                PageType = pageType,
+                Description = description,
+                CreatedByEntityId = createdById
+            };
+
+            var createdPage = await pageHandler.CreatePage(page);
+            components.Add(createdPage);
+
+            // Create layout entity
             var layoutEntity = _dataContext.NewEntity();
             var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(layoutEntity.Id);
 
@@ -63,29 +80,20 @@ public class UIStudioSystem
             var createdLayout = await layoutHandler.CreateLayout(layout);
             components.Add(createdLayout);
 
-            // Create page entity
-            var pageEntity = _dataContext.NewEntity();
-            var pageHandler = _dataContext.For<UIStudioPageHandler>(pageEntity.Id);
-
-            var page = new UIStudioPage
-            {
-                OwnerEntityId = pageEntity.Id,
-                PageName = pageName,
-                PageSlug = pageSlug,
-                PageType = pageType,
-                Description = description,
-                LayoutEntityId = layoutEntity.Id,
-                CreatedByEntityId = createdById
-            };
-
-            var createdPage = await pageHandler.CreatePage(page);
-            components.Add(createdPage);
+            // Link page -> layout (parent -> child)
+            await _dataContext.LinkRelationship(
+                pageEntity.Id,      // parent
+                layoutEntity.Id,    // child
+                "UIStudioPage",     // parent type
+                "UIStudioLayout"    // child type
+            );
 
             // If using a template, create component bindings from template
             if (templateId.HasValue)
             {
                 var templateBindings = await CreateComponentBindingsFromTemplate(
-                    pageEntity.Id, 
+                    pageEntity.Id,
+                    pageSlug,
                     templateId.Value, 
                     createdById);
                 components.AddRange(templateBindings);
@@ -156,12 +164,29 @@ public class UIStudioSystem
             components.Add(savedPage);
 
             // Update layout if layout changes are included
-            if (updates.ContainsKey("layout_config") && currentPage.LayoutEntityId.HasValue)
+            if (updates.ContainsKey("layout_config"))
             {
-                var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(currentPage.LayoutEntityId.Value);
-                var layoutConfig = (Dictionary<string, object>)updates["layout_config"];
-                var updatedLayout = await layoutHandler.UpdateGridConfig(layoutConfig);
-                components.Add(updatedLayout);
+                // Find child layout entity
+                var childEntityIds = await _dataContext.Children(pageId);
+                foreach (var childId in childEntityIds)
+                {
+                    try
+                    {
+                        var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(childId);
+                        var layout = await layoutHandler.Get();
+                        if (layout != null)
+                        {
+                            var layoutConfig = (Dictionary<string, object>)updates["layout_config"];
+                            var updatedLayout = await layoutHandler.UpdateGridConfig(layoutConfig);
+                            components.Add(updatedLayout);
+                            break; // Assuming one layout per page
+                        }
+                    }
+                    catch
+                    {
+                        // Not a layout, continue
+                    }
+                }
             }
 
             // Create version snapshot
@@ -260,6 +285,69 @@ public class UIStudioSystem
 
             throw;
         }
+    }
+
+    /// <summary>
+    /// Gets a page with all its related components (layout, bindings) using ECS relationships.
+    /// </summary>
+    /// <param name="pageSlug">Page slug to retrieve</param>
+    /// <returns>List of all components related to the page</returns>
+    public async Task<List<IComponent>> GetPageWithRelatedComponents(string pageSlug)
+    {
+        var components = new List<IComponent>();
+        
+        // Find page by slug
+        var pageQuery = await _dataContext.Query()
+            .WithAll<UIStudioPage>(p => p.PageSlug == pageSlug)
+            .ToEntityComponents();
+            
+        var pageEntity = pageQuery.FirstOrDefault();
+        if (pageEntity.Value == null) return components;
+        
+        // Add page component
+        var page = pageEntity.Value.Get<UIStudioPage>();
+        if (page != null)
+        {
+            components.Add(page);
+        }
+        var pageEntityId = pageEntity.Key;
+        
+        // Get child entities (layouts and bindings)
+        var childEntityIds = await _dataContext.Children(pageEntityId);
+        foreach (var childId in childEntityIds)
+        {
+            // Try to get as layout
+            try
+            {
+                var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(childId);
+                var layout = await layoutHandler.Get();
+                if (layout != null)
+                {
+                    components.Add(layout);
+                }
+            }
+            catch
+            {
+                // Not a layout, might be a binding
+            }
+            
+            // Try to get as binding
+            try
+            {
+                var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(childId);
+                var binding = await bindingHandler.Get();
+                if (binding != null)
+                {
+                    components.Add(binding);
+                }
+            }
+            catch
+            {
+                // Not a binding either
+            }
+        }
+        
+        return components;
     }
 
     /// <summary>
@@ -432,20 +520,49 @@ public class UIStudioSystem
             { "page", page }
         };
 
-        // Include layout if present
-        if (page.LayoutEntityId.HasValue)
+        // Get child entities
+        var childEntityIds = await _dataContext.Children(pageId);
+        var layouts = new List<UIStudioLayout>();
+        var bindings = new List<UIStudioComponentBinding>();
+        
+        foreach (var childId in childEntityIds)
         {
-            var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(page.LayoutEntityId.Value);
-            var layout = await layoutHandler.Get();
-            if (layout != null)
+            // Try to get as layout
+            try
             {
-                snapshot["layout"] = layout;
+                var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(childId);
+                var layout = await layoutHandler.Get();
+                if (layout != null)
+                {
+                    layouts.Add(layout);
+                }
+            }
+            catch
+            {
+                // Not a layout
+            }
+            
+            // Try to get as binding
+            try
+            {
+                var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(childId);
+                var binding = await bindingHandler.Get();
+                if (binding != null)
+                {
+                    bindings.Add(binding);
+                }
+            }
+            catch
+            {
+                // Not a binding
             }
         }
-
-        // Include component bindings
-        var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(Guid.NewGuid());
-        var bindings = await bindingHandler.GetByPage(pageId);
+        
+        if (layouts.Any())
+        {
+            snapshot["layout"] = layouts.First(); // Assuming one layout per page
+        }
+        
         snapshot["component_bindings"] = bindings;
 
         return snapshot;
@@ -455,11 +572,13 @@ public class UIStudioSystem
     /// Creates component bindings from a template.
     /// </summary>
     /// <param name="pageId">Entity ID of the target page</param>
+    /// <param name="pageSlug">Slug of the page</param>
     /// <param name="templateId">Entity ID of the template</param>
     /// <param name="createdById">Entity ID of the creator</param>
     /// <returns>List of created component bindings</returns>
     private async Task<List<UIStudioComponentBinding>> CreateComponentBindingsFromTemplate(
         Guid pageId,
+        string pageSlug,
         Guid templateId,
         Guid createdById)
     {
@@ -481,13 +600,21 @@ public class UIStudioSystem
                 var binding = new UIStudioComponentBinding
                 {
                     OwnerEntityId = bindingEntity.Id,
-                    PageEntityId = pageId,
+                    PageSlug = pageSlug,
                     // Map other properties from template data
                     CreatedByEntityId = createdById
                 };
 
                 var createdBinding = await bindingHandler.CreateBinding(binding);
                 bindings.Add(createdBinding);
+                
+                // Link page -> binding (parent -> child)
+                await _dataContext.LinkRelationship(
+                    pageId,                      // parent
+                    bindingEntity.Id,            // child
+                    "UIStudioPage",              // parent type
+                    "UIStudioComponentBinding"   // child type
+                );
             }
         }
 
@@ -628,13 +755,42 @@ public class UIStudioSystem
             var pageHandler = _dataContext.For<UIStudioPageHandler>(pageId);
             var page = await pageHandler.Get() ?? throw new InvalidOperationException("Page not found");
 
-            // Delete component bindings first
-            var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(Guid.NewGuid());
-            var bindings = await bindingHandler.GetByPage(pageId);
-            foreach (var binding in bindings)
+            // Delete child entities (layouts and bindings)
+            var childEntityIds = await _dataContext.Children(pageId);
+            foreach (var childId in childEntityIds)
             {
-                var bindHandler = _dataContext.For<UIStudioComponentBindingHandler>(binding.OwnerEntityId);
-                await _dataContext.Remove<UIStudioComponentBinding>(binding.Id);
+                // Unlink the relationship first
+                await _dataContext.UnlinkRelationship(pageId, childId);
+                
+                // Try to remove as component binding
+                try
+                {
+                    var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(childId);
+                    var binding = await bindingHandler.Get();
+                    if (binding != null)
+                    {
+                        await _dataContext.Remove<UIStudioComponentBinding>(binding.Id);
+                    }
+                }
+                catch
+                {
+                    // Not a binding
+                }
+                
+                // Try to remove as layout
+                try
+                {
+                    var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(childId);
+                    var layout = await layoutHandler.Get();
+                    if (layout != null)
+                    {
+                        await _dataContext.Remove<UIStudioLayout>(layout.Id);
+                    }
+                }
+                catch
+                {
+                    // Not a layout
+                }
             }
 
             // Delete the page
@@ -709,32 +865,6 @@ public class UIStudioSystem
                 newPageSlug = newPageName.ToLowerInvariant().Replace(' ', '-');
             }
 
-            // Duplicate layout if present
-            Guid? newLayoutEntityId = null;
-            if (sourcePage.LayoutEntityId.HasValue)
-            {
-                var sourceLayoutHandler = _dataContext.For<UIStudioLayoutHandler>(sourcePage.LayoutEntityId.Value);
-                var sourceLayout = await sourceLayoutHandler.Get();
-                if (sourceLayout != null)
-                {
-                    var newLayoutEntity = _dataContext.NewEntity();
-                    var newLayoutHandler = _dataContext.For<UIStudioLayoutHandler>(newLayoutEntity.Id);
-                    
-                    var duplicatedLayout = sourceLayout with
-                    {
-                        OwnerEntityId = newLayoutEntity.Id,
-                        LayoutName = $"{newPageName} Layout",
-                        CreatedByEntityId = createdById,
-                        CreatedAt = DateTime.UtcNow,
-                        LastUpdated = DateTime.UtcNow
-                    };
-                    
-                    var createdLayout = await newLayoutHandler.CreateLayout(duplicatedLayout);
-                    components.Add(createdLayout);
-                    newLayoutEntityId = newLayoutEntity.Id;
-                }
-            }
-
             // Create new page
             var newPageEntity = _dataContext.NewEntity();
             var newPageHandler = _dataContext.For<UIStudioPageHandler>(newPageEntity.Id);
@@ -744,7 +874,6 @@ public class UIStudioSystem
                 OwnerEntityId = newPageEntity.Id,
                 PageName = newPageName,
                 PageSlug = newPageSlug,
-                LayoutEntityId = newLayoutEntityId,
                 IsPublished = false, // Duplicated pages start as unpublished
                 IsDefault = false, // Duplicated pages are never default
                 CreatedByEntityId = createdById,
@@ -756,28 +885,87 @@ public class UIStudioSystem
             var createdPage = await newPageHandler.CreatePage(duplicatedPage);
             components.Add(createdPage);
 
+            // Duplicate child entities (layout and bindings)
+            var sourceChildIds = await _dataContext.Children(sourcePageId);
+            foreach (var sourceChildId in sourceChildIds)
+            {
+                // Try to duplicate as layout
+                try
+                {
+                    var sourceLayoutHandler = _dataContext.For<UIStudioLayoutHandler>(sourceChildId);
+                    var sourceLayout = await sourceLayoutHandler.Get();
+                    if (sourceLayout != null)
+                    {
+                        var newLayoutEntity = _dataContext.NewEntity();
+                        var newLayoutHandler = _dataContext.For<UIStudioLayoutHandler>(newLayoutEntity.Id);
+                        
+                        var duplicatedLayout = sourceLayout with
+                        {
+                            OwnerEntityId = newLayoutEntity.Id,
+                            LayoutName = $"{newPageName} Layout",
+                            CreatedByEntityId = createdById,
+                            CreatedAt = DateTime.UtcNow,
+                            LastUpdated = DateTime.UtcNow
+                        };
+                        
+                        var createdLayout = await newLayoutHandler.CreateLayout(duplicatedLayout);
+                        components.Add(createdLayout);
+                        
+                        // Link new page -> new layout
+                        await _dataContext.LinkRelationship(
+                            newPageEntity.Id,
+                            newLayoutEntity.Id,
+                            "UIStudioPage",
+                            "UIStudioLayout"
+                        );
+                    }
+                }
+                catch
+                {
+                    // Not a layout
+                }
+            }
+
             // Duplicate component bindings if requested
             if (includeBindings)
             {
-                var sourceBindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(Guid.NewGuid());
-                var sourceBindings = await sourceBindingHandler.GetByPage(sourcePageId);
-                
-                foreach (var sourceBinding in sourceBindings)
+                foreach (var sourceChildId in sourceChildIds)
                 {
-                    var newBindingEntity = _dataContext.NewEntity();
-                    var newBindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(newBindingEntity.Id);
-                    
-                    var duplicatedBinding = sourceBinding with
+                    // Try to duplicate as binding
+                    try
                     {
-                        OwnerEntityId = newBindingEntity.Id,
-                        PageEntityId = newPageEntity.Id,
-                        CreatedByEntityId = createdById,
-                        CreatedAt = DateTime.UtcNow,
-                        LastUpdated = DateTime.UtcNow
-                    };
-                    
-                    var createdBinding = await newBindingHandler.CreateBinding(duplicatedBinding);
-                    components.Add(createdBinding);
+                        var sourceBindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(sourceChildId);
+                        var sourceBinding = await sourceBindingHandler.Get();
+                        if (sourceBinding != null)
+                        {
+                            var newBindingEntity = _dataContext.NewEntity();
+                            var newBindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(newBindingEntity.Id);
+                            
+                            var duplicatedBinding = sourceBinding with
+                            {
+                                OwnerEntityId = newBindingEntity.Id,
+                                PageSlug = newPageSlug,
+                                CreatedByEntityId = createdById,
+                                CreatedAt = DateTime.UtcNow,
+                                LastUpdated = DateTime.UtcNow
+                            };
+                            
+                            var createdBinding = await newBindingHandler.CreateBinding(duplicatedBinding);
+                            components.Add(createdBinding);
+                            
+                            // Link new page -> new binding
+                            await _dataContext.LinkRelationship(
+                                newPageEntity.Id,
+                                newBindingEntity.Id,
+                                "UIStudioPage",
+                                "UIStudioComponentBinding"
+                            );
+                        }
+                    }
+                    catch
+                    {
+                        // Not a binding
+                    }
                 }
             }
 
@@ -1355,7 +1543,7 @@ public class UIStudioSystem
                 "component_binding",
                 new Dictionary<string, object>
                 {
-                    { "page_entity_id", bindingComponent.PageEntityId },
+                    { "page_slug", bindingComponent.PageSlug },
                     { "component_type", bindingComponent.ComponentType }
                 },
                 correlationId: correlationId);
@@ -1400,7 +1588,7 @@ public class UIStudioSystem
                 "component_binding",
                 new Dictionary<string, object>
                 {
-                    { "page_entity_id", bindingComponent.PageEntityId },
+                    { "page_slug", bindingComponent.PageSlug },
                     { "component_type", bindingComponent.ComponentType }
                 },
                 correlationId: correlationId);

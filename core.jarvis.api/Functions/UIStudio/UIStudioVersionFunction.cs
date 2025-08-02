@@ -314,20 +314,49 @@ public class UIStudioVersionFunction
         var page = await pageHandler.Get() ?? throw new InvalidOperationException("Page not found");
         snapshot["page"] = page;
 
-        // Include layout if present
-        if (page.LayoutEntityId.HasValue)
+        // Get child entities (layouts and bindings)
+        var childEntityIds = await _dataContext.Children(pageId);
+        var layouts = new List<UIStudioLayout>();
+        var bindings = new List<UIStudioComponentBinding>();
+        
+        foreach (var childId in childEntityIds)
         {
-            var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(page.LayoutEntityId.Value);
-            var layout = await layoutHandler.Get();
-            if (layout != null)
+            // Try to get as layout
+            try
             {
-                snapshot["layout"] = layout;
+                var layoutHandler = _dataContext.For<UIStudioLayoutHandler>(childId);
+                var layout = await layoutHandler.Get();
+                if (layout != null)
+                {
+                    layouts.Add(layout);
+                }
+            }
+            catch
+            {
+                // Not a layout
+            }
+            
+            // Try to get as binding
+            try
+            {
+                var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(childId);
+                var binding = await bindingHandler.Get();
+                if (binding != null)
+                {
+                    bindings.Add(binding);
+                }
+            }
+            catch
+            {
+                // Not a binding
             }
         }
-
-        // Include component bindings
-        var bindingHandler = _dataContext.For<UIStudioComponentBindingHandler>(Guid.NewGuid());
-        var bindings = await bindingHandler.GetByPage(pageId);
+        
+        if (layouts.Any())
+        {
+            snapshot["layout"] = layouts.First(); // Assuming one layout per page
+        }
+        
         snapshot["component_bindings"] = bindings;
     }
 

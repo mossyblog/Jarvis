@@ -21,10 +21,10 @@ public record UIStudioComponentBinding : IComponent, IVersionedComponent
     public Guid OwnerEntityId { get; set; }
 
     /// <summary>
-    /// Entity ID of the page this binding belongs to.
-    /// Maps to page_entity_id in database.
+    /// Page slug this binding is associated with (for querying purposes only).
+    /// Maps to page_slug in database.
     /// </summary>
-    public Guid PageEntityId { get; init; }
+    public string PageSlug { get; init; } = string.Empty;
 
     /// <summary>
     /// Type of UI component (e.g., "table", "card", "chart", "form").
