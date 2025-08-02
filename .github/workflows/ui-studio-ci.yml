@@ -1,0 +1,551 @@
+name: UI Studio CI/CD
+
+on:
+  push:
+    branches: [ "master", "main" ]
+    paths:
+      - 'core.jarvis.ui.studio/**'
+      - '.github/workflows/ui-studio-ci.yml'
+  pull_request:
+    branches: [ "master", "main" ]
+    paths:
+      - 'core.jarvis.ui.studio/**'
+      - '.github/workflows/ui-studio-ci.yml'
+
+env:
+  NODE_VERSION: '18'
+  WORKING_DIR: core.jarvis.ui.studio
+
+jobs:
+  # Job 1: Code Quality & Linting
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Type checking
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run typecheck
+        
+      - name: ESLint
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run lint
+        
+      - name: Brand compliance check
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run brand-check:strict
+
+  # Job 2: Unit Tests with Coverage
+  unit-tests:
+    name: Unit Tests & Coverage
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Cache Vitest results
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.WORKING_DIR }}/node_modules/.vitest
+          key: vitest-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.{ts,tsx,js,jsx}') }}
+          restore-keys: |
+            vitest-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            vitest-${{ runner.os }}-
+            
+      - name: Run unit tests with coverage
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:coverage
+        
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ${{ env.WORKING_DIR }}/coverage
+          flags: unit-tests
+          name: unit-test-coverage
+          token: ${{ secrets.CODECOV_TOKEN }}
+          
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-reports
+          path: ${{ env.WORKING_DIR }}/coverage/
+          retention-days: 30
+          
+      - name: Comment coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: 5monkeys/cobertura-action@master
+        with:
+          path: ${{ env.WORKING_DIR }}/coverage/cobertura-coverage.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          minimum_coverage: 80
+
+  # Job 3: Build & Build Artifacts
+  build:
+    name: Build Application
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [code-quality]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.WORKING_DIR }}/dist
+            ${{ env.WORKING_DIR }}/node_modules/.vite
+          key: build-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.{ts,tsx,js,jsx,css}') }}
+          restore-keys: |
+            build-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}-
+            build-${{ runner.os }}-
+            
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          retention-days: 30
+
+  # Job 4: E2E Tests - Cross Browser
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps ${{ matrix.project }}
+        
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+            
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Run E2E tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright test --project=${{ matrix.project }}
+        env:
+          CI: true
+          
+      - name: Upload E2E test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-results-${{ matrix.project }}
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 30
+
+  # Job 5: Mobile E2E Tests
+  e2e-mobile:
+    name: Mobile E2E Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Run mobile E2E tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:e2e:mobile
+        env:
+          CI: true
+          
+      - name: Upload mobile test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: e2e-mobile-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 30
+
+  # Job 6: Accessibility Tests
+  accessibility-tests:
+    name: Accessibility Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Run accessibility tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:e2e:accessibility
+        env:
+          CI: true
+          
+      - name: Upload accessibility test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: accessibility-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 30
+
+  # Job 7: Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    needs: [build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Run performance tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:e2e:performance
+        env:
+          CI: true
+          
+      - name: Upload performance test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 30
+
+  # Job 8: Visual Regression Tests
+  visual-regression:
+    name: Visual Regression Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [build]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Run visual regression tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:e2e:visual
+        env:
+          CI: true
+          
+      - name: Upload visual test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-regression-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 30
+
+  # Job 9: Test Result Aggregation
+  test-summary:
+    name: Test Summary & Reports
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [unit-tests, e2e-tests, e2e-mobile, accessibility-tests, performance-tests, visual-regression]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Download all test artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: test-artifacts/
+          
+      - name: Generate test summary
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run test:e2e:summary
+        env:
+          ARTIFACTS_PATH: ../test-artifacts
+          
+      - name: Upload consolidated test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolidated-test-report
+          path: ${{ env.WORKING_DIR }}/test-summary/
+          retention-days: 90
+          
+      - name: Comment test summary on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const summaryPath = path.join('${{ env.WORKING_DIR }}', 'test-summary', 'summary.md');
+              if (fs.existsSync(summaryPath)) {
+                const summary = fs.readFileSync(summaryPath, 'utf8');
+                
+                github.rest.issues.createComment({
+                  issue_number: context.issue.number,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  body: `## 🧪 Test Summary\n\n${summary}`
+                });
+              }
+            } catch (error) {
+              console.log('Could not post test summary:', error.message);
+            }
+
+  # Job 10: Deploy Preview (PR only)
+  deploy-preview:
+    name: Deploy Preview Environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build, unit-tests]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Deploy to Vercel Preview
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ${{ env.WORKING_DIR }}
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+          
+      - name: Comment preview URL on PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## 🚀 Preview Deployment\n\nYour changes have been deployed to a preview environment!\n\n[View Preview](https://core-jarvis-ui-studio-${context.issue.number}.vercel.app)\n\n*This preview will be updated with each new commit.*`
+            });
+
+  # Job 11: Production Deploy (main/master only)
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [test-summary, build]
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ${{ env.WORKING_DIR }}/dist/
+          
+      - name: Deploy to Vercel Production
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ${{ env.WORKING_DIR }}
+          scope: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-args: '--prod'
+          
+      - name: Notify deployment success
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.repos.createCommitStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              sha: context.sha,
+              state: 'success',
+              target_url: 'https://core-jarvis-ui-studio.vercel.app',
+              description: 'Successfully deployed to production',
+              context: 'deployment/production'
+            });

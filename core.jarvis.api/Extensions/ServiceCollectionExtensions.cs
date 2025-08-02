@@ -1,5 +1,6 @@
 using core.jarvis;
 using core.jarvis.api.Handlers;
+using core.jarvis.api.Systems;
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
@@ -101,9 +102,32 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, NavigationHandler>();
         services.AddScoped<NavigationHandler>();
         
+        // UIStudio handlers
+        services.AddScoped<IComponentHandler, UIStudioPageHandler>();
+        services.AddScoped<UIStudioPageHandler>();
+        
+        services.AddScoped<IComponentHandler, UIStudioLayoutHandler>();
+        services.AddScoped<UIStudioLayoutHandler>();
+        
+        services.AddScoped<IComponentHandler, UIStudioComponentBindingHandler>();
+        services.AddScoped<UIStudioComponentBindingHandler>();
+        
+        services.AddScoped<IComponentHandler, UIStudioPermissionHandler>();
+        services.AddScoped<UIStudioPermissionHandler>();
+        
+        services.AddScoped<IComponentHandler, UIStudioTemplateHandler>();
+        services.AddScoped<UIStudioTemplateHandler>();
+        
+        services.AddScoped<IComponentHandler, UIStudioVersionHandler>();
+        services.AddScoped<UIStudioVersionHandler>();
+        
+        services.AddScoped<IComponentHandler, UIStudioAuditLogHandler>();
+        services.AddScoped<UIStudioAuditLogHandler>();
+        
         // Add System services
         services.AddScoped<Systems.RegistrationSystem>();
         services.AddScoped<Systems.AuthSystem>();
+        services.AddScoped<Systems.UIStudioSystem>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>

@@ -1,0 +1,345 @@
+name: UI Studio Nightly Tests
+
+on:
+  schedule:
+    # Run nightly at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+env:
+  NODE_VERSION: '18'
+  WORKING_DIR: core.jarvis.ui.studio
+
+jobs:
+  # Full cross-browser regression test suite
+  comprehensive-e2e:
+    name: Comprehensive E2E Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit, edge]
+        viewport: [desktop, tablet, mobile]
+        
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps
+        
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run comprehensive E2E tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          case "${{ matrix.viewport }}" in
+            desktop)
+              npx playwright test --project=${{ matrix.browser }} --grep="@desktop|@all"
+              ;;
+            tablet)
+              npx playwright test --project=${{ matrix.browser }} --grep="@tablet|@all" --config=playwright.tablet.config.ts
+              ;;
+            mobile)
+              npx playwright test --project=${{ matrix.browser }} --grep="@mobile|@all" --config=playwright.mobile.config.ts
+              ;;
+          esac
+        env:
+          CI: true
+          BROWSER: ${{ matrix.browser }}
+          VIEWPORT: ${{ matrix.viewport }}
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: nightly-e2e-${{ matrix.browser }}-${{ matrix.viewport }}
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 7
+
+  # Performance baseline testing
+  performance-baseline:
+    name: Performance Baseline Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build production application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run performance baseline tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Run performance tests with multiple iterations for statistical accuracy
+          for i in {1..5}; do
+            echo "Performance test iteration $i/5"
+            npm run test:e2e:performance -- --repeat-each=1
+          done
+        env:
+          CI: true
+          PERFORMANCE_BASELINE: true
+          
+      - name: Generate performance report
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Create consolidated performance report
+          node scripts/performance-analysis.js
+          
+      - name: Upload performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-baseline-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/performance/
+            ${{ env.WORKING_DIR }}/performance-report/
+          retention-days: 30
+
+  # Memory leak and stress testing
+  stress-testing:
+    name: Stress & Memory Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run stress tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Extended stress testing scenarios
+          npx playwright test tests/e2e/stress/ --workers=1 --timeout=300000
+        env:
+          CI: true
+          STRESS_TEST: true
+          
+      - name: Upload stress test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: stress-test-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 7
+
+  # Visual regression comprehensive testing
+  visual-regression-comprehensive:
+    name: Comprehensive Visual Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run comprehensive visual tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Test all themes and viewport combinations
+          for theme in light dark; do
+            for viewport in desktop tablet mobile; do
+              echo "Testing $theme theme at $viewport viewport"
+              THEME=$theme VIEWPORT=$viewport npm run test:e2e:visual
+            done
+          done
+        env:
+          CI: true
+          COMPREHENSIVE_VISUAL: true
+          
+      - name: Upload visual test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-visual-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/playwright-report/
+          retention-days: 30
+
+  # Accessibility compliance testing
+  accessibility-comprehensive:
+    name: Comprehensive Accessibility Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright browsers
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run comprehensive accessibility tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Test WCAG 2.1 AA compliance across all pages
+          npm run test:e2e:accessibility -- --grep="@wcag-aa"
+          
+          # Test keyboard navigation
+          npm run test:e2e:accessibility -- --grep="@keyboard"
+          
+          # Test screen reader compatibility
+          npm run test:e2e:accessibility -- --grep="@screen-reader"
+        env:
+          CI: true
+          ACCESSIBILITY_COMPREHENSIVE: true
+          
+      - name: Generate accessibility report
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Generate WCAG compliance report
+          node scripts/accessibility-report.js
+          
+      - name: Upload accessibility results
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-comprehensive-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/
+            ${{ env.WORKING_DIR }}/accessibility-report/
+          retention-days: 30
+
+  # Notify results
+  notify-results:
+    name: Notify Nightly Results
+    runs-on: ubuntu-latest
+    needs: [comprehensive-e2e, performance-baseline, stress-testing, visual-regression-comprehensive, accessibility-comprehensive]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Generate nightly report
+        run: |
+          # Create comprehensive nightly test report
+          echo "# 🌙 Nightly Test Results" > nightly-report.md
+          echo "" >> nightly-report.md
+          echo "Date: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> nightly-report.md
+          echo "Commit: ${{ github.sha }}" >> nightly-report.md
+          echo "" >> nightly-report.md
+          
+          # Add job results
+          echo "## Test Results Summary" >> nightly-report.md
+          echo "- Comprehensive E2E: ${{ needs.comprehensive-e2e.result }}" >> nightly-report.md
+          echo "- Performance Baseline: ${{ needs.performance-baseline.result }}" >> nightly-report.md
+          echo "- Stress Testing: ${{ needs.stress-testing.result }}" >> nightly-report.md
+          echo "- Visual Regression: ${{ needs.visual-regression-comprehensive.result }}" >> nightly-report.md
+          echo "- Accessibility: ${{ needs.accessibility-comprehensive.result }}" >> nightly-report.md
+          
+      - name: Create GitHub issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('nightly-report.md', 'utf8');
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🚨 Nightly Tests Failed - ${new Date().toISOString().split('T')[0]}`,
+              body: `${report}\n\n**Action Required:** Please investigate and fix the failing tests.\n\n[View Workflow Run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              labels: ['bug', 'testing', 'nightly-failure']
+            });
+            
+      - name: Upload nightly report
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-test-report
+          path: nightly-report.md
+          retention-days: 90
