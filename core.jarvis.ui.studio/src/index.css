@@ -48,6 +48,21 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  
+  /* Radix dropdown menu CSS variables support */
+  .max-h-\\(--radix-dropdown-menu-content-available-height\\) {
+    max-height: var(--radix-dropdown-menu-content-available-height);
+  }
+  
+  .origin-\\(--radix-dropdown-menu-content-transform-origin\\) {
+    transform-origin: var(--radix-dropdown-menu-content-transform-origin);
+  }
+  
+  /* Hidden outline utility */
+  .outline-hidden {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
   .hide-scrollbar::-webkit-scrollbar {
     display: none;
   }

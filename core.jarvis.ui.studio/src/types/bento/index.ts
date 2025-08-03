@@ -317,10 +317,10 @@ export interface PageExport {
   version: string;
   timestamp: Timestamp;
   
-  // Page data (will be properly typed when imported)
-  page: any;
-  layout: any;
-  grids: any[];
+  // Page data - using unknown for safer typing until fully imported
+  page: unknown;
+  layout: unknown;
+  grids: unknown[];
   
   // Component information
   components: ComponentReference[];
@@ -340,7 +340,7 @@ export interface ComponentReference {
   type: string;
   version?: string;
   source?: 'registry' | 'custom';
-  definition?: any;
+  definition?: Record<string, unknown>;
 }
 
 /**
@@ -462,40 +462,41 @@ export type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 /**
  * Type guard for GridComponent validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isGridComponent = (obj: any): boolean => {
-  return obj && 
-    typeof obj.id === 'string' &&
-    typeof obj.componentType === 'string' &&
-    obj.position && 
-    typeof obj.position.x === 'number' &&
-    typeof obj.position.y === 'number' &&
-    typeof obj.position.w === 'number' &&
-    typeof obj.position.h === 'number';
+export const isGridComponent = (obj: unknown): obj is { id: string; componentType: string; position: GridPosition } => {
+  if (!obj || typeof obj !== 'object') return false;
+  
+  const candidate = obj as Record<string, unknown>;
+  
+  return typeof candidate.id === 'string' &&
+    typeof candidate.componentType === 'string' &&
+    Boolean(candidate.position) &&
+    typeof candidate.position === 'object' &&
+    candidate.position !== null &&
+    typeof (candidate.position as Record<string, unknown>).x === 'number' &&
+    typeof (candidate.position as Record<string, unknown>).y === 'number' &&
+    typeof (candidate.position as Record<string, unknown>).w === 'number' &&
+    typeof (candidate.position as Record<string, unknown>).h === 'number';
 };
 
 /**
  * Type guard for DeviceType validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isValidDeviceType = (value: any): value is DeviceType => {
-  return Object.values(DeviceType).includes(value);
+export const isValidDeviceType = (value: unknown): value is DeviceType => {
+  return Object.values(DeviceType).includes(value as DeviceType);
 };
 
 /**
  * Type guard for ComponentCategory validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isValidComponentCategory = (value: any): value is ComponentCategory => {
-  return Object.values(ComponentCategory).includes(value);
+export const isValidComponentCategory = (value: unknown): value is ComponentCategory => {
+  return Object.values(ComponentCategory).includes(value as ComponentCategory);
 };
 
 /**
  * Type guard for PageStatus validation
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const isValidPageStatus = (value: any): value is PageStatus => {
-  return Object.values(PageStatus).includes(value);
+export const isValidPageStatus = (value: unknown): value is PageStatus => {
+  return Object.values(PageStatus).includes(value as PageStatus);
 };
 
 // ============================================================================
@@ -515,7 +516,15 @@ export const createDefaultGridPosition = (): GridPosition => ({
 /**
  * Create a default page configuration
  */
-export const createDefaultPage = (displayName: string, route: string): any => ({
+export const createDefaultPage = (displayName: string, route: string): {
+  displayName: string;
+  route: string;
+  status: PageStatus;
+  bindings: {
+    security: { isPublic: boolean };
+    visibility: { showInNavigation: boolean };
+  };
+} => ({
   displayName,
   route,
   status: PageStatus.Draft,
@@ -528,7 +537,15 @@ export const createDefaultPage = (displayName: string, route: string): any => ({
 /**
  * Create a default component constraints object
  */
-export const createDefaultConstraints = (): any => ({
+export const createDefaultConstraints = (): {
+  minSize: { w: number; h: number };
+  maxSize: { w: number; h: number };
+  defaultSize: { w: number; h: number };
+  resizable: {
+    horizontal: boolean;
+    vertical: boolean;
+  };
+} => ({
   minSize: { w: 1, h: 1 },
   maxSize: { w: 12, h: 12 },
   defaultSize: { w: 2, h: 2 },

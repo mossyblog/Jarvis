@@ -138,7 +138,7 @@ const createDefaultGrid = (device: DeviceType): BentoGrid => ({
     enableSnapping: true,
     snapToGrid: true,
     enableGuides: true,
-    compactMode: 'none' as any
+    compactMode: 'none' as 'none' | 'horizontal' | 'vertical'
   },
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString()
@@ -310,14 +310,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
   }, []);
   
   // Touch gesture handlers
-  const handleLongPress = useCallback((detail: any) => {
+  const handleLongPress = useCallback((detail: { duration: number; x: number; y: number }) => {
     if (state.isMobileLayout && !readOnly) {
       // Open component palette or context menu on long press
       setState(prev => ({ ...prev, showMobileMenu: true }));
     }
   }, [state.isMobileLayout, readOnly]);
   
-  const handleSwipe = useCallback((detail: any) => {
+  const handleSwipe = useCallback((detail: { direction: string; velocity: number; distance: number }) => {
     if (state.isMobileLayout) {
       if (detail.direction === 'up' && detail.velocity > 0.5) {
         // Swipe up to open component palette
@@ -329,7 +329,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
     }
   }, [state.isMobileLayout]);
   
-  const handlePinch = useCallback((detail: any) => {
+  const handlePinch = useCallback((detail: { scale: number; rotation: number; center: { x: number; y: number } }) => {
     if (state.isMobileLayout && detail.scale > 1.2) {
       // Pinch to zoom - toggle preview mode
       setState(prev => ({ ...prev, isPreviewMode: !prev.isPreviewMode }));
@@ -637,7 +637,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
             )}
             onTouchStart={(e) => {
               if (state.touchGesturesEnabled && state.isMobileLayout) {
-                handleLongPress({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+                handleLongPress({ duration: 500, x: e.touches[0].clientX, y: e.touches[0].clientY });
               }
             }}
           >

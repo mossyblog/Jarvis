@@ -9,36 +9,24 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   Search,
-  Filter,
   Star,
   Download,
   Eye,
-  Calendar,
-  User,
   Grid3X3,
   Layers,
   Zap,
-  Clock,
-  Tag,
-  ChevronDown,
   X,
   Play,
-  Bookmark,
   TrendingUp,
-  Award,
   Image as ImageIcon,
   FileText,
   BarChart3,
-  Database,
-  Users,
   Settings,
-  Globe,
-  Smartphone,
-  Monitor,
-  Tablet
+  Users,
+  Tag,
+  Globe
 } from 'lucide-react';
 
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';

@@ -532,7 +532,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
         // Update page via API - convert BentoGrid changes to UpdatePageRequest
         const updateRequest: UpdatePageRequest = {
           updatedByEntityId: 'current-user', // TODO: Get from auth context
-          metadata: (changes as any).metadata || {}
+          metadata: (changes as Record<string, unknown>).metadata as Record<string, unknown> || {}
         };
         updatePageMutation.mutate(updateRequest, {
           onSuccess: () => {

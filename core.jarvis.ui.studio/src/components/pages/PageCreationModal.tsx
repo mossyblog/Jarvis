@@ -333,10 +333,10 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
       const request: CreatePageRequest = {
         pageName: data.basicInfo.pageName,
         pageSlug: data.basicInfo.pageSlug,
-        pageType: data.basicInfo.pageType,
+        pageType: data.basicInfo.pageType as 'static' | 'dynamic',
         description: data.basicInfo.description,
         createdByEntityId: userEntityId,
-        tags: data.basicInfo.tags,
+        tags: Array.isArray(data.basicInfo.tags) ? data.basicInfo.tags.join(', ') : data.basicInfo.tags,
         metadata: data.configuration.metadata
       };
 
@@ -433,8 +433,10 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
     setCurrentStep(prev => Math.max(prev - 1, 0));
   }, []);
 
+  // Form data type is defined by the schema above
+
   // Handle form submission
-  const handleSubmit = useCallback(async (data: any) => {
+  const handleSubmit = useCallback(async (data: PageCreationFormData) => {
     const hasTemplate = data.templateSelection.selectedTemplateId;
 
     if (hasTemplate) {

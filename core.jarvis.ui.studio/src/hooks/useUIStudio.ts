@@ -154,7 +154,7 @@ export function useUIStudioCacheManager() {
 /** Hook to get a specific page (using GraphQL for reads) */
 export function useUIStudioPage(
   pageEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<unknown, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioPage | null, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   const queryClient = useQueryClient();
   const cacheManager = createCacheManager(queryClient);
@@ -177,7 +177,7 @@ export function useUIStudioPage(
 /** Hook to get pages by owner (using GraphQL for reads) */
 export function useUIStudioPagesByOwner(
   ownerEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioPage[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: cacheKeys.pagesByOwner(ownerEntityId),
@@ -190,7 +190,7 @@ export function useUIStudioPagesByOwner(
 /** Hook to get published pages (using GraphQL for reads) */
 export function useUIStudioPublishedPages(
   query: GetPublishedPagesQuery = {},
-  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioPage[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: cacheKeys.publishedPages(query),
@@ -359,7 +359,7 @@ export function useDuplicateUIStudioPage(
 /** Hook to get a specific layout (using GraphQL for reads) */
 export function useUIStudioLayout(
   layoutEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<unknown, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioLayout | null, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   const queryClient = useQueryClient();
   const cacheManager = createCacheManager(queryClient);
@@ -368,7 +368,7 @@ export function useUIStudioLayout(
     queryKey: cacheKeys.layout(layoutEntityId),
     queryFn: async () => {
       const layouts = await graphqlService.getUIStudioLayouts();
-      const layout = layouts.find((layout: any) => layout.id === layoutEntityId) || null;
+      const layout = layouts.find((layout: Record<string, unknown>) => layout.id === layoutEntityId) || null;
       
       // Prefetch related data in the background
       if (layout) {
@@ -477,7 +477,7 @@ export function useUpdateUIStudioLayoutGrid(
 /** Hook to get page bindings (using GraphQL for reads) */
 export function useUIStudioPageBindings(
   pageSlug: string,
-  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioComponentBinding[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: cacheKeys.pageBindingsBySlug(pageSlug),
@@ -575,7 +575,7 @@ export function useDeleteUIStudioBinding(
 /** Hook to get a specific template (using GraphQL for reads) */
 export function useUIStudioTemplate(
   templateEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<unknown, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioTemplate | null, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: uistudioKeys.template(templateEntityId),
@@ -587,13 +587,18 @@ export function useUIStudioTemplate(
 /** Hook to get templates by owner (using GraphQL for reads) */
 export function useUIStudioTemplatesByOwner(
   ownerEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<UIStudioTemplate[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: uistudioKeys.templatesByOwner(ownerEntityId),
-    queryFn: async () => {
+    queryFn: async (): Promise<UIStudioTemplate[]> => {
       const templates = await graphqlService.getTemplates();
-      return templates.filter((template: any) => template.owner_entity_id === ownerEntityId);
+      return templates
+        .filter((template): template is Record<string, unknown> => 
+          typeof template === 'object' && template !== null
+        )
+        .filter((template) => template.owner_entity_id === ownerEntityId)
+        .map((template) => template as unknown as UIStudioTemplate);
     },
     ...options
   });

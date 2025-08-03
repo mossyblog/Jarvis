@@ -21,7 +21,7 @@ import { UIStudioInterfaceSimple as UIStudioInterface } from './components/inter
 import { PageBuilderInterface } from './components/interfaces/PageBuilderInterface';
 import { SkipNavigation } from './components/accessibility/SkipNavigation';
 import { KeyboardNavigationProvider } from './components/keyboard/KeyboardNavigationProvider';
-import { ErrorBoundary } from './components/ErrorBoundary';
+import { ErrorBoundary } from './components/ui/error-boundary';
 import CacheMonitor from './components/dev/CacheMonitor';
 
 function App() {

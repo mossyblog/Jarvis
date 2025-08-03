@@ -12,10 +12,10 @@ import { useViewState } from '../hooks/useViewState';
 import { ViewSwitcher } from '../components/ui/view-switcher';
 import { Circle, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { addToRecentPages } from '../utils/recentPagesManager';
+
 import type { RecentPageMetadata } from '../utils/recentPagesManager';
 import { populateMockRecentPages } from '../utils/mockRecentPages';
-import { ErrorBoundary } from '../components/ui/error-boundary';
+
 
 // Generate mock chart data
 const generateChartData = (baseValue: number, variance: number = 0.3) => {

@@ -7,7 +7,7 @@
  * @module UseCacheStrategy
  */
 
-import { useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, type QueryKey } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo } from 'react';
 import { 
   cacheKeys, 
@@ -143,7 +143,7 @@ export function useCacheStrategy() {
     resourceType: UIStudioResourceType,
     strategy: CacheStrategy = 'background'
   ) => {
-    let queryKey: any;
+    let queryKey: QueryKey;
     
     // Get the appropriate cache key based on resource type
     switch (resourceType) {
@@ -182,8 +182,8 @@ export function useCacheStrategy() {
   }, [cacheManager]);
 
   const prefetchWithStrategy = useCallback(async (
-    queryKey: any[],
-    queryFn: () => Promise<any>,
+    queryKey: QueryKey,
+    queryFn: () => Promise<unknown>,
     strategy: CacheStrategy = 'background'
   ) => {
     const strategyConfig = getStrategyConfig(strategy);
@@ -196,7 +196,7 @@ export function useCacheStrategy() {
   }, [queryClient, getStrategyConfig]);
 
   const optimisticUpdateWithRollback = useCallback(async <T>(
-    queryKey: any[],
+    queryKey: QueryKey,
     updater: (oldData: T | undefined) => T,
     strategy: CacheStrategy = 'aggressive'
   ): Promise<() => void> => {
@@ -386,7 +386,7 @@ export function useRealtimeCacheStrategy() {
     queryOptions: strategies.realtime(),
     invalidate: (resourceType: UIStudioResourceType) => 
       invalidateByStrategy(resourceType, 'aggressive'),
-    prefetch: (queryKey: any[], queryFn: () => Promise<any>) =>
+    prefetch: (queryKey: QueryKey, queryFn: () => Promise<unknown>) =>
       prefetchWithStrategy(queryKey, queryFn, 'realtime'),
   };
 }
@@ -399,7 +399,7 @@ export function useBackgroundCacheStrategy() {
     queryOptions: strategies.background(),
     invalidate: (resourceType: UIStudioResourceType) => 
       invalidateByStrategy(resourceType, 'background'),
-    prefetch: (queryKey: any[], queryFn: () => Promise<any>) =>
+    prefetch: (queryKey: QueryKey, queryFn: () => Promise<unknown>) =>
       prefetchWithStrategy(queryKey, queryFn, 'background'),
   };
 }
@@ -412,7 +412,7 @@ export function useStaticCacheStrategy() {
     queryOptions: strategies.static(),
     invalidate: (resourceType: UIStudioResourceType) => 
       invalidateByStrategy(resourceType, 'lazy'),
-    prefetch: (queryKey: any[], queryFn: () => Promise<any>) =>
+    prefetch: (queryKey: QueryKey, queryFn: () => Promise<unknown>) =>
       prefetchWithStrategy(queryKey, queryFn, 'static'),
   };
 }

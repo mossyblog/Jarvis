@@ -402,13 +402,29 @@ export class RealApiService implements IApiService {
         return this.getFallbackNavigation();
       }
 
-      const data = result.data?.data as any;
+      type GraphQLNavigationResponse = {
+        navigation_item_componentCollection?: {
+          edges: Array<{
+            node: {
+              id: string;
+              label: string;
+              icon: string;
+              href: string;
+              sort_order: number;
+              is_active: boolean;
+              required_permission_id?: string;
+            };
+          }>;
+        };
+      };
+      
+      const data = result.data?.data as GraphQLNavigationResponse;
       if (data?.navigation_item_componentCollection?.edges) {
         const navigationItems: NavigationItem[] = data.navigation_item_componentCollection.edges
-          .map((edge: Record<string, unknown>) => edge.node)
-          .filter((item: Record<string, unknown>) => item.is_active)
-          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.sort_order as number) - (b.sort_order as number))
-          .map((item: Record<string, unknown>) => ({
+          .map(edge => edge.node)
+          .filter(item => item.is_active)
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map(item => ({
             id: item.id,
             label: item.label,
             icon: item.icon,

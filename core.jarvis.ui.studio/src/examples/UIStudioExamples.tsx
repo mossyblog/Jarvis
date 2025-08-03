@@ -28,6 +28,8 @@ import type {
   CreateBindingRequest,
   UIStudioLayout,
   CreateTemplateRequest,
+  UIStudioPage,
+  UIStudioComponentBinding,
   ApplyTemplateRequest,
   CreateVersionRequest 
 } from '../types/uistudio';
@@ -149,7 +151,7 @@ export function PageManagerExample({ userId }: PageManagerProps) {
 
       {pages && pages.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {(pages as any[])?.map((page: any) => (
+          {(pages as UIStudioPage[])?.map((page: UIStudioPage) => (
             <div
               key={page.id}
               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
@@ -398,7 +400,7 @@ export function BentoGridEditorExample({ pageEntityId, layoutEntityId, userId }:
         <h3 className="font-medium mb-3">Page Components</h3>
         {bindings && bindings.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {(bindings as any[])?.map((binding: any) => (
+            {(bindings as UIStudioComponentBinding[])?.map((binding: UIStudioComponentBinding) => (
               <div
                 key={binding.id}
                 className="p-3 border border-gray-200 rounded-lg"

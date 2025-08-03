@@ -48,6 +48,7 @@ import {
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 import type { FieldMapping, UIControlType, FieldValidation } from './WriteConfigModal';
+import type { ECSComponentConfig } from '@/types/bento';
 
 // ============================================================================
 // Types
@@ -55,7 +56,7 @@ import type { FieldMapping, UIControlType, FieldValidation } from './WriteConfig
 
 export interface FieldMappingEditorProps {
   /** ECS component being mapped */
-  ecsComponent: ECSComponent;
+  ecsComponent: ECSComponentConfig;
   /** UI component type */
   componentType: string;
   /** Current field mappings */
@@ -962,7 +963,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
                         
                         handleUpdateMapping(field.name, {
                           ecsField: field.name,
-                          source: suggestion.source as any,
+                          source: suggestion.source as 'prop' | 'state' | 'computed',
                           sourcePath: suggestion.path,
                           uiControl: defaultControl
                         });
@@ -1020,7 +1021,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs">{ecsComponent.name}</span>
                 <Badge variant="outline" className="text-xs">
-                  v{(ecsComponent as any).version || '1.0.0'}
+                  v{ecsComponent.version || '1.0.0'}
                 </Badge>
               </div>
             </div>

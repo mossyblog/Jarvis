@@ -24,7 +24,9 @@ import {
   FileText,
   TestTube,
   ChevronRight,
-  X
+  X,
+  Lock,
+  Link
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -545,7 +547,7 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
             </SelectContent>
           </Select>
           
-          <Select value={sortBy} onValueChange={(value) => setSortBy(value as any)}>
+          <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'name' | 'category' | 'updated')}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -799,7 +801,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
               return (
                 <React.Fragment key={step.id}>
                   <button
-                    onClick={() => setActiveTab(step.id as any)}
+                    onClick={() => setActiveTab(step.id as 'component' | 'mapping' | 'config' | 'test' | 'deploy')}
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors",
                       isActive && "bg-primary text-primary-foreground",
@@ -840,7 +842,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
             {activeTab === 'mapping' && selectedECSComponent && (
               <div className="space-y-6">
                 <FieldMappingEditor
-                  ecsComponent={selectedECSComponent as any}
+                  ecsComponent={selectedECSComponent}
                   componentType={component.componentType}
                   mappings={binding.fieldMappings || []}
                   onChange={handleFieldMappingsUpdate}
@@ -1006,7 +1008,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                           <div className="space-y-2">
                             <Label>Sample Data:</Label>
                             <pre className="text-xs p-3 bg-muted rounded font-mono overflow-auto max-h-40">
-                              {JSON.stringify(testResult.data as any, null, 2)}
+                              {JSON.stringify(testResult.data as Record<string, unknown>, null, 2)}
                             </pre>
                           </div>
                         )}
@@ -1036,7 +1038,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                             ...prev,
                             deploymentConfig: {
                               ...prev.deploymentConfig!,
-                              environment: value as any
+                              environment: value as 'development' | 'staging' | 'production'
                             }
                           }))}
                         >

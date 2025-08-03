@@ -17,7 +17,7 @@
  * @module TemplateGalleryGrid
  */
 
-import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 // UIStudio hooks and services
@@ -47,16 +47,11 @@ import {
   Grid3X3,
   List,
   Eye,
-  Download,
   Star,
   Users,
   Calendar,
   Tag,
-  ChevronLeft,
-  ChevronRight,
   X,
-  Heart,
-  Zap,
   Trophy,
   Sparkles
 } from 'lucide-react';

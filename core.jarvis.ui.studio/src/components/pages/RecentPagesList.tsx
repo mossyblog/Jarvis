@@ -29,12 +29,6 @@ import {
   SortDesc,
   Grid3X3,
   List,
-  Calendar,
-  User,
-  Tag,
-  Globe,
-  Lock,
-  FileText,
   X,
   RefreshCw,
   AlertCircle,
@@ -52,7 +46,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Utilities and Types

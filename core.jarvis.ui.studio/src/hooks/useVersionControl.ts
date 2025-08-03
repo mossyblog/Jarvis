@@ -40,8 +40,8 @@ export interface VersionConflict {
 
 export interface ConflictingChange {
   path: string;
-  localValue: any;
-  remoteValue: any;
+  localValue: unknown;
+  remoteValue: unknown;
   changeType: 'added' | 'modified' | 'removed';
 }
 

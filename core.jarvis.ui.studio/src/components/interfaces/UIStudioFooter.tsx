@@ -21,7 +21,6 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 // Shadcn/ui components
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
-import { Separator } from '../ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 // Icons
@@ -31,14 +30,9 @@ import {
   XCircle,
   AlertCircle,
   Clock,
-  Zap,
-  Database,
-  Server,
-  Wifi,
   WifiOff,
   RefreshCw,
   Info,
-  Settings,
   User
 } from 'lucide-react';
 

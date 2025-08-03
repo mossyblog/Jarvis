@@ -258,15 +258,18 @@ export class GraphQLService {
         };
       }>(query);
 
-      return result.account_componentCollection?.edges?.map((edge: any) => ({
-        id: edge.node.id,
-        ownerEntityId: edge.node.owner_entity_id,
-        email: edge.node.email,
-        authMethod: edge.node.auth_method,
-        isActive: edge.node.is_active,
-        createdAt: edge.node.created_at,
-        lastUpdated: edge.node.last_updated
-      })) || [];
+      return result.account_componentCollection?.edges?.map((edge: { node: unknown }) => {
+        const node = edge.node as Record<string, unknown>;
+        return {
+          id: node.id,
+          ownerEntityId: node.owner_entity_id,
+          email: node.email,
+          authMethod: node.auth_method,
+          isActive: node.is_active,
+          createdAt: node.created_at,
+          lastUpdated: node.last_updated
+        };
+      }) || [];
     } catch (error) {
       console.error('Failed to fetch accounts via GraphQL:', error);
       return [];
@@ -286,9 +289,16 @@ export class GraphQLService {
     
     const searchLower = searchTerm.toLowerCase();
     
-    return allAccounts.filter((account: any) => 
-      account.email.toLowerCase().includes(searchLower) ||
-      account.ownerEntityId.toLowerCase().includes(searchLower)
+    return allAccounts
+      .filter((account): account is Record<string, unknown> => 
+        typeof account === 'object' && account !== null
+      )
+      .filter((account) => {
+      const email = account.email as string;
+      const ownerEntityId = account.ownerEntityId as string;
+      return email?.toLowerCase().includes(searchLower) ||
+        ownerEntityId?.toLowerCase().includes(searchLower);
+    }
     );
   }
 
@@ -650,7 +660,7 @@ export class GraphQLService {
         // Group by component type to create registry
         const components = new Map();
         result.ui_studio_component_bindingCollection.edges.forEach(edge => {
-          const node = edge.node as any;
+          const node = edge.node as Record<string, unknown>;
           if (!components.has(node.component_type)) {
             components.set(node.component_type, {
               type: node.component_type,

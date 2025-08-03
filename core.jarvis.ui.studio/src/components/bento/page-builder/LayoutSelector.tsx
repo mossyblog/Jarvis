@@ -11,7 +11,12 @@ import {
   Search,
   Filter,
   Check,
-  Eye
+  Eye,
+  BarChart3,
+  Settings,
+  Star,
+  Users,
+  Grid3X3
 } from 'lucide-react';
 
 import type { BentoLayout } from '@/types/bento';

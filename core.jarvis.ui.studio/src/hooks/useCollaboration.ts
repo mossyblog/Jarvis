@@ -34,7 +34,7 @@ export interface PageUpdate {
   userId: string;
   timestamp: string;
   changeType: 'component_add' | 'component_update' | 'component_remove' | 'page_settings' | 'layout_change';
-  data: any;
+  data: Record<string, unknown>;
   version: number;
 }
 
@@ -212,7 +212,12 @@ export const useCollaboration = (
   // Message Handling
   // ============================================================================
 
-  const handleWebSocketMessage = useCallback((message: any) => {
+  const handleWebSocketMessage = useCallback((message: {
+    type: string;
+    data?: unknown;
+    user?: CollaborationUser;
+    update?: PageUpdate;
+  }) => {
     switch (message.type) {
       case 'user_joined':
         setState(prev => ({

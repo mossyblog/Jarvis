@@ -9,12 +9,12 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuGroup,
 } from '@/components/ui/dropdown-menu'
 import { 
   Home, 
   HelpCircle, 
   Bell,
-  Slash,
   ExternalLink,
   MessageCircle,
   FileText,
@@ -203,8 +203,8 @@ const NotificationsPopover = () => {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 max-h-96 overflow-hidden">
-        <DropdownMenuLabel className="flex items-center justify-between px-4 py-2">
+      <DropdownMenuContent align="end" className="w-80">
+        <DropdownMenuLabel className="flex items-center justify-between">
           <span>Notifications</span>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
@@ -225,8 +225,8 @@ const NotificationsPopover = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {hasNotifications ? (
-          <div className="max-h-80 overflow-y-auto">
+        <DropdownMenuGroup>
+        {hasNotifications ? (<>
             {notifications.map((notification) => (
               <DropdownMenuItem 
                 key={notification.id}
@@ -265,11 +265,7 @@ const NotificationsPopover = () => {
                 </div>
               </DropdownMenuItem>
             ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem className="p-3 text-center text-sm text-primary hover:text-primary/80 cursor-pointer">
-              View all notifications
-            </DropdownMenuItem>
-          </div>
+            </>
         ) : (
           <div className="p-6 text-center">
             <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
@@ -280,6 +276,15 @@ const NotificationsPopover = () => {
               We'll notify you when something happens
             </p>
           </div>
+        )}
+        </DropdownMenuGroup>
+        {hasNotifications && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="justify-center text-sm text-primary hover:text-primary/80">
+              View all notifications
+            </DropdownMenuItem>
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>

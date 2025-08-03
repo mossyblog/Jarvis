@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import type { User, LoginCredentials, NavigationItem } from '../services/api/types';
+import type { User, LoginCredentials, NavigationItem, AuthResponse } from '../services/api/types';
 import { apiService } from '../services/api/apiService';
 import { 
   getStoredTokens, 
@@ -128,9 +128,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
               timeoutPromise
             ]);
             
-            if ((result as { data?: any }).data) {
+            if ((result as { data?: AuthResponse }).data) {
               console.log('Token refreshed on startup');
-              setUser((result as { data: { user: any } }).data.user);
+              setUser((result as { data: AuthResponse }).data.user);
               
               // Load navigation with timeout
               try {
@@ -138,15 +138,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
                   apiService.getNavigation(),
                   timeoutPromise
                 ]);
-                if ((navResult as { data?: any }).data) {
-                  setNavigation((navResult as { data: any }).data);
+                if ((navResult as { data?: NavigationItem[] }).data) {
+                  setNavigation((navResult as { data: NavigationItem[] }).data);
                 }
               } catch (navError) {
                 console.error('Failed to load navigation:', navError);
               }
               
               // Schedule next refresh
-              scheduleTokenRefresh((result as { data: { accessToken: string } }).data.accessToken);
+              scheduleTokenRefresh((result as { data: AuthResponse }).data.accessToken);
               return;
             }
           } catch (refreshError) {
