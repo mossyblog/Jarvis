@@ -128,7 +128,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsMobileOpen(!isMobileOpen)}
-        className="fixed top-4 left-4 z-50 p-2 rounded-md bg-dash-sidebar border border-border-stronger lg:hidden"
+        className="fixed top-xs left-xs z-50 p-xs rounded-md bg-dash-sidebar border border-border-stronger lg:hidden"
       >
         <Menu size={20} />
       </button>
@@ -136,8 +136,8 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-12 h-[calc(100vh-3rem)] bg-dash-sidebar border-r border-border-stronger flex flex-col transition-[width] duration-200 ease-out overflow-hidden",
-          isExpanded ? "w-64" : "w-12",
+          "fixed left-0 top-3xl h-[calc(100vh-3rem)] bg-dash-sidebar border-r border-border-stronger flex flex-col transition-[width] duration-200 ease-out overflow-hidden",
+          isExpanded ? "w-4xl" : "w-md",
           "hidden md:flex",
           isMobileOpen && "flex",
           // Higher z-index and shadow when expanded on hover (overlay mode)
@@ -159,14 +159,14 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
         }}
       >
         {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto py-1 px-2" role="menubar" aria-label="Primary navigation menu">
-          <div className="space-y-1">
+        <nav className="flex-1 overflow-y-auto py-xs px-xs" role="menubar" aria-label="Primary navigation menu">
+          <div className="space-y-xs">
             {sidebarItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => handleItemClick(item.id)}
                 className={cn(
-                  "w-full flex items-center h-9 rounded-md transition-colors relative group",
+                  "w-full flex items-center h-sm rounded-md transition-colors relative group",
                   "hover:bg-secondary",
                   activeItem === item.id && "bg-secondary",
                 )}
@@ -175,7 +175,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                 aria-current={activeItem === item.id ? "page" : undefined}
               >
                 {/* Icon container - fixed position */}
-                <div className="absolute left-2 w-5 h-5 flex items-center justify-center">
+                <div className="absolute left-xs w-sm h-sm flex items-center justify-center">
                   <span className={cn(
                     activeItem === item.id ? "text-brand" : "text-muted-foreground",
                     "group-hover:text-foreground/90"
@@ -186,7 +186,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                 
                 {/* Label - only visible when expanded */}
                 <div className={cn(
-                  "ml-9 mr-3 overflow-hidden transition-opacity duration-200",
+                  "ml-lg mr-xs overflow-hidden transition-opacity duration-200",
                   isExpanded ? "opacity-100" : "opacity-0"
                 )}>
                   <span className={cn(
@@ -206,21 +206,21 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                 <DialogTrigger asChild>
                   <button
                     className={cn(
-                      "w-full flex items-center h-9 rounded-md transition-colors relative group",
+                      "w-full flex items-center h-sm rounded-md transition-colors relative group",
                       "hover:bg-secondary border-2 border-dashed border-border",
-                      "mt-2"
+                      "mt-xs"
                     )}
                     role="menuitem"
                     aria-label="Create new page"
                   >
                     {/* Icon container - fixed position */}
-                    <div className="absolute left-2 w-5 h-5 flex items-center justify-center">
+                    <div className="absolute left-xs w-sm h-sm flex items-center justify-center">
                       <Plus size={18} className="text-muted-foreground group-hover:text-foreground/90" />
                     </div>
                     
                     {/* Label - only visible when expanded */}
                     <div className={cn(
-                      "ml-9 mr-3 overflow-hidden transition-opacity duration-200",
+                      "ml-lg mr-xs overflow-hidden transition-opacity duration-200",
                       isExpanded ? "opacity-100" : "opacity-0"
                     )}>
                       <span className="text-sm whitespace-nowrap text-muted-foreground group-hover:text-foreground/90">
@@ -238,8 +238,8 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                     </DialogDescription>
                   </DialogHeader>
                   
-                  <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
+                  <div className="grid gap-xs py-xs">
+                    <div className="grid grid-cols-4 items-center gap-xs">
                       <Label htmlFor="page-name" className="text-right">
                         Name
                       </Label>
@@ -251,7 +251,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                         className="col-span-3"
                       />
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
+                    <div className="grid grid-cols-4 items-center gap-xs">
                       <Label htmlFor="page-route" className="text-right">
                         Route
                       </Label>
@@ -281,11 +281,11 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
         </nav>
 
         {/* Bottom Section with Sidebar Control */}
-        <div className="border-t border-border-stronger p-2 relative" role="complementary" aria-label="Sidebar controls">
+        <div className="border-t border-border-stronger p-xs relative" role="complementary" aria-label="Sidebar controls">
           {/* Sidebar Control Button */}
           <button
             onClick={() => setShowDropdown(!showDropdown)}
-            className="sidebar-control-button w-9 h-9 flex items-center justify-center hover:bg-secondary rounded transition-colors relative"
+            className="sidebar-control-button w-sm h-sm flex items-center justify-center hover:bg-secondary rounded transition-colors relative"
             title="Sidebar control"
             aria-label="Open sidebar control menu"
             aria-expanded={showDropdown}
@@ -299,25 +299,25 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
             <div 
               className={cn(
                 "sidebar-control-dropdown absolute bg-secondary border border-border rounded-md shadow-lg min-w-[180px] z-[100]",
-                "bottom-full mb-2 left-0"
+                "bottom-full mb-xs left-0"
               )}
               role="menu"
               aria-label="Sidebar control options"
               >
-              <div className="p-1">
-                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
+              <div className="p-xs">
+                <div className="px-xs py-xs text-xs font-medium text-muted-foreground">
                   Sidebar control
                 </div>
-                <div className="h-px bg-border my-1" />
+                <div className="h-px bg-border my-xs" />
                 <button
                   onClick={() => handleBehaviorChange('open')}
                   className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors",
+                    "w-full flex items-center gap-xs px-xs py-xs text-sm rounded hover:bg-muted transition-colors",
                     behavior === 'open' && "bg-muted"
                   )}
                 >
                   <div className={cn(
-                    "w-4 h-4 rounded-full border-2",
+                    "w-xs h-xs rounded-full border-2",
                     behavior === 'open' ? "border-brand bg-brand" : "border-muted-foreground"
                   )}>
                     {behavior === 'open' && (
@@ -329,12 +329,12 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                 <button
                   onClick={() => handleBehaviorChange('closed')}
                   className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors",
+                    "w-full flex items-center gap-xs px-xs py-xs text-sm rounded hover:bg-muted transition-colors",
                     behavior === 'closed' && "bg-muted"
                   )}
                 >
                   <div className={cn(
-                    "w-4 h-4 rounded-full border-2",
+                    "w-xs h-xs rounded-full border-2",
                     behavior === 'closed' ? "border-brand bg-brand" : "border-muted-foreground"
                   )}>
                     {behavior === 'closed' && (
@@ -346,12 +346,12 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                 <button
                   onClick={() => handleBehaviorChange('expandable')}
                   className={cn(
-                    "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded hover:bg-muted transition-colors",
+                    "w-full flex items-center gap-xs px-xs py-xs text-sm rounded hover:bg-muted transition-colors",
                     behavior === 'expandable' && "bg-muted"
                   )}
                 >
                   <div className={cn(
-                    "w-4 h-4 rounded-full border-2",
+                    "w-xs h-xs rounded-full border-2",
                     behavior === 'expandable' ? "border-brand bg-brand" : "border-muted-foreground"
                   )}>
                     {behavior === 'expandable' && (

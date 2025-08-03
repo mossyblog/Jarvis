@@ -24,7 +24,7 @@ const buttonVariants = cva(
         xs: "h-lg px-sm text-xs gap-xs [&_svg]:h-md [&_svg]:w-md rounded-sm",
         sm: "h-xl px-md text-sm gap-sm [&_svg]:h-md [&_svg]:w-md rounded-sm", 
         default: "h-xl px-lg text-sm gap-sm [&_svg]:h-md [&_svg]:w-md rounded-sm",
-        lg: "h-2xl px-xl text-base gap-md [&_svg]:h-lg [&_svg]:w-lg rounded-md",
+        lg: "h-2xl px-xl text-md gap-md [&_svg]:h-lg [&_svg]:w-lg rounded-md",
         xl: "h-3xl px-2xl text-lg gap-md [&_svg]:h-xl [&_svg]:w-xl rounded-md",
         icon: "h-xl w-xl min-w-xl min-h-xl p-sm flex-shrink-0 [&_svg]:h-md [&_svg]:w-md [&_svg]:flex-shrink-0 rounded-sm",
       },

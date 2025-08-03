@@ -33,7 +33,7 @@ export const Default: Story = {
 
 export const WithLabel: Story = {
   render: () => (
-    <div className="grid w-full max-w-sm items-center gap-1.5">
+    <div className="grid w-full max-w-sm items-center gap-xs">
       <Label htmlFor="framework">Framework</Label>
       <Select>
         <SelectTrigger>
@@ -87,7 +87,7 @@ export const AllSizes: Story = {
       <div className="space-y-2">
         <Label>Small Select</Label>
         <Select>
-          <SelectTrigger className="w-[160px] h-8 text-xs">
+          <SelectTrigger className="w-3xl h-xs text-xs">
             <SelectValue placeholder="Small" />
           </SelectTrigger>
           <SelectContent>
@@ -113,7 +113,7 @@ export const AllSizes: Story = {
       <div className="space-y-2">
         <Label>Large Select</Label>
         <Select>
-          <SelectTrigger className="w-[220px] h-12">
+          <SelectTrigger className="w-4xl h-md">
             <SelectValue placeholder="Large" />
           </SelectTrigger>
           <SelectContent>

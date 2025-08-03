@@ -24,7 +24,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
 
   return (
     <label className={cn(
-      "flex items-center gap-2 cursor-pointer",
+      "flex items-center gap-xs cursor-pointer",
       disabled && "cursor-not-allowed opacity-50",
       className
     )}>
@@ -37,7 +37,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({
           if (el) el.indeterminate = indeterminate;
         }}
         className={cn(
-          "w-4 h-4 rounded border border-input bg-background",
+          "w-xs h-xs rounded border border-input bg-background",
           "checked:bg-primary checked:border-primary",
           "focus:ring-2 focus:ring-primary focus:ring-offset-2",
           disabled && "cursor-not-allowed"

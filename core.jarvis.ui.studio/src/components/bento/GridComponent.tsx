@@ -457,7 +457,7 @@ export const GridComponent: React.FC<GridComponentProps> = ({
       {helpMessage && (
         <div
           className={cn(
-            'absolute top-0 left-0 z-30 p-2 rounded-md shadow-md typography-caption max-w-48',
+            'absolute top-0 left-0 z-30 p-sm rounded-md shadow-md typography-caption max-w-3xl',
             'transition-all duration-300 ease-in-out transform -translate-y-full',
             {
               'bg-success/10 border border-success text-success': helpMessage.type === 'success',

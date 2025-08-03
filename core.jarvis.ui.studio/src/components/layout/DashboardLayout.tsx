@@ -60,7 +60,7 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
         {/* Layout Toolbar - Only visible in edit mode */}
         <div className={cn(
           "transition-all duration-200",
-          !isEmulating && sidebarBehavior === 'open' ? "md:ml-32" : !isEmulating && "md:ml-12"
+          !isEmulating && sidebarBehavior === 'open' ? "md:ml-6xl" : !isEmulating && "md:ml-3xl"
         )}>
           <LayoutToolbar />
         </div>
@@ -76,7 +76,7 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
             className={cn(
               "flex-1 min-h-0 overflow-y-auto overflow-x-hidden transition-all duration-200 pb-16",
               // Only push content when sidebar is in 'open' mode and not emulating
-              !isEmulating && sidebarBehavior === 'open' ? "md:ml-32" : !isEmulating && "md:ml-12",
+              !isEmulating && sidebarBehavior === 'open' ? "md:ml-6xl" : !isEmulating && "md:ml-3xl",
               isEmulating && "ml-0 w-full"
             )}
             role="main"

@@ -393,7 +393,7 @@ export function BentoGridKeyboard({
 
       {/* Visual indicators */}
       {enableKeyboardNavigation && isActive && (
-        <div className="absolute top-2 right-2 flex items-center gap-2 pointer-events-none z-50">
+        <div className="absolute top-2 right-2 flex items-center gap-xs pointer-events-none z-50">
           <div className="bg-blue-500 text-white text-xs px-2 py-1 rounded font-mono">
             KB Nav
           </div>
@@ -443,7 +443,7 @@ export function BentoGridKeyboard({
               }}
             >
               {/* Component content would be rendered here */}
-              <div className="w-full h-full bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+              <div className="w-full h-full bg-white border border-gray-200 rounded-lg p-sm shadow-sm">
                 <div className="text-sm font-medium text-gray-900">
                   {component.componentType}
                 </div>

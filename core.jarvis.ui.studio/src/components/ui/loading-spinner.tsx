@@ -29,11 +29,11 @@ const loadingSpinnerVariants = cva(
         accent: "text-accent-foreground"
       },
       size: {
-        xs: "h-3 w-3",
-        sm: "h-4 w-4", 
-        default: "h-5 w-5",
-        lg: "h-6 w-6",
-        xl: "h-8 w-8"
+        xs: "h-xs w-xs",
+        sm: "h-xs w-xs", 
+        default: "h-sm w-sm",
+        lg: "h-md w-md",
+        xl: "h-lg w-lg"
       }
     },
     defaultVariants: {
@@ -89,15 +89,15 @@ export function LoadingState({
   showSpinner = true 
 }: LoadingStateProps) {
   const sizeClasses = {
-    sm: 'py-4',
-    default: 'py-8', 
-    lg: 'py-12'
+    sm: 'py-md',
+    default: 'py-lg', 
+    lg: 'py-xl'
   };
 
   const variantClasses = {
     default: 'flex items-center justify-center',
-    minimal: 'flex items-center gap-2',
-    card: 'flex flex-col items-center justify-center p-8 bg-muted/30 rounded-lg border-2 border-dashed border-muted'
+    minimal: 'flex items-center gap-xs',
+    card: 'flex flex-col items-center justify-center p-lg bg-muted/30 rounded-lg border-2 border-dashed border-muted'
   };
 
   return (
@@ -107,7 +107,7 @@ export function LoadingState({
       className
     )}>
       <div className={cn(
-        "flex items-center gap-2 text-muted-foreground",
+        "flex items-center gap-xs text-muted-foreground",
         variant === 'default' && "flex-col text-center"
       )}>
         {showSpinner && (
@@ -118,7 +118,7 @@ export function LoadingState({
         {children && (
           <span className={cn(
             "text-sm",
-            variant === 'default' && "mt-2"
+            variant === 'default' && "mt-xs"
           )}>
             {children}
           </span>
@@ -152,7 +152,7 @@ export function LoadingOverlay({
       {children}
       {isLoading && (
         <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-10">
-          <div className="flex flex-col items-center gap-3 p-6 bg-background border rounded-lg shadow-lg">
+          <div className="flex flex-col items-center gap-md p-2xl bg-background border rounded-lg shadow-lg">
             <LoadingSpinner size={spinnerSize} />
             <span className="text-sm text-muted-foreground">{message}</span>
           </div>
@@ -230,9 +230,9 @@ interface LoadingDotsProps {
 
 export function LoadingDots({ className, size = 'default' }: LoadingDotsProps) {
   const sizeClasses = {
-    sm: 'h-1 w-1',
-    default: 'h-2 w-2',
-    lg: 'h-3 w-3'
+    sm: 'h-0.5 w-0.5',
+    default: 'h-xs w-xs',
+    lg: 'h-xs w-xs'
   };
 
   const dotClass = cn(
@@ -241,7 +241,7 @@ export function LoadingDots({ className, size = 'default' }: LoadingDotsProps) {
   );
 
   return (
-    <div className={cn("flex items-center gap-1", className)}>
+    <div className={cn("flex items-center gap-0.5", className)}>
       <div className={cn(dotClass, "[animation-delay:0ms]")} />
       <div className={cn(dotClass, "[animation-delay:150ms]")} />
       <div className={cn(dotClass, "[animation-delay:300ms]")} />
@@ -267,7 +267,7 @@ export function ProgressIndicator({
   showPercentage = true
 }: ProgressIndicatorProps) {
   return (
-    <div className={cn("w-full space-y-2", className)}>
+    <div className={cn("w-full space-y-xs", className)}>
       {(message || showPercentage) && (
         <div className="flex justify-between items-center text-sm">
           {message && <span className="text-muted-foreground">{message}</span>}
@@ -278,7 +278,7 @@ export function ProgressIndicator({
           )}
         </div>
       )}
-      <div className="h-2 bg-muted rounded-full overflow-hidden">
+      <div className="h-xs bg-muted rounded-full overflow-hidden">
         <div 
           className="h-full bg-primary transition-all duration-300 ease-out"
           style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
@@ -315,7 +315,7 @@ export function LoadingText({
   className?: string; 
 }) {
   return (
-    <span className={cn("flex items-center gap-2 text-muted-foreground", className)}>
+    <span className={cn("flex items-center gap-xs text-muted-foreground", className)}>
       <LoadingSpinner size="xs" />
       {children}
     </span>

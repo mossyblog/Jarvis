@@ -93,7 +93,7 @@ export const DeviceSelector: React.FC = () => {
                     )}
                   >
                     <Icon className={cn(
-                      "h-4 w-4 transition-colors",
+                      "h-xs w-xs transition-colors",
                       isActive && "text-primary"
                     )} />
                     {isActive && (

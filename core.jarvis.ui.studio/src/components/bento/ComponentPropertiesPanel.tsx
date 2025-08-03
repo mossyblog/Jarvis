@@ -123,12 +123,12 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
       
       {/* Panel */}
       <div className={cn(
-        "fixed top-0 right-0 h-full w-96 bg-background border-l border-border z-50",
+        "fixed top-0 right-0 h-full w-6xl bg-background border-l border-border z-50",
         "transform transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border">
+        <div className="flex items-center justify-between p-sm border-b border-border">
           <div>
             <h2 className="text-lg font-semibold">Component Properties</h2>
             <p className="text-sm text-muted-foreground">
@@ -141,29 +141,29 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
             onClick={onClose}
             className="h-8 w-8 p-0"
           >
-            <X className="h-4 w-4" />
+            <X className="icon-xs" />
           </Button>
         </div>
 
         {/* Component Actions Bar */}
-        <div className="flex items-center gap-1 px-4 py-2 border-b border-border bg-muted/30">
+        <div className="flex items-center gap-xs px-sm py-sm border-b border-border bg-muted/30">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onDuplicate?.(component.id)}
-            className="h-7 px-2"
+            className="h-sm px-sm"
             title="Duplicate component"
           >
-            <Copy className="h-3 w-3" />
+            <Copy className="icon-xs" />
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onMove?.(component.id, 'up')}
-            className="h-7 px-2"
+            className="h-sm px-sm"
             title="Move up"
           >
-            <Move className="h-3 w-3" />
+            <Move className="icon-xs" />
           </Button>
           <div className="flex-1" />
           <Button
@@ -173,23 +173,23 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
             className="h-7 px-2 text-destructive hover:text-destructive"
             title="Delete component"
           >
-            <Trash2 className="h-3 w-3" />
+            <Trash2 className="icon-xs" />
           </Button>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'properties' | 'bindings' | 'preview')} className="flex flex-col h-[calc(100%-122px)]">
           <TabsList className="grid w-full grid-cols-3 m-4 mb-0">
-            <TabsTrigger value="properties" className="flex items-center gap-2">
-              <Settings className="h-4 w-4" />
+            <TabsTrigger value="properties" className="flex items-center gap-xs">
+              <Settings className="icon-xs" />
               Props
             </TabsTrigger>
-            <TabsTrigger value="bindings" className="flex items-center gap-2">
-              <Database className="h-4 w-4" />
+            <TabsTrigger value="bindings" className="flex items-center gap-xs">
+              <Database className="icon-xs" />
               Data
             </TabsTrigger>
-            <TabsTrigger value="preview" className="flex items-center gap-2">
-              <Eye className="h-4 w-4" />
+            <TabsTrigger value="preview" className="flex items-center gap-xs">
+              <Eye className="icon-xs" />
               Preview
             </TabsTrigger>
           </TabsList>
@@ -197,11 +197,11 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
           {/* Properties Tab */}
           <TabsContent value="properties" className="flex-1 m-0">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-6">
+              <div className="p-sm space-y-xl">
                 {/* Component Info */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <Label className="text-sm font-medium">Component Info</Label>
-                  <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div className="grid grid-cols-2 gap-md text-sm">
                     <div>
                       <span className="text-muted-foreground">Type:</span>
                       <div className="font-mono">{component.componentType}</div>
@@ -222,11 +222,11 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                 </div>
 
                 {/* Component Properties */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <Label className="text-sm font-medium">Properties</Label>
-                  <div className="space-y-4">
+                  <div className="space-y-lg">
                     {getComponentProperties(component.componentType).map((prop) => (
-                      <div key={prop.name} className="space-y-2">
+                      <div key={prop.name} className="space-y-sm">
                         <Label className="text-sm">{prop.name}</Label>
                         {prop.type === 'string' && (
                           <Input
@@ -252,7 +252,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                           />
                         )}
                         {prop.type === 'boolean' && (
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-xs">
                             <input
                               type="checkbox"
                               checked={(componentProps as Record<string, unknown>)[prop.name] as boolean || false}
@@ -272,10 +272,10 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                 </div>
 
                 {/* Layout & Spacing */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <Label className="text-sm font-medium">Layout & Spacing</Label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-md">
+                    <div className="space-y-sm">
                       <Label className="text-xs">Padding (px)</Label>
                       <Input
                         type="number"
@@ -290,7 +290,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                         className="w-full"
                       />
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-sm">
                       <Label className="text-xs">Border Radius (px)</Label>
                       <Input
                         type="number"
@@ -309,12 +309,12 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                 </div>
 
                 {/* Styling */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <Label className="text-sm font-medium">Styling</Label>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
+                  <div className="space-y-lg">
+                    <div className="space-y-sm">
                       <Label className="text-xs">Background Color</Label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-xs">
                         <Button
                           variant="outline"
                           size="sm"
@@ -326,15 +326,15 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                             onUpdate?.(component.id, { display: { ...component.display, style: newStyles } });
                           }}
                         >
-                          <div className="w-4 h-4 rounded border mr-2" style={{ backgroundColor: componentStyles.backgroundColor || '#ffffff' }} />
+                          <div className="w-xs h-xs rounded border mr-2" style={{ backgroundColor: componentStyles.backgroundColor || '#ffffff' }} />
                           {componentStyles.backgroundColor || 'Default'}
                         </Button>
                       </div>
                     </div>
                     
-                    <div className="space-y-2">
+                    <div className="space-y-sm">
                       <Label className="text-xs">Text Color</Label>
-                      <div className="flex gap-2">
+                      <div className="flex gap-xs">
                         <Button
                           variant="outline"
                           size="sm"
@@ -346,7 +346,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                             onUpdate?.(component.id, { display: { ...component.display, style: newStyles } });
                           }}
                         >
-                          <div className="w-4 h-4 rounded border mr-2" style={{ backgroundColor: componentStyles.color || '#000000' }} />
+                          <div className="w-xs h-xs rounded border mr-2" style={{ backgroundColor: componentStyles.color || '#000000' }} />
                           {componentStyles.color || 'Default'}
                         </Button>
                       </div>
@@ -356,13 +356,13 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
 
                 {/* Advanced */}
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 text-sm font-medium hover:bg-muted rounded">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-sm text-sm font-medium hover:bg-muted rounded">
                     Advanced Settings
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="icon-xs" />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <div className="space-y-4 mt-3 p-3 bg-muted/30 rounded">
-                      <div className="space-y-2">
+                    <div className="space-y-lg mt-3 p-md bg-muted/30 rounded">
+                      <div className="space-y-sm">
                         <Label className="text-xs">Custom CSS Class</Label>
                         <Input
                           placeholder="custom-class-name"
@@ -378,7 +378,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                         />
                       </div>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-sm">
                         <Label className="text-xs">Z-Index</Label>
                         <Input
                           type="number"
@@ -406,9 +406,9 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
           {/* Bindings Tab */}
           <TabsContent value="bindings" className="flex-1 m-0">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-6">
+              <div className="p-sm space-y-xl">
                 {/* Read Query Section */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">Read Query (GraphQL)</Label>
                     <Button variant="outline" size="sm">
@@ -418,19 +418,19 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                   <Textarea
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    className="font-mono text-xs h-32 resize-none"
+                    className="font-mono text-xs h-3xl resize-none"
                     placeholder="Enter GraphQL query..."
                   />
                 </div>
 
                 {/* Property Mappings */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <Label className="text-sm font-medium">Property Mappings</Label>
-                  <div className="space-y-3">
+                  <div className="space-y-md">
                     {componentProperties.map((prop) => (
-                      <div key={prop.name} className="flex items-center gap-3 p-3 border border-border rounded-lg">
+                      <div key={prop.name} className="flex items-center gap-md p-md border border-border rounded-lg">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-xs">
                             <Label className="text-sm">{prop.name}</Label>
                             <Badge variant="outline" className="text-xs">
                               {prop.type}
@@ -438,11 +438,11 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                           </div>
                         </div>
                         
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
+                        <ArrowRight className="icon-xs text-muted-foreground" />
                         
                         <div className="flex-1">
                           <Select defaultValue="">
-                            <SelectTrigger className="h-8">
+                            <SelectTrigger className="h-lg">
                               <SelectValue placeholder="Select field" />
                             </SelectTrigger>
                             <SelectContent>
@@ -454,8 +454,8 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                           </Select>
                         </div>
                         
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <Code className="h-3 w-3" />
+                        <Button variant="ghost" size="sm" className="h-lg w-lg p-0">
+                          <Code className="icon-xs" />
                         </Button>
                       </div>
                     ))}
@@ -463,7 +463,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                 </div>
 
                 {/* Write Actions */}
-                <div className="space-y-3">
+                <div className="space-y-md">
                   <Label className="text-sm font-medium">Write Actions</Label>
                   <Button
                     variant="outline"
@@ -473,12 +473,12 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                       console.log('Configure write actions for', component.id);
                     }}
                   >
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="mr-2 icon-xs" />
                     Configure Write Actions
                   </Button>
                   
                   {/* Write Actions Summary */}
-                  <div className="text-xs text-muted-foreground p-3 bg-muted rounded-lg">
+                  <div className="text-xs text-muted-foreground p-md bg-muted rounded-lg">
                     <p>No write actions configured.</p>
                     <p>Click above to map component interactions to ECS components.</p>
                   </div>
@@ -509,54 +509,54 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
           {/* Preview Tab */}
           <TabsContent value="preview" className="flex-1 m-0">
             <ScrollArea className="h-full">
-              <div className="p-4 space-y-4">
+              <div className="p-sm space-y-lg">
                 {/* Preview Controls */}
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-medium">Preview Mode</Label>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-xs">
                     <Button
                       variant={previewMode === 'desktop' ? 'default' : 'ghost'}
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-lg w-lg p-0"
                       onClick={() => setPreviewMode('desktop')}
                     >
-                      <Monitor className="h-4 w-4" />
+                      <Monitor className="icon-xs" />
                     </Button>
                     <Button
                       variant={previewMode === 'tablet' ? 'default' : 'ghost'}
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-lg w-lg p-0"
                       onClick={() => setPreviewMode('tablet')}
                     >
-                      <Tablet className="h-4 w-4" />
+                      <Tablet className="icon-xs" />
                     </Button>
                     <Button
                       variant={previewMode === 'mobile' ? 'default' : 'ghost'}
                       size="sm"
-                      className="h-8 w-8 p-0"
+                      className="h-lg w-lg p-0"
                       onClick={() => setPreviewMode('mobile')}
                     >
-                      <Smartphone className="h-4 w-4" />
+                      <Smartphone className="icon-xs" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-8 w-8 p-0 ml-2"
                     >
-                      <RefreshCw className="h-4 w-4" />
+                      <RefreshCw className="icon-xs" />
                     </Button>
                   </div>
                 </div>
 
                 {/* Preview Viewport */}
-                <div className="border border-border rounded-lg p-4 bg-muted/30">
+                <div className="border border-border rounded-lg p-sm bg-muted/30">
                   <div className={cn(
                     "mx-auto rounded border border-border bg-background overflow-hidden",
                     previewMode === 'desktop' && "w-full",
-                    previewMode === 'tablet' && "w-64",
-                    previewMode === 'mobile' && "w-48"
+                    previewMode === 'tablet' && "w-4xl",
+                    previewMode === 'mobile' && "w-3xl"
                   )}>
-                    <div className="p-3">
+                    <div className="p-md">
                       <ComponentRenderer
                         component={component}
                         gridSize={{
@@ -572,12 +572,12 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
 
                 {/* Sample Data */}
                 <Collapsible>
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 text-sm font-medium hover:bg-muted rounded">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-sm text-sm font-medium hover:bg-muted rounded">
                     Sample Data
-                    <RefreshCw className="h-4 w-4" />
+                    <RefreshCw className="icon-xs" />
                   </CollapsibleTrigger>
                   <CollapsibleContent>
-                    <pre className="text-xs p-3 bg-muted rounded-lg mt-2 overflow-auto">
+                    <pre className="text-xs p-md bg-muted rounded-lg mt-2 overflow-auto">
 {JSON.stringify({
   metrics: {
     value: component.props?.value || "1,234", 

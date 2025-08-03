@@ -249,7 +249,7 @@ export default function AccountEdit() {
               onClick={() => navigate('/accounts')}
               className="flex items-center text-sm text-muted-foreground hover:text-foreground"
             >
-              <ArrowLeft className="h-4 w-4 mr-1" />
+              <ArrowLeft className="h-xs w-xs mr-1" />
               Back to Accounts
             </button>
           }
@@ -263,7 +263,7 @@ export default function AccountEdit() {
                   onClick={handleDiscard}
                   className="gap-xs"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-xs w-xs" />
                   Discard
                 </Button>
               )}
@@ -273,7 +273,7 @@ export default function AccountEdit() {
                 disabled={saving || !isDirty}
                 className="gap-xs"
               >
-                <Save className="h-4 w-4" />
+                <Save className="h-xs w-xs" />
                 Save Changes
               </Button>
             </div>
@@ -388,7 +388,7 @@ export default function AccountEdit() {
                                     id="email"
                                     type="email"
                                     disabled
-                                    className="bg-muted w-64"
+                                    className="bg-muted w-4xl"
                                   />
                                 )}
                               />
@@ -405,7 +405,7 @@ export default function AccountEdit() {
                                     {...field}
                                     id="displayName"
                                     placeholder="Enter display name"
-                                    className={cn("w-64", errors.displayName && "border-destructive")}
+                                    className={cn("w-4xl", errors.displayName && "border-destructive")}
                                   />
                                 )}
                               />
@@ -424,7 +424,7 @@ export default function AccountEdit() {
                                     value={field.value}
                                     onValueChange={field.onChange}
                                   >
-                                    <SelectTrigger id="status" className="w-40">
+                                    <SelectTrigger id="status" className="w-3xl">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -446,7 +446,7 @@ export default function AccountEdit() {
                                     value={field.value}
                                     onValueChange={field.onChange}
                                   >
-                                    <SelectTrigger id="authMethod" className="w-40">
+                                    <SelectTrigger id="authMethod" className="w-3xl">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -477,16 +477,16 @@ export default function AccountEdit() {
                                   <img
                                     src={avatarPreview}
                                     alt="Avatar"
-                                    className="w-32 h-32 rounded-full border-2 border-border object-cover"
+                                    className="w-2xl h-2xl rounded-full border-2 border-border object-cover"
                                   />
                                 ) : (
-                                  <div className="w-32 h-32 rounded-full border-2 border-border bg-muted flex items-center justify-center">
+                                  <div className="w-2xl h-2xl rounded-full border-2 border-border bg-muted flex items-center justify-center">
                                     {displayName ? (
                                       <span className="text-2xl font-medium text-muted-foreground">
                                         {getInitials(displayName)}
                                       </span>
                                     ) : (
-                                      <User className="w-12 h-12 text-muted-foreground" />
+                                      <User className="w-sm h-sm text-muted-foreground" />
                                     )}
                                   </div>
                                 )}
@@ -501,7 +501,7 @@ export default function AccountEdit() {
                                   onClick={() => fileInputRef.current?.click()}
                                   className="gap-xs"
                                 >
-                                  <Upload className="h-4 w-4" />
+                                  <Upload className="h-xs w-xs" />
                                   Upload Avatar
                                 </Button>
                                 {avatarPreview && (
@@ -550,7 +550,7 @@ export default function AccountEdit() {
                                       value={field.value}
                                       onValueChange={field.onChange}
                                     >
-                                      <SelectTrigger id="theme" className="w-32">
+                                      <SelectTrigger id="theme" className="w-2xl">
                                         <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>

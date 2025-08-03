@@ -1070,7 +1070,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     
     return (
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <div className="text-center p-8">
+        <div className="text-center p-3xl">
           <div className="text-muted-foreground/50 mb-4 animate-bounce flex justify-center">{message.icon}</div>
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">{message.title}</h3>
           <p className="text-sm text-muted-foreground">{message.subtitle}</p>
@@ -1266,7 +1266,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     return (
       <div className={cn('bento-grid-wrapper flex items-center justify-center h-full', className)}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <div className="animate-spin rounded-full icon-lg border-b-2 border-primary mx-auto mb-2"></div>
           <p className="text-sm text-muted-foreground">Loading page...</p>
         </div>
       </div>
@@ -1278,7 +1278,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     return (
       <div className={cn('bento-grid-wrapper flex items-center justify-center h-full', className)}>
         <div className="text-center">
-          <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50" />
+          <Package className="icon-2xl mx-auto mb-4 text-muted-foreground opacity-50" />
           <h3 className="text-lg font-semibold text-muted-foreground mb-2">No Grid Available</h3>
           <p className="text-sm text-muted-foreground">
             {pageEntityId ? 'This page doesn\'t have a grid configured yet.' : 'No grid provided for display.'}
@@ -1293,15 +1293,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       {/* Save status banner */}
       {(saveState.isSaving || saveState.lastSaved || saveState.saveError) && (
         <div className={cn(
-          'fixed top-4 right-4 z-50 p-3 rounded-lg shadow-lg transition-all duration-300',
+          'fixed top-4 right-4 z-50 p-md rounded-lg shadow-lg transition-all duration-300',
           saveState.isSaving && 'bg-blue-500 text-white',
           saveState.lastSaved && 'bg-green-500 text-white',
           saveState.saveError && 'bg-red-500 text-white'
         )}>
-          <div className="flex items-center gap-2 text-sm font-medium">
+          <div className="flex items-center gap-xs text-sm font-medium">
             {saveState.isSaving && (
               <>
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <div className="animate-spin rounded-full icon-xs border-2 border-white border-t-transparent"></div>
                 Saving changes...
               </>
             )}
@@ -1321,13 +1321,13 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       
       {/* Collaboration indicators */}
       {enableCollaboration && collaborators.size > 0 && (
-        <div className="fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg border">
+        <div className="fixed top-4 left-4 z-50 p-sm bg-white rounded-lg shadow-lg border">
           <div className="text-xs font-medium text-muted-foreground mb-2">Collaborators</div>
-          <div className="flex -space-x-2">
+          <div className="flex -space-x-xs">
             {Array.from(collaborators.values()).slice(0, 5).map(user => (
               <div
                 key={user.id}
-                className="w-8 h-8 rounded-full border-2 border-white bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold text-white"
+                className="w-lg h-lg rounded-full border-2 border-white bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-xs font-bold text-white"
                 title={user.name}
                 style={{ backgroundColor: user.color }}
               >
@@ -1335,7 +1335,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               </div>
             ))}
             {collaborators.size > 5 && (
-              <div className="w-8 h-8 rounded-full border-2 border-white bg-gray-400 flex items-center justify-center text-xs font-bold text-white">
+              <div className="w-lg h-lg rounded-full border-2 border-white bg-gray-400 flex items-center justify-center text-xs font-bold text-white">
                 +{collaborators.size - 5}
               </div>
             )}
@@ -1346,7 +1346,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       {dragState.helpMessage && (
         <div
           className={cn(
-            'fixed top-4 right-4 z-50 p-3 rounded-lg shadow-lg max-w-sm',
+            'fixed top-4 right-4 z-50 p-md rounded-lg shadow-lg max-w-sm',
             'transition-all duration-300 ease-in-out',
             {
               'bg-success/10 border border-success text-success': dragState.helpMessage.type === 'success',
@@ -1469,7 +1469,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   title={getTooltipText('drop-zone-valid')}
                 >
                   {/* Subtle indicator dot */}
-                  <div className="absolute top-2 left-2 w-2 h-2 bg-success rounded-full opacity-60" />
+                  <div className="absolute top-2 left-2 w-xs h-xs bg-success rounded-full opacity-60" />
                 </div>
               );
             })}
@@ -1501,20 +1501,20 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   }}
                 >
                   {/* Enhanced skeleton preview with better visual feedback */}
-                  <div className="h-full w-full relative opacity-95 bg-background/98 backdrop-blur-md rounded-lg p-4 border border-border/40">
+                  <div className="h-full w-full relative opacity-95 bg-background/98 backdrop-blur-md rounded-lg p-sm border border-border/40">
                     {renderComponentSkeleton(dragState.draggedComponent.componentType)}
                     
                     {/* Enhanced snapping indicator */}
                     {dragState.isSnapping && (
-                      <div className="absolute top-2 left-2 flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary">
-                        <div className="w-1.5 h-1.5 bg-primary rounded-full animate-pulse" />
+                      <div className="absolute top-2 left-2 flex items-center gap-xs text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full border border-primary">
+                        <div className="w-xs h-xs bg-primary rounded-full animate-pulse" />
                         Snapped
                       </div>
                     )}
                     
                     {/* Enhanced status indicator */}
                     <div className={cn(
-                      'absolute top-2 right-2 w-7 h-7 rounded-full border-2',
+                      'absolute top-2 right-2 w-lg h-lg rounded-full border-2',
                       'flex items-center justify-center text-sm font-bold',
                       'transition-all duration-150 shadow-md',
                       isValidPos 
@@ -1555,12 +1555,12 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   }}
                 >
                   {/* Enhanced preview skeleton */}
-                  <div className="h-full w-full relative opacity-90 bg-background/95 backdrop-blur-md rounded-lg p-4 border border-border/50">
+                  <div className="h-full w-full relative opacity-90 bg-background/95 backdrop-blur-md rounded-lg p-sm border border-border/50">
                     {renderComponentSkeleton(externalDragState.componentType)}
                     
                     {/* Status indicator */}
                     <div className={cn(
-                      'absolute top-2 right-2 w-6 h-6 rounded-full border-2',
+                      'absolute top-2 right-2 w-md h-md rounded-full border-2',
                       'flex items-center justify-center text-xs font-bold shadow-sm',
                       'transition-all duration-150',
                       isValidPlacement 
@@ -1599,12 +1599,12 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   }}
                 >
                   {/* Enhanced preview skeleton */}
-                  <div className="h-full w-full relative opacity-85 bg-background/95 backdrop-blur-md rounded-lg p-4 border border-border/50 shadow-lg">
+                  <div className="h-full w-full relative opacity-85 bg-background/95 backdrop-blur-md rounded-lg p-sm border border-border/50 shadow-lg">
                     {renderComponentSkeleton(externalDragPreview.componentType)}
                     
                     {/* Status indicator */}
                     <div className={cn(
-                      'absolute top-2 right-2 w-5 h-5 rounded-full border',
+                      'absolute top-2 right-2 w-sm h-sm rounded-full border',
                       'flex items-center justify-center text-xs font-bold shadow-sm',
                       isValidPlacement 
                         ? 'bg-success border-success text-success-foreground' 
@@ -1666,8 +1666,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   
                   {/* Save status indicator */}
                   {saveState.isSaving && (
-                    <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                      <div className="animate-spin rounded-full h-3 w-3 border border-white border-t-transparent"></div>
+                    <div className="absolute top-2 left-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-xs">
+                      <div className="animate-spin rounded-full icon-xs border border-white border-t-transparent"></div>
                       Saving...
                     </div>
                   )}
@@ -1735,8 +1735,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
           minHeight={0.2}
           showHandle={true}
         >
-          <div className="p-4">
-            <div className="grid grid-cols-2 gap-4">
+          <div className="p-sm">
+            <div className="grid grid-cols-2 gap-sm">
               {/* Component palette items with proper touch targets */}
               {[
                 { type: 'metric-card', icon: <BarChart3 size={24} />, name: 'Metric Card' },
@@ -1750,7 +1750,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               ].map((componentType) => (
                 <button
                   key={componentType.type}
-                  className="flex flex-col items-center justify-center p-4 bg-card border border-border rounded-lg hover:bg-accent transition-colors"
+                  className="flex flex-col items-center justify-center p-sm bg-card border border-border rounded-lg hover:bg-accent transition-colors"
                   style={{ minHeight: '88px', minWidth: '88px' }} // Double minimum touch target for easier selection
                   onClick={() => {
                     // Use the enhanced component add handler
@@ -1765,9 +1765,9 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
             </div>
             
             {/* Mobile-specific actions */}
-            <div className="mt-6 space-y-3">
+            <div className="mt-6 space-y-md">
               <button
-                className="w-full flex items-center justify-center gap-2 p-3 bg-secondary text-secondary-foreground rounded-lg font-medium"
+                className="w-full flex items-center justify-center gap-xs p-md bg-secondary text-secondary-foreground rounded-lg font-medium"
                 style={{ minHeight: '48px' }}
                 onClick={() => {
                   setMobileState(prev => ({ ...prev, dragMode: !prev.dragMode }));
@@ -1778,7 +1778,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               </button>
               
               <button
-                className="w-full flex items-center justify-center gap-2 p-3 bg-secondary text-secondary-foreground rounded-lg font-medium"
+                className="w-full flex items-center justify-center gap-xs p-md bg-secondary text-secondary-foreground rounded-lg font-medium"
                 style={{ minHeight: '48px' }}
                 onClick={() => {
                   setMobileState(prev => ({ ...prev, zoomLevel: prev.zoomLevel === 1 ? 0.8 : 1 }));

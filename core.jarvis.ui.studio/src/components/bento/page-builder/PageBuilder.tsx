@@ -356,9 +356,9 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
       {/* Toolbar - Mobile Optimized */}
       <div className={cn(
         'page-builder__toolbar flex items-center justify-between border-b bg-card',
-        state.isMobileLayout ? 'p-2' : 'p-4'
+        state.isMobileLayout ? 'p-sm' : 'p-sm'
       )}>
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+        <div className="flex items-center gap-xs sm:gap-sm min-w-0">
           <h1 className={cn(
             'font-semibold truncate',
             state.isMobileLayout ? 'text-sm' : 'text-lg'
@@ -371,7 +371,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
             </span>
           )}
           {collaborationEnabled && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-xs">
               <div className={cn(
                 'w-2 h-2 rounded-full',
                 isConnected ? 'bg-green-500' : 'bg-red-500'
@@ -383,7 +383,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           )}
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-xs">
           {/* Mobile Menu Toggle (Mobile Only) */}
           {state.isMobileLayout && (
             <Button
@@ -398,7 +398,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           
           {/* Device Selector - Hidden on Mobile */}
           <div className={cn(
-            'flex items-center gap-1 p-1 bg-muted rounded-md',
+            'flex items-center gap-xs p-xs bg-muted rounded-md',
             state.isMobileLayout ? 'hidden' : 'flex'
           )}>
             <Button
@@ -428,7 +428,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           
           {/* View Controls - Responsive */}
           <div className={cn(
-            'flex items-center gap-1',
+            'flex items-center gap-xs',
             state.isMobileLayout ? 'hidden' : 'flex'
           )}>
             <Button
@@ -456,7 +456,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           <div className="flex items-center gap-1">
             {/* Undo/Redo - Hidden on Mobile */}
             <div className={cn(
-              'flex items-center gap-1',
+              'flex items-center gap-xs',
               state.isMobileLayout ? 'hidden' : 'flex'
             )}>
               <Button variant="outline" size="sm" disabled>
@@ -538,7 +538,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
             
             <TabsContent value="design" className={cn(
               'h-full mt-0',
-              state.isMobileLayout ? 'p-2' : 'p-4'
+              state.isMobileLayout ? 'p-sm' : 'p-sm'
             )}>
               <ComponentPalette
                 onComponentAdd={handleComponentAdd}
@@ -549,7 +549,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
             
             <TabsContent value="settings" className={cn(
               'h-full mt-0',
-              state.isMobileLayout ? 'p-2' : 'p-4'
+              state.isMobileLayout ? 'p-sm' : 'p-sm'
             )}>
               <PageSettings
                 page={page}
@@ -561,7 +561,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
             
             <TabsContent value="layout" className={cn(
               'h-full mt-0',
-              state.isMobileLayout ? 'p-2' : 'p-4'
+              state.isMobileLayout ? 'p-sm' : 'p-sm'
             )}>
               <LayoutSelector
                 layouts={layouts}
@@ -579,7 +579,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           {/* Canvas Header - Mobile Optimized */}
           <div className={cn(
             'canvas-header border-b bg-muted/20',
-            state.isMobileLayout ? 'p-2' : 'p-4'
+            state.isMobileLayout ? 'p-sm' : 'p-sm'
           )}>
             <div className="flex items-center justify-between">
               <div className={cn(
@@ -598,7 +598,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               
               {/* Mobile Quick Actions */}
               {state.isMobileLayout ? (
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-xs">
                   <Button
                     variant="outline"
                     size="sm"
@@ -615,7 +615,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-xs">
                   <Button
                     variant="outline"
                     size="sm"
@@ -633,7 +633,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           <div 
             className={cn(
               'canvas-content flex-1 overflow-auto',
-              state.isMobileLayout ? 'p-2' : 'p-4'
+              state.isMobileLayout ? 'p-sm' : 'p-sm'
             )}
             onTouchStart={(e) => {
               if (state.touchGesturesEnabled && state.isMobileLayout) {
@@ -695,7 +695,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           )}>
             <div className={cn(
               'border-b',
-              state.isMobileLayout ? 'p-2' : 'p-4'
+              state.isMobileLayout ? 'p-sm' : 'p-sm'
             )}>
               <h3 className={cn(
                 'font-medium',
@@ -708,7 +708,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               </p>
             </div>
             <div className={cn(
-              state.isMobileLayout ? 'p-2' : 'p-4'
+              state.isMobileLayout ? 'p-sm' : 'p-sm'
             )}>
               {/* Component editor would go here */}
               <p className="text-xs text-muted-foreground">
@@ -759,7 +759,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
       {/* Collaboration Status Overlay */}
       {collaborationEnabled && state.isMobileLayout && (
         <div className="fixed top-16 right-4 bg-card border rounded-lg p-2 shadow-lg">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-xs">
             <div className={cn(
               'w-2 h-2 rounded-full',
               isConnected ? 'bg-green-500' : 'bg-red-500'

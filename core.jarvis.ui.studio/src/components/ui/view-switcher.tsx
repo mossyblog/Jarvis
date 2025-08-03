@@ -64,9 +64,9 @@ const VIEW_CONFIG = {
 } as const;
 
 const SIZE_STYLES = {
-  sm: 'h-8 w-8 text-sm',
-  md: 'h-9 w-9 text-base',
-  lg: 'h-10 w-10 text-lg'
+  sm: 'h-md w-md text-sm',
+  md: 'h-lg w-lg text-base',
+  lg: 'h-xl w-xl text-lg'
 } as const;
 
 // ============================================================================
@@ -108,7 +108,7 @@ export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
             'opacity-50 cursor-not-allowed': isDisabled,
             'opacity-60': isChanging && !isActive,
           },
-          showLabels && 'px-3 gap-2'
+          showLabels && 'px-md gap-xs'
         )}
         aria-label={config.label}
         aria-pressed={isActive}
@@ -116,9 +116,9 @@ export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
         <Icon 
           className={cn(
             'flex-shrink-0',
-            size === 'sm' && 'h-3.5 w-3.5',
-            size === 'md' && 'h-4 w-4', 
-            size === 'lg' && 'h-5 w-5'
+            size === 'sm' && 'h-xs w-xs',
+            size === 'md' && 'h-xs w-xs', 
+            size === 'lg' && 'h-sm w-sm'
           )} 
         />
         {showLabels && (
@@ -160,7 +160,7 @@ export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   const content = (
     <div 
       className={cn(
-        'inline-flex items-center gap-1 p-1 bg-background border border-border rounded-md',
+        'inline-flex items-center gap-0.5 p-xs bg-background border border-border rounded-md',
         className
       )}
       role="radiogroup"

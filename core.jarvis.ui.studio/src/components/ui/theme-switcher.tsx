@@ -27,13 +27,13 @@ export function ThemeSwitcher() {
         variant="ghost"
         size="sm"
         onClick={handleModeToggle}
-        className="h-8 w-8 p-0"
+        className="h-xs w-xs p-0"
         title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}
       >
         {mode === 'light' ? (
-          <Moon className="h-4 w-4" />
+          <Moon className="h-xs w-xs" />
         ) : (
-          <Sun className="h-4 w-4" />
+          <Sun className="h-xs w-xs" />
         )}
         <span className="sr-only">Toggle theme mode</span>
       </Button>
@@ -44,10 +44,10 @@ export function ThemeSwitcher() {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-8 w-8 p-0"
+            className="h-xs w-xs p-0"
             title="Select theme"
           >
-            <Palette className="h-4 w-4" />
+            <Palette className="h-xs w-xs" />
             <span className="sr-only">Select theme</span>
           </Button>
         </DropdownMenuTrigger>
@@ -88,9 +88,9 @@ export function ThemeSwitcherCompact({ showLabel = false }: ThemeSwitcherCompact
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           {mode === 'light' ? (
-            <Sun className="h-4 w-4" />
+            <Sun className="h-xs w-xs" />
           ) : (
-            <Moon className="h-4 w-4" />
+            <Moon className="h-xs w-xs" />
           )}
           {showLabel && (
             <span className="text-sm capitalize">
@@ -108,11 +108,11 @@ export function ThemeSwitcherCompact({ showLabel = false }: ThemeSwitcherCompact
           Mode
         </DropdownMenuLabel>
         <DropdownMenuItem onClick={() => setMode('light')} className="gap-2">
-          <Sun className="h-4 w-4" />
+          <Sun className="h-xs w-xs" />
           Light
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode('dark')} className="gap-2">
-          <Moon className="h-4 w-4" />
+          <Moon className="h-xs w-xs" />
           Dark
         </DropdownMenuItem>
         

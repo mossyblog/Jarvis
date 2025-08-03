@@ -170,16 +170,16 @@ export const Templates: React.FC = () => {
             
             <div className="flex items-center gap-3">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
                 <Input
                   placeholder="Search templates..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-80"
+                  className="pl-10 w-5xl"
                 />
               </div>
               <Button onClick={() => setShowBrowser(true)}>
-                <Grid3X3 className="h-4 w-4 mr-2" />
+                <Grid3X3 className="h-xs w-xs mr-2" />
                 Browse All Templates
               </Button>
             </div>
@@ -210,8 +210,8 @@ export const Templates: React.FC = () => {
                     >
                       <CardHeader className="pb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Icon className="h-5 w-5 text-primary" />
+                          <div className="w-xl h-xl rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Icon className="h-sm w-sm text-primary" />
                           </div>
                           <CardTitle className="text-base">{action.title}</CardTitle>
                         </div>
@@ -248,7 +248,7 @@ export const Templates: React.FC = () => {
                     >
                       <CardHeader className={`bg-gradient-to-br ${colorClasses[category.color as keyof typeof colorClasses]} pb-4`}>
                         <div className="flex items-center justify-between">
-                          <Icon className="h-8 w-8" />
+                          <Icon className="h-lg w-lg" />
                           <Badge className="bg-white/20 text-white border-white/30">
                             {category.count}
                           </Badge>
@@ -306,7 +306,7 @@ export const Templates: React.FC = () => {
                     <CardHeader className="pb-3">
                       <div className="aspect-video bg-gradient-to-br from-slate-100 to-slate-200 rounded-lg mb-3 flex items-center justify-center">
                         <div className="text-center">
-                          <Layout className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                          <Layout className="h-lg w-lg text-muted-foreground mx-auto mb-2" />
                           <span className="text-xs text-muted-foreground">Preview</span>
                         </div>
                       </div>
@@ -315,7 +315,7 @@ export const Templates: React.FC = () => {
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-base leading-tight">{template.name}</CardTitle>
                           {template.featured && (
-                            <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0" />
+                            <Star className="h-xs w-xs text-yellow-500 fill-current flex-shrink-0" />
                           )}
                         </div>
                         
@@ -324,7 +324,7 @@ export const Templates: React.FC = () => {
                             {template.category}
                           </Badge>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <TrendingUp className="h-3 w-3" />
+                            <TrendingUp className="h-xs w-xs" />
                             {template.rating}
                           </div>
                         </div>
@@ -338,11 +338,11 @@ export const Templates: React.FC = () => {
                       
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Download className="h-3 w-3" />
+                          <Download className="h-xs w-xs" />
                           {template.downloads}
                         </div>
-                        <Button size="sm" variant="ghost" className="h-7 px-2">
-                          <Zap className="h-3 w-3 mr-1" />
+                        <Button size="sm" variant="ghost" className="h-sm px-2">
+                          <Zap className="h-xs w-xs mr-1" />
                           Use Template
                         </Button>
                       </div>
@@ -355,7 +355,7 @@ export const Templates: React.FC = () => {
 
           <TabsContent value="featured" className="space-y-8">
             <div className="text-center py-12">
-              <Sparkles className="h-16 w-16 mx-auto text-yellow-500 mb-4" />
+              <Sparkles className="h-3xl w-3xl mx-auto text-yellow-500 mb-4" />
               <h3 className="text-xl font-semibold mb-2">Featured Templates</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Discover our handpicked selection of the most popular and well-designed templates.
@@ -364,7 +364,7 @@ export const Templates: React.FC = () => {
                 setBrowserConfig({ featured: true });
                 setShowBrowser(true);
               }}>
-                <Star className="h-4 w-4 mr-2" />
+                <Star className="h-xs w-xs mr-2" />
                 Browse Featured Templates
               </Button>
             </div>
@@ -372,13 +372,13 @@ export const Templates: React.FC = () => {
 
           <TabsContent value="recent" className="space-y-8">
             <div className="text-center py-12">
-              <Clock className="h-16 w-16 mx-auto text-blue-500 mb-4" />
+              <Clock className="h-3xl w-3xl mx-auto text-blue-500 mb-4" />
               <h3 className="text-xl font-semibold mb-2">Recently Added</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Check out the latest templates added to our library with the newest design trends.
               </p>
               <Button onClick={() => setShowBrowser(true)}>
-                <Clock className="h-4 w-4 mr-2" />
+                <Clock className="h-xs w-xs mr-2" />
                 View Recent Templates
               </Button>
             </div>

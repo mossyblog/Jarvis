@@ -156,7 +156,7 @@ const Sidebar = React.forwardRef<
               "border-r",
               side === "left" ? "left-0" : "right-0",
               state === "collapsed" && "w-[--sidebar-width-icon]",
-              variant === "floating" && "p-2",
+              variant === "floating" && "p-xs",
               variant === "inset" && "bg-transparent"
             )}
           >
@@ -188,14 +188,14 @@ const SidebarTrigger = React.forwardRef<
       ref={ref}
       size="icon"
       variant="ghost"
-      className={cn("h-7 w-7", className)}
+      className={cn("h-sm w-sm", className)}
       onClick={(event) => {
         onClick?.(event)
         toggleSidebar()
       }}
       {...props}
     >
-      <PanelLeft className="h-4 w-4" />
+      <PanelLeft className="h-xs w-xs" />
       <span className="sr-only">Toggle Sidebar</span>
     </Button>
   )
@@ -208,7 +208,7 @@ const SidebarContent = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex min-h-0 flex-1 flex-col gap-2 bg-sidebar", className)}
+    className={cn("flex min-h-0 flex-1 flex-col gap-xs bg-sidebar", className)}
     {...props}
   />
 ))
@@ -220,7 +220,7 @@ const SidebarHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex gap-2 px-2 py-2", className)}
+    className={cn("flex gap-xs px-xs py-xs", className)}
     {...props}
   />
 ))
@@ -232,7 +232,7 @@ const SidebarFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("mt-auto flex gap-2 px-2 py-2", className)}
+    className={cn("mt-auto flex gap-xs px-xs py-xs", className)}
     {...props}
   />
 ))
@@ -244,7 +244,7 @@ const SidebarGroup = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col gap-2", className)}
+    className={cn("flex flex-col gap-xs", className)}
     {...props}
   />
 ))
@@ -256,7 +256,7 @@ const SidebarGroupLabel = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("px-2 text-xs font-medium text-sidebar-foreground/70", className)}
+    className={cn("px-xs text-xs font-medium text-sidebar-foreground/70", className)}
     {...props}
   />
 ))
@@ -299,7 +299,7 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "group/menu-button relative flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground h-8 text-sm group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+  "group/menu-button relative flex w-full items-center gap-xs overflow-hidden rounded-md p-xs text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground h-md text-sm group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-xs [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
   {
     variants: {
       variant: {
@@ -308,9 +308,9 @@ const sidebarMenuButtonVariants = cva(
           "bg-background shadow-[0_0_0_1px_hsl(var(--sidebar-border))] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground hover:shadow-[0_0_0_1px_hsl(var(--sidebar-accent))]",
       },
       size: {
-        default: "h-8 text-sm",
-        sm: "h-7 text-xs",
-        lg: "h-12 text-sm group-data-[collapsible=icon]:!p-0",
+        default: "h-md text-sm",
+        sm: "h-sm text-xs",
+        lg: "h-xl text-sm group-data-[collapsible=icon]:!p-0",
       },
     },
     defaultVariants: {

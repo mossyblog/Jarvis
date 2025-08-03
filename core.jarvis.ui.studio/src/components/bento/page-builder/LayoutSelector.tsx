@@ -199,9 +199,9 @@ const LayoutPreview: React.FC<{ template: LayoutTemplate }> = ({ template }) => 
   const cells = Array.from({ length: Math.min(columns * rows, 24) }, (_, i) => i);
   
   return (
-    <div className="layout-preview bg-muted/20 rounded-md p-2 aspect-[4/3] overflow-hidden">
+    <div className="layout-preview bg-muted/20 rounded-md p-sm aspect-[4/3] overflow-hidden">
       <div 
-        className="grid gap-1 h-full"
+        className="grid gap-xs h-full"
         style={{
           gridTemplateColumns: `repeat(${Math.min(columns, 6)}, 1fr)`,
           gridTemplateRows: `repeat(${Math.min(rows, 4)}, 1fr)`
@@ -265,15 +265,15 @@ const LayoutCard: React.FC<LayoutCardProps> = ({
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-xs">
               {template.name}
-              {isSelected && <Check className="h-4 w-4 text-primary" />}
+              {isSelected && <Check className="icon-xs text-primary" />}
             </CardTitle>
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
               {template.description}
             </p>
           </div>
-          <div className="flex flex-col gap-1 ml-2">
+          <div className="flex flex-col gap-xs ml-2">
             {template.isPopular && (
               <Badge variant="secondary" className="text-xs">Popular</Badge>
             )}
@@ -291,7 +291,7 @@ const LayoutCard: React.FC<LayoutCardProps> = ({
         <LayoutPreview template={template} />
         
         <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-md">
             <span>{template.componentCount} components</span>
             <span>
               {template.gridConfiguration.desktop.columns}×{template.gridConfiguration.desktop.rows}
@@ -303,9 +303,9 @@ const LayoutCard: React.FC<LayoutCardProps> = ({
               variant="ghost"
               size="sm"
               onClick={handlePreview}
-              className="h-auto p-1"
+              className="h-auto p-xs"
             >
-              <Eye className="h-3 w-3" />
+              <Eye className="icon-xs" />
             </Button>
           )}
         </div>
@@ -409,7 +409,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
           <h3 className="text-lg font-semibold">Layout Templates</h3>
           {onCreateLayout && !readOnly && (
             <Button variant="outline" size="sm" onClick={onCreateLayout}>
-              <Plus className="h-4 w-4 mr-1" />
+              <Plus className="icon-xs mr-1" />
               Custom
             </Button>
           )}
@@ -417,7 +417,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
 
         {/* Search */}
         <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 icon-xs text-muted-foreground" />
           <Input
             placeholder="Search layouts..."
             value={searchQuery}
@@ -440,17 +440,17 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
       <div className="layout-selector__content flex-1 overflow-auto">
         {selectedCategory === 'all' ? (
           // Show all categories
-          <div className="space-y-6">
+          <div className="space-y-xl">
             {Object.entries(templatesByCategory).map(([category, templates]) => {
               const IconComponent = getCategoryIcon(category);
               return (
                 <div key={category}>
-                  <h4 className="text-sm font-medium mb-3 flex items-center gap-2 text-muted-foreground">
-                    <IconComponent className="h-4 w-4" />
+                  <h4 className="text-sm font-medium mb-3 flex items-center gap-xs text-muted-foreground">
+                    <IconComponent className="icon-xs" />
                     {category.charAt(0).toUpperCase() + category.slice(1)}
                     <span className="text-xs">({templates.length})</span>
                   </h4>
-                  <div className="grid gap-3">
+                  <div className="grid gap-md">
                     {templates.map(template => (
                       <LayoutCard
                         key={template.id}
@@ -467,7 +467,7 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
           </div>
         ) : (
           // Show selected category only
-          <div className="grid gap-3">
+          <div className="grid gap-md">
             {filteredTemplates.map(template => (
               <LayoutCard
                 key={template.id}
@@ -481,8 +481,8 @@ export const LayoutSelector: React.FC<LayoutSelectorProps> = ({
         )}
 
         {filteredTemplates.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-            <Filter className="h-8 w-8 mb-2 opacity-50" />
+          <div className="flex flex-col items-center justify-center h-3xl text-muted-foreground">
+            <Filter className="icon-lg mb-2 opacity-50" />
             <p className="text-sm">No layouts found</p>
             {searchQuery && (
               <p className="text-xs">Try adjusting your search query</p>

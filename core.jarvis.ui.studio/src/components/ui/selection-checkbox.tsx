@@ -61,18 +61,18 @@ function extractModifiers(event: React.MouseEvent | React.KeyboardEvent): Select
 
 const sizeConfig = {
   sm: {
-    container: 'w-3.5 h-3.5',
-    icon: 'w-2.5 h-2.5',
+    container: 'w-xs h-xs',
+    icon: 'w-xs h-xs',
     text: 'text-xs'
   },
   md: {
-    container: 'w-4 h-4',
-    icon: 'w-3 h-3',
+    container: 'w-xs h-xs',
+    icon: 'w-xs h-xs',
     text: 'text-sm'
   },
   lg: {
-    container: 'w-5 h-5',
-    icon: 'w-4 h-4',
+    container: 'w-sm h-sm',
+    icon: 'w-xs h-xs',
     text: 'text-base'
   }
 };

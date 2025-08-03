@@ -78,7 +78,7 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
           'drag-preview',
           'bg-gradient-to-br from-primary/20 to-brand/20 border-2 border-primary/50',
           'rounded-lg shadow-2xl',
-          'p-4 backdrop-blur-sm',
+          'p-sm backdrop-blur-sm',
           'animate-drag-preview',
           className
         )}
@@ -88,7 +88,7 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
         }}
       >
         {/* Playful preview with bouncing emoji */}
-        <div className="h-full w-full flex flex-col items-center justify-center gap-2">
+        <div className="h-full w-full flex flex-col items-center justify-center gap-xs">
           <div className="text-4xl animate-bounce">
             {(() => {
               const iconMap: Record<string, string> = {
@@ -121,8 +121,8 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
         </div>
         
         {/* Dragging indicator */}
-        <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-          <div className="w-2 h-2 bg-primary-foreground rounded-full animate-bounce"></div>
+        <div className="absolute -top-2 -right-2 w-xs h-xs bg-primary rounded-full flex items-center justify-center">
+          <div className="w-xs h-xs bg-primary-foreground rounded-full animate-bounce"></div>
         </div>
       </div>
     );
@@ -148,7 +148,7 @@ export const DragPreview: React.FC<DragPreviewProps> = ({
       </div>
       
       {/* Drag indicator */}
-      <div className="absolute top-2 right-2 z-10 w-3 h-3 bg-primary rounded-full animate-pulse">
+      <div className="absolute top-2 right-2 z-10 w-xs h-xs bg-primary rounded-full animate-pulse">
         <div className="absolute inset-0 bg-primary rounded-full animate-ping opacity-75"></div>
       </div>
       

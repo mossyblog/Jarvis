@@ -256,7 +256,7 @@ export default function UserManagement() {
           {/* Filter Header */}
           <div className="flex items-center gap-2">
             {loading ? (
-              <Skeleton className="h-8 w-8" />
+              <Skeleton className="h-xs w-xs" />
             ) : (
               <span className="text-2xl font-light">{accounts.length}</span>
             )}
@@ -303,7 +303,7 @@ export default function UserManagement() {
                     activeFilter === 'all' ? "bg-primary text-primary-foreground" : "bg-muted"
                   )}>
                     {loading ? (
-                      <Skeleton className="h-3 w-4" />
+                      <Skeleton className="h-xs w-xs" />
                     ) : (
                       accounts.length
                     )}
@@ -326,7 +326,7 @@ export default function UserManagement() {
                     activeFilter === 'active' ? "bg-success text-success-foreground" : "bg-muted"
                   )}>
                     {loading ? (
-                      <Skeleton className="h-3 w-4" />
+                      <Skeleton className="h-xs w-xs" />
                     ) : (
                       accounts.filter(a => a.isActive).length
                     )}
@@ -349,7 +349,7 @@ export default function UserManagement() {
                     activeFilter === 'inactive' ? "bg-muted-foreground text-muted-foreground-foreground" : "bg-muted"
                   )}>
                     {loading ? (
-                      <Skeleton className="h-3 w-4" />
+                      <Skeleton className="h-xs w-xs" />
                     ) : (
                       accounts.filter(a => !a.isActive).length
                     )}
@@ -367,7 +367,7 @@ export default function UserManagement() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyPress={handleSearchKeyPress}
-                    className="bg-card border border-border rounded pl-10 pr-4 py-2 text-sm w-80 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    className="bg-card border border-border rounded pl-10 pr-4 py-2 text-sm w-5xl focus:outline-none focus:ring-2 focus:ring-primary/40"
                     disabled={searchLoading}
                   />
                 </div>
@@ -375,12 +375,12 @@ export default function UserManagement() {
                 <Button 
                   size="icon" 
                   variant="ghost" 
-                  className="h-8 w-8" 
+                  className="h-xs w-xs" 
                   onClick={handleSearch} 
                   title="Search accounts"
                   disabled={loading || searchLoading}
                 >
-                  <RefreshCw className={cn("h-4 w-4", (loading || searchLoading) && "animate-spin")} />
+                  <RefreshCw className={cn("h-xs w-xs", (loading || searchLoading) && "animate-spin")} />
                 </Button>
               </div>
             </div>
@@ -468,9 +468,9 @@ export default function UserManagement() {
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button size="icon" variant="ghost" className="h-8 w-8">
+                          <Button size="icon" variant="ghost" className="h-xs w-xs">
                             <span className="sr-only">Open menu</span>
-                            <MoreVertical className="h-4 w-4" />
+                            <MoreVertical className="h-xs w-xs" />
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
@@ -516,7 +516,7 @@ export default function UserManagement() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-sm">
             <div className="text-xs text-muted-foreground">
               {loading ? (
-                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-xs w-4xl" />
               ) : (
                 `${filteredAccounts.length} of ${accounts.length} account${accounts.length !== 1 ? 's' : ''} shown`
               )}
@@ -528,10 +528,10 @@ export default function UserManagement() {
                 <option value="20">20</option>
               </select>
               <span className="text-xs">Page 1 of 1</span>
-              <Button size="icon" variant="ghost" className="h-8 w-8"><span className="sr-only">First</span>&laquo;</Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8"><span className="sr-only">Prev</span>&lsaquo;</Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8"><span className="sr-only">Next</span>&rsaquo;</Button>
-              <Button size="icon" variant="ghost" className="h-8 w-8"><span className="sr-only">Last</span>&raquo;</Button>
+              <Button size="icon" variant="ghost" className="h-xs w-xs"><span className="sr-only">First</span>&laquo;</Button>
+              <Button size="icon" variant="ghost" className="h-xs w-xs"><span className="sr-only">Prev</span>&lsaquo;</Button>
+              <Button size="icon" variant="ghost" className="h-xs w-xs"><span className="sr-only">Next</span>&rsaquo;</Button>
+              <Button size="icon" variant="ghost" className="h-xs w-xs"><span className="sr-only">Last</span>&raquo;</Button>
             </div>
           </div>
         </div>

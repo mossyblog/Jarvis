@@ -40,7 +40,7 @@ function SkeletonText({ lines = 3, className }: SkeletonTextProps) {
         <Skeleton 
           key={i}
           className={cn(
-            "h-4",
+            "h-xs",
             i === lines - 1 ? "w-3/4" : "w-full" // Last line is shorter
           )} 
         />
@@ -59,16 +59,16 @@ function SkeletonCard({ className, hasImage = true, hasActions = true }: Skeleto
   return (
     <div className={cn("p-4 border rounded-lg space-y-4", className)}>
       {hasImage && (
-        <Skeleton className="h-48 w-full" />
+        <Skeleton className="h-6xl w-full" />
       )}
       <div className="space-y-2">
-        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-xs w-3/4" />
         <SkeletonText lines={2} />
       </div>
       {hasActions && (
         <div className="flex gap-2">
-          <Skeleton className="h-9 w-20" />
-          <Skeleton className="h-9 w-16" />
+          <Skeleton className="h-sm w-20" />
+          <Skeleton className="h-sm w-16" />
         </div>
       )}
     </div>
@@ -93,7 +93,7 @@ function SkeletonTable({
       {hasHeader && (
         <div className="grid gap-4 pb-4 border-b mb-4" style={{ gridTemplateColumns: `repeat(${columns}, 1fr)` }}>
           {Array.from({ length: columns }).map((_, i) => (
-            <Skeleton key={i} className="h-4 w-full" />
+            <Skeleton key={i} className="h-xs w-full" />
           ))}
         </div>
       )}
@@ -108,7 +108,7 @@ function SkeletonTable({
               <Skeleton 
                 key={colIndex} 
                 className={cn(
-                  "h-4",
+                  "h-xs",
                   colIndex === 0 ? "w-3/4" : "w-full" // First column shorter for names
                 )} 
               />
@@ -138,16 +138,16 @@ function SkeletonList({
       {Array.from({ length: items }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 p-3 border rounded">
           {hasAvatar && (
-            <Skeleton className="h-10 w-10 rounded-full flex-shrink-0" />
+            <Skeleton className="h-sm w-sm rounded-full flex-shrink-0" />
           )}
           <div className="flex-1 space-y-1">
-            <Skeleton className="h-4 w-1/3" />
-            <Skeleton className="h-3 w-2/3" />
+            <Skeleton className="h-xs w-1/3" />
+            <Skeleton className="h-xs w-2/3" />
           </div>
           {hasActions && (
             <div className="flex gap-2 flex-shrink-0">
-              <Skeleton className="h-8 w-8 rounded" />
-              <Skeleton className="h-8 w-8 rounded" />
+              <Skeleton className="h-xs w-xs rounded" />
+              <Skeleton className="h-xs w-xs rounded" />
             </div>
           )}
         </div>
@@ -167,14 +167,14 @@ function SkeletonForm({ fields = 4, hasSubmit = true, className }: SkeletonFormP
     <div className={cn("space-y-4", className)}>
       {Array.from({ length: fields }).map((_, i) => (
         <div key={i} className="space-y-2">
-          <Skeleton className="h-4 w-1/4" /> {/* Label */}
-          <Skeleton className="h-10 w-full" /> {/* Input */}
+          <Skeleton className="h-xs w-1/4" />
+          <Skeleton className="h-sm w-full" />
         </div>
       ))}
       {hasSubmit && (
         <div className="flex gap-2 pt-2">
-          <Skeleton className="h-10 w-24" />
-          <Skeleton className="h-10 w-20" />
+          <Skeleton className="h-sm w-24" />
+          <Skeleton className="h-sm w-20" />
         </div>
       )}
     </div>
@@ -209,7 +209,7 @@ function SkeletonChart({ type = 'bar', className }: SkeletonChartProps) {
   if (type === 'pie') {
     return (
       <div className={cn("flex items-center justify-center p-8", className)}>
-        <Skeleton className="h-48 w-48 rounded-full" />
+        <Skeleton className="h-6xl w-6xl rounded-full" />
       </div>
     );
   }
@@ -217,8 +217,8 @@ function SkeletonChart({ type = 'bar', className }: SkeletonChartProps) {
   return (
     <div className={cn("p-4", className)}>
       <div className="space-y-2 mb-4">
-        <Skeleton className="h-6 w-1/3" />
-        <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-xs w-1/3" />
+        <Skeleton className="h-xs w-1/2" />
       </div>
       <div className="h-64 flex items-end gap-2">
         {Array.from({ length: 8 }).map((_, i) => (
@@ -249,17 +249,17 @@ function SkeletonNavigation({
   return (
     <div className={cn("flex items-center justify-between p-4", className)}>
       {hasLogo && (
-        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-xs w-32" />
       )}
       <div className="flex gap-6">
         {Array.from({ length: items }).map((_, i) => (
-          <Skeleton key={i} className="h-4 w-16" />
+          <Skeleton key={i} className="h-xs w-16" />
         ))}
       </div>
       {hasProfile && (
         <div className="flex items-center gap-2">
-          <Skeleton className="h-8 w-8 rounded-full" />
-          <Skeleton className="h-4 w-20" />
+          <Skeleton className="h-xs w-xs rounded-full" />
+          <Skeleton className="h-xs w-20" />
         </div>
       )}
     </div>
@@ -289,15 +289,15 @@ function SkeletonPage({
         {hasSidebar && (
           <div className="w-64 border-r p-4 space-y-2">
             {Array.from({ length: 8 }).map((_, i) => (
-              <Skeleton key={i} className="h-8 w-full" />
+              <Skeleton key={i} className="h-xs w-full" />
             ))}
           </div>
         )}
         
         <div className="flex-1 p-6 space-y-6">
           <div className="space-y-2">
-            <Skeleton className="h-8 w-1/3" />
-            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-xs w-1/3" />
+            <Skeleton className="h-xs w-2/3" />
           </div>
           
           <SkeletonGrid />
@@ -308,7 +308,7 @@ function SkeletonPage({
       
       {hasFooter && (
         <div className="border-t p-4">
-          <Skeleton className="h-4 w-full max-w-md mx-auto" />
+          <Skeleton className="h-xs w-full max-w-md mx-auto" />
         </div>
       )}
     </div>
@@ -326,9 +326,9 @@ interface SkeletonAvatarProps {
 
 function SkeletonAvatar({ size = 'default', className }: SkeletonAvatarProps) {
   const sizeClasses = {
-    sm: 'h-8 w-8',
-    default: 'h-10 w-10',
-    lg: 'h-12 w-12'
+    sm: 'h-xs w-xs',
+    default: 'h-sm w-sm',
+    lg: 'h-md w-md'
   };
 
   return (

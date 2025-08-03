@@ -112,7 +112,7 @@ const COMPONENT_REGISTRY: Record<string, React.ComponentType<BentoComponentProps
       <CardContent className="pt-0">
         <div className="flex items-center justify-center h-full min-h-[60px] text-muted-foreground">
           <div className="text-center">
-            <Box className="h-8 w-8 mx-auto mb-2 opacity-50" />
+            <Box className="icon-lg mx-auto mb-2 opacity-50" />
             <p className="text-xs">
               {gridSize ? `${gridSize.w}×${gridSize.h}` : 'Component'}
             </p>
@@ -127,7 +127,7 @@ const COMPONENT_REGISTRY: Record<string, React.ComponentType<BentoComponentProps
     const text = (props as { text?: string }).text || 'Sample text';
     return (
       <Card className={cn('h-full', className)}>
-        <CardContent className="flex items-center justify-center h-full p-4">
+        <CardContent className="flex items-center justify-center h-full p-sm">
           <div className="text-center">
             <p className="text-sm">{text}</p>
           </div>
@@ -159,7 +159,7 @@ const COMPONENT_REGISTRY: Record<string, React.ComponentType<BentoComponentProps
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0 flex flex-col justify-center h-[calc(100%-50px)]">
-          <div className="space-y-2">
+          <div className="space-y-xs">
             <div className={cn(
               'text-3xl font-bold transition-all duration-500',
               hasLiveData && 'text-blue-600'
@@ -197,7 +197,7 @@ const COMPONENT_REGISTRY: Record<string, React.ComponentType<BentoComponentProps
         <CardContent className="pt-0 h-[calc(100%-60px)]">
           <div className="flex items-center justify-center h-full min-h-[150px] text-muted-foreground">
             <div className="w-full h-full flex flex-col justify-end">
-              <div className="flex items-end justify-around h-full p-4">
+              <div className="flex items-end justify-around h-full p-sm">
                 {[65, 45, 78, 52, 88, 62, 95, 71].map((height, i) => (
                   <div
                     key={i}
@@ -289,16 +289,16 @@ const ComponentLoadingFallback: React.FC<{
       <CardContent className="flex items-center justify-center h-full">
         <div className="text-center">
           <div className="relative">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-3 text-blue-500" />
-            <div className="absolute inset-0 h-8 w-8 mx-auto mb-3 border-2 border-transparent border-t-purple-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
+            <Loader2 className="icon-lg animate-spin mx-auto mb-3 text-blue-500" />
+            <div className="absolute inset-0 icon-lg mx-auto mb-3 border-2 border-transparent border-t-purple-500 rounded-full animate-spin" style={{ animationDirection: 'reverse', animationDuration: '0.8s' }}></div>
           </div>
           <p className="text-sm text-muted-foreground animate-pulse">{message}</p>
           
           {/* Live data connection indicator */}
           {isLiveData && (
-            <div className="mt-2 flex items-center justify-center gap-2">
+            <div className="mt-2 flex items-center justify-center gap-xs">
               <div className={cn(
-                'w-2 h-2 rounded-full',
+                'w-xs h-xs rounded-full',
                 connectionStatus ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
               )}></div>
               <span className="text-xs text-muted-foreground">
@@ -345,7 +345,7 @@ const ComponentErrorFallback: React.FC<{
       isLiveDataError && 'border-red-300 bg-red-50/50',
       className
     )}>
-      <CardContent className="flex items-center justify-center h-full p-4">
+      <CardContent className="flex items-center justify-center h-full p-sm">
         <div className="text-center">
           <div className="text-4xl mb-2 animate-bounce">{personality.emoji}</div>
           <p className={cn(
@@ -389,9 +389,9 @@ const ComponentNotFoundFallback: React.FC<{
   className?: string;
 }> = ({ componentType, className }) => (
   <Card className={cn('h-full border-dashed', className)}>
-    <CardContent className="flex items-center justify-center h-full p-4">
+    <CardContent className="flex items-center justify-center h-full p-sm">
       <div className="text-center">
-        <Box className="h-6 w-6 mx-auto mb-2 text-muted-foreground" />
+        <Box className="icon-md mx-auto mb-2 text-muted-foreground" />
         <p className="text-xs text-muted-foreground mb-1">
           Unknown component
         </p>
@@ -590,16 +590,16 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
       <div className="relative">
         {/* Live data indicators */}
         {shouldFetchLiveData && (
-          <div className="absolute top-2 right-2 z-10 flex items-center gap-2">
+          <div className="absolute top-2 right-2 z-10 flex items-center gap-xs">
             {/* Connection status */}
             <Badge 
               variant={liveDataState.isConnected ? 'default' : 'destructive'} 
               className="text-xs px-2 py-1"
             >
               {liveDataState.isConnected ? (
-                <><Wifi className="w-3 h-3 mr-1" />Live</>
+                <><Wifi className="icon-xs mr-1" />Live</>
               ) : (
-                <><WifiOff className="w-3 h-3 mr-1" />Offline</>
+                <><WifiOff className="icon-xs mr-1" />Offline</>
               )}
             </Badge>
             
@@ -613,7 +613,7 @@ export const ComponentRenderer: React.FC<ComponentRendererProps> = ({
             {/* Error indicator */}
             {liveDataState.errors.length > 0 && (
               <Badge variant="destructive" className="text-xs px-2 py-1" title={liveDataState.errors.join(', ')}>
-                <AlertCircle className="w-3 h-3" />
+                <AlertCircle className="icon-xs" />
               </Badge>
             )}
           </div>

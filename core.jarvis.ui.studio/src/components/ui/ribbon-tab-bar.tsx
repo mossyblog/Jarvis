@@ -68,22 +68,22 @@ const colorVariants = {
 
 const sizeVariants = {
   sm: {
-    height: 'h-8',
-    padding: 'px-3 py-2',
+    height: 'h-md',
+    padding: 'px-md py-xs',
     text: 'text-xs',
-    icon: 'w-3 h-3'
+    icon: 'w-xs h-xs'
   },
   md: {
-    height: 'h-12',
-    padding: 'px-6 py-3',
+    height: 'h-xl',
+    padding: 'px-2xl py-md',
     text: 'text-sm',
-    icon: 'w-4 h-4'
+    icon: 'w-xs h-xs'
   },
   lg: {
-    height: 'h-16',
-    padding: 'px-8 py-4',
+    height: 'h-2xl',
+    padding: 'px-3xl py-lg',
     text: 'text-base',
-    icon: 'w-5 h-5'
+    icon: 'w-sm h-sm'
   }
 };
 
@@ -106,7 +106,7 @@ export const RibbonTabBar: React.FC<RibbonTabBarProps> = ({
 
   return (
     <div className={cn(
-      "flex items-center gap-1 relative",
+      "flex items-center gap-0.5 relative",
       sizeConfig.height,
       className
     )}>
@@ -122,7 +122,7 @@ export const RibbonTabBar: React.FC<RibbonTabBarProps> = ({
             onClick={() => !tab.disabled && onTabChange(tab.id)}
             disabled={tab.disabled}
             className={cn(
-              "flex items-center gap-2 rounded-t-md transition-all duration-200 font-medium",
+              "flex items-center gap-xs rounded-t-md transition-all duration-200 font-medium",
               "hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-primary/20",
               sizeConfig.padding,
               sizeConfig.text,

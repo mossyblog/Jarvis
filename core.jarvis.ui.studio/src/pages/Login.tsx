@@ -9,8 +9,8 @@ export function Login() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4" role="main" aria-label="Login page">
       <Card className="w-full max-w-md p-6 space-y-6" role="form" aria-labelledby="login-heading">
         <header className="text-center space-y-4">
-          <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-primary/20 hover:scale-105" role="img" aria-label="Jarvis Studio logo">
-            <Shield className="w-8 h-8 text-primary" />
+          <div className="mx-auto w-2xl h-2xl bg-primary/10 rounded-full flex items-center justify-center transition-all duration-300 hover:bg-primary/20 hover:scale-105" role="img" aria-label="Jarvis Studio logo">
+            <Shield className="w-lg h-lg text-primary" />
           </div>
           <div className="space-y-2">
             <h1 id="login-heading" className="text-2xl font-bold">Welcome to Jarvis Studio</h1>

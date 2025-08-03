@@ -9,7 +9,7 @@ export function Badge({ className, variant = "default", ...props }: BadgeProps) 
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-1",
+        "inline-flex items-center rounded-md px-xs py-0.5 text-xs font-medium transition-colors focus:outline-none focus:ring-1 focus:ring-ring focus:ring-offset-1",
         variant === "default" && "bg-primary/10 text-primary border border-primary/20",
         variant === "secondary" && "bg-muted/50 text-muted-foreground border border-border/40",
         variant === "destructive" && "bg-destructive/10 text-destructive border border-destructive/20",

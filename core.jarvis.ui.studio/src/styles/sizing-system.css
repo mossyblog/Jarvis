@@ -59,6 +59,9 @@
   --width-xl: calc(var(--size-unit) * 12);  /* 96px */
   --width-2xl: calc(var(--size-unit) * 16); /* 128px */
   --width-3xl: calc(var(--size-unit) * 20); /* 160px */
+  --width-4xl: calc(var(--size-unit) * 32); /* 256px */
+  --width-5xl: calc(var(--size-unit) * 40); /* 320px */
+  --width-6xl: calc(var(--size-unit) * 48); /* 384px */
 
   /* ============================================================================ */
   /* FONT SIZES (8px scale) */
@@ -217,6 +220,9 @@
 .w-xl { width: var(--width-xl); }
 .w-2xl { width: var(--width-2xl); }
 .w-3xl { width: var(--width-3xl); }
+.w-4xl { width: var(--width-4xl); }
+.w-5xl { width: var(--width-5xl); }
+.w-6xl { width: var(--width-6xl); }
 
 /* Min-height utilities */
 .min-h-xs { min-height: var(--height-xs); }
@@ -235,6 +241,9 @@
 .min-w-xl { min-width: var(--width-xl); }
 .min-w-2xl { min-width: var(--width-2xl); }
 .min-w-3xl { min-width: var(--width-3xl); }
+.min-w-4xl { min-width: var(--width-4xl); }
+.min-w-5xl { min-width: var(--width-5xl); }
+.min-w-6xl { min-width: var(--width-6xl); }
 
 /* ============================================================================ */
 /* UTILITY CLASSES - TYPOGRAPHY */
