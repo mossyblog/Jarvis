@@ -1,0 +1,1322 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites name="vitest tests" tests="170" failures="117" errors="0" time="50.650911856">
+    <testsuite name="src/test/basic.test.tsx" timestamp="2025-08-03T05:18:03.987Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/test/basic.test.tsx" name="src/test/basic.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/msw.test.tsx" timestamp="2025-08-03T05:18:03.995Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/test/msw.test.tsx" name="src/test/msw.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/panels/QuickActionsPanel.test.tsx" timestamp="2025-08-03T05:18:04.004Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/panels/QuickActionsPanel.test.tsx" name="src/components/panels/QuickActionsPanel.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/ui/badge.test.tsx" timestamp="2025-08-03T05:18:04.008Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/ui/badge.test.tsx" name="src/components/ui/badge.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/ui/button.test.tsx" timestamp="2025-08-03T05:18:04.011Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/ui/button.test.tsx" name="src/components/ui/button.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/contexts/__tests__/AuthContext.simple.test.tsx" timestamp="2025-08-03T05:18:04.015Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/contexts/__tests__/AuthContext.simple.test.tsx" name="src/contexts/__tests__/AuthContext.simple.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/contexts/__tests__/AuthContext.test.tsx" timestamp="2025-08-03T05:18:04.019Z" hostname="DESKTOP-6PTDT3G" tests="18" failures="12" errors="0" skipped="0" time="40.128628754">
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Provider Initialization &gt; should provide auth context to children" time="0.006143044">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Provider Initialization &gt; should throw error when useAuth is used outside provider" time="0.002092308">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Provider Initialization &gt; should initialize with loading state" time="0.003574072">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Login Functionality &gt; should handle successful login" time="0.004541705">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:179:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Login Functionality &gt; should handle login failure" time="0.027931462">
+            <failure message="expected [Function] to throw error including &apos;Invalid credentials&apos; but got &apos;Cannot set property bubbles of #&lt;Even…&apos;" type="AssertionError">
+AssertionError: expected [Function] to throw error including &apos;Invalid credentials&apos; but got &apos;Cannot set property bubbles of #&lt;Even…&apos;
+
+Expected: &quot;Invalid credentials&quot;
+Received: &quot;Cannot set property bubbles of #&lt;Event&gt; which has only a getter&quot;
+
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:205:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Login Functionality &gt; should store user and navigation data in localStorage on successful login" time="0.005818952">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:233:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Logout Functionality &gt; should handle logout" time="0.007049611">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:273:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Logout Functionality &gt; should clear stored data on logout" time="0.005838403">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:311:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Permission System &gt; should check permissions for authenticated user" time="0.005714444">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:350:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Permission System &gt; should return false for permissions when not authenticated" time="0.003817794">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Permission System &gt; should use default action &quot;read&quot; when no action specified" time="0.006712317">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Token Refresh &gt; should handle token refresh" time="0.005507578">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Initialization with Stored Tokens &gt; should load user from stored tokens on initialization" time="0.005572256">
+            <failure message="[2mexpect([22m[31melement[39m[2m).toHaveTextContent()[22m
+
+Expected element to have text content:
+[32m  test@example.com[39m
+Received:
+[31m  no-user[39m" type="Error">
+Error: expect(element).toHaveTextContent()
+
+Expected element to have text content:
+  test@example.com
+Received:
+  no-user
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:458:42
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Initialization with Stored Tokens &gt; should handle expired tokens by attempting refresh" time="10.012725307">
+            <failure message="Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;." type="Error">
+Error: Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;.
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:461:5
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Initialization with Stored Tokens &gt; should clear auth when refresh token fails" time="10.00514017">
+            <failure message="Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;." type="Error">
+Error: Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;.
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:496:5
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Error Handling &gt; should handle network errors during login" time="0.007952155">
+            <failure message="expected [Function] to throw error including &apos;Network error&apos; but got &apos;Cannot set property bubbles of #&lt;Even…&apos;" type="AssertionError">
+AssertionError: expected [Function] to throw error including &apos;Network error&apos; but got &apos;Cannot set property bubbles of #&lt;Even…&apos;
+
+Expected: &quot;Network error&quot;
+Received: &quot;Cannot set property bubbles of #&lt;Event&gt; which has only a getter&quot;
+
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:534:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Error Handling &gt; should handle API errors gracefully during initialization" time="10.006662232">
+            <failure message="Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;." type="Error">
+Error: Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;.
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:542:5
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/AuthContext.test.tsx" name="AuthContext &gt; Session Management &gt; should schedule token refresh" time="10.004627544">
+            <failure message="Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;." type="Error">
+Error: Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;.
+ ❯ src/contexts/__tests__/AuthContext.test.tsx:574:5
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/contexts/__tests__/ThemeContext.dom.test.tsx" timestamp="2025-08-03T05:18:04.061Z" hostname="DESKTOP-6PTDT3G" tests="16" failures="13" errors="0" skipped="0" time="0.16563939">
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; CSS Class Management &gt; should apply initial theme and mode classes on mount" time="0.015523013">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; CSS Class Management &gt; should remove all theme classes before applying new ones" time="0.080898421">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:154:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; CSS Class Management &gt; should handle rapid theme changes correctly" time="0.006478655">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:183:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; CSS Class Management &gt; should maintain class application order" time="0.004972955">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:206:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Data Attribute Management &gt; should set data-theme and data-mode attributes on initialization" time="0.00364471">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Data Attribute Management &gt; should update data attributes when theme changes" time="0.004626953">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:242:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Data Attribute Management &gt; should maintain attribute consistency across multiple changes" time="0.005585011">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:264:9
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Data Attribute Management &gt; should handle simultaneous theme and mode changes atomically" time="0.004589008">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:284:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; CSS Custom Properties Integration &gt; should work with CSS custom properties via data attributes" time="0.005318631">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:315:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; CSS Custom Properties Integration &gt; should support themed component selection via classes" time="0.005894348">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:337:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Theme Transition Preparation &gt; should provide stable DOM structure for CSS transitions" time="0.005068029">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:361:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Theme Transition Preparation &gt; should handle theme changes without causing layout thrashing" time="0.004569578">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:389:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Error Handling in DOM Operations &gt; should document DOM error handling for future enhancement" time="0.004818917">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:413:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Error Handling in DOM Operations &gt; should handle missing document.documentElement gracefully" time="0.002601177">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Performance Optimizations &gt; should minimize DOM operations for unchanged values" time="0.003818283">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:469:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.dom.test.tsx" name="ThemeContext - DOM Integration &gt; Performance Optimizations &gt; should batch DOM updates within single render cycle" time="0.003906193">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.dom.test.tsx:491:7
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/contexts/__tests__/ThemeContext.integration.test.tsx" timestamp="2025-08-03T05:18:04.104Z" hostname="DESKTOP-6PTDT3G" tests="14" failures="9" errors="0" skipped="0" time="0.103219344">
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; ThemeSwitcher Integration &gt; should integrate with ThemeSwitcher component" time="0.021724743">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:173:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; ThemeSwitcher Integration &gt; should integrate with ThemeSwitcherCompact component" time="0.017630278">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:193:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; ThemeSwitcher Integration &gt; should handle theme changes through ThemeSwitcher dropdown" time="0.008732472">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:214:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; System Preference Detection &gt; should detect dark mode preference" time="0.002093722">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; System Preference Detection &gt; should handle system preference changes" time="0.002619899">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Performance Testing &gt; should handle rapid theme changes efficiently" time="0.004062655">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:299:9
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Performance Testing &gt; should not cause memory leaks with multiple providers" time="0.004041125">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:315:9
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Performance Testing &gt; should handle concurrent theme changes gracefully" time="0.004344292">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Performance Testing &gt; should minimize re-renders with stable references" time="0.002253523">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Error Boundaries and Edge Cases &gt; should work with React.StrictMode" time="0.002447406">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Error Boundaries and Edge Cases &gt; should handle provider unmounting during theme change" time="0.006419743">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:447:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Error Boundaries and Edge Cases &gt; should handle multiple rapid provider mounts/unmounts" time="0.003987466">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:483:9
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Accessibility Integration &gt; should work with screen readers and ARIA" time="0.016513288">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.integration.test.tsx" name="ThemeContext - Integration &amp; Performance &gt; Accessibility Integration &gt; should document screen reader announcements for future enhancement" time="0.005265629">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.integration.test.tsx:528:7
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/contexts/__tests__/ThemeContext.persistence.test.tsx" timestamp="2025-08-03T05:18:04.132Z" hostname="DESKTOP-6PTDT3G" tests="16" failures="6" errors="0" skipped="0" time="0.045647176">
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; localStorage Persistence &gt; should persist theme changes across provider remounts" time="0.005186362">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.persistence.test.tsx:108:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; localStorage Persistence &gt; should persist multiple theme changes correctly" time="0.004235406">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.persistence.test.tsx:142:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; localStorage Persistence &gt; should handle localStorage quota exceeded gracefully" time="0.00450145">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.persistence.test.tsx:171:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; localStorage Persistence &gt; should document localStorage disabled handling for future enhancement" time="0.001801126">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Theme Validation &gt; should reject invalid theme names and use default" time="0.001729572">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Theme Validation &gt; should reject invalid mode names and use default" time="0.001669861">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Theme Validation &gt; should validate available themes array" time="0.001667494">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Theme Validation &gt; should handle malformed data in localStorage" time="0.002156622">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Edge Cases &amp; Error Handling &gt; should handle empty string values in localStorage" time="0.001753131">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Edge Cases &amp; Error Handling &gt; should handle null values in localStorage" time="0.001562575">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Edge Cases &amp; Error Handling &gt; should handle case-sensitive theme names correctly" time="0.002951419">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Edge Cases &amp; Error Handling &gt; should be resilient to localStorage being redefined during runtime" time="0.004303077">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.persistence.test.tsx:332:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Performance &amp; Optimization &gt; should minimize localStorage reads on initialization" time="0.001613439">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Performance &amp; Optimization &gt; should only write to localStorage when values actually change" time="0.003839546">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.persistence.test.tsx:374:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Performance &amp; Optimization &gt; should batch localStorage operations efficiently" time="0.004017139">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.persistence.test.tsx:396:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.persistence.test.tsx" name="ThemeContext - Persistence &amp; Validation &gt; Cross-tab Synchronization &gt; should document storage event handling for future enhancement" time="0.001941938">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/contexts/__tests__/ThemeContext.test.tsx" timestamp="2025-08-03T05:18:04.154Z" hostname="DESKTOP-6PTDT3G" tests="22" failures="8" errors="0" skipped="0" time="0.071906752">
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Provider Initialization &gt; should provide theme context to children" time="0.003552086">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Provider Initialization &gt; should throw error when useTheme is used outside provider" time="0.004147758">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Provider Initialization &gt; should use default props when no props provided" time="0.00187679">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Provider Initialization &gt; should use custom default props when provided" time="0.001794642">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Provider Initialization &gt; should provide readonly available themes array" time="0.002294882">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Local Storage Integration &gt; should load theme from localStorage on initialization" time="0.00227643">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Local Storage Integration &gt; should ignore invalid theme from localStorage and use default" time="0.00259525">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Local Storage Integration &gt; should ignore invalid mode from localStorage and use default" time="0.004443588">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Local Storage Integration &gt; should save theme to localStorage when changed" time="0.004807267">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:218:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Local Storage Integration &gt; should save mode to localStorage when changed" time="0.004279481">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:228:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Theme Switching &gt; should switch theme correctly" time="0.00460889">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:244:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Theme Switching &gt; should switch mode correctly" time="0.004096628">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:260:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Theme Switching &gt; should maintain independent theme and mode states" time="0.003539433">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:273:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; DOM Updates &gt; should apply theme and mode classes to document element" time="0.002211581">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; DOM Updates &gt; should remove old classes before applying new ones" time="0.00411004">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:305:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; DOM Updates &gt; should update data attributes when theme changes" time="0.004016684">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:323:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; State Synchronization &gt; should notify all consumers when theme changes" time="0.004384989">
+            <failure message="Cannot set property bubbles of #&lt;Event&gt; which has only a getter" type="TypeError">
+TypeError: Cannot set property bubbles of #&lt;Event&gt; which has only a getter
+ ❯ new MockPointerEvent src/test/setup.ts:110:12
+ ❯ createEvent node_modules/@testing-library/user-event/dist/esm/event/createEvent.js:38:19
+ ❯ Object.dispatchUIEvent node_modules/@testing-library/user-event/dist/esm/event/dispatchEvent.js:19:19
+ ❯ Object.leave node_modules/@testing-library/user-event/dist/esm/system/pointer/pointer.js:44:34
+ ❯ PointerHost.move node_modules/@testing-library/user-event/dist/esm/system/pointer/index.js:49:85
+ ❯ pointerAction node_modules/@testing-library/user-event/dist/esm/pointer/index.js:57:39
+ ❯ Object.pointer node_modules/@testing-library/user-event/dist/esm/pointer/index.js:25:15
+ ❯ Object.asyncWrapper node_modules/@testing-library/react/dist/pure.js:88:22
+ ❯ src/contexts/__tests__/ThemeContext.test.tsx:344:7
+            </failure>
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; State Synchronization &gt; should provide stable function references within same provider instance" time="0.001780501">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Error Handling &gt; should document localStorage error handling for future enhancement" time="0.002142286">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; Error Handling &gt; should handle invalid JSON in localStorage gracefully" time="0.002361355">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; TypeScript Type Safety &gt; should enforce theme name types" time="0.003417614">
+        </testcase>
+        <testcase classname="src/contexts/__tests__/ThemeContext.test.tsx" name="ThemeContext &gt; TypeScript Type Safety &gt; should enforce mode types" time="0.002290635">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useBottomSheet.test.ts" timestamp="2025-08-03T05:18:04.184Z" hostname="DESKTOP-6PTDT3G" tests="41" failures="26" errors="0" skipped="0" time="10.13587044">
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Basic State Management &gt; initializes with correct default state" time="0.005104208">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Basic State Management &gt; initializes with custom initial state" time="0.002782196">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Basic State Management &gt; opens bottom sheet" time="0.003811098">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Basic State Management &gt; closes bottom sheet" time="0.002497973">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Basic State Management &gt; toggles bottom sheet state" time="0.002295847">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Basic State Management &gt; maintains stable callback references" time="0.002638056">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Position Calculations &gt; calculates position from delta correctly" time="0.002624283">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Position Calculations &gt; calculates position from delta down correctly" time="0.002928953">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Position Calculations &gt; respects maximum height constraint" time="0.002372103">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Position Calculations &gt; respects minimum height constraint (allows below for closing)" time="0.002834567">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Position Calculations &gt; handles viewport resize correctly" time="0.002697271">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Snap Point Logic &gt; snaps to nearest point correctly" time="0.002656573">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Snap Point Logic &gt; considers velocity in snap decisions" time="0.0043248">
+            <failure message="expected 0.2 to be close to 0.5, received difference is 0.3, but expected 0.05" type="AssertionError">
+AssertionError: expected 0.2 to be close to 0.5, received difference is 0.3, but expected 0.05
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:299:61
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Snap Point Logic &gt; handles edge cases for velocity-based snapping" time="0.002626066">
+            <failure message="expected 0.5 to be close to 0.9, received difference is 0.4, but expected 0.05" type="AssertionError">
+AssertionError: expected 0.5 to be close to 0.9, received difference is 0.4, but expected 0.05
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:311:61
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Snap Point Logic &gt; works with custom snap points" time="0.004600045">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Snap Point Logic &gt; handles single snap point" time="0.003531815">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Animation State Management &gt; manages animation state correctly" time="10.004606301">
+            <failure message="Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;." type="Error">
+Error: Test timed out in 10000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with &quot;testTimeout&quot;.
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:340:5
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Animation State Management &gt; prevents concurrent animations" time="0.016397572">
+            <failure message="Cannot read properties of null (reading &apos;animateToHeight&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;animateToHeight&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:365:51
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:789:22
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:365:26
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Animation State Management &gt; handles rapid animation requests" time="0.004414179">
+            <failure message="Cannot read properties of null (reading &apos;animateToHeight&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;animateToHeight&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:383:50
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:789:22
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:383:25
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Animation State Management &gt; uses correct easing function" time="0.004487907">
+            <failure message="Cannot read properties of null (reading &apos;animateToHeight&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;animateToHeight&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:406:24
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:789:22
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:405:7
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Closing Logic &gt; determines when to close based on height" time="0.004082617">
+            <failure message="Cannot read properties of null (reading &apos;shouldClose&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;shouldClose&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:427:29
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Closing Logic &gt; determines when to close based on velocity" time="0.003377367">
+            <failure message="Cannot read properties of null (reading &apos;shouldClose&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;shouldClose&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:439:29
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Closing Logic &gt; considers both height and velocity for closing decision" time="0.002760972">
+            <failure message="Cannot read properties of null (reading &apos;shouldClose&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;shouldClose&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:451:29
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Drag State Management &gt; manages drag state correctly" time="0.003714872">
+            <failure message="Cannot read properties of null (reading &apos;isDragging&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;isDragging&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:462:29
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Drag State Management &gt; tracks velocity correctly" time="0.002685479">
+            <failure message="Cannot read properties of null (reading &apos;velocity&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;velocity&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:480:29
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Drag State Management &gt; resets velocity when drag ends" time="0.003072998">
+            <failure message="Cannot read properties of null (reading &apos;setVelocity&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;setVelocity&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:499:24
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:789:22
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:498:7
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Memory Management and Cleanup &gt; cleans up timers on unmount" time="0.00251468">
+            <failure message="expected &quot;clearTimeout&quot; to be called at least once" type="AssertionError">
+AssertionError: expected &quot;clearTimeout&quot; to be called at least once
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:517:31
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Memory Management and Cleanup &gt; handles rapid mount/unmount cycles" time="0.00584717">
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Memory Management and Cleanup &gt; maintains state consistency during cleanup" time="0.002201053">
+            <failure message="Cannot read properties of null (reading &apos;setIsAnimating&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;setIsAnimating&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:534:24
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:789:22
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:533:7
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Memory Management and Cleanup &gt; cancels animations on unmount" time="0.002851307">
+            <failure message="Cannot read properties of null (reading &apos;animateToHeight&apos;)" type="TypeError">
+TypeError: Cannot read properties of null (reading &apos;animateToHeight&apos;)
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:547:24
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:48:24
+ ❯ process.env.NODE_ENV.exports.act node_modules/react/cjs/react.development.js:789:22
+ ❯ node_modules/@testing-library/react/dist/act-compat.js:47:25
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:546:7
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Edge Cases and Error Handling &gt; handles invalid height values" time="0.003908409">
+            <failure message="expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown" type="AssertionError">
+AssertionError: expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+&quot;TypeError: Cannot read properties of null (reading &apos;snapToNearestPoint&apos;)&quot;
+
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:561:64
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Edge Cases and Error Handling &gt; handles invalid velocity values" time="0.003901171">
+            <failure message="expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown" type="AssertionError">
+AssertionError: expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+&quot;TypeError: Cannot read properties of null (reading &apos;snapToNearestPoint&apos;)&quot;
+
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:574:69
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Edge Cases and Error Handling &gt; handles empty snap points array" time="0.00250358">
+            <failure message="expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown" type="AssertionError">
+AssertionError: expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+&quot;TypeError: Cannot read properties of null (reading &apos;snapToNearestPoint&apos;)&quot;
+
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:583:64
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Edge Cases and Error Handling &gt; handles zero animation duration" time="0.002593479">
+            <failure message="expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown" type="AssertionError">
+AssertionError: expected [Function] to not throw an error but &apos;TypeError: Cannot read properties of …&apos; was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+&quot;TypeError: Cannot read properties of null (reading &apos;animateToHeight&apos;)&quot;
+
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:591:61
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Edge Cases and Error Handling &gt; handles missing window object" time="0.002547197">
+            <failure message="expected [Function] to not throw an error but &apos;ReferenceError: window is not defined&apos; was thrown" type="AssertionError">
+AssertionError: expected [Function] to not throw an error but &apos;ReferenceError: window is not defined&apos; was thrown
+
+- Expected: 
+undefined
+
++ Received: 
+&quot;ReferenceError: window is not defined&quot;
+
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:602:14
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Edge Cases and Error Handling &gt; handles missing requestAnimationFrame" time="0.001046847">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:139:27
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Integration Scenarios &gt; works with multiple instances independently" time="0.001714829">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:139:27
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Integration Scenarios &gt; handles state changes during animation" time="0.00082427">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:139:27
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Integration Scenarios &gt; maintains performance with frequent updates" time="0.00077426">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:139:27
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Integration Scenarios &gt; handles concurrent state updates" time="0.000763198">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:139:27
+            </failure>
+        </testcase>
+        <testcase classname="src/hooks/__tests__/useBottomSheet.test.ts" name="useBottomSheet Hook &gt; Integration Scenarios &gt; integrates correctly with React Strict Mode" time="0.000714899">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/hooks/__tests__/useBottomSheet.test.ts:139:27
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useCacheStrategy.test.tsx" timestamp="2025-08-03T05:18:04.277Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/hooks/__tests__/useCacheStrategy.test.tsx" name="src/hooks/__tests__/useCacheStrategy.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useDebounce.test.ts" timestamp="2025-08-03T05:18:04.280Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/hooks/__tests__/useDebounce.test.ts" name="src/hooks/__tests__/useDebounce.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useSearchState.test.ts" timestamp="2025-08-03T05:18:04.284Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/hooks/__tests__/useSearchState.test.ts" name="src/hooks/__tests__/useSearchState.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useTouchGestures.performance.test.ts" timestamp="2025-08-03T05:18:04.287Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/hooks/__tests__/useTouchGestures.performance.test.ts" name="src/hooks/__tests__/useTouchGestures.performance.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useTouchGestures.test.ts" timestamp="2025-08-03T05:18:04.290Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/hooks/__tests__/useTouchGestures.test.ts" name="src/hooks/__tests__/useTouchGestures.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/hooks/__tests__/useViewState.test.ts" timestamp="2025-08-03T05:18:04.293Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/hooks/__tests__/useViewState.test.ts" name="src/hooks/__tests__/useViewState.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/utils/__tests__/cacheManager.test.ts" timestamp="2025-08-03T05:18:04.296Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/utils/__tests__/cacheManager.test.ts" name="src/utils/__tests__/cacheManager.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/utils/__tests__/gridHelpers.test.ts" timestamp="2025-08-03T05:18:04.301Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/utils/__tests__/gridHelpers.test.ts" name="src/utils/__tests__/gridHelpers.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/utils/__tests__/recentPagesManager.test.ts" timestamp="2025-08-03T05:18:04.305Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/utils/__tests__/recentPagesManager.test.ts" name="src/utils/__tests__/recentPagesManager.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/utils/__tests__/tokenUtils.test.ts" timestamp="2025-08-03T05:18:04.307Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/utils/__tests__/tokenUtils.test.ts" name="src/utils/__tests__/tokenUtils.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/__tests__/auth.integration.test.tsx" timestamp="2025-08-03T05:18:04.312Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/test/__tests__/auth.integration.test.tsx" name="src/test/__tests__/auth.integration.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/__tests__/auth.offline.test.tsx" timestamp="2025-08-03T05:18:04.317Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/test/__tests__/auth.offline.test.tsx" name="src/test/__tests__/auth.offline.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/__tests__/auth.session.test.tsx" timestamp="2025-08-03T05:18:04.321Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/test/__tests__/auth.session.test.tsx" name="src/test/__tests__/auth.session.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/test/examples/complete-example.test.tsx" timestamp="2025-08-03T05:18:04.324Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/test/examples/complete-example.test.tsx" name="src/test/examples/complete-example.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/bento/__tests__/BentoGrid.basic.test.tsx" timestamp="2025-08-03T05:18:04.328Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/bento/__tests__/BentoGrid.basic.test.tsx" name="src/components/bento/__tests__/BentoGrid.basic.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/bento/__tests__/BentoGrid.dragdrop.test.tsx" timestamp="2025-08-03T05:18:04.332Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/bento/__tests__/BentoGrid.dragdrop.test.tsx" name="src/components/bento/__tests__/BentoGrid.dragdrop.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/bento/__tests__/BentoGrid.performance.test.tsx" timestamp="2025-08-03T05:18:04.336Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/bento/__tests__/BentoGrid.performance.test.tsx" name="src/components/bento/__tests__/BentoGrid.performance.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/bento/__tests__/BentoGrid.snap.test.tsx" timestamp="2025-08-03T05:18:04.339Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/bento/__tests__/BentoGrid.snap.test.tsx" name="src/components/bento/__tests__/BentoGrid.snap.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/bento/__tests__/BentoGrid.test.tsx" timestamp="2025-08-03T05:18:04.342Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/bento/__tests__/BentoGrid.test.tsx" name="src/components/bento/__tests__/BentoGrid.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/bento/__tests__/GridComponent.test.tsx" timestamp="2025-08-03T05:18:04.346Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/bento/__tests__/GridComponent.test.tsx" name="src/components/bento/__tests__/GridComponent.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/auth/__tests__/LoginForm.test.tsx" timestamp="2025-08-03T05:18:04.350Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/auth/__tests__/LoginForm.test.tsx" name="src/components/auth/__tests__/LoginForm.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/auth/__tests__/ProtectedRoute.test.tsx" timestamp="2025-08-03T05:18:04.353Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/auth/__tests__/ProtectedRoute.test.tsx" name="src/components/auth/__tests__/ProtectedRoute.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/layout/__tests__/LayoutHeader.test.tsx" timestamp="2025-08-03T05:18:04.356Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/layout/__tests__/LayoutHeader.test.tsx" name="src/components/layout/__tests__/LayoutHeader.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/layout/__tests__/StatusFooter.test.tsx" timestamp="2025-08-03T05:18:04.360Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/layout/__tests__/StatusFooter.test.tsx" name="src/components/layout/__tests__/StatusFooter.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/interfaces/__tests__/UIStudioHeader.test.tsx" timestamp="2025-08-03T05:18:04.364Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/interfaces/__tests__/UIStudioHeader.test.tsx" name="src/components/interfaces/__tests__/UIStudioHeader.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/interfaces/__tests__/UIStudioInterfaceSimple.test.tsx" timestamp="2025-08-03T05:18:04.368Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/interfaces/__tests__/UIStudioInterfaceSimple.test.tsx" name="src/components/interfaces/__tests__/UIStudioInterfaceSimple.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/keyboard/__tests__/KeyboardNavigation.test.tsx" timestamp="2025-08-03T05:18:04.373Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/keyboard/__tests__/KeyboardNavigation.test.tsx" name="src/components/keyboard/__tests__/KeyboardNavigation.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/BottomSheet.dragSystem.test.tsx" timestamp="2025-08-03T05:18:04.378Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/BottomSheet.dragSystem.test.tsx" name="src/components/mobile/__tests__/BottomSheet.dragSystem.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/BottomSheet.test.tsx" timestamp="2025-08-03T05:18:04.382Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/BottomSheet.test.tsx" name="src/components/mobile/__tests__/BottomSheet.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/MobileGestureIntegration.test.tsx" timestamp="2025-08-03T05:18:04.386Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/MobileGestureIntegration.test.tsx" name="src/components/mobile/__tests__/MobileGestureIntegration.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/OrientationHandling.test.tsx" timestamp="2025-08-03T05:18:04.389Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/OrientationHandling.test.tsx" name="src/components/mobile/__tests__/OrientationHandling.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/ResponsiveBehavior.test.tsx" timestamp="2025-08-03T05:18:04.391Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/ResponsiveBehavior.test.tsx" name="src/components/mobile/__tests__/ResponsiveBehavior.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/ResponsiveBreakpoints.test.tsx" timestamp="2025-08-03T05:18:04.395Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/ResponsiveBreakpoints.test.tsx" name="src/components/mobile/__tests__/ResponsiveBreakpoints.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/mobile/__tests__/TouchTargetCompliance.test.tsx" timestamp="2025-08-03T05:18:04.398Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/mobile/__tests__/TouchTargetCompliance.test.tsx" name="src/components/mobile/__tests__/TouchTargetCompliance.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/components/pages/__tests__/PageCreationModal.test.tsx" timestamp="2025-08-03T05:18:04.401Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/components/pages/__tests__/PageCreationModal.test.tsx" name="src/components/pages/__tests__/PageCreationModal.test.tsx" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/api/__tests__/apiService.auth.test.ts" timestamp="2025-08-03T05:18:04.405Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/services/api/__tests__/apiService.auth.test.ts" name="src/services/api/__tests__/apiService.auth.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/services/api/__tests__/uistudioApiClient.test.ts" timestamp="2025-08-03T05:18:04.410Z" hostname="DESKTOP-6PTDT3G" tests="1" failures="1" errors="0" skipped="0" time="0">
+        <testcase classname="src/services/api/__tests__/uistudioApiClient.test.ts" name="src/services/api/__tests__/uistudioApiClient.test.ts" time="0">
+            <failure message="window is not defined" type="ReferenceError">
+ReferenceError: window is not defined
+ ❯ src/test/setup.ts:46:23
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>

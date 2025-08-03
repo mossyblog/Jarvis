@@ -1,0 +1,220 @@
+/**
+ * Jarvis UI Studio Brand Tokens
+ * 
+ * Refined color system and design tokens for sophisticated, 
+ * modern UI with reduced visual weight and improved hierarchy.
+ */
+
+:root {
+  /* ============================================================================ */
+  /* BRAND COLOR PALETTE - Professional & Refined */
+  /* ============================================================================ */
+  
+  /* Primary Brand Colors */
+  --brand-primary: #3b82f6;      /* Modern blue - primary actions */
+  --brand-primary-50: #eff6ff;
+  --brand-primary-100: #dbeafe;
+  --brand-primary-200: #bfdbfe;
+  --brand-primary-300: #93c5fd;
+  --brand-primary-400: #60a5fa;
+  --brand-primary-500: #3b82f6;
+  --brand-primary-600: #2563eb;
+  --brand-primary-700: #1d4ed8;
+  --brand-primary-800: #1e40af;
+  --brand-primary-900: #1e3a8a;
+
+  /* Neutral Palette - Sophisticated grays */
+  --brand-neutral-0: #ffffff;
+  --brand-neutral-25: #fcfcfd;
+  --brand-neutral-50: #f8fafc;
+  --brand-neutral-100: #f1f5f9;
+  --brand-neutral-200: #e2e8f0;
+  --brand-neutral-300: #cbd5e1;
+  --brand-neutral-400: #94a3b8;
+  --brand-neutral-500: #64748b;
+  --brand-neutral-600: #475569;
+  --brand-neutral-700: #334155;
+  --brand-neutral-800: #1e293b;
+  --brand-neutral-900: #0f172a;
+
+  /* Semantic Colors - Refined status indicators */
+  --brand-success: #10b981;
+  --brand-success-50: #ecfdf5;
+  --brand-warning: #f59e0b;
+  --brand-warning-50: #fffbeb;
+  --brand-error: #ef4444;
+  --brand-error-50: #fef2f2;
+  --brand-info: #0ea5e9;
+  --brand-info-50: #f0f9ff;
+
+  /* ============================================================================ */
+  /* REFINED COMPONENT TOKENS */
+  /* ============================================================================ */
+  
+  /* Surface & Background Tokens */
+  --surface-primary: var(--brand-neutral-0);
+  --surface-secondary: var(--brand-neutral-25);
+  --surface-tertiary: var(--brand-neutral-50);
+  --surface-muted: var(--brand-neutral-100);
+  --surface-accent: var(--brand-primary-50);
+  --surface-overlay: rgba(15, 23, 42, 0.05);
+
+  /* Border Tokens - Subtle & Sophisticated */
+  --border-primary: var(--brand-neutral-200);
+  --border-secondary: var(--brand-neutral-100);
+  --border-muted: rgba(226, 232, 240, 0.4);
+  --border-accent: var(--brand-primary-200);
+  --border-focus: var(--brand-primary-300);
+
+  /* Text Hierarchy Tokens */
+  --text-primary: var(--brand-neutral-900);
+  --text-secondary: var(--brand-neutral-700);
+  --text-tertiary: var(--brand-neutral-600);
+  --text-muted: var(--brand-neutral-500);
+  --text-placeholder: var(--brand-neutral-400);
+  --text-disabled: var(--brand-neutral-300);
+  --text-inverse: var(--brand-neutral-0);
+  --text-accent: var(--brand-primary-600);
+
+  /* Interactive State Tokens */
+  --interactive-primary: var(--brand-primary-500);
+  --interactive-primary-hover: var(--brand-primary-600);
+  --interactive-primary-active: var(--brand-primary-700);
+  --interactive-secondary: var(--brand-neutral-100);
+  --interactive-secondary-hover: var(--brand-neutral-200);
+  --interactive-ghost-hover: rgba(148, 163, 184, 0.1);
+
+  /* Shadow Tokens - Refined elevation */
+  --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 4px 6px rgba(15, 23, 42, 0.05), 0 2px 4px rgba(15, 23, 42, 0.03);
+  --shadow-lg: 0 10px 15px rgba(15, 23, 42, 0.08), 0 4px 6px rgba(15, 23, 42, 0.04);
+  --shadow-xl: 0 20px 25px rgba(15, 23, 42, 0.10), 0 10px 10px rgba(15, 23, 42, 0.04);
+
+  /* ============================================================================ */
+  /* COMPONENT-SPECIFIC TOKENS */
+  /* ============================================================================ */
+  
+  /* Card Tokens */
+  --card-background: var(--surface-primary);
+  --card-border: var(--border-muted);
+  --card-shadow: var(--shadow-sm);
+  --card-shadow-hover: var(--shadow-md);
+
+  /* Button Tokens */
+  --button-primary-bg: var(--interactive-primary);
+  --button-primary-hover: var(--interactive-primary-hover);
+  --button-secondary-bg: var(--interactive-secondary);
+  --button-secondary-hover: var(--interactive-secondary-hover);
+  --button-ghost-hover: var(--interactive-ghost-hover);
+
+  /* Input Tokens */
+  --input-background: var(--surface-primary);
+  --input-border: var(--border-secondary);
+  --input-border-hover: var(--border-primary);
+  --input-border-focus: var(--border-focus);
+  --input-placeholder: var(--text-placeholder);
+
+  /* Badge Tokens */
+  --badge-primary-bg: var(--brand-primary-50);
+  --badge-primary-text: var(--brand-primary-700);
+  --badge-primary-border: var(--brand-primary-200);
+  --badge-success-bg: var(--brand-success-50);
+  --badge-success-text: #065f46;
+  --badge-success-border: #a7f3d0;
+  --badge-warning-bg: var(--brand-warning-50);
+  --badge-warning-text: #92400e;
+  --badge-warning-border: #fcd34d;
+
+  /* ============================================================================ */
+  /* ANIMATION & TRANSITION TOKENS */
+  /* ============================================================================ */
+  
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ============================================================================ */
+  /* SPACING REFINEMENTS */
+  /* ============================================================================ */
+  
+  /* Refined spacing scale for tighter, more sophisticated layouts */
+  --space-px: 1px;
+  --space-0-5: 0.125rem; /* 2px */
+  --space-1: 0.25rem;    /* 4px */
+  --space-1-5: 0.375rem; /* 6px */
+  --space-2: 0.5rem;     /* 8px */
+  --space-2-5: 0.625rem; /* 10px */
+  --space-3: 0.75rem;    /* 12px */
+  --space-3-5: 0.875rem; /* 14px */
+  --space-4: 1rem;       /* 16px */
+  --space-5: 1.25rem;    /* 20px */
+  --space-6: 1.5rem;     /* 24px */
+}
+
+/* ============================================================================ */
+/* UTILITY CLASSES FOR BRAND TOKENS */
+/* ============================================================================ */
+
+.bg-surface-primary { background-color: var(--surface-primary); }
+.bg-surface-secondary { background-color: var(--surface-secondary); }
+.bg-surface-tertiary { background-color: var(--surface-tertiary); }
+.bg-surface-muted { background-color: var(--surface-muted); }
+
+.border-primary { border-color: var(--border-primary); }
+.border-secondary { border-color: var(--border-secondary); }
+.border-muted { border-color: var(--border-muted); }
+
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-tertiary { color: var(--text-tertiary); }
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--text-accent); }
+
+.shadow-refined-xs { box-shadow: var(--shadow-xs); }
+.shadow-refined-sm { box-shadow: var(--shadow-sm); }
+.shadow-refined-md { box-shadow: var(--shadow-md); }
+.shadow-refined-lg { box-shadow: var(--shadow-lg); }
+
+.transition-refined { transition: var(--transition-normal); }
+
+/* ============================================================================ */
+/* REFINED COMPONENT PRESETS */
+/* ============================================================================ */
+
+.card-refined {
+  background-color: var(--card-background);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: var(--transition-normal);
+}
+
+.card-refined:hover {
+  box-shadow: var(--card-shadow-hover);
+  border-color: var(--border-primary);
+}
+
+.button-refined-primary {
+  background-color: var(--button-primary-bg);
+  color: var(--text-inverse);
+  transition: var(--transition-fast);
+}
+
+.button-refined-primary:hover {
+  background-color: var(--button-primary-hover);
+}
+
+.input-refined {
+  background-color: var(--input-background);
+  border: 1px solid var(--input-border);
+  transition: var(--transition-fast);
+}
+
+.input-refined:hover {
+  border-color: var(--input-border-hover);
+}
+
+.input-refined:focus {
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}

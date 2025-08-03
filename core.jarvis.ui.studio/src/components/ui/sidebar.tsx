@@ -6,7 +6,7 @@ import { PanelLeft } from "lucide-react"
 import { cn } from "../../lib/utils"
 import { Button } from "./button"
 import { Sheet, SheetContent } from "./sheet"
-import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "./tooltip"
 
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_ICON = "3rem"
@@ -351,15 +351,17 @@ const SidebarMenuButton = React.forwardRef<
   }
 
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
-      <TooltipContent
-        side="right"
-        align="center"
-        hidden={state !== "collapsed"}
-        {...tooltip}
-      />
-    </Tooltip>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent
+          side="right"
+          align="center"
+          hidden={state !== "collapsed"}
+          {...tooltip}
+        />
+      </Tooltip>
+    </TooltipProvider>
   )
 })
 SidebarMenuButton.displayName = "SidebarMenuButton"

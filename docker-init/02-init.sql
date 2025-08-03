@@ -174,6 +174,17 @@ INSERT INTO navigation_item_component (
     3,
     true,
     NOW()
+),
+(
+    '550e8400-e29b-41d4-a716-446655440004',
+    '550e8400-e29b-41d4-a716-446655440014',
+    'main',
+    'Pages',
+    'FileText',
+    '/pages',
+    4,
+    true,
+    NOW()
 )
 ON CONFLICT (id) DO UPDATE SET
     label = EXCLUDED.label,

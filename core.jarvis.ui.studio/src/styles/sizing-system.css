@@ -317,9 +317,77 @@
 .shadow-2xl { box-shadow: var(--shadow-2xl); }
 
 /* ============================================================================ */
-/* ICON SIZE UTILITIES */
+/* ICON SIZE UTILITIES - Override h-* w-* for icons */
 /* ============================================================================ */
 
+/* EMERGENCY ICON FIX - Force all SVG icons to have minimum size */
+svg {
+  min-width: 16px !important;
+  min-height: 16px !important;
+}
+
+/* Specific overrides for t-shirt sizes */
+svg.h-xs.w-xs, 
+svg.w-xs.h-xs,
+.h-xs.w-xs svg,
+.w-xs.h-xs svg,
+button svg.h-xs,
+button svg.w-xs { 
+  width: 16px !important; 
+  height: 16px !important; 
+  min-width: 16px !important;
+  min-height: 16px !important;
+}
+
+svg.h-sm.w-sm, 
+svg.w-sm.h-sm,
+.h-sm.w-sm svg,
+.w-sm.h-sm svg,
+button svg.h-sm,
+button svg.w-sm { 
+  width: 16px !important; 
+  height: 16px !important; 
+  min-width: 16px !important;
+  min-height: 16px !important;
+}
+
+svg.h-md.w-md, 
+svg.w-md.h-md,
+.h-md.w-md svg,
+.w-md.h-md svg,
+button svg.h-md,
+button svg.w-md { 
+  width: 24px !important; 
+  height: 24px !important; 
+  min-width: 24px !important;
+  min-height: 24px !important;
+}
+
+svg.h-lg.w-lg, 
+svg.w-lg.h-lg,
+.h-lg.w-lg svg,
+.w-lg.h-lg svg,
+button svg.h-lg,
+button svg.w-lg { 
+  width: 32px !important; 
+  height: 32px !important; 
+  min-width: 32px !important;
+  min-height: 32px !important;
+}
+
+svg.h-xl.w-xl, 
+svg.w-xl.h-xl,
+.h-xl.w-xl svg,
+.w-xl.h-xl svg,
+button svg.h-xl,
+button svg.w-xl { 
+  width: 40px !important; 
+  height: 40px !important; 
+  min-width: 40px !important;
+  min-height: 40px !important;
+}
+
+/* Dedicated icon size utilities */
 .icon-xs { 
   width: var(--icon-size-xs); 
   height: var(--icon-size-xs); 

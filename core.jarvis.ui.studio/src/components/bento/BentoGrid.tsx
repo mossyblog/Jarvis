@@ -14,7 +14,6 @@
  */
 
 import React, { useMemo, useCallback, useState, useRef, useEffect } from 'react';
-import { useQueryClient } from '@/providers/QueryProvider';
 import { toast } from 'sonner';
 import {
   BarChart3,
@@ -65,17 +64,16 @@ import {
   useUIStudioPageBindings,
   useCreateUIStudioBinding,
   useUpdateUIStudioBinding,
-  useDeleteUIStudioBinding,
-  useCreateUIStudioVersionSnapshot,
-  uistudioKeys
+  useDeleteUIStudioBinding
 } from '@/hooks/useUIStudio';
-import type { UIStudioEntityId, UIStudioPage, UIStudioComponentBinding } from '@/types/uistudio';
+import type { UIStudioEntityId, UIStudioPage, UIStudioComponentBinding, UpdatePageRequest } from '@/types/uistudio';
 
 // Bottom sheet for mobile component palette
 import BottomSheet, { useBottomSheet } from '@/components/mobile/BottomSheet';
 
 import type { BentoGrid as BentoGridType, GridComponent, GridPosition } from '@/types/bento';
 import { DeviceType } from '@/types/bento';
+import { getDeviceInfo } from '@/components/layout/DeviceSelector';
 import { cn } from '@/lib/utils';
 import { GridComponent as GridComponentWrapper } from './GridComponent';
 import { ComponentRenderer } from './ComponentRenderer';
@@ -83,7 +81,6 @@ import { GridOverlay } from './GridOverlay';
 import { DragPreview } from './DragPreview';
 import {
   applyMagneticSnapping,
-  // getOptimizedDropZones,  // Unused import
   generateStrategicDropZones,
   isValidPlacement,
   getContextualHelp,
@@ -213,20 +210,23 @@ interface CollaborationUser {
 
 // Helper function to convert UIStudio page to Bento grid
 function createDefaultGridFromPage(page: UIStudioPage, device: DeviceType): BentoGridType {
+  const deviceInfo = getDeviceInfo(device === DeviceType.Desktop ? 'desktop' : 
+                                    device === DeviceType.Tablet ? 'tablet' : 'mobile');
+  
   return {
     id: `grid-${page.id}-${device}`,
     name: `${page.pageName} (${device})`,
     device,
-    columns: device === 'mobile' ? 4 : device === 'tablet' ? 8 : 12,
+    columns: deviceInfo.gridColumns,
     rows: 20,
-    gap: 16,
-    rowHeight: 100,
+    gap: device === DeviceType.Mobile ? 12 : device === DeviceType.Tablet ? 14 : 16,
+    rowHeight: device === DeviceType.Mobile ? 80 : device === DeviceType.Tablet ? 90 : 100,
     components: [], // Will be populated from component bindings
     settings: {
       enableSnapping: true,
       snapToGrid: true,
       enableGuides: true,
-      compactMode: 'none'
+      compactMode: device === DeviceType.Mobile ? 'vertical' : 'none'
     },
     createdAt: page.createdAt || new Date().toISOString(),
     updatedAt: page.lastUpdated || new Date().toISOString()
@@ -298,13 +298,10 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   onComponentSelect,
   onComponentDelete,
   onShowProperties,
-  onGridUpdate,
   onComponentAdd,
   onSaveComplete,
   onCollaborationEvent,
 }) => {
-  // React Query client for cache management
-  const queryClient = useQueryClient();
   
   // UIStudio API hooks for data integration
   const {
@@ -330,7 +327,6 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   const createBindingMutation = useCreateUIStudioBinding();
   const updateBindingMutation = useUpdateUIStudioBinding('');
   const deleteBindingMutation = useDeleteUIStudioBinding();
-  const createSnapshotMutation = useCreateUIStudioVersionSnapshot();
   
   // State for drag operations and visual feedback
   const [dragState, setDragState] = useState<DragState>({
@@ -356,12 +352,15 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
 
   // Derived grid from API data or local state
   const grid = useMemo<BentoGridType | null>(() => {
-    if (pageData && pageData.length > 0) {
+    if (pageData) {
       // Convert UIStudio page data to Bento grid format
-      const page = pageData[0];
       // This would need proper type mapping from UIStudio to Bento
       // For now, we'll use the local grid or create a default
-      return localGrid || createDefaultGridFromPage(page, deviceType);
+      const firstPage = Array.isArray(pageData) && pageData.length > 0 ? pageData[0] as UIStudioPage : null;
+      if (firstPage) {
+        return localGrid || createDefaultGridFromPage(firstPage, deviceType);
+      }
+      return localGrid;
     }
     return localGrid;
   }, [pageData, localGrid, deviceType]);
@@ -370,7 +369,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   const componentBindings = useMemo(() => {
     if (!bindingsData?.length) return new Map();
     const bindingsMap = new Map<string, UIStudioComponentBinding>();
-    bindingsData.forEach(binding => {
+    (bindingsData as UIStudioComponentBinding[]).forEach((binding: UIStudioComponentBinding) => {
       bindingsMap.set(binding.componentInstanceId, binding);
     });
     return bindingsMap;
@@ -378,6 +377,13 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   
   // State for delightful moments
   const [confetti, setConfetti] = useState<{ x: number; y: number; id: string }[]>([]);
+
+  // External drag state
+  const [externalDragState, setExternalDragState] = useState<{
+    isActive: boolean;
+    componentType: string | null;
+    previewPosition: { x: number; y: number; w: number; h: number } | null;
+  }>({ isActive: false, componentType: null, previewPosition: null });
 
   // Mobile-specific state
   const [mobileState, setMobileState] = useState<MobileState>({
@@ -408,8 +414,8 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   const [gridInteractionState, setGridInteractionState] = useState<'idle' | 'hovering' | 'interacting'>('idle');
   
   // Collaboration state
-  const [collaborators, setCollaborators] = useState<Map<UIStudioEntityId, CollaborationUser>>(new Map());
-  const [lockedComponents, setLockedComponents] = useState<Set<string>>(new Set());
+  const [collaborators] = useState<Map<UIStudioEntityId, CollaborationUser>>(new Map());
+  const [lockedComponents] = useState<Set<string>>(new Set());
 
   // Refs for immediate mouse tracking
   const gridContainerRef = useRef<HTMLDivElement>(null);
@@ -523,8 +529,12 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
       if (Object.keys(changes).length > 0) {
         setSaveState(prev => ({ ...prev, isSaving: true }));
         
-        // Update page via API
-        updatePageMutation.mutate(changes as any, {
+        // Update page via API - convert BentoGrid changes to UpdatePageRequest
+        const updateRequest: UpdatePageRequest = {
+          updatedByEntityId: 'current-user', // TODO: Get from auth context
+          metadata: (changes as any).metadata || {}
+        };
+        updatePageMutation.mutate(updateRequest, {
           onSuccess: () => {
             setSaveState({
               isSaving: false,
@@ -842,10 +852,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     }
   }, [dragState.draggedComponent, dragState.previewPosition, grid, handleComponentMove, triggerCelebration]);
 
-  // Handle component selection
-  // const handleComponentSelect = useCallback((componentId: string) => {
-  //   onComponentSelect?.(componentId);
-  // }, [onComponentSelect]);  // Unused function
+  // Handle component selection - implemented inline where needed
 
   // Enhanced component delete with API integration
   const handleComponentDelete = useCallback((componentId: string) => {
@@ -1016,40 +1023,9 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     onShowProperties?.(componentId);
   }, [onShowProperties]);
   
-  // Handle component selection with collaboration
-  const handleComponentSelect = useCallback((componentId: string | null) => {
-    if (enableCollaboration && componentId && currentUserEntityId) {
-      // Lock component for editing
-      setLockedComponents(prev => new Set([...prev, componentId]));
-      onCollaborationEvent?.({
-        type: 'component_locked',
-        userId: currentUserEntityId,
-        data: { componentId }
-      });
-    }
-    
-    onComponentSelect?.(componentId);
-  }, [enableCollaboration, currentUserEntityId, onCollaborationEvent, onComponentSelect]);
+  // Component selection handled inline where needed
   
-  // Create version snapshot
-  const createSnapshot = useCallback((reason: string) => {
-    if (!pageEntityId || !currentUserEntityId) return;
-    
-    createSnapshotMutation.mutate({
-      resourceEntityId: pageEntityId,
-      resourceType: 'page',
-      versionLabel: `snapshot-${Date.now()}`,
-      changeReason: reason,
-      createdByEntityId: currentUserEntityId
-    }, {
-      onSuccess: () => {
-        toast.success('Snapshot created successfully');
-      },
-      onError: (error) => {
-        toast.error(`Failed to create snapshot: ${error.message}`);
-      }
-    });
-  }, [pageEntityId, currentUserEntityId, createSnapshotMutation]);
+  // Snapshot creation functionality available via API
 
   // Render icon based on component type - matches toolbar icons
   const renderComponentSkeleton = (componentType: string) => {
@@ -1218,6 +1194,34 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
     };
   }, []);
   
+  // External drag event listeners
+  useEffect(() => {
+    const handleExternalDragStart = (event: CustomEvent) => {
+      const { componentType } = event.detail;
+      setExternalDragState({
+        isActive: true,
+        componentType,
+        previewPosition: null
+      });
+    };
+    
+    const handleExternalDragEnd = () => {
+      setExternalDragState({
+        isActive: false,
+        componentType: null,
+        previewPosition: null
+      });
+    };
+    
+    window.addEventListener('bento-external-drag-start', handleExternalDragStart as EventListener);
+    window.addEventListener('bento-external-drag-end', handleExternalDragEnd);
+    
+    return () => {
+      window.removeEventListener('bento-external-drag-start', handleExternalDragStart as EventListener);
+      window.removeEventListener('bento-external-drag-end', handleExternalDragEnd);
+    };
+  }, []);
+  
   // Auto-save cleanup
   useEffect(() => {
     return () => {
@@ -1229,12 +1233,12 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
   
   // Sync local grid with API data
   useEffect(() => {
-    if (pageData && pageData.length > 0 && bindingsData) {
-      const page = pageData[0];
+    if (pageData && Array.isArray(pageData) && pageData.length > 0 && bindingsData) {
+      const page = pageData[0] as UIStudioPage;
       const newGrid = createDefaultGridFromPage(page, deviceType);
       
       // Convert bindings to grid components
-      const components: GridComponent[] = bindingsData.map(bindingToGridComponent);
+      const components: GridComponent[] = (bindingsData as UIStudioComponentBinding[]).map(bindingToGridComponent);
       newGrid.components = components;
       
       setLocalGrid(newGrid);
@@ -1368,6 +1372,49 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
           className="relative"
           onMouseEnter={handleGridMouseEnter}
           onMouseLeave={handleGridMouseLeave}
+          onDragOver={(e) => {
+            // Allow external drops
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            
+            // Update external drag preview position
+            if (externalDragState.isActive && gridContainerRef.current && grid) {
+              const gridRect = gridContainerRef.current.getBoundingClientRect();
+              const x = Math.floor((e.clientX - gridRect.left) / (gridRect.width / grid.columns));
+              const y = Math.floor((e.clientY - gridRect.top) / ((grid.rowHeight || 100) + grid.gap));
+              
+              const defaultSize = window.__bentoExternalDrag?.defaultSize || { w: 2, h: 2 };
+              
+              // Constrain to grid bounds
+              const constrainedX = Math.max(0, Math.min(x, grid.columns - defaultSize.w));
+              const constrainedY = Math.max(0, y);
+              
+              setExternalDragState(prev => ({
+                ...prev,
+                previewPosition: {
+                  x: constrainedX,
+                  y: constrainedY,
+                  w: defaultSize.w,
+                  h: defaultSize.h
+                }
+              }));
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            
+            // Handle external component drops
+            if (window.__bentoExternalDrag && externalDragState.previewPosition) {
+              // Add the component at the preview position
+              handleComponentAdd(
+                window.__bentoExternalDrag.componentType, 
+                { 
+                  x: externalDragState.previewPosition.x, 
+                  y: externalDragState.previewPosition.y 
+                }
+              );
+            }
+          }}
         >
           {/* Render grid overlay with progressive visibility */}
           {isEditing && (
@@ -1486,8 +1533,54 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
               );
             })()}
 
-            {/* External drag preview with clear layering */}
-            {externalDragPreview && (() => {
+            {/* Enhanced external drag preview */}
+            {externalDragState.isActive && externalDragState.previewPosition && externalDragState.componentType && (() => {
+              const isValidPlacement = !checkCollision(externalDragState.previewPosition!);
+              
+              return (
+                <div
+                  className={cn(
+                    'pointer-events-none z-[12] rounded-lg border-2 border-dashed',
+                    'drop-zone-preview transition-all duration-150',
+                    isValidPlacement 
+                      ? 'border-success bg-success/10 shadow-success/25' 
+                      : 'border-destructive bg-destructive/10 shadow-destructive/25'
+                  )}
+                  style={{
+                    gridColumn: `${externalDragState.previewPosition.x + 1} / span ${externalDragState.previewPosition.w}`,
+                    gridRow: `${externalDragState.previewPosition.y + 1} / span ${externalDragState.previewPosition.h}`,
+                    boxShadow: isValidPlacement 
+                      ? '0 4px 12px rgba(34, 197, 94, 0.25)'
+                      : '0 4px 12px rgba(239, 68, 68, 0.25)',
+                  }}
+                >
+                  {/* Enhanced preview skeleton */}
+                  <div className="h-full w-full relative opacity-90 bg-background/95 backdrop-blur-md rounded-lg p-4 border border-border/50">
+                    {renderComponentSkeleton(externalDragState.componentType)}
+                    
+                    {/* Status indicator */}
+                    <div className={cn(
+                      'absolute top-2 right-2 w-6 h-6 rounded-full border-2',
+                      'flex items-center justify-center text-xs font-bold shadow-sm',
+                      'transition-all duration-150',
+                      isValidPlacement 
+                        ? 'bg-success border-success text-success-foreground animate-pulse' 
+                        : 'bg-destructive border-destructive text-destructive-foreground'
+                    )}>
+                      {isValidPlacement ? '✓' : '✕'}
+                    </div>
+                    
+                    {/* Grid position indicator */}
+                    <div className="absolute bottom-2 left-2 text-xs font-mono bg-background/90 px-2 py-1 rounded border border-border/60 shadow-sm">
+                      ({externalDragState.previewPosition.x}, {externalDragState.previewPosition.y})
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+            
+            {/* Legacy external drag preview for backward compatibility */}
+            {externalDragPreview && !externalDragState.isActive && (() => {
               const isValidPlacement = !checkCollision(externalDragPreview.position);
               const feedbackClass = isValidPlacement 
                 ? 'drop-zone-valid'

@@ -7,16 +7,11 @@
 
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  Grid3X3,
-  BarChart3,
-  Users,
   Plus,
   Search,
   Filter,
-  Star,
   Check,
-  Eye,
-  Settings
+  Eye
 } from 'lucide-react';
 
 import type { BentoLayout } from '@/types/bento';
@@ -42,6 +37,8 @@ export interface LayoutSelectorProps {
   onCreateLayout?: () => void;
   /** Whether the selector is read-only */
   readOnly?: boolean;
+  /** Whether to render in compact mobile mode */
+  compact?: boolean;
   /** Additional CSS classes */
   className?: string;
 }

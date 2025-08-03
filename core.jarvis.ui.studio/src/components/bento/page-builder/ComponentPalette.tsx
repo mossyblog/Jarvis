@@ -17,6 +17,7 @@ import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { componentRegistryService, type ComponentRegistryComponent } from '@/services/componentRegistryService';
 import {
   Search,
   Filter,
@@ -44,12 +45,12 @@ import {
   Package2
 } from 'lucide-react';
 
-import type { DeviceType, ComponentCategory } from '@/types/bento';
-import type { UIStudioComponentBinding, UIStudioEntityId } from '@/types/uistudio';
+import { DeviceType, ComponentCategory } from '@/types/bento';
+import type { UIStudioEntityId } from '@/types/uistudio';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -68,39 +69,80 @@ export interface ComponentPaletteProps {
   onComponentAdd?: (componentType: string, position: { x: number; y: number }) => void;
   /** Called when a component preview is requested */
   onComponentPreview?: (componentType: string) => void;
+  /** Whether to render in compact mobile mode */
+  compact?: boolean;
   /** Additional CSS classes */
   className?: string;
 }
 
-interface ComponentDefinition {
-  id: string;
-  name: string;
-  description: string;
+interface ComponentDefinition extends Omit<ComponentRegistryComponent, 'icon' | 'category' | 'supportedDevices'> {
   category: ComponentCategory;
   icon: React.ComponentType<{ className?: string }>;
-  tags: string[];
-  isPremium?: boolean;
-  isNew?: boolean;
-  isFromRegistry?: boolean;
-  usageCount?: number;
-  lastUsed?: Date;
-  minSize: { w: number; h: number };
-  maxSize: { w: number; h: number };
   supportedDevices: DeviceType[];
-  requiredDataSources?: string[];
-  configurationSchema?: Record<string, unknown>;
 }
 
 interface DraggableComponentProps {
   component: ComponentDefinition;
   isDisabled?: boolean;
+  onComponentAdd?: (componentType: string, position: { x: number; y: number }) => void;
 }
 
 // ============================================================================
-// Component Registry
+// Component Registry Dynamic Loading
 // ============================================================================
 
-const COMPONENT_REGISTRY: ComponentDefinition[] = [
+// Icon mapping for components from registry
+const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
+  'TrendingUp': TrendingUp,
+  'BarChart3': BarChart3,
+  'PieChart': PieChart,
+  'Table': Table,
+  'User': User,
+  'Activity': Activity,
+  'Bell': Bell,
+  'Mail': Mail,
+  'Type': Type,
+  'Image': Image,
+  'Calendar': Calendar,
+  'MessageSquare': MessageSquare,
+  'Database': Database,
+  'Package2': Package2, // Default fallback icon
+};
+
+// Category mapping from string to ComponentCategory
+const CATEGORY_MAP: Record<string, ComponentCategory> = {
+  'Analytics': 'Analytics' as ComponentCategory,
+  'Data': 'Data' as ComponentCategory,
+  'Status': 'Status' as ComponentCategory,
+  'Forms': 'Forms' as ComponentCategory,
+  'Layout': 'Layout' as ComponentCategory,
+  'Media': 'Media' as ComponentCategory,
+  'Custom': 'Custom' as ComponentCategory,
+};
+
+// Device mapping from string to DeviceType
+const DEVICE_MAP: Record<string, DeviceType> = {
+  'desktop': 'desktop' as DeviceType,
+  'tablet': 'tablet' as DeviceType,
+  'mobile': 'mobile' as DeviceType,
+};
+
+/**
+ * Transform registry component to ComponentDefinition
+ */
+function transformRegistryComponent(registryComponent: ComponentRegistryComponent): ComponentDefinition {
+  return {
+    ...registryComponent,
+    category: CATEGORY_MAP[registryComponent.category] || 'Custom',
+    icon: ICON_MAP[registryComponent.icon] || Package2,
+    supportedDevices: registryComponent.supportedDevices
+      .map(device => DEVICE_MAP[device])
+      .filter(Boolean) as DeviceType[],
+  };
+}
+
+// Fallback static components if API fails - These will be dynamically loaded from registry in production
+const FALLBACK_STATIC_COMPONENTS: Omit<ComponentDefinition, 'isFromRegistry'>[] = [
   // Analytics Components
   {
     id: 'metric-card',
@@ -326,11 +368,82 @@ const COMPONENT_REGISTRY: ComponentDefinition[] = [
   }
 ];
 
+/**
+ * Convert static components to ComponentDefinition with isFromRegistry flag
+ */
+function createFallbackComponents(): ComponentDefinition[] {
+  return FALLBACK_STATIC_COMPONENTS.map(comp => ({
+    ...comp,
+    isFromRegistry: false
+  }));
+}
+
+/**
+ * Custom hook for dynamic component loading
+ */
+function useComponentRegistry(searchTerm?: string, activeCategory?: ComponentCategory, deviceType: DeviceType = DeviceType.Desktop) {
+  // Load components from registry with caching
+  const componentsQuery = useQuery({
+    queryKey: ['component-registry', { search: searchTerm, category: activeCategory, device: deviceType }],
+    queryFn: async () => {
+      try {
+        if (searchTerm) {
+          const searchResults = await componentRegistryService.searchComponents(searchTerm, {
+            category: activeCategory,
+            limit: 50
+          });
+          return searchResults.map(transformRegistryComponent);
+        } else {
+          const allComponents = await componentRegistryService.getComponents({
+            category: activeCategory,
+            device: deviceType
+          });
+          return allComponents.map(transformRegistryComponent);
+        }
+      } catch (error) {
+        console.error('Failed to load components from registry:', error);
+        // Fallback to static components
+        let components = createFallbackComponents();
+        
+        if (activeCategory) {
+          components = components.filter(comp => comp.category === activeCategory);
+        }
+        
+        if (searchTerm) {
+          const searchLower = searchTerm.toLowerCase();
+          components = components.filter(comp =>
+            comp.name.toLowerCase().includes(searchLower) ||
+            comp.description.toLowerCase().includes(searchLower) ||
+            comp.tags.some(tag => tag.toLowerCase().includes(searchLower))
+          );
+        }
+        
+        return components.filter(comp => comp.supportedDevices.includes(deviceType));
+      }
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (renamed from cacheTime)
+    refetchOnWindowFocus: false,
+  });
+
+  return {
+    components: componentsQuery.data || [],
+    isLoading: componentsQuery.isLoading,
+    error: componentsQuery.error,
+    refetch: componentsQuery.refetch
+  };
+}
+
 // ============================================================================
 // Draggable Component
 // ============================================================================
 
-const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, isDisabled = false }) => {
+const DraggableComponent: React.FC<DraggableComponentProps & { compact?: boolean }> = ({ 
+  component, 
+  isDisabled = false, 
+  compact = false,
+  onComponentAdd
+}) => {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: component.id,
     disabled: isDisabled,
@@ -352,41 +465,81 @@ const DraggableComponent: React.FC<DraggableComponentProps> = ({ component, isDi
       ref={setNodeRef}
       className={cn(
         'component-palette-item cursor-grab active:cursor-grabbing transition-all',
-        'hover:shadow-md hover:border-primary/50',
+        'hover:shadow-md hover:border-primary/50 touch-manipulation',
         isDragging && 'shadow-lg border-primary opacity-50',
-        isDisabled && 'opacity-50 cursor-not-allowed'
+        isDisabled && 'opacity-50 cursor-not-allowed',
+        compact && 'min-h-[60px]'
       )}
       style={style}
       {...listeners}
       {...attributes}
     >
-      <CardContent className="p-3">
-        <div className="flex items-start gap-2">
-          <div className="flex-shrink-0">
-            <IconComponent className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-1 mb-1">
-              <h4 className="text-sm font-medium truncate">{component.name}</h4>
-              {component.isNew && (
-                <Badge variant="secondary" className="text-xs">New</Badge>
-              )}
-              {component.isPremium && (
-                <Star className="h-3 w-3 text-yellow-500" />
-              )}
+      <CardContent className={cn(
+        compact ? 'p-2' : 'p-3'
+      )}>
+        {compact ? (
+          // Compact mobile layout
+          <div className="flex items-center gap-2">
+            <div className="flex-shrink-0">
+              <IconComponent className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-xs text-muted-foreground line-clamp-2">
-              {component.description}
-            </p>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {component.tags.slice(0, 2).map(tag => (
-                <Badge key={tag} variant="outline" className="text-xs px-1">
-                  {tag}
-                </Badge>
-              ))}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1">
+                <h4 className="text-xs font-medium truncate">{component.name}</h4>
+                {component.isNew && (
+                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                )}
+                {component.isPremium && (
+                  <Star className="h-2 w-2 text-yellow-500" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground truncate">
+                {component.description}
+              </p>
+            </div>
+            <div className="flex-shrink-0">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 w-6 p-0"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onComponentAdd?.(component.id, { x: 0, y: 0 });
+                }}
+              >
+                +
+              </Button>
             </div>
           </div>
-        </div>
+        ) : (
+          // Full desktop layout
+          <div className="flex items-start gap-2">
+            <div className="flex-shrink-0">
+              <IconComponent className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-1 mb-1">
+                <h4 className="text-sm font-medium truncate">{component.name}</h4>
+                {component.isNew && (
+                  <Badge variant="secondary" className="text-xs">New</Badge>
+                )}
+                {component.isPremium && (
+                  <Star className="h-3 w-3 text-yellow-500" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {component.description}
+              </p>
+              <div className="flex flex-wrap gap-1 mt-2">
+                {component.tags.slice(0, 2).map(tag => (
+                  <Badge key={tag} variant="outline" className="text-xs px-1">
+                    {tag}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -401,34 +554,30 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   pageEntityId,
   enableLiveUpdates = true,
   onComponentAdd,
-  onComponentPreview,
+  compact = false,
   className
 }) => {
+  const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<ComponentCategory | 'all'>('all');
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   
-  // Load component registry from UIStudio (mock implementation)
-  const {
-    data: registryComponents,
-    isLoading: registryLoading,
-    error: registryError,
-    refetch: refetchRegistry
-  } = useQuery({
-    queryKey: ['component-registry', pageEntityId],
-    queryFn: async () => {
-      // Mock API call to get available components from UIStudio
-      // In production, this would query the UIStudio component registry
-      const response = await fetch('/api/uistudio/components/registry');
-      if (!response.ok) throw new Error('Failed to load component registry');
-      
-      const data = await response.json();
-      return data.components as ComponentDefinition[];
-    },
-    enabled: !!pageEntityId,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    refetchInterval: enableLiveUpdates ? 30000 : false // Refetch every 30 seconds if live updates enabled
-  });
+  // Debounce search input
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchQuery(searchInput);
+    }, 300);
+    return () => clearTimeout(timeoutId);
+  }, [searchInput]);
+  
+  // Load components dynamically from registry
+  const activeCategory = selectedCategory === 'all' ? undefined : selectedCategory;
+  const { 
+    components: allComponents, 
+    isLoading: registryLoading, 
+    error: registryError, 
+    refetch: refetchRegistry 
+  } = useComponentRegistry(searchQuery, activeCategory, selectedDevice);
   
   // Handle query error
   useEffect(() => {
@@ -437,58 +586,25 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
     }
   }, [registryError]);
   
-  // Merge static components with registry components
-  const allComponents = useMemo(() => {
-    const staticComponents = COMPONENT_REGISTRY.map(comp => ({ ...comp, isFromRegistry: false }));
-    const dynamicComponents = Array.isArray(registryComponents) ? registryComponents : [];
-    
-    // Merge and deduplicate by component ID
-    const merged = [...staticComponents];
-    dynamicComponents.forEach(regComp => {
-      const existingIndex = merged.findIndex(comp => comp.id === regComp.id);
-      if (existingIndex >= 0) {
-        // Update existing component with registry data
-        merged[existingIndex] = { ...merged[existingIndex], ...regComp, isFromRegistry: true };
-      } else {
-        // Add new component from registry
-        merged.push({ ...regComp, isFromRegistry: true });
-      }
-    });
-    
-    return merged;
-  }, [registryComponents]);
+  // Enable live updates if requested
+  useEffect(() => {
+    if (enableLiveUpdates) {
+      componentRegistryService.enableLiveUpdates(30000); // 30 seconds
+      return () => componentRegistryService.disableLiveUpdates();
+    }
+  }, [enableLiveUpdates]);
 
   // Enhanced filtering with registry support
   const filteredComponents = useMemo(() => {
     return allComponents.filter(component => {
-      // Device compatibility check
-      if (!component.supportedDevices.includes(selectedDevice)) {
-        return false;
-      }
-
-      // Category filter
-      if (selectedCategory !== 'all' && component.category !== selectedCategory) {
-        return false;
-      }
-      
-      // Show only available filter
+      // Show only available filter (registry components only)
       if (showOnlyAvailable && !component.isFromRegistry) {
         return false;
       }
 
-      // Search query filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        return (
-          component.name.toLowerCase().includes(query) ||
-          component.description.toLowerCase().includes(query) ||
-          component.tags.some(tag => tag.toLowerCase().includes(query))
-        );
-      }
-
       return true;
     });
-  }, [allComponents, searchQuery, selectedCategory, selectedDevice, showOnlyAvailable]);
+  }, [allComponents, showOnlyAvailable]);
 
   // Group components by category
   const componentsByCategory = useMemo(() => {
@@ -521,22 +637,12 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   }, [componentsByCategory]);
 
   const handleSearchChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
+    setSearchInput(event.target.value);
   }, []);
 
   const handleCategoryChange = useCallback((category: string) => {
     setSelectedCategory(category === 'all' ? 'all' : category as ComponentCategory);
   }, []);
-  
-  const handleComponentDrop = useCallback((componentType: string, position: { x: number; y: number }) => {
-    onComponentAdd?.(componentType, position);
-    
-    // Update usage analytics (mock)
-    const component = allComponents.find(c => c.id === componentType);
-    if (component) {
-      toast.success(`Added ${component.name} to your page`);
-    }
-  }, [onComponentAdd, allComponents]);
   
   // Handle registry errors
   useEffect(() => {
@@ -546,9 +652,13 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
   }, [registryError]);
 
   return (
-    <div className={cn('component-palette h-full flex flex-col', className)}>      
-      {/* Registry status indicator */}
-      {pageEntityId && (
+    <div className={cn(
+      'component-palette h-full flex flex-col',
+      compact && 'text-sm',
+      className
+    )}>      
+      {/* Registry status indicator - Hidden in compact mode */}
+      {pageEntityId && !compact && (
         <div className="mb-3 p-2 bg-muted/50 rounded-lg">
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-2 text-muted-foreground">
@@ -573,74 +683,124 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
           </div>
         </div>
       )}
-      {/* Header */}
-      <div className="component-palette__header mb-4">
-        <h3 className="text-lg font-semibold mb-3">Components</h3>
+      {/* Header - Compact for mobile */}
+      <div className={cn(
+        'component-palette__header',
+        compact ? 'mb-2' : 'mb-4'
+      )}>
+        <h3 className={cn(
+          'font-semibold',
+          compact ? 'text-sm mb-2' : 'text-lg mb-3'
+        )}>
+          Components
+        </h3>
         
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        {/* Search - Simplified for compact mode */}
+        <div className={cn(
+          'relative',
+          compact ? 'mb-2' : 'mb-3'
+        )}>
+          <Search className={cn(
+            'absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground',
+            compact ? 'h-3 w-3' : 'h-4 w-4'
+          )} />
           <Input
-            placeholder="Search components..."
-            value={searchQuery}
+            placeholder={compact ? "Search..." : "Search components..."}
+            value={searchInput}
             onChange={handleSearchChange}
-            className="pl-9"
+            className={cn(
+              'pl-9',
+              compact && 'h-8 text-xs'
+            )}
           />
+          {searchQuery && searchInput !== searchQuery && (
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+            </div>
+          )}
         </div>
 
-        {/* Enhanced filters */}
-        <div className="space-y-2">
-          {/* Category Filter */}
-          <div className="flex flex-wrap gap-1">
-            <Button
-              variant={selectedCategory === 'all' ? 'secondary' : 'outline'}
-              size="sm"
-              onClick={() => handleCategoryChange('all')}
+        {/* Enhanced filters - Simplified for compact */}
+        <div className={cn(
+          compact ? 'space-y-1' : 'space-y-2'
+        )}>
+          {/* Category Filter - Simplified for mobile */}
+          {compact ? (
+            <select
+              value={selectedCategory}
+              onChange={(e) => handleCategoryChange(e.target.value)}
+              className="w-full h-8 text-xs border border-input bg-background rounded-md px-2"
             >
-              All
-            </Button>
-            {availableCategories.map(category => (
+              <option value="all">All Categories</option>
+              {availableCategories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <div className="flex flex-wrap gap-1">
               <Button
-                key={category}
-                variant={selectedCategory === category ? 'secondary' : 'outline'}
+                variant={selectedCategory === 'all' ? 'secondary' : 'outline'}
                 size="sm"
-                onClick={() => handleCategoryChange(category)}
+                onClick={() => handleCategoryChange('all')}
               >
-                {category}
+                All
               </Button>
-            ))}
-          </div>
+              {availableCategories.map(category => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? 'secondary' : 'outline'}
+                  size="sm"
+                  onClick={() => handleCategoryChange(category)}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+          )}
           
-          {/* Additional filters */}
-          <div className="flex items-center gap-2">
-            <Button
-              variant={showOnlyAvailable ? 'secondary' : 'outline'}
-              size="sm"
-              onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
-              className="text-xs"
-            >
-              <Wifi className="w-3 h-3 mr-1" />
-              Live Only
-            </Button>
-          </div>
+          {/* Additional filters - Hidden in compact mode */}
+          {!compact && (
+            <div className="flex items-center gap-2">
+              <Button
+                variant={showOnlyAvailable ? 'secondary' : 'outline'}
+                size="sm"
+                onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
+                className="text-xs"
+              >
+                <Wifi className="w-3 h-3 mr-1" />
+                Live Only
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Component List */}
+      {/* Component List - Optimized for compact */}
       <div className="component-palette__content flex-1 overflow-auto">
         {selectedCategory === 'all' ? (
           // Show all categories
-          <div className="space-y-6">
+          <div className={cn(
+            compact ? 'space-y-3' : 'space-y-6'
+          )}>
             {availableCategories.map(category => (
               <div key={category}>
-                <h4 className="text-sm font-medium mb-2 text-muted-foreground">
-                  {category}
-                </h4>
-                <div className="grid gap-2">
+                {!compact && (
+                  <h4 className="text-sm font-medium mb-2 text-muted-foreground">
+                    {category}
+                  </h4>
+                )}
+                <div className={cn(
+                  'grid gap-2',
+                  compact && 'gap-1'
+                )}>
                   {componentsByCategory[category].map(component => (
                     <DraggableComponent
                       key={component.id}
                       component={component}
+                      compact={compact}
+                      onComponentAdd={onComponentAdd}
                     />
                   ))}
                 </div>
@@ -649,21 +809,37 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
           </div>
         ) : (
           // Show selected category only
-          <div className="grid gap-2">
+          <div className={cn(
+            'grid gap-2',
+            compact && 'gap-1'
+          )}>
             {registryLoading ? (
-              // Loading skeleton for component registry
-              <div className="space-y-2">
-                {[...Array(6)].map((_, i) => (
-                  <Card key={i} className="p-3">
+              // Loading skeleton for component registry - Compact for mobile
+              <div className={cn(
+                compact ? 'space-y-1' : 'space-y-2'
+              )}>
+                {[...Array(compact ? 4 : 6)].map((_, i) => (
+                  <Card key={i} className={cn(
+                    compact ? 'p-2' : 'p-3'
+                  )}>
                     <div className="flex items-start gap-2">
-                      <Skeleton className="h-5 w-5 rounded" />
+                      <Skeleton className={cn(
+                        'rounded',
+                        compact ? 'h-4 w-4' : 'h-5 w-5'
+                      )} />
                       <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-3/4" />
-                        <Skeleton className="h-3 w-full" />
-                        <div className="flex gap-1">
-                          <Skeleton className="h-4 w-12" />
-                          <Skeleton className="h-4 w-12" />
-                        </div>
+                        <Skeleton className={cn(
+                          compact ? 'h-3 w-3/4' : 'h-4 w-3/4'
+                        )} />
+                        <Skeleton className={cn(
+                          compact ? 'h-2 w-full' : 'h-3 w-full'
+                        )} />
+                        {!compact && (
+                          <div className="flex gap-1">
+                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-4 w-12" />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </Card>
@@ -674,6 +850,8 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
                 <DraggableComponent
                   key={component.id}
                   component={component}
+                  compact={compact}
+                  onComponentAdd={onComponentAdd}
                 />
               ))
             )}
@@ -681,41 +859,51 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
         )}
 
         {!registryLoading && filteredComponents.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-            <Filter className="h-8 w-8 mb-2 opacity-50" />
-            <p className="text-sm">
-              {registryError ? 'Component registry unavailable' : 'No components found'}
+          <div className={cn(
+            'flex flex-col items-center justify-center text-muted-foreground',
+            compact ? 'h-24' : 'h-32'
+          )}>
+            <Filter className={cn(
+              'mb-2 opacity-50',
+              compact ? 'h-6 w-6' : 'h-8 w-8'
+            )} />
+            <p className={cn(
+              compact ? 'text-xs' : 'text-sm'
+            )}>
+              {registryError ? 'Registry unavailable' : 'No components found'}
             </p>
             {searchQuery && (
-              <p className="text-xs">Try adjusting your search query</p>
+              <p className="text-xs">Try adjusting your search</p>
             )}
-            {showOnlyAvailable && !registryError && (
+            {showOnlyAvailable && !registryError && !compact && (
               <p className="text-xs">Try disabling "Live Only" filter</p>
             )}
           </div>
         )}
       </div>
 
-      {/* Enhanced footer with registry status */}
-      <div className="component-palette__footer mt-4 pt-4 border-t">
-        <div className="text-xs text-muted-foreground space-y-1">
-          <p>
-            Showing {filteredComponents.length} components for {selectedDevice}
-            {registryComponents && (
-              <span className="ml-2 text-green-600">
-                ({registryComponents.length} from registry)
-              </span>
-            )}
-          </p>
-          <p>Drag components onto the canvas to add them</p>
-          {enableLiveUpdates && (
-            <p className="flex items-center gap-1">
-              <Wifi className="w-3 h-3" />
-              Live updates enabled
+      {/* Enhanced footer with registry status - Hidden in compact mode */}
+      {!compact && (
+        <div className="component-palette__footer mt-4 pt-4 border-t">
+          <div className="text-xs text-muted-foreground space-y-1">
+            <p>
+              Showing {filteredComponents.length} components for {selectedDevice}
+              {allComponents && (
+                <span className="ml-2 text-green-600">
+                  ({allComponents.length} from registry)
+                </span>
+              )}
             </p>
-          )}
+            <p>Drag components onto the canvas to add them</p>
+            {enableLiveUpdates && (
+              <p className="flex items-center gap-1">
+                <Wifi className="w-3 h-3" />
+                Live updates enabled
+              </p>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

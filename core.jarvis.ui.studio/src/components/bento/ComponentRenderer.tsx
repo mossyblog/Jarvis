@@ -16,7 +16,6 @@
 import React, { Suspense, useMemo, useCallback, useState, useEffect } from 'react';
 import { Box, Loader2, Wifi, WifiOff, AlertCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { toast } from 'sonner';
 
 import type { GridComponent, Size } from '@/types/bento';
 import { DeviceType } from '@/types/bento';

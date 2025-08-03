@@ -105,19 +105,61 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
     };
   }, []);
 
-  // Handle escape key
+  // Handle keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        onClose();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      switch (event.key) {
+        case 'Escape':
+          event.preventDefault();
+          onClose();
+          break;
+        case 'Tab':
+          // Trap focus within the sheet
+          const focusableElements = sheetRef.current?.querySelectorAll(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          ) as NodeListOf<HTMLElement>;
+          
+          if (focusableElements && focusableElements.length > 0) {
+            const firstElement = focusableElements[0];
+            const lastElement = focusableElements[focusableElements.length - 1];
+            
+            if (event.shiftKey) {
+              if (document.activeElement === firstElement) {
+                event.preventDefault();
+                lastElement.focus();
+              }
+            } else {
+              if (document.activeElement === lastElement) {
+                event.preventDefault();
+                firstElement.focus();
+              }
+            }
+          }
+          break;
+        case 'ArrowUp':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            animateHeight(maxHeight);
+          }
+          break;
+        case 'ArrowDown':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            if (dragState.currentHeight > minHeight) {
+              animateHeight(minHeight);
+            } else {
+              handleClose();
+            }
+          }
+          break;
       }
     };
 
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose, maxHeight, minHeight, dragState.currentHeight]); // Removed forward references
 
   // Prevent body scroll when open
   useEffect(() => {

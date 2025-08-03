@@ -69,7 +69,7 @@ const DEFAULT_CONFIG: UIStudioApiConfig = {
     exponentialBackoff: true,
     retryableErrors: ['NETWORK_ERROR', 'SERVER_ERROR', 'RATE_LIMIT']
   },
-  enableLogging: process.env.NODE_ENV === 'development'
+  enableLogging: import.meta.env.DEV
 };
 
 // ============================================================================

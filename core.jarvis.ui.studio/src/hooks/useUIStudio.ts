@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-query';
 
 import { uistudioApiClient } from '../services/api/uistudioApiClient';
+import { graphqlService } from '../services/graphql/graphqlService';
 import { 
   UIStudioError,
   getUserFriendlyMessage,
@@ -24,6 +25,20 @@ import {
   logError,
   createErrorContext
 } from '../utils/uistudioErrors';
+import {
+  cacheKeys,
+  invalidationPatterns,
+  createCacheManager,
+  type CacheInvalidationConfig
+} from '../utils/cacheManager';
+import {
+  pageDataQueryOptions,
+  layoutDataQueryOptions,
+  templateDataQueryOptions,
+  bindingDataQueryOptions,
+  versionHistoryQueryOptions,
+  staticQueryOptions
+} from '../providers/QueryProvider';
 
 import type {
   UIStudioPage,
@@ -51,43 +66,11 @@ import type {
 } from '../types/uistudio';
 
 // ============================================================================
-// Query Keys Factory
+// Re-export cache keys for backward compatibility
 // ============================================================================
 
-/** Query keys for consistent caching and invalidation */
-export const uistudioKeys = {
-  all: ['uistudio'] as const,
-  
-  // Pages
-  pages: () => [...uistudioKeys.all, 'pages'] as const,
-  page: (id: UIStudioEntityId) => [...uistudioKeys.pages(), id] as const,
-  pagesByOwner: (ownerId: UIStudioEntityId) => [...uistudioKeys.pages(), 'by-owner', ownerId] as const,
-  publishedPages: (query?: GetPublishedPagesQuery) => [...uistudioKeys.pages(), 'published', query] as const,
-  pageBindings: (pageId: UIStudioEntityId) => [...uistudioKeys.pages(), pageId, 'bindings'] as const,
-  
-  // Layouts
-  layouts: () => [...uistudioKeys.all, 'layouts'] as const,
-  layout: (id: UIStudioEntityId) => [...uistudioKeys.layouts(), id] as const,
-  
-  // Bindings
-  bindings: () => [...uistudioKeys.all, 'bindings'] as const,
-  binding: (id: UIStudioEntityId) => [...uistudioKeys.bindings(), id] as const,
-  
-  // Templates
-  templates: () => [...uistudioKeys.all, 'templates'] as const,
-  template: (id: UIStudioEntityId) => [...uistudioKeys.templates(), id] as const,
-  templatesByOwner: (ownerId: UIStudioEntityId) => [...uistudioKeys.templates(), 'by-owner', ownerId] as const,
-  
-  // Permissions
-  permissions: () => [...uistudioKeys.all, 'permissions'] as const,
-  resourcePermissions: (resourceId: UIStudioEntityId, resourceType: string) => 
-    [...uistudioKeys.permissions(), 'resource', resourceId, resourceType] as const,
-  
-  // Versions
-  versions: () => [...uistudioKeys.all, 'versions'] as const,
-  versionHistory: (resourceId: UIStudioEntityId, query?: GetVersionHistoryQuery) => 
-    [...uistudioKeys.versions(), 'history', resourceId, query] as const,
-};
+/** @deprecated Use cacheKeys from cacheManager instead */
+export const uistudioKeys = cacheKeys;
 
 // ============================================================================
 // Error Handling Hook
@@ -124,41 +107,97 @@ export function useUIStudioErrorHandler() {
 }
 
 // ============================================================================
+// Cache Management Hook
+// ============================================================================
+
+/** Hook to access cache manager for advanced cache operations */
+export function useUIStudioCacheManager() {
+  const queryClient = useQueryClient();
+  const cacheManager = createCacheManager(queryClient);
+  
+  return {
+    // Core cache manager methods
+    applyInvalidation: cacheManager.applyInvalidation.bind(cacheManager),
+    invalidateAll: cacheManager.invalidateAll.bind(cacheManager),
+    clearAll: cacheManager.clearAll.bind(cacheManager),
+    backgroundRefresh: cacheManager.backgroundRefresh.bind(cacheManager),
+    warmupCache: cacheManager.warmupCache.bind(cacheManager),
+    getCacheStats: cacheManager.getCacheStats.bind(cacheManager),
+    getCacheHealth: cacheManager.getCacheHealth.bind(cacheManager),
+    logCacheMetrics: cacheManager.logCacheMetrics.bind(cacheManager),
+    optimisticUpdate: cacheManager.optimisticUpdate.bind(cacheManager),
+    prefetchRelatedData: cacheManager.prefetchRelatedData.bind(cacheManager),
+    
+    // Convenience methods for common operations
+    invalidatePages: () => cacheManager.applyInvalidation({ invalidate: [cacheKeys.pages()] }),
+    invalidateLayouts: () => cacheManager.applyInvalidation({ invalidate: [cacheKeys.layouts()] }),
+    invalidateBindings: () => cacheManager.applyInvalidation({ invalidate: [cacheKeys.bindings()] }),
+    invalidateTemplates: () => cacheManager.applyInvalidation({ invalidate: [cacheKeys.templates()] }),
+    
+    // Background refresh methods
+    refreshStaleData: () => cacheManager.backgroundRefresh(),
+    refreshPageData: () => cacheManager.backgroundRefresh('page'),
+    refreshLayoutData: () => cacheManager.backgroundRefresh('layout'),
+    
+    // Cache warming
+    warmupForUser: (userId: UIStudioEntityId) => cacheManager.warmupCache(userId),
+    
+    // Performance monitoring
+    logMetrics: () => cacheManager.logCacheMetrics(),
+  };
+}
+
+// ============================================================================
 // Page Management Hooks
 // ============================================================================
 
-/** Hook to get a specific page */
+/** Hook to get a specific page (using GraphQL for reads) */
 export function useUIStudioPage(
   pageEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioPage>, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<unknown, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
+  const queryClient = useQueryClient();
+  const cacheManager = createCacheManager(queryClient);
+  
   return useQuery({
-    queryKey: uistudioKeys.page(pageEntityId),
-    queryFn: () => uistudioApiClient.getPage(pageEntityId),
+    queryKey: cacheKeys.page(pageEntityId),
+    queryFn: async () => {
+      const result = await graphqlService.getPageMetadata(pageEntityId);
+      
+      // Prefetch related data in the background
+      cacheManager.prefetchRelatedData('page', pageEntityId);
+      
+      return result;
+    },
+    ...pageDataQueryOptions,
     ...options
   });
 }
 
-/** Hook to get pages by owner */
+/** Hook to get pages by owner (using GraphQL for reads) */
 export function useUIStudioPagesByOwner(
   ownerEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioPage>, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: uistudioKeys.pagesByOwner(ownerEntityId),
-    queryFn: () => uistudioApiClient.getPagesByOwner(ownerEntityId),
+    queryKey: cacheKeys.pagesByOwner(ownerEntityId),
+    queryFn: () => graphqlService.getPagesByOwner(ownerEntityId),
+    ...pageDataQueryOptions,
     ...options
   });
 }
 
-/** Hook to get published pages */
+/** Hook to get published pages (using GraphQL for reads) */
 export function useUIStudioPublishedPages(
   query: GetPublishedPagesQuery = {},
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioPage>, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: uistudioKeys.publishedPages(query),
-    queryFn: () => uistudioApiClient.getPublishedPages(query),
+    queryKey: cacheKeys.publishedPages(query),
+    queryFn: () => graphqlService.getPublishedPages(query),
+    ...pageDataQueryOptions,
+    // Published pages are more stable, so longer stale time
+    staleTime: 10 * 60 * 1000, // 10 minutes
     ...options
   });
 }
@@ -169,13 +208,19 @@ export function useCreateUIStudioPage(
 ) {
   const queryClient = useQueryClient();
   const { handleError } = useUIStudioErrorHandler();
+  const cacheManager = createCacheManager(queryClient);
 
   return useMutation({
     mutationFn: (request: CreatePageRequest) => uistudioApiClient.createPage(request),
-    onSuccess: (data, variables) => {
-      // Invalidate and refetch pages
-      queryClient.invalidateQueries({ queryKey: uistudioKeys.pages() });
-      queryClient.invalidateQueries({ queryKey: uistudioKeys.pagesByOwner(variables.createdByEntityId) });
+    onSuccess: async (data, variables) => {
+      // Apply smart cache invalidation
+      const invalidationConfig = invalidationPatterns.createPage(variables.createdByEntityId);
+      await cacheManager.applyInvalidation(invalidationConfig);
+      
+      // Warm up cache for the new page if we got an ID back
+      if (data.length > 0 && data[0].id) {
+        await cacheManager.prefetchRelatedData('page', data[0].id);
+      }
     },
     onError: (error) => {
       handleError(error, 'create_page');
@@ -191,47 +236,41 @@ export function useUpdateUIStudioPage(
     UIStudioApiResponse<UIStudioPage>, 
     UIStudioError, 
     UpdatePageRequest,
-    { previousPage: UIStudioApiResponse<UIStudioPage> | undefined }
+    { rollback: () => void }
   >
 ) {
   const queryClient = useQueryClient();
   const { handleError } = useUIStudioErrorHandler();
+  const cacheManager = createCacheManager(queryClient);
 
   return useMutation<
     UIStudioApiResponse<UIStudioPage>,
     UIStudioError,
     UpdatePageRequest,
-    { previousPage: UIStudioApiResponse<UIStudioPage> | undefined }
+    { rollback: () => void }
   >({
     mutationFn: (request: UpdatePageRequest) => uistudioApiClient.updatePage(pageEntityId, request),
-    onMutate: async (variables): Promise<{ previousPage: UIStudioApiResponse<UIStudioPage> | undefined }> => {
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey: uistudioKeys.page(pageEntityId) });
-
-      // Snapshot the previous value
-      const previousPage = queryClient.getQueryData<UIStudioApiResponse<UIStudioPage>>(
-        uistudioKeys.page(pageEntityId)
+    onMutate: async (variables): Promise<{ rollback: () => void }> => {
+      // Use cache manager for optimistic update
+      const rollback = await cacheManager.optimisticUpdate<UIStudioApiResponse<UIStudioPage>>(
+        cacheKeys.page(pageEntityId),
+        (oldData) => {
+          if (!oldData || oldData.length === 0) return oldData || [];
+          return [{ ...oldData[0], ...variables }];
+        }
       );
 
-      // Optimistically update the page
-      if (previousPage && previousPage.length > 0) {
-        const updatedPage = { ...previousPage[0], ...variables };
-        queryClient.setQueryData(uistudioKeys.page(pageEntityId), [updatedPage]);
-      }
-
-      return { previousPage };
+      return { rollback };
     },
     onError: (error, variables, context) => {
       // Rollback optimistic update
-      if (context?.previousPage) {
-        queryClient.setQueryData(uistudioKeys.page(pageEntityId), context.previousPage);
-      }
+      context?.rollback();
       handleError(error, 'update_page');
     },
-    onSuccess: () => {
-      // Invalidate related queries
-      queryClient.invalidateQueries({ queryKey: uistudioKeys.page(pageEntityId) });
-      queryClient.invalidateQueries({ queryKey: uistudioKeys.pages() });
+    onSuccess: async () => {
+      // Apply smart cache invalidation
+      const invalidationConfig = invalidationPatterns.updatePage(pageEntityId);
+      await cacheManager.applyInvalidation(invalidationConfig);
     },
     ...options
   });
@@ -317,14 +356,28 @@ export function useDuplicateUIStudioPage(
 // Layout Management Hooks
 // ============================================================================
 
-/** Hook to get a specific layout */
+/** Hook to get a specific layout (using GraphQL for reads) */
 export function useUIStudioLayout(
   layoutEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioLayout>, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<unknown, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
+  const queryClient = useQueryClient();
+  const cacheManager = createCacheManager(queryClient);
+  
   return useQuery({
-    queryKey: uistudioKeys.layout(layoutEntityId),
-    queryFn: () => uistudioApiClient.getLayout(layoutEntityId),
+    queryKey: cacheKeys.layout(layoutEntityId),
+    queryFn: async () => {
+      const layouts = await graphqlService.getUIStudioLayouts();
+      const layout = layouts.find((layout: any) => layout.id === layoutEntityId) || null;
+      
+      // Prefetch related data in the background
+      if (layout) {
+        cacheManager.prefetchRelatedData('layout', layoutEntityId);
+      }
+      
+      return layout;
+    },
+    ...layoutDataQueryOptions,
     ...options
   });
 }
@@ -421,14 +474,15 @@ export function useUpdateUIStudioLayoutGrid(
 // Component Binding Hooks
 // ============================================================================
 
-/** Hook to get page bindings */
+/** Hook to get page bindings (using GraphQL for reads) */
 export function useUIStudioPageBindings(
-  pageEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioComponentBinding>, UIStudioError>, 'queryKey' | 'queryFn'>
+  pageSlug: string,
+  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: uistudioKeys.pageBindings(pageEntityId),
-    queryFn: () => uistudioApiClient.getPageBindings(pageEntityId),
+    queryKey: cacheKeys.pageBindingsBySlug(pageSlug),
+    queryFn: () => graphqlService.getPageBindings(pageSlug),
+    ...bindingDataQueryOptions,
     ...options
   });
 }
@@ -518,26 +572,29 @@ export function useDeleteUIStudioBinding(
 // Template Management Hooks
 // ============================================================================
 
-/** Hook to get a specific template */
+/** Hook to get a specific template (using GraphQL for reads) */
 export function useUIStudioTemplate(
   templateEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioTemplate>, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<unknown, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: uistudioKeys.template(templateEntityId),
-    queryFn: () => uistudioApiClient.getTemplate(templateEntityId),
+    queryFn: () => graphqlService.getTemplateMetadata(templateEntityId),
     ...options
   });
 }
 
-/** Hook to get templates by owner */
+/** Hook to get templates by owner (using GraphQL for reads) */
 export function useUIStudioTemplatesByOwner(
   ownerEntityId: UIStudioEntityId,
-  options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioTemplate>, UIStudioError>, 'queryKey' | 'queryFn'>
+  options?: Omit<UseQueryOptions<unknown[], UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
     queryKey: uistudioKeys.templatesByOwner(ownerEntityId),
-    queryFn: () => uistudioApiClient.getTemplatesByOwner(ownerEntityId),
+    queryFn: async () => {
+      const templates = await graphqlService.getTemplates();
+      return templates.filter((template: any) => template.owner_entity_id === ownerEntityId);
+    },
     ...options
   });
 }
@@ -595,8 +652,9 @@ export function useUIStudioVersionHistory(
   options?: Omit<UseQueryOptions<UIStudioApiResponse<UIStudioVersion>, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: uistudioKeys.versionHistory(resourceId, query),
+    queryKey: cacheKeys.versionHistory(resourceId, query),
     queryFn: () => uistudioApiClient.getVersionHistory(resourceId, query),
+    ...versionHistoryQueryOptions,
     ...options
   });
 }
@@ -654,8 +712,10 @@ export function useUIStudioHealthCheck(
   options?: Omit<UseQueryOptions<{ status: 'ok' | 'error'; timestamp: string }, UIStudioError>, 'queryKey' | 'queryFn'>
 ) {
   return useQuery({
-    queryKey: [...uistudioKeys.all, 'health'],
+    queryKey: cacheKeys.health(),
     queryFn: () => uistudioApiClient.healthCheck(),
+    // Health checks use static query options with custom intervals
+    ...staticQueryOptions,
     // Check health every 5 minutes
     refetchInterval: 5 * 60 * 1000,
     // Don't retry health checks as frequently
@@ -666,14 +726,42 @@ export function useUIStudioHealthCheck(
 
 /** Hook to invalidate all UIStudio queries */
 export function useInvalidateUIStudioQueries() {
-  const queryClient = useQueryClient();
+  const cacheManagerHook = useUIStudioCacheManager();
   
   return {
-    invalidateAll: () => queryClient.invalidateQueries({ queryKey: uistudioKeys.all }),
-    invalidatePages: () => queryClient.invalidateQueries({ queryKey: uistudioKeys.pages() }),
-    invalidateLayouts: () => queryClient.invalidateQueries({ queryKey: uistudioKeys.layouts() }),
-    invalidateBindings: () => queryClient.invalidateQueries({ queryKey: uistudioKeys.bindings() }),
-    invalidateTemplates: () => queryClient.invalidateQueries({ queryKey: uistudioKeys.templates() }),
-    invalidateVersions: () => queryClient.invalidateQueries({ queryKey: uistudioKeys.versions() }),
+    invalidateAll: () => cacheManagerHook.invalidateAll(),
+    invalidatePages: () => cacheManagerHook.invalidatePages(),
+    invalidateLayouts: () => cacheManagerHook.invalidateLayouts(),
+    invalidateBindings: () => cacheManagerHook.invalidateBindings(),
+    invalidateTemplates: () => cacheManagerHook.invalidateTemplates(),
+    invalidateVersions: () => cacheManagerHook.applyInvalidation({ invalidate: [cacheKeys.versions()] }),
+    
+    // Advanced cache operations
+    refreshStaleData: () => cacheManagerHook.refreshStaleData(),
+    clearAllCache: () => cacheManagerHook.clearAll(),
+    getCacheStats: () => cacheManagerHook.getCacheStats(),
+    getCacheHealth: () => cacheManagerHook.getCacheHealth(),
+    logMetrics: () => cacheManagerHook.logMetrics(),
   };
 }
+
+// ============================================================================
+// Export Cache Keys and Utilities for External Use
+// ============================================================================
+
+/** Export cache keys for use in other parts of the application */
+export { cacheKeys } from '../utils/cacheManager';
+
+/** Export cache management utilities */
+export { 
+  createCacheManager,
+  type CacheInvalidationConfig 
+} from '../utils/cacheManager';
+
+/** Export cache strategy hooks */
+export {
+  useCacheStrategy,
+  useRealtimeCacheStrategy,
+  useBackgroundCacheStrategy,
+  useStaticCacheStrategy
+} from './useCacheStrategy';

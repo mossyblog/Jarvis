@@ -71,12 +71,18 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
           {!isEmulating && <Sidebar activeItem={activeItem} onItemClick={onItemClick} />}
           
           {/* Main Content */}
-          <main className={cn(
-            "flex-1 min-h-0 overflow-y-auto overflow-x-hidden transition-all duration-200",
-            // Only push content when sidebar is in 'open' mode and not emulating
-            !isEmulating && sidebarBehavior === 'open' ? "md:ml-32" : !isEmulating && "md:ml-12",
-            isEmulating && "ml-0 w-full"
-          )}>
+          <main 
+            id="main-content"
+            className={cn(
+              "flex-1 min-h-0 overflow-y-auto overflow-x-hidden transition-all duration-200 pb-16",
+              // Only push content when sidebar is in 'open' mode and not emulating
+              !isEmulating && sidebarBehavior === 'open' ? "md:ml-32" : !isEmulating && "md:ml-12",
+              isEmulating && "ml-0 w-full"
+            )}
+            role="main"
+            aria-label="Main content area"
+            tabIndex={-1}
+          >
             {children}
           </main>
         </div>

@@ -10,6 +10,8 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { useLocation, useNavigate } from 'react-router-dom';
 import { PageStatus } from '@/types/bento';
 import type { BentoPage, GridComponent } from '@/types/bento';
+import { uiStudioAPI, type PageSaveRequest, type PagePublishRequest } from '@/services/uiStudioApiService';
+import { toast } from 'sonner';
 
 // ============================================================================
 // Types
@@ -55,6 +57,12 @@ export interface EditModeActions {
   savePage: () => Promise<void>;
   /** Create new page */
   createPage: (pageData: Partial<BentoPage>) => Promise<void>;
+  /** Publish current page */
+  publishPage: (environment: 'development' | 'staging' | 'production', options?: Partial<PagePublishRequest['options']>) => Promise<void>;
+  /** Load page from template */
+  loadTemplate: (templateId: string, pageName: string, route: string) => Promise<void>;
+  /** Get page versions */
+  getPageVersions: () => Promise<any[]>;
 }
 
 export interface EditModeContextValue extends EditModeState, EditModeActions {}
@@ -248,22 +256,42 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({ children }) 
     if (!state.currentPage) return;
     
     try {
-      // Mock save operation - replace with actual API call
-      console.log('Saving page:', state.currentPage);
+      // Prepare save request
+      const saveRequest: PageSaveRequest = {
+        page: state.currentPage,
+        components: [], // Get components from current grid state
+        bindings: [], // Get bindings from component configurations
+        metadata: {
+          comment: 'Auto-save',
+          tags: ['auto-generated'],
+          category: 'page'
+        }
+      };
       
-      // Simulate async operation
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Save via API
+      const response = await uiStudioAPI.savePage(saveRequest);
       
-      markSaved();
+      if (response.success && response.data) {
+        // Update current page with saved version
+        setState(prev => ({
+          ...prev,
+          currentPage: response.data!
+        }));
+        
+        markSaved();
+        toast.success('Page saved successfully');
+      } else {
+        throw new Error('Failed to save page');
+      }
     } catch (error) {
       console.error('Failed to save page:', error);
+      toast.error('Failed to save page');
       throw error;
     }
   }, [state.currentPage, markSaved]);
 
   const createPage = useCallback(async (pageData: Partial<BentoPage>) => {
     try {
-      // Mock page creation - replace with actual API call
       const newPage: BentoPage = {
         id: crypto.randomUUID(),
         displayName: pageData.displayName || 'New Page',
@@ -288,15 +316,117 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({ children }) 
         updatedBy: 'current-user'
       };
 
-      console.log('Creating page:', newPage);
+      // Save the new page
+      const saveRequest: PageSaveRequest = {
+        page: newPage,
+        components: [],
+        bindings: [],
+        metadata: {
+          comment: 'Initial page creation',
+          tags: ['new-page'],
+          category: 'page'
+        }
+      };
       
-      // Navigate to the new page
-      navigate(newPage.route);
+      const response = await uiStudioAPI.savePage(saveRequest);
+      
+      if (response.success && response.data) {
+        setState(prev => ({ ...prev, currentPage: response.data! }));
+        toast.success('Page created successfully');
+        
+        // Navigate to the new page
+        navigate(newPage.route);
+      } else {
+        throw new Error('Failed to create page');
+      }
     } catch (error) {
       console.error('Failed to create page:', error);
+      toast.error('Failed to create page');
       throw error;
     }
   }, [navigate]);
+
+  // Publish page action
+  const publishPage = useCallback(async (
+    environment: 'development' | 'staging' | 'production',
+    options: Partial<PagePublishRequest['options']> = {}
+  ) => {
+    if (!state.currentPage) return;
+    
+    try {
+      // Ensure page is saved first
+      if (state.hasUnsavedChanges) {
+        await savePage();
+      }
+      
+      const publishRequest: PagePublishRequest = {
+        pageId: state.currentPage.id,
+        environment,
+        options: {
+          makePublic: false,
+          notifyUsers: false,
+          generateSitemap: true,
+          optimizeAssets: true,
+          ...options
+        }
+      };
+      
+      const response = await uiStudioAPI.publishPage(publishRequest);
+      
+      if (response.success && response.data) {
+        toast.success(`Page published to ${environment} successfully!`);
+      } else {
+        throw new Error('Failed to publish page');
+      }
+    } catch (error) {
+      console.error('Failed to publish page:', error);
+      toast.error('Failed to publish page');
+      throw error;
+    }
+  }, [state.currentPage, state.hasUnsavedChanges, savePage]);
+  
+  // Load template action
+  const loadTemplate = useCallback(async (templateId: string, pageName: string, route: string) => {
+    try {
+      const response = await uiStudioAPI.createPageFromTemplate(templateId, pageName, route);
+      
+      if (response.success && response.data) {
+        setState(prev => ({ 
+          ...prev, 
+          currentPage: response.data!.page,
+          hasUnsavedChanges: true
+        }));
+        
+        toast.success('Template loaded successfully');
+        navigate(route);
+      } else {
+        throw new Error('Failed to load template');
+      }
+    } catch (error) {
+      console.error('Failed to load template:', error);
+      toast.error('Failed to load template');
+      throw error;
+    }
+  }, [navigate]);
+  
+  // Get page versions action
+  const getPageVersions = useCallback(async () => {
+    if (!state.currentPage) return [];
+    
+    try {
+      const response = await uiStudioAPI.getPageVersions(state.currentPage.id);
+      
+      if (response.success && response.data) {
+        return response.data;
+      } else {
+        throw new Error('Failed to get page versions');
+      }
+    } catch (error) {
+      console.error('Failed to get page versions:', error);
+      toast.error('Failed to get page versions');
+      return [];
+    }
+  }, [state.currentPage]);
 
   // Context value
   const contextValue: EditModeContextValue = {
@@ -312,7 +442,10 @@ export const EditModeProvider: React.FC<EditModeProviderProps> = ({ children }) 
     moveComponent,
     deleteComponent,
     savePage,
-    createPage
+    createPage,
+    publishPage,
+    loadTemplate,
+    getPageVersions
   };
 
   return (

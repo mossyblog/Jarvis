@@ -6,6 +6,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { LoginForm } from '../LoginForm'
 import { AuthProvider } from '../../../contexts/AuthContext'
 import { apiService } from '../../../services/api/apiService'
+import type { User, AuthResponse, ApiResponse } from '../../../services/api/types'
 
 // Mock dependencies
 vi.mock('../../../services/api/apiService')
@@ -262,12 +263,12 @@ describe('LoginForm', () => {
       const user = userEvent.setup()
       
       // Create a promise that we can control
-      let resolveLogin: (value: any) => void
-      const loginPromise = new Promise((resolve) => {
+      let resolveLogin: (value: ApiResponse<AuthResponse>) => void
+      const loginPromise = new Promise<ApiResponse<AuthResponse>>((resolve) => {
         resolveLogin = resolve
       })
       
-      mockApiService.login.mockReturnValue(loginPromise as Promise<any>)
+      mockApiService.login.mockReturnValue(loginPromise)
 
       renderLoginForm()
       
@@ -282,13 +283,14 @@ describe('LoginForm', () => {
       // Resolve the promise
       act(() => {
         resolveLogin!({
+          success: true,
           data: {
             user: mockUser,
             accessToken: 'token',
             refreshToken: 'refresh',
             expiresIn: 3600
           }
-        })
+        } as ApiResponse<AuthResponse>)
       })
       
       await waitFor(() => {

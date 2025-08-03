@@ -371,7 +371,6 @@ export class RealApiService implements IApiService {
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
     try {
-      
       const query = `
         query {
           navigation_item_componentCollection {
@@ -400,7 +399,6 @@ export class RealApiService implements IApiService {
       const result = await this.handleResponse<Record<string, unknown>>(response);
       
       if (result.error) {
-        // Fallback to hardcoded navigation
         return this.getFallbackNavigation();
       }
 
@@ -422,7 +420,6 @@ export class RealApiService implements IApiService {
         return { data: navigationItems };
       }
 
-      // Fallback if no data
       return this.getFallbackNavigation();
     } catch {
       return this.getFallbackNavigation();
@@ -436,6 +433,14 @@ export class RealApiService implements IApiService {
         label: 'Dashboard',
         icon: 'LayoutDashboard',
         href: '/',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      },
+      {
+        id: 'pages',
+        label: 'Pages',
+        icon: 'FileText',
+        href: '/pages',
         requiredPermission: undefined,
         requiredAction: 'read'
       },

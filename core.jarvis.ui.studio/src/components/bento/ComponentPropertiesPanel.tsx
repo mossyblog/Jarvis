@@ -7,7 +7,7 @@
  */
 
 import React, { useState } from 'react';
-import { X, Link, Eye, Settings, Code, ArrowRight, RefreshCw, Monitor, Tablet, Smartphone } from 'lucide-react';
+import { X, Eye, Settings, Code, ArrowRight, RefreshCw, Monitor, Tablet, Smartphone, Copy, Trash2, Move, Database } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import type { GridComponent } from '@/types/bento';
 import { ComponentRenderer } from './ComponentRenderer';
@@ -37,6 +38,15 @@ interface ComponentPropertiesPanelProps {
   
   /** Called when component is updated */
   onUpdate?: (componentId: string, updates: Partial<GridComponent>) => void;
+  
+  /** Called when component should be deleted */
+  onDelete?: (componentId: string) => void;
+  
+  /** Called when component should be duplicated */
+  onDuplicate?: (componentId: string) => void;
+  
+  /** Called when component should be moved */
+  onMove?: (componentId: string, direction: 'up' | 'down' | 'left' | 'right') => void;
 }
 
 // Mock property mappings for demo (currently unused but planned for future implementation)
@@ -55,8 +65,11 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
   isOpen,
   onClose,
   onUpdate,
+  onDelete,
+  onDuplicate,
+  onMove,
 }) => {
-  const [activeTab, setActiveTab] = useState<'bindings' | 'preview'>('bindings');
+  const [activeTab, setActiveTab] = useState<'properties' | 'bindings' | 'preview'>('properties');
   const [query, setQuery] = useState(
     `query GetComponentData {
   metrics {
@@ -69,6 +82,8 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
 }`
   );
   const [previewMode, setPreviewMode] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+  const [componentProps, setComponentProps] = useState(component.props || {});
+  const [componentStyles, setComponentStyles] = useState(component.display?.style || {});
 
   // Mock property mappings based on component type
   const getComponentProperties = (componentType: string) => {
@@ -130,18 +145,263 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
           </Button>
         </div>
 
+        {/* Component Actions Bar */}
+        <div className="flex items-center gap-1 px-4 py-2 border-b border-border bg-muted/30">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDuplicate?.(component.id)}
+            className="h-7 px-2"
+            title="Duplicate component"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onMove?.(component.id, 'up')}
+            className="h-7 px-2"
+            title="Move up"
+          >
+            <Move className="h-3 w-3" />
+          </Button>
+          <div className="flex-1" />
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete?.(component.id)}
+            className="h-7 px-2 text-destructive hover:text-destructive"
+            title="Delete component"
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        </div>
+
         {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'bindings' | 'preview')} className="flex flex-col h-[calc(100%-73px)]">
-          <TabsList className="grid w-full grid-cols-2 m-4 mb-0">
+        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'properties' | 'bindings' | 'preview')} className="flex flex-col h-[calc(100%-122px)]">
+          <TabsList className="grid w-full grid-cols-3 m-4 mb-0">
+            <TabsTrigger value="properties" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" />
+              Props
+            </TabsTrigger>
             <TabsTrigger value="bindings" className="flex items-center gap-2">
-              <Link className="h-4 w-4" />
-              Bindings
+              <Database className="h-4 w-4" />
+              Data
             </TabsTrigger>
             <TabsTrigger value="preview" className="flex items-center gap-2">
               <Eye className="h-4 w-4" />
               Preview
             </TabsTrigger>
           </TabsList>
+
+          {/* Properties Tab */}
+          <TabsContent value="properties" className="flex-1 m-0">
+            <ScrollArea className="h-full">
+              <div className="p-4 space-y-6">
+                {/* Component Info */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Component Info</Label>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Type:</span>
+                      <div className="font-mono">{component.componentType}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">ID:</span>
+                      <div className="font-mono text-xs">{component.id.slice(-8)}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Position:</span>
+                      <div className="font-mono">{component.position.x}, {component.position.y}</div>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Size:</span>
+                      <div className="font-mono">{component.position.w}×{component.position.h}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Component Properties */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Properties</Label>
+                  <div className="space-y-4">
+                    {getComponentProperties(component.componentType).map((prop) => (
+                      <div key={prop.name} className="space-y-2">
+                        <Label className="text-sm">{prop.name}</Label>
+                        {prop.type === 'string' && (
+                          <Input
+                            value={(componentProps as Record<string, unknown>)[prop.name] as string || ''}
+                            onChange={(e) => {
+                              const newProps = { ...componentProps, [prop.name]: e.target.value };
+                              setComponentProps(newProps);
+                              onUpdate?.(component.id, { props: newProps });
+                            }}
+                            placeholder={`Enter ${prop.name}...`}
+                          />
+                        )}
+                        {prop.type === 'number' && (
+                          <Input
+                            type="number"
+                            value={(componentProps as Record<string, unknown>)[prop.name] as number || 0}
+                            onChange={(e) => {
+                              const newProps = { ...componentProps, [prop.name]: Number(e.target.value) };
+                              setComponentProps(newProps);
+                              onUpdate?.(component.id, { props: newProps });
+                            }}
+                            placeholder={`Enter ${prop.name}...`}
+                          />
+                        )}
+                        {prop.type === 'boolean' && (
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              checked={(componentProps as Record<string, unknown>)[prop.name] as boolean || false}
+                              onChange={(e) => {
+                                const newProps = { ...componentProps, [prop.name]: e.target.checked };
+                                setComponentProps(newProps);
+                                onUpdate?.(component.id, { props: newProps });
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm">Enable {prop.name}</span>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Layout & Spacing */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Layout & Spacing</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Padding (px)</Label>
+                      <Input
+                        type="number"
+                        value={componentStyles.padding ? parseInt(String(componentStyles.padding)) : 16}
+                        onChange={(e) => {
+                          const newStyles = { ...componentStyles, padding: `${e.target.value}px` };
+                          setComponentStyles(newStyles);
+                          onUpdate?.(component.id, { display: { ...component.display, style: newStyles } });
+                        }}
+                        min={0}
+                        max={48}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs">Border Radius (px)</Label>
+                      <Input
+                        type="number"
+                        value={componentStyles.borderRadius ? parseInt(String(componentStyles.borderRadius)) : 8}
+                        onChange={(e) => {
+                          const newStyles = { ...componentStyles, borderRadius: `${e.target.value}px` };
+                          setComponentStyles(newStyles);
+                          onUpdate?.(component.id, { display: { ...component.display, style: newStyles } });
+                        }}
+                        min={0}
+                        max={24}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Styling */}
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">Styling</Label>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-xs">Background Color</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 justify-start"
+                          onClick={() => {
+                            // Color picker functionality would go here
+                            const newStyles = { ...componentStyles, backgroundColor: '#f3f4f6' };
+                            setComponentStyles(newStyles);
+                            onUpdate?.(component.id, { display: { ...component.display, style: newStyles } });
+                          }}
+                        >
+                          <div className="w-4 h-4 rounded border mr-2" style={{ backgroundColor: componentStyles.backgroundColor || '#ffffff' }} />
+                          {componentStyles.backgroundColor || 'Default'}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Label className="text-xs">Text Color</Label>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1 justify-start"
+                          onClick={() => {
+                            // Color picker functionality would go here
+                            const newStyles = { ...componentStyles, color: '#1f2937' };
+                            setComponentStyles(newStyles);
+                            onUpdate?.(component.id, { display: { ...component.display, style: newStyles } });
+                          }}
+                        >
+                          <div className="w-4 h-4 rounded border mr-2" style={{ backgroundColor: componentStyles.color || '#000000' }} />
+                          {componentStyles.color || 'Default'}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Advanced */}
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 text-sm font-medium hover:bg-muted rounded">
+                    Advanced Settings
+                    <ArrowRight className="h-4 w-4" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="space-y-4 mt-3 p-3 bg-muted/30 rounded">
+                      <div className="space-y-2">
+                        <Label className="text-xs">Custom CSS Class</Label>
+                        <Input
+                          placeholder="custom-class-name"
+                          value={component.display?.className || ''}
+                          onChange={(e) => {
+                            onUpdate?.(component.id, { 
+                              display: { 
+                                ...component.display, 
+                                className: e.target.value 
+                              } 
+                            });
+                          }}
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label className="text-xs">Z-Index</Label>
+                        <Input
+                          type="number"
+                          value={component.display?.zIndex || 1}
+                          onChange={(e) => {
+                            onUpdate?.(component.id, { 
+                              display: { 
+                                ...component.display, 
+                                zIndex: Number(e.target.value) 
+                              } 
+                            });
+                          }}
+                          min={-10}
+                          max={50}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </div>
+            </ScrollArea>
+          </TabsContent>
 
           {/* Bindings Tab */}
           <TabsContent value="bindings" className="flex-1 m-0">

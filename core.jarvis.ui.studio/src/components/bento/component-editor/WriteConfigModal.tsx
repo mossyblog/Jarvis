@@ -80,6 +80,12 @@ export interface FieldMapping {
   uiControl: UIControlType;
   transform?: string;
   validation?: FieldValidation;
+  metadata?: {
+    autoMapped?: boolean;
+    confidence?: number;
+    strategy?: string;
+    [key: string]: unknown;
+  };
 }
 
 export interface WriteTrigger {

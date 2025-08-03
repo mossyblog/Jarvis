@@ -143,33 +143,115 @@ export function useQueryClient() {
 // Specialized Query Configurations
 // ============================================================================
 
-/** Query options for real-time data that updates frequently */
+// ============================================================================
+// Cache Management Strategies
+// ============================================================================
+
+/** Cache strategy for real-time data that updates frequently */
 export const realtimeQueryOptions = {
   staleTime: 30 * 1000, // 30 seconds
+  gcTime: 2 * 60 * 1000, // 2 minutes
   refetchInterval: 60 * 1000, // Refetch every minute
+  refetchIntervalInBackground: true,
+  // Stale-while-revalidate pattern
+  refetchOnMount: 'always' as const,
+  refetchOnWindowFocus: true,
+  refetchOnReconnect: true,
+} as const;
+
+/** Cache strategy for static/slow-changing data */
+export const staticQueryOptions = {
+  staleTime: 30 * 60 * 1000, // 30 minutes
+  gcTime: 2 * 60 * 60 * 1000, // 2 hours
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+  // Background refresh every hour
+  refetchInterval: 60 * 60 * 1000, // 1 hour
+  refetchIntervalInBackground: false,
+} as const;
+
+/** Cache strategy for user-specific data */
+export const userDataQueryOptions = {
+  staleTime: 5 * 60 * 1000, // 5 minutes
+  gcTime: 15 * 60 * 1000, // 15 minutes
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
+  refetchOnReconnect: true,
+  // Background refresh every 10 minutes
+  refetchInterval: 10 * 60 * 1000,
   refetchIntervalInBackground: true,
 } as const;
 
-/** Query options for static/slow-changing data */
-export const staticQueryOptions = {
-  staleTime: 30 * 60 * 1000, // 30 minutes
-  gcTime: 60 * 60 * 1000, // 1 hour
-  refetchOnWindowFocus: false,
-} as const;
-
-/** Query options for user-specific data */
-export const userDataQueryOptions = {
-  staleTime: 5 * 60 * 1000, // 5 minutes
-  refetchOnWindowFocus: true,
-  refetchOnMount: true,
-} as const;
-
-/** Query options for configuration data */
+/** Cache strategy for configuration data */
 export const configQueryOptions = {
   staleTime: 15 * 60 * 1000, // 15 minutes
-  gcTime: 30 * 60 * 1000, // 30 minutes
+  gcTime: 60 * 60 * 1000, // 1 hour
   refetchOnWindowFocus: false,
   refetchOnMount: false,
+  refetchOnReconnect: false,
+  // Background refresh every 30 minutes
+  refetchInterval: 30 * 60 * 1000,
+  refetchIntervalInBackground: false,
+} as const;
+
+/** Cache strategy for UIStudio page data */
+export const pageDataQueryOptions = {
+  staleTime: 2 * 60 * 1000, // 2 minutes
+  gcTime: 10 * 60 * 1000, // 10 minutes
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
+  refetchOnReconnect: true,
+  // Background refresh every 5 minutes
+  refetchInterval: 5 * 60 * 1000,
+  refetchIntervalInBackground: true,
+} as const;
+
+/** Cache strategy for UIStudio layout data */
+export const layoutDataQueryOptions = {
+  staleTime: 10 * 60 * 1000, // 10 minutes
+  gcTime: 30 * 60 * 1000, // 30 minutes
+  refetchOnWindowFocus: false,
+  refetchOnMount: true,
+  refetchOnReconnect: true,
+  // Background refresh every 15 minutes
+  refetchInterval: 15 * 60 * 1000,
+  refetchIntervalInBackground: false,
+} as const;
+
+/** Cache strategy for UIStudio template data */
+export const templateDataQueryOptions = {
+  staleTime: 15 * 60 * 1000, // 15 minutes
+  gcTime: 45 * 60 * 1000, // 45 minutes
+  refetchOnWindowFocus: false,
+  refetchOnMount: true,
+  refetchOnReconnect: false,
+  // Background refresh every 20 minutes
+  refetchInterval: 20 * 60 * 1000,
+  refetchIntervalInBackground: false,
+} as const;
+
+/** Cache strategy for UIStudio bindings (frequently updated) */
+export const bindingDataQueryOptions = {
+  staleTime: 1 * 60 * 1000, // 1 minute
+  gcTime: 5 * 60 * 1000, // 5 minutes
+  refetchOnWindowFocus: true,
+  refetchOnMount: true,
+  refetchOnReconnect: true,
+  // Background refresh every 3 minutes
+  refetchInterval: 3 * 60 * 1000,
+  refetchIntervalInBackground: true,
+} as const;
+
+/** Cache strategy for version history (rarely changes) */
+export const versionHistoryQueryOptions = {
+  staleTime: 60 * 60 * 1000, // 1 hour
+  gcTime: 2 * 60 * 60 * 1000, // 2 hours
+  refetchOnWindowFocus: false,
+  refetchOnMount: false,
+  refetchOnReconnect: false,
+  // No automatic background refresh
+  refetchInterval: false,
 } as const;
 
 // ============================================================================
@@ -261,14 +343,14 @@ export function UIStudioQueryProvider({
 
 /** Development helper to inspect query cache */
 export function logQueryCache(client: QueryClient) {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     console.log('Query Cache State:', client.getQueryCache().getAll());
   }
 }
 
 /** Development helper to clear all queries */
 export function clearAllQueries(client: QueryClient) {
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.DEV) {
     client.clear();
     console.log('All queries cleared');
   }

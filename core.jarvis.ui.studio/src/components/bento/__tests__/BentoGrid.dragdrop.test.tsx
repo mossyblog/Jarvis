@@ -14,7 +14,7 @@
 
 import React from 'react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, waitFor, fireEvent, cleanup, act } from '@/test/utils/test-utils'
+import { render, screen, waitFor, fireEvent, cleanup } from '@/test/utils/test-utils'
 import userEvent from '@testing-library/user-event'
 
 import { BentoGrid } from '../BentoGrid'
@@ -24,9 +24,6 @@ import {
   createMockGridComponent,
   createGridComponents,
   createCollisionTestComponents,
-  createMockDragStartEvent,
-  createMockDragOverEvent,
-  createMockDragEndEvent,
   createMockTouchEvent,
   simulateLongPress,
   simulateRapidDragOperations,
@@ -42,7 +39,11 @@ vi.mock('../ComponentRenderer', () => ({
 }))
 
 vi.mock('../GridOverlay', () => ({
-  GridOverlay: ({ children, interactionState, ...props }: any) => (
+  GridOverlay: ({ children, interactionState, ...props }: { 
+    children: React.ReactNode; 
+    interactionState: string; 
+    [key: string]: unknown; 
+  }) => (
     <div 
       data-testid="grid-overlay" 
       data-interaction-state={interactionState}
@@ -54,14 +55,18 @@ vi.mock('../GridOverlay', () => ({
 }))
 
 vi.mock('../DragPreview', () => ({
-  DragPreview: ({ component, deviceType, simplified }: any) => (
+  DragPreview: ({ component, deviceType, simplified }: { 
+    component?: { id: string; [key: string]: unknown }; 
+    deviceType: string; 
+    simplified: boolean; 
+  }) => (
     <div 
       data-testid="drag-preview" 
       data-component-id={component?.id}
       data-device-type={deviceType}
       data-simplified={simplified}
     >
-      Drag Preview: {component?.componentType}
+      Drag Preview: {component?.componentType as React.ReactNode}
     </div>
   )
 }))
@@ -69,14 +74,14 @@ vi.mock('../DragPreview', () => ({
 describe('BentoGrid Drag and Drop', () => {
   let testEnvironment: ReturnType<typeof setupBentoTestEnvironment>
   let onComponentMove: ReturnType<typeof vi.fn>
-  let onComponentResize: ReturnType<typeof vi.fn>
-  let onComponentDelete: ReturnType<typeof vi.fn>
+  // let onComponentResize: ReturnType<typeof vi.fn>
+  // let onComponentDelete: ReturnType<typeof vi.fn>
 
   beforeEach(() => {
     testEnvironment = setupBentoTestEnvironment()
     onComponentMove = vi.fn()
-    onComponentResize = vi.fn()
-    onComponentDelete = vi.fn()
+    // onComponentResize = vi.fn()
+    // onComponentDelete = vi.fn()
     vi.clearAllMocks()
   })
 

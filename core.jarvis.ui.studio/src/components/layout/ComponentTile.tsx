@@ -61,7 +61,7 @@ export const ComponentTile: React.FC<ComponentTileProps> = ({
 }) => {
   const handleDragStart = (event: React.DragEvent) => {
     const dragData = {
-      type: 'component',
+      type: 'external-component',
       componentType: id,
       defaultSize
     };
@@ -71,6 +71,11 @@ export const ComponentTile: React.FC<ComponentTileProps> = ({
     
     // Store drag data globally for access during dragOver
     window.__bentoExternalDrag = dragData;
+    
+    // Notify any listening grid components about external drag start
+    window.dispatchEvent(new CustomEvent('bento-external-drag-start', { 
+      detail: dragData 
+    }));
     
     // Create a compact drag image
     const dragImage = document.createElement('div');
@@ -112,7 +117,12 @@ export const ComponentTile: React.FC<ComponentTileProps> = ({
     <div
       draggable
       onDragStart={handleDragStart}
-      onDragEnd={() => {
+      onDragEnd={(event) => {
+        // Notify any listening grid components about external drag end
+        window.dispatchEvent(new CustomEvent('bento-external-drag-end', { 
+          detail: { componentType: id, defaultSize } 
+        }));
+        
         // Clean up global drag data
         delete window.__bentoExternalDrag;
       }}

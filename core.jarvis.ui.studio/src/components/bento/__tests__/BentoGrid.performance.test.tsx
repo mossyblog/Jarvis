@@ -19,7 +19,7 @@ import { BentoGrid } from '../BentoGrid'
 import { DeviceType } from '@/types/bento'
 import {
   createMockBentoGrid,
-  createMockGridComponent,
+  // createMockGridComponent,
   createLargeComponentSet,
   measureRenderTime,
   simulateRapidDragOperations,
@@ -34,7 +34,7 @@ vi.mock('../ComponentRenderer', () => ({
 }))
 
 vi.mock('../GridOverlay', () => ({
-  GridOverlay: React.memo(({ children, ...props }: any) => (
+  GridOverlay: React.memo(({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
     <div data-testid="grid-overlay" {...props}>
       {children}
     </div>

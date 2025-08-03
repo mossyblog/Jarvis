@@ -26,8 +26,7 @@ const LoginPage = () => (
 const renderProtectedRoute = (
   protectedContent: React.ReactNode,
   requiredPermission?: string,
-  requiredAction?: string,
-  initialRoute = '/'
+  requiredAction?: string
 ) => {
   return render(
     <BrowserRouter>

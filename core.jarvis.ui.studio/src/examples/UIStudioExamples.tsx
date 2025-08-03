@@ -149,7 +149,7 @@ export function PageManagerExample({ userId }: PageManagerProps) {
 
       {pages && pages.length > 0 ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {pages.map((page) => (
+          {(pages as any[])?.map((page: any) => (
             <div
               key={page.id}
               className={`p-4 border rounded-lg cursor-pointer transition-colors ${
@@ -398,7 +398,7 @@ export function BentoGridEditorExample({ pageEntityId, layoutEntityId, userId }:
         <h3 className="font-medium mb-3">Page Components</h3>
         {bindings && bindings.length > 0 ? (
           <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-            {bindings.map((binding) => (
+            {(bindings as any[])?.map((binding: any) => (
               <div
                 key={binding.id}
                 className="p-3 border border-gray-200 rounded-lg"

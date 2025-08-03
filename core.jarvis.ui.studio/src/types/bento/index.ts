@@ -110,6 +110,144 @@ export type { BentoGrid, GridSettings, GridZone, GridComponent, ComponentDisplay
 export type { ComponentConfig, PropTypeDefinition, ComponentConstraints, ComponentVariant, ComponentExample, ResizeHandle } from './component.types';
 export type { DataBindingConfig, DataField, DataFieldType, DataSourceType, DataSource, DataTransform, RefreshConfig, RefreshTrigger, CacheConfig, ComponentBindings, EventBinding, InteractionConfig, ComponentEvent, ComponentAction, PayloadDefinition, ActionParameter, StateConfig, StateField, StateUpdater } from './bindings.types';
 
+// Component Binding Types for UIStudio API integration
+export interface ComponentBinding {
+  id: string;
+  componentId: string;
+  componentType: string;
+  
+  // ECS Configuration
+  ecsComponent: string;
+  ecsComponentConfig: ECSComponentConfig;
+  
+  // Field Mappings
+  fieldMappings: FieldMapping[];
+  
+  // Read/Write Configuration
+  readConfig: ReadConfig;
+  writeConfig?: WriteConfig;
+  
+  // Deployment
+  deploymentConfig: DeploymentConfig;
+  
+  // Metadata
+  name: string;
+  description?: string;
+  version: string;
+  status: 'draft' | 'testing' | 'deployed' | 'error';
+  createdAt: string;
+  updatedAt: string;
+  createdBy: string;
+  updatedBy: string;
+}
+
+export interface ECSComponentConfig {
+  name: string;
+  displayName: string;
+  description: string;
+  category: string;
+  version: string;
+  documentation?: string;
+  fields: ECSField[];
+  permissions: {
+    read: boolean;
+    write: boolean;
+    admin: boolean;
+  };
+}
+
+export interface ECSField {
+  name: string;
+  type: 'string' | 'number' | 'boolean' | 'date' | 'json' | 'array' | 'object';
+  required: boolean;
+  description?: string;
+  defaultValue?: unknown;
+  constraints?: {
+    min?: number;
+    max?: number;
+    pattern?: string;
+    enum?: string[];
+  };
+  metadata?: Record<string, unknown>;
+}
+
+export interface FieldMapping {
+  ecsField: string;
+  source: 'prop' | 'state' | 'computed';
+  sourcePath: string;
+  uiControl: UIControlType;
+  transform?: string;
+  validation?: FieldValidation;
+  metadata?: {
+    autoMapped?: boolean;
+    confidence?: number;
+    strategy?: string;
+    [key: string]: unknown;
+  };
+}
+
+export interface FieldValidation {
+  required?: boolean;
+  min?: number;
+  max?: number;
+  pattern?: string;
+  custom?: string;
+}
+
+export type UIControlType = 
+  | 'text' | 'number' | 'select' | 'multiselect' 
+  | 'checkbox' | 'switch' | 'date' | 'datetime' 
+  | 'textarea' | 'json' | 'code' | 'color' | 'file';
+
+export interface ReadConfig {
+  enabled: boolean;
+  query: string;
+  polling: {
+    enabled: boolean;
+    interval: number;
+  };
+  caching: {
+    enabled: boolean;
+    ttl: number;
+  };
+  errorHandling: {
+    retries: number;
+    fallback?: unknown;
+  };
+}
+
+export interface WriteConfig {
+  enabled: boolean;
+  mutations: WriteMutation[];
+  validation: {
+    enabled: boolean;
+    schema?: string;
+  };
+  confirmation: {
+    required: boolean;
+    message?: string;
+  };
+}
+
+export interface WriteMutation {
+  trigger: string;
+  operation: 'create' | 'update' | 'delete';
+  target: string;
+  mapping: Record<string, string>;
+}
+
+export interface DeploymentConfig {
+  environment: 'development' | 'staging' | 'production';
+  autoRefresh: boolean;
+  errorReporting: boolean;
+  analytics: boolean;
+  permissions: {
+    public: boolean;
+    roles: string[];
+    users: string[];
+  };
+}
+
 // ============================================================================
 // Validation Types
 // ============================================================================

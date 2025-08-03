@@ -20,7 +20,8 @@ export const mockRoles: Record<string, Role> = {
       { id: 'perm-5', resource: 'database', actions: ['read'] },
       { id: 'perm-6', resource: 'functions', actions: ['read', 'write'] },
       { id: 'perm-7', resource: 'api', actions: ['read'] },
-      { id: 'perm-8', resource: 'logs', actions: ['read'] }
+      { id: 'perm-8', resource: 'logs', actions: ['read'] },
+      { id: 'perm-9', resource: 'pages', actions: ['read', 'write'] }
     ]
   },
   editor: {
@@ -28,9 +29,10 @@ export const mockRoles: Record<string, Role> = {
     name: 'Content Editor',
     description: 'Content management access',
     permissions: [
-      { id: 'perm-9', resource: 'table-editor', actions: ['read', 'write'] },
-      { id: 'perm-10', resource: 'storage', actions: ['read', 'write'] },
-      { id: 'perm-11', resource: 'realtime', actions: ['read'] }
+      { id: 'perm-10', resource: 'table-editor', actions: ['read', 'write'] },
+      { id: 'perm-11', resource: 'storage', actions: ['read', 'write'] },
+      { id: 'perm-12', resource: 'realtime', actions: ['read'] },
+      { id: 'perm-13', resource: 'pages', actions: ['read', 'write'] }
     ]
   },
   viewer: {
@@ -38,9 +40,10 @@ export const mockRoles: Record<string, Role> = {
     name: 'Viewer',
     description: 'Read-only access',
     permissions: [
-      { id: 'perm-12', resource: 'home', actions: ['read'] },
-      { id: 'perm-13', resource: 'reports', actions: ['read'] },
-      { id: 'perm-14', resource: 'api', actions: ['read'] }
+      { id: 'perm-14', resource: 'home', actions: ['read'] },
+      { id: 'perm-15', resource: 'reports', actions: ['read'] },
+      { id: 'perm-16', resource: 'api', actions: ['read'] },
+      { id: 'perm-17', resource: 'pages', actions: ['read'] }
     ]
   }
 };
@@ -105,6 +108,7 @@ export const mockUsers: User[] = [
 
 export const fullNavigationItems: NavigationItem[] = [
   { id: 'home', label: 'Project overview', icon: 'Home', href: '/', requiredPermission: 'home' },
+  { id: 'pages', label: 'Pages', icon: 'FileText', href: '/pages', requiredPermission: 'pages' },
   { id: 'table-editor', label: 'Table Editor', icon: 'Table', href: '/editor', requiredPermission: 'table-editor' },
   { id: 'schema-visualizer', label: 'Schema Visualizer', icon: 'Database', href: '/SchemaVisualizer', requiredPermission: 'schema-visualizer' },
   { id: 'sql-editor', label: 'SQL Editor', icon: 'FileCode2', href: '/sql', requiredPermission: 'sql-editor' },

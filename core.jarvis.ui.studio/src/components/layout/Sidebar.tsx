@@ -145,6 +145,8 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
           // Normal z-index for other modes
           behavior !== 'expandable' && "z-40"
         )}
+        role="navigation"
+        aria-label="Main navigation"
         onMouseEnter={() => {
           if (behavior === 'expandable' && !showDropdown) {
             setIsExpanded(true);
@@ -157,7 +159,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
         }}
       >
         {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto py-1 px-2">
+        <nav className="flex-1 overflow-y-auto py-1 px-2" role="menubar" aria-label="Primary navigation menu">
           <div className="space-y-1">
             {sidebarItems.map((item) => (
               <button
@@ -168,6 +170,9 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                   "hover:bg-secondary",
                   activeItem === item.id && "bg-secondary",
                 )}
+                role="menuitem"
+                aria-label={`Navigate to ${item.label}`}
+                aria-current={activeItem === item.id ? "page" : undefined}
               >
                 {/* Icon container - fixed position */}
                 <div className="absolute left-2 w-5 h-5 flex items-center justify-center">
@@ -205,6 +210,8 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                       "hover:bg-secondary border-2 border-dashed border-border",
                       "mt-2"
                     )}
+                    role="menuitem"
+                    aria-label="Create new page"
                   >
                     {/* Icon container - fixed position */}
                     <div className="absolute left-2 w-5 h-5 flex items-center justify-center">
@@ -274,12 +281,15 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
         </nav>
 
         {/* Bottom Section with Sidebar Control */}
-        <div className="border-t border-border-stronger p-2 relative">
+        <div className="border-t border-border-stronger p-2 relative" role="complementary" aria-label="Sidebar controls">
           {/* Sidebar Control Button */}
           <button
             onClick={() => setShowDropdown(!showDropdown)}
             className="sidebar-control-button w-9 h-9 flex items-center justify-center hover:bg-secondary rounded transition-colors relative"
             title="Sidebar control"
+            aria-label="Open sidebar control menu"
+            aria-expanded={showDropdown}
+            aria-haspopup="menu"
           >
             <PanelLeftClose size={18} className="text-muted-foreground" />
           </button>
@@ -290,7 +300,10 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
               className={cn(
                 "sidebar-control-dropdown absolute bg-secondary border border-border rounded-md shadow-lg min-w-[180px] z-[100]",
                 "bottom-full mb-2 left-0"
-              )}>
+              )}
+              role="menu"
+              aria-label="Sidebar control options"
+              >
               <div className="p-1">
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
                   Sidebar control

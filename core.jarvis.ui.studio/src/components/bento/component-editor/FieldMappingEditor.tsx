@@ -21,7 +21,11 @@ import {
   AlertCircle,
   CheckCircle,
   Plus,
-  X
+  X,
+  Wand2,
+  Download,
+  Lightbulb,
+  Target
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -711,27 +715,86 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
     onChange?.(updatedMappings);
   }, [mappings, onChange]);
 
-  // Auto-map fields
+  // Enhanced auto-map fields with intelligent suggestions
   const handleAutoMap = useCallback(() => {
     const newMappings = [...mappings];
     
     unmappedFields.forEach(field => {
-      // Simple auto-mapping logic
-      const propSource = dataSources.prop.options.find(opt => 
-        opt.path.toLowerCase().includes(field.name.toLowerCase()) ||
-        field.name.toLowerCase().includes(opt.path.toLowerCase())
-      );
+      // Intelligent mapping logic with multiple strategies
+      let bestMatch = null;
+      const matchScore = 0;
       
-      if (propSource) {
+      // Strategy 1: Exact name match
+      const exactMatch = dataSources.prop.options.find(opt => 
+        opt.path.toLowerCase() === field.name.toLowerCase()
+      );
+      if (exactMatch) {
+        bestMatch = { source: 'prop' as const, path: exactMatch.path, score: 100 };
+      }
+      
+      // Strategy 2: Partial name match
+      if (!bestMatch) {
+        const partialMatch = dataSources.prop.options.find(opt => 
+          opt.path.toLowerCase().includes(field.name.toLowerCase()) ||
+          field.name.toLowerCase().includes(opt.path.toLowerCase())
+        );
+        if (partialMatch) {
+          bestMatch = { source: 'prop' as const, path: partialMatch.path, score: 80 };
+        }
+      }
+      
+      // Strategy 3: Type-based matching
+      if (!bestMatch) {
+        const typeMatch = dataSources.prop.options.find(opt => opt.type === field.type);
+        if (typeMatch) {
+          bestMatch = { source: 'prop' as const, path: typeMatch.path, score: 60 };
+        }
+      }
+      
+      // Strategy 4: Semantic matching
+      if (!bestMatch) {
+        const semanticMatches = {
+          'id': ['id', 'identifier', 'key'],
+          'name': ['name', 'title', 'label', 'displayName'],
+          'email': ['email', 'emailAddress', 'userEmail'],
+          'date': ['date', 'timestamp', 'createdAt', 'updatedAt'],
+          'status': ['status', 'state', 'condition'],
+          'value': ['value', 'amount', 'count', 'number']
+        };
+        
+        const fieldLower = field.name.toLowerCase();
+        for (const [concept, keywords] of Object.entries(semanticMatches)) {
+          if (keywords.some(keyword => fieldLower.includes(keyword) || keyword.includes(fieldLower))) {
+            const semanticMatch = dataSources.prop.options.find(opt => 
+              keywords.some(kw => opt.path.toLowerCase().includes(kw))
+            );
+            if (semanticMatch) {
+              bestMatch = { source: 'prop' as const, path: semanticMatch.path, score: 40 };
+              break;
+            }
+          }
+        }
+      }
+      
+      // Create mapping if we found a match
+      if (bestMatch && bestMatch.score >= 40) {
         const defaultControl = Object.values(UI_CONTROLS).find(control =>
           control.supportedTypes.includes(field.type)
         )?.type || 'text' as UIControlType;
         
         newMappings.push({
           ecsField: field.name,
-          source: 'prop',
-          sourcePath: propSource.path,
-          uiControl: defaultControl
+          source: bestMatch.source,
+          sourcePath: bestMatch.path,
+          uiControl: defaultControl,
+          // Add confidence metadata
+          metadata: {
+            autoMapped: true,
+            confidence: bestMatch.score,
+            strategy: bestMatch.score === 100 ? 'exact' : 
+                     bestMatch.score === 80 ? 'partial' : 
+                     bestMatch.score === 60 ? 'type' : 'semantic'
+          }
         });
       }
     });
@@ -754,14 +817,43 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
         
         <div className="flex items-center gap-2">
           {unmappedFields.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleAutoMap}
-              disabled={readOnly}
-            >
-              Auto-Map Fields
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAutoMap}
+                disabled={readOnly}
+              >
+                <Wand2 className="h-3 w-3 mr-1" />
+                Auto-Map Fields
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  // Export mapping configuration
+                  const exportData = {
+                    ecsComponent: ecsComponent.name,
+                    componentType,
+                    mappings,
+                    exportedAt: new Date().toISOString()
+                  };
+                  const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${ecsComponent.name}-mappings.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+                disabled={readOnly}
+              >
+                <Download className="h-3 w-3 mr-1" />
+                Export
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -803,27 +895,135 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
         })}
       </div>
 
+      {/* Smart Suggestions Panel */}
+      {unmappedFields.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50/50">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-blue-600" />
+              Smart Mapping Suggestions
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {unmappedFields.slice(0, 3).map(field => {
+              // Generate suggestion for this field
+              const suggestions = [];
+              
+              // Exact match
+              const exactMatch = dataSources.prop.options.find(opt => 
+                opt.path.toLowerCase() === field.name.toLowerCase()
+              );
+              if (exactMatch) {
+                suggestions.push({ 
+                  source: 'prop', 
+                  path: exactMatch.path, 
+                  confidence: 'High',
+                  reason: 'Exact name match'
+                });
+              }
+              
+              // Type match
+              const typeMatch = dataSources.prop.options.find(opt => opt.type === field.type);
+              if (typeMatch && !suggestions.length) {
+                suggestions.push({ 
+                  source: 'prop', 
+                  path: typeMatch.path, 
+                  confidence: 'Medium',
+                  reason: `Compatible ${field.type} type`
+                });
+              }
+              
+              const suggestion = suggestions[0];
+              if (suggestion) {
+                return (
+                  <div key={field.name} className="flex items-center justify-between p-2 bg-white rounded border border-blue-200">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{field.name}</span>
+                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                        <span className="font-mono text-xs">{suggestion.path}</span>
+                        <Badge variant="outline" className={cn(
+                          'text-xs',
+                          suggestion.confidence === 'High' && 'border-green-500 text-green-700',
+                          suggestion.confidence === 'Medium' && 'border-orange-500 text-orange-700'
+                        )}>
+                          {suggestion.confidence}
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{suggestion.reason}</p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        const defaultControl = Object.values(UI_CONTROLS).find(control =>
+                          control.supportedTypes.includes(field.type)
+                        )?.type || 'text' as UIControlType;
+                        
+                        handleUpdateMapping(field.name, {
+                          ecsField: field.name,
+                          source: suggestion.source as any,
+                          sourcePath: suggestion.path,
+                          uiControl: defaultControl
+                        });
+                      }}
+                      disabled={readOnly}
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Apply
+                    </Button>
+                  </div>
+                );
+              }
+              return null;
+            }).filter(Boolean)}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Component Info */}
       <Card className="border-dashed">
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm">ECS Component: {ecsComponent.displayName}</CardTitle>
+          <CardTitle className="text-sm flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            ECS Component: {ecsComponent.displayName}
+          </CardTitle>
         </CardHeader>
         <CardContent className="text-sm space-y-2">
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Total Fields:</span>
-            <span>{ecsComponent.fields.length}</span>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total Fields:</span>
+                <span className="font-medium">{ecsComponent.fields.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Required Fields:</span>
+                <span className="font-medium">{ecsComponent.fields.filter(f => f.required).length}</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Mapped Fields:</span>
+                <span className="font-medium">{mappedFields.length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Completion:</span>
+                <span className="font-medium">
+                  {Math.round((mappedFields.length / ecsComponent.fields.length) * 100)}%
+                </span>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Required Fields:</span>
-            <span>{ecsComponent.fields.filter(f => f.required).length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Mapped Fields:</span>
-            <span>{mappedFields.length}</span>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-muted-foreground">Component:</span>
-            <span className="font-mono text-xs">{ecsComponent.name}</span>
+          <div className="pt-2 border-t">
+            <div className="flex justify-between items-center">
+              <span className="text-muted-foreground">Component:</span>
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-xs">{ecsComponent.name}</span>
+                <Badge variant="outline" className="text-xs">
+                  v{(ecsComponent as any).version || '1.0.0'}
+                </Badge>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

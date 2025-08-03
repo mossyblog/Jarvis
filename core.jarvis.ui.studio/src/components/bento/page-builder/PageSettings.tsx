@@ -45,6 +45,8 @@ export interface PageSettingsProps {
   onUpdate?: (updates: Partial<BentoPage>) => void;
   /** Whether the settings are read-only */
   readOnly?: boolean;
+  /** Whether to render in compact mobile mode */
+  compact?: boolean;
   /** Additional CSS classes */
   className?: string;
 }

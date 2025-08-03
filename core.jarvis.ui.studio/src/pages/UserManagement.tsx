@@ -12,6 +12,9 @@ import { Badge } from '../components/ui/badge';
 import { NotificationCard } from '../components/ui/notification-card';
 import { TableSkeleton } from '../components/ui/table-skeleton';
 import { Skeleton } from '../components/ui/skeleton';
+import { SelectionCheckbox } from '../components/ui/selection-checkbox';
+import { BulkActionsToolbar } from '../components/ui/bulk-actions-toolbar';
+import { useSelectionState, type BulkAction } from '../hooks/useSelectionState';
 import { cn } from '../lib/utils';
 
 // Account type based on database schema
@@ -43,6 +46,71 @@ export default function UserManagement() {
   // const [authMethodFilter, setAuthMethodFilter] = useState<'all' | 'email' | 'oauth'>('all'); // TODO: implement auth method filtering
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
+  const [enableSelection, setEnableSelection] = useState(false);
+  
+  // Bulk actions for user management
+  const bulkActions: BulkAction<Account>[] = [
+    {
+      id: 'activate',
+      label: 'Activate',
+      icon: 'check',
+      action: (accounts) => {
+        console.log('Activating accounts:', accounts.map(a => a.email));
+        // TODO: Implement activation API call
+      },
+      tooltip: 'Activate selected accounts',
+      validate: (accounts) => accounts.some(a => !a.isActive)
+    },
+    {
+      id: 'deactivate',
+      label: 'Deactivate',
+      icon: 'x',
+      action: (accounts) => {
+        console.log('Deactivating accounts:', accounts.map(a => a.email));
+        // TODO: Implement deactivation API call
+      },
+      tooltip: 'Deactivate selected accounts',
+      validate: (accounts) => accounts.some(a => a.isActive)
+    },
+    {
+      id: 'delete',
+      label: 'Delete',
+      icon: 'trash',
+      action: (accounts) => {
+        const confirmed = window.confirm(
+          `Are you sure you want to delete ${accounts.length} account(s)?\n\n` +
+          'This action cannot be undone and will remove all associated data.'
+        );
+        if (confirmed) {
+          console.log('Deleting accounts:', accounts.map(a => a.email));
+          // TODO: Implement bulk delete API call
+        }
+      },
+      destructive: true,
+      tooltip: 'Delete selected accounts',
+      shortcut: 'Del'
+    },
+    {
+      id: 'export',
+      label: 'Export',
+      icon: 'download',
+      action: (accounts) => {
+        const data = JSON.stringify(accounts, null, 2);
+        const blob = new Blob([data], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `accounts-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      tooltip: 'Export selected accounts as JSON'
+    }
+  ];
+
+  const handleBulkAction = (actionId: string) => {
+    // Will be defined after filteredAccounts
+  };
 
   const handleItemClick = (itemId: string) => {
     setActiveItem(itemId);
@@ -147,6 +215,33 @@ export default function UserManagement() {
     return true;
   });
 
+  // Selection state management
+  const {
+    selectedItems,
+    isSelected,
+    getSelectAllProps,
+    getItemProps,
+    getTableRowProps,
+    showBulkToolbar,
+    bulkToolbarActions,
+    executeBulkAction,
+    deselectAll
+  } = useSelectionState(filteredAccounts, {
+    mode: 'multiple',
+    getId: (account) => account.id,
+    enableKeyboard: true,
+    enableRangeSelection: true,
+    enableSelectAll: true,
+    bulkActions,
+    onBulkAction: (action, accounts) => {
+      console.log(`Bulk action ${action.id} on`, accounts.length, 'accounts');
+    }
+  });
+
+  const realHandleBulkAction = (actionId: string) => {
+    executeBulkAction(actionId);
+  };
+
   return (
     <DashboardLayout activeItem={activeItem} onItemClick={handleItemClick}>
       <div className="@container">
@@ -171,6 +266,24 @@ export default function UserManagement() {
 
           {/* Filter Tabs and Search */}
           <div className="space-y-6">
+            {/* Selection Toggle */}
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={enableSelection}
+                  onChange={(e) => setEnableSelection(e.target.checked)}
+                  className="rounded border-border"
+                />
+                Enable selection for bulk operations
+              </label>
+              {enableSelection && selectedItems.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {selectedItems.length} account{selectedItems.length !== 1 ? 's' : ''} selected
+                </span>
+              )}
+            </div>
+            
             {/* Status Filter Tabs and Search on same row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1">
@@ -284,10 +397,19 @@ export default function UserManagement() {
               description={error}
             />
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="font-mono">Entity ID</TableHead>
+            <div data-selectable-container>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {enableSelection && (
+                      <TableHead className="w-12">
+                        <SelectionCheckbox
+                          size="sm"
+                          {...getSelectAllProps()}
+                        />
+                      </TableHead>
+                    )}
+                    <TableHead className="font-mono">Entity ID</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Profile Name</TableHead>
                   <TableHead>Auth Method</TableHead>
@@ -295,11 +417,31 @@ export default function UserManagement() {
                   <TableHead>Created</TableHead>
                   <TableHead>Last Updated</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredAccounts.length > 0 ? filteredAccounts.map(account => (
-                  <TableRow key={account.id}>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAccounts.length > 0 ? filteredAccounts.map(account => {
+                    const rowProps = enableSelection ? getTableRowProps(account) : {};
+                    const selected = enableSelection ? isSelected(account) : false;
+                    
+                    return (
+                    <TableRow 
+                      key={account.id}
+                      className={cn(
+                        'transition-colors',
+                        selected && 'bg-accent/50',
+                        enableSelection && 'cursor-pointer'
+                      )}
+                      {...rowProps}
+                    >
+                      {enableSelection && (
+                        <TableCell>
+                          <SelectionCheckbox
+                            size="sm"
+                            {...getItemProps(account)}
+                          />
+                        </TableCell>
+                      )}
                     <TableCell className="font-mono text-xs">
                       {account.ownerEntityId.slice(0, 8)}...
                     </TableCell>
@@ -344,16 +486,30 @@ export default function UserManagement() {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
-                  </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    </TableRow>
+                    );
+                  }) : (
+                    <TableRow>
+                      <TableCell colSpan={enableSelection ? 9 : 8} className="text-center text-muted-foreground">
                       {`No ${activeFilter === 'all' ? '' : activeFilter + ' '}accounts found`}
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+              
+              {/* Bulk Actions Toolbar */}
+              {enableSelection && (
+                <BulkActionsToolbar
+                  selectedCount={selectedItems.length}
+                  actions={bulkToolbarActions}
+                  visible={showBulkToolbar}
+                  onAction={realHandleBulkAction}
+                  onDismiss={deselectAll}
+                  position="bottom"
+                />
+              )}
+            </div>
           )}
           
           {/* Pagination */}
