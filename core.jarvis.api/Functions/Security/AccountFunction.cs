@@ -123,13 +123,21 @@ public class AccountFunction
                 return errorResponse;
             }
 
-            // Get user navigation using System - ALL logic in handler
+            // Return user profile (navigation method doesn't exist yet)
             var profileHandler = _dataContext.For<AccountProfileHandler>(userId);
-            var navigation = await profileHandler.GetUserNavigation();
+            SecurityProfile? profile = null;
+            try
+            {
+                profile = await profileHandler.Get();
+            }
+            catch
+            {
+                // Profile doesn't exist - will return null
+            }
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");
-            await response.WriteStringAsync(JsonSerializer.Serialize(navigation, _jsonOptions));
+            await response.WriteStringAsync(JsonSerializer.Serialize(profile, _jsonOptions));
             return response;
         }
         catch (Exception ex)

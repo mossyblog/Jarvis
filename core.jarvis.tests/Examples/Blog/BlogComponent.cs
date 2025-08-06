@@ -61,7 +61,7 @@ public record BlogComponent : IComponent, IVersionedComponent
     /// When the blog was last updated.
     /// Maps to updated_at in database.
     /// </summary>
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     
     public int? Version { get; set; }
 } 

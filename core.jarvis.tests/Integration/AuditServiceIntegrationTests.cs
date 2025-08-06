@@ -17,7 +17,7 @@ namespace core.jarvis.tests.Integration;
 /// <para><strong>ARCHITECTURAL SIGNIFICANCE:</strong> Tests the complete audit pipeline from service to database.</para>
 /// <para><strong>FUTURE RESILIENCE:</strong> Ensures audit functionality remains reliable as system evolves.</para>
 /// </remarks>
-[Collection("SupabaseIntegration")]
+[Collection("Sequential")]
 public class AuditServiceIntegrationTests : IntegrationTestBase
 {
     /// <summary>
@@ -43,9 +43,6 @@ public class AuditServiceIntegrationTests : IntegrationTestBase
         // Act
         var auditService = _serviceProvider.GetRequiredService<IAuditService>();
         await auditService.LogEvent(eventType, entityId, metadata);
-        
-        // Give database time to persist
-        await Task.Delay(1000);
         
         // Assert - Query the database directly through PgClient to verify
         var pgClient = _serviceProvider.GetRequiredService<IPgClient>();
@@ -91,9 +88,6 @@ public class AuditServiceIntegrationTests : IntegrationTestBase
         // Act
         var auditService = _serviceProvider.GetRequiredService<IAuditService>();
         await auditService.LogChange(eventType, entityId, oldValue, newValue);
-        
-        // Give database time to persist
-        await Task.Delay(1000);
         
         // Assert - Query the database directly through PgClient to verify
         var pgClient = _serviceProvider.GetRequiredService<IPgClient>();

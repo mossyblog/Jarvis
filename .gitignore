@@ -7,7 +7,6 @@ riderModule.iml
 .idea/
 .vscode/
 /CoverageReport/
-.claude
 .cursor
 CLAUDE.local.md
 CLAUDE.md
@@ -24,3 +23,6 @@ scripts/
 memory/
 Jarvis.sln.DotSettings.user
 9_Test.txt
+core.jarvis.api.tests/TestResults/
+/core.jarvis.tests/TestResults/
+nul

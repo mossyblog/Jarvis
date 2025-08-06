@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using core.jarvis;
 using core.jarvis.api.Functions.Security;
+using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.tests.Helpers;
 using core.jarvis.api.Services;
@@ -17,6 +18,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 using Xunit;
 
@@ -65,7 +67,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         // Use TestDataContext() to persist the account
@@ -109,7 +111,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         var email = $"test_reg_{Guid.NewGuid()}@example.com";
         var password = "TestPassword123!";
         
-        // First register the user
+        // First register the user (creates inactive account)
         var registerFunction = _serviceProvider.GetRequiredService<RegisterFunction>();
         var registerBody = JsonSerializer.Serialize(new { email, password });
         
@@ -118,6 +120,23 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         
         var registerResponse = await registerFunction.Register(registerRequest);
         registerResponse.StatusCode.ShouldBe(HttpStatusCode.Created);
+        
+        // Extract the registered account to get the OwnerEntityId
+        var registerResponseBody = await TestFactory.GetResponseBodyAsync(registerResponse);
+        var registeredAccount = JsonSerializer.Deserialize<Account>(registerResponseBody, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        
+        registeredAccount.ShouldNotBeNull();
+        registeredAccount.OwnerEntityId.ShouldNotBe(Guid.Empty);
+        
+        // Track entity for cleanup
+        TrackEntity(registeredAccount.OwnerEntityId);
+        
+        // Activate the account (required for authentication)
+        var accountHandler = TestDataContext().For<AccountHandler>(registeredAccount.OwnerEntityId);
+        await accountHandler.Activate();
         
         // Now authenticate
         var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
@@ -138,12 +157,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         
         authToken.ShouldNotBeNull();
         authToken.AccessToken.ShouldNotBeNullOrEmpty();
-        
-        // Track for cleanup
-        if (authToken.OwnerEntityId != Guid.Empty)
-        {
-            TrackEntity(authToken.OwnerEntityId);
-        }
+        authToken.OwnerEntityId.ShouldBe(registeredAccount.OwnerEntityId);
     }
     
     /// <summary>
@@ -188,7 +202,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         // Use TestDataContext() to persist the account
@@ -198,7 +212,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
         var requestBody = JsonSerializer.Serialize(new { Email = email, Password = password });
         
-        Console.WriteLine($"Sending JSON: {requestBody}");
+        Logger().LogInformation("Sending JSON: {RequestBody}", requestBody);
         
         var request = TestFactory.CreateHttpRequestData("POST", "/api/security/auth", requestBody);
         request.Headers.Add("Content-Type", "application/json");
@@ -209,7 +223,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var errorBody = await TestFactory.GetResponseBodyAsync(response);
-            Console.WriteLine($"Auth failed with status {response.StatusCode}: {errorBody}");
+            Logger().LogWarning("Auth failed with status {StatusCode}: {ErrorBody}", response.StatusCode, errorBody);
         }
         response.StatusCode.ShouldBe(HttpStatusCode.OK, 
             $"Authentication failed for {email}. Check logs for details.");
@@ -247,7 +261,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await TestDataContext().Commit(account);
@@ -269,7 +283,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
             ""userAgent"": ""string""
         }}";
         
-        Console.WriteLine($"Sending full Account JSON: {accountJson}");
+        Logger().LogInformation("Sending full Account JSON: {AccountJson}", accountJson);
         
         var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
         var request = TestFactory.CreateHttpRequestData("POST", "/api/security/auth", accountJson);
@@ -281,7 +295,7 @@ public class AuthenticationIntegrationTests : ApiIntegrationTestBase
         if (response.StatusCode != HttpStatusCode.OK)
         {
             var errorBody = await TestFactory.GetResponseBodyAsync(response);
-            Console.WriteLine($"Auth failed with status {response.StatusCode}: {errorBody}");
+            Logger().LogWarning("Auth failed with status {StatusCode}: {ErrorBody}", response.StatusCode, errorBody);
         }
         response.StatusCode.ShouldBe(HttpStatusCode.OK, 
             "Authentication should work with full Account object");

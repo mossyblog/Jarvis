@@ -9,7 +9,7 @@ public record AuthToken : IComponent, IVersionedComponent
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid OwnerEntityId { get; set; }
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     public int? Version { get; set; }
 
     /// <summary>

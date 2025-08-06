@@ -46,19 +46,37 @@ public class SnapshotPerformanceTests : IntegrationTestBase
         var avgTimePerCommit = stopwatch.ElapsedMilliseconds / components.Count;
         avgTimePerCommit.ShouldBeLessThan(100); // 100ms per commit max (increased from 50ms for safety)
         
-        // Verify snapshots were created (async)
-        await Task.Delay(2000); // Allow async operations to complete
-        
-        // Spot check first 3 components
+        // Verify snapshots were created (async) - use deterministic waiting
+        // Spot check first 3 components with retry logic for async snapshot creation
         foreach (var component in components.Take(3))
         {
-            var snapshots = await TestDataContext().Snapshots()
-                .ForComponent<TestComponent>(component.Id)
-                .FirstOrDefault();
+            var maxRetries = 10;
+            var retryDelay = 200;
+            bool snapshotFound = false;
+            
+            for (int retry = 0; retry < maxRetries && !snapshotFound; retry++)
+            {
+                var snapshots = await TestDataContext().Snapshots()
+                    .ForComponent<TestComponent>(component.Id)
+                    .FirstOrDefault();
+                    
+                if (snapshots != null)
+                {
+                    var snapshotList = snapshots.GetSnapshots();
+                    if (snapshotList.Count > 0)
+                    {
+                        snapshotFound = true;
+                        break;
+                    }
+                }
                 
-            snapshots.ShouldNotBeNull();
-            var snapshotList = snapshots.GetSnapshots();
-            snapshotList.Count.ShouldBeGreaterThan(0);
+                if (retry < maxRetries - 1)
+                {
+                    await Task.Delay(retryDelay);
+                }
+            }
+            
+            snapshotFound.ShouldBeTrue($"Snapshot should have been created for component {component.Id} within {maxRetries * retryDelay}ms");
         }
     }
     
@@ -70,7 +88,7 @@ public class SnapshotPerformanceTests : IntegrationTestBase
     /// ARCHITECTURAL SIGNIFICANCE: Validates snapshot impact on TryCommit
     /// FUTURE RESILIENCE: Ensures performance remains acceptable
     /// </summary>
-    [Fact(Skip = "Skipping due to timezone handling issue in TryCommit - snapshots are working correctly")]
+    [Fact]
     public async Task TryCommit_Performance_Should_Remain_Acceptable()
     {
         // Arrange
@@ -85,7 +103,6 @@ public class SnapshotPerformanceTests : IntegrationTestBase
         
         // Create initial version
         await TestDataContext().Commit(component);
-        await Task.Delay(500);
         
         // Act - Multiple updates using TryCommit
         var stopwatch = Stopwatch.StartNew();
@@ -111,15 +128,40 @@ public class SnapshotPerformanceTests : IntegrationTestBase
         var avgTimePerUpdate = stopwatch.ElapsedMilliseconds / updateCount;
         avgTimePerUpdate.ShouldBeLessThan(150); // 150ms per update max
         
-        // Verify all snapshots were created
-        await Task.Delay(2000);
+        // Verify all snapshots were created using deterministic waiting
+        var maxRetries = 10;
+        var retryDelay = 200;
+        bool allSnapshotsFound = false;
         
-        var snapshots = await TestDataContext().Snapshots()
+        for (int retry = 0; retry < maxRetries && !allSnapshotsFound; retry++)
+        {
+            var snapshots = await TestDataContext().Snapshots()
+                .ForComponent<TestComponent>(component.Id)
+                .FirstOrDefault();
+                
+            if (snapshots != null)
+            {
+                var snapshotList = snapshots.GetSnapshots();
+                if (snapshotList.Count == updateCount + 1) // Initial + updates
+                {
+                    allSnapshotsFound = true;
+                    break;
+                }
+            }
+            
+            if (retry < maxRetries - 1)
+            {
+                await Task.Delay(retryDelay);
+            }
+        }
+        
+        // Final verification
+        var finalSnapshots = await TestDataContext().Snapshots()
             .ForComponent<TestComponent>(component.Id)
             .FirstOrDefault();
             
-        snapshots.ShouldNotBeNull();
-        var snapshotList = snapshots.GetSnapshots();
-        snapshotList.Count.ShouldBe(updateCount + 1); // Initial + updates
+        finalSnapshots.ShouldNotBeNull();
+        var finalSnapshotList = finalSnapshots.GetSnapshots();
+        finalSnapshotList.Count.ShouldBe(updateCount + 1); // Initial + updates
     }
 }

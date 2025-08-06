@@ -53,7 +53,7 @@ public record OrderComponent : IComponent, IVersionedComponent
     /// When the order was last updated.
     /// Maps to updated_at in database.
     /// </summary>
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
 
     /// <summary>
     /// Optional notes about the order.

@@ -1,6 +1,7 @@
 using System.Reflection;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
+using core.jarvis.Data.Schema;
 using core.jarvis.Events;
 using core.jarvis.Events.Emitters;
 using core.jarvis.Logging;
@@ -17,6 +18,30 @@ namespace core.jarvis;
 /// </summary>
 public static class JarvisServiceCollectionExtensions
 {
+    // Database Configuration Constants
+    /// <summary>
+    /// Default maximum pool size for database connection pooling.
+    /// Balances resource usage with concurrent request handling.
+    /// </summary>
+    private const int DefaultMaxPoolSize = 20;
+    
+    /// <summary>
+    /// Default minimum pool size for database connection pooling.
+    /// Ensures baseline connections are always available.
+    /// </summary>
+    private const int DefaultMinPoolSize = 5;
+    
+    /// <summary>
+    /// Default connection lifetime in minutes for pooled connections.
+    /// Prevents stale connections while maintaining efficiency.
+    /// </summary>
+    private const int DefaultConnectionLifetimeMinutes = 5;
+    
+    /// <summary>
+    /// Standard PostgreSQL port number.
+    /// Default port for PostgreSQL database connections.
+    /// </summary>
+    private const int DefaultPostgreSqlPort = 5432;
     /// <summary>
     /// Adds the core Jarvis framework services with handler-based architecture.
     /// </summary>
@@ -49,6 +74,9 @@ public static class JarvisServiceCollectionExtensions
 
         // 5. Register EntityQuery factory
         services.TryAddScoped<IEntityQuery, EntityQuery>();
+        
+        // 5.5. Register Table Manager
+        services.TryAddScoped<ITableManager, PostgreSqlTableManager>();
 
         // 6. Register DataContext
         services.TryAddScoped<IDataContext, DataContext>();
@@ -70,10 +98,10 @@ public static class JarvisServiceCollectionExtensions
                 
                 var logger = sp.GetRequiredService<ILogger<NpgsqlConnectionFactory>>();
                 
-                // Get pool configuration
-                var maxPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MaxPoolSize") ?? 20;
-                var minPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MinPoolSize") ?? 5;
-                var connectionLifetimeMinutes = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:ConnectionLifetimeMinutes") ?? 5;
+                // Get pool configuration with fallback to constants
+                var maxPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MaxPoolSize") ?? DefaultMaxPoolSize;
+                var minPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MinPoolSize") ?? DefaultMinPoolSize;
+                var connectionLifetimeMinutes = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:ConnectionLifetimeMinutes") ?? DefaultConnectionLifetimeMinutes;
                 
                 return new NpgsqlConnectionFactory(
                     connectionString,
@@ -126,7 +154,7 @@ public static class JarvisServiceCollectionExtensions
         if (uri.Host == "localhost" || uri.Host == "127.0.0.1")
         {
             // For local development/testing, use direct connection string
-            return "Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=postgres";
+            return $"Host=localhost;Port={DefaultPostgreSqlPort};Database=postgres;Username=postgres;Password=postgres";
         }
         
         // Extract hostname from Supabase URL for production

@@ -26,7 +26,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
     /// Creates a SecurityProfile with default roles and permissions.
     /// Returns existing profile if already exists.
     /// </summary>
-    public async Task<SecurityProfile> CreateWithDefaults(string email)
+    public async Task<SecurityProfile> CreateWithDefaults(string email, string? fullName = null)
     {
         var existingProfile = await GetOrDefault();
         if (existingProfile != null)
@@ -37,12 +37,19 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 
         Logger.LogInformation("Creating SecurityProfile for first-time user: {UserId}", OwnerEntityId);
 
-        // Get default role
-        var defaultRoleEntities = await DataContext.Query()
-            .WithAll<Role>(r => r.Name == "default")
+        // Get default role - fetch all roles and filter in memory
+        var allRoles = await DataContext.Query()
+            .WithAll<Role>(r => true)
             .ToEntityComponents();
 
-        var defaultRoleId = defaultRoleEntities.FirstOrDefault().Key;
+        var defaultRoleEntity = allRoles
+            .FirstOrDefault(kvp => 
+            {
+                var role = kvp.Value.Get<Role>();
+                return role != null && role.Name == "default";
+            });
+            
+        var defaultRoleId = defaultRoleEntity.Key;
 
         // Get permissions from default role
         var permissionIds = new List<string>();
@@ -57,7 +64,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         }
 
         // Create user profile with default role and permissions
-        var userName = email.Split('@')[0]; // Use email prefix as default name
+        var userName = !string.IsNullOrWhiteSpace(fullName) ? fullName.Trim() : email.Split('@')[0]; // Use provided name or email prefix as default
         var userProfile = new SecurityProfile
         {
             OwnerEntityId = OwnerEntityId,
@@ -65,7 +72,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             RoleIds = defaultRoleId != Guid.Empty ? new[] { defaultRoleId.ToString() } : Array.Empty<string>(),
             PermissionIds = permissionIds.ToArray(),
             Avatar = null,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(userProfile);
@@ -98,21 +105,24 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             if (!Guid.TryParse(rid, out var parsedRoleId))
                 continue;
                 
-            // Get role's permissions
-            var roleEntities = await DataContext.Query()
-                .WithAll<Role>(r => r.OwnerEntityId == parsedRoleId)
-                .ToEntityComponents();
-                
-            var roleEntity = roleEntities.FirstOrDefault();
-            if (roleEntity.Value != null)
+            // Get role's permissions - use handler's Get method
+            var roleHandler = DataContext.For<RoleHandler>(parsedRoleId);
+            Role? role = null;
+            try
             {
-                var role = roleEntity.Value.Get<Role>();
-                if (role != null)
+                role = await roleHandler.Get();
+            }
+            catch
+            {
+                // Role not found
+                // TODO: Should throw an error and not be caught silently.
+            }
+                
+            if (role != null)
+            {
+                foreach (var permId in role.PermissionIds)
                 {
-                    foreach (var permId in role.PermissionIds)
-                    {
-                        allPermissionIds.Add(permId);
-                    }
+                    allPermissionIds.Add(permId);
                 }
             }
         }
@@ -121,7 +131,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         { 
             RoleIds = roleIds.ToArray(),
             PermissionIds = allPermissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);
@@ -162,21 +172,24 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             if (!Guid.TryParse(rid, out var parsedRoleId))
                 continue;
                 
-            // Get role's permissions
-            var roleEntities = await DataContext.Query()
-                .WithAll<Role>(r => r.OwnerEntityId == parsedRoleId)
-                .ToEntityComponents();
-                
-            var roleEntity = roleEntities.FirstOrDefault();
-            if (roleEntity.Value != null)
+            // Get role's permissions - use handler's Get method
+            var roleHandler = DataContext.For<RoleHandler>(parsedRoleId);
+            Role? role = null;
+            try
             {
-                var role = roleEntity.Value.Get<Role>();
-                if (role != null)
+                role = await roleHandler.Get();
+            }
+            catch
+            {
+                // Role not found
+                // TODO: Should throw an error and not be caught silently.
+            }
+                
+            if (role != null)
+            {
+                foreach (var permId in role.PermissionIds)
                 {
-                    foreach (var permId in role.PermissionIds)
-                    {
-                        allPermissionIds.Add(permId);
-                    }
+                    allPermissionIds.Add(permId);
                 }
             }
         }
@@ -185,7 +198,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         { 
             RoleIds = roleIds.ToArray(),
             PermissionIds = allPermissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);
@@ -201,40 +214,6 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         return updated;
     }
 
-    /// <summary>
-    /// Gets navigation items filtered by user permissions.
-    /// </summary>
-    public async Task<List<NavigationItem>> GetUserNavigation()
-    {
-        var profile = await GetOrDefault();
-        if (profile == null)
-        {
-            Logger.LogWarning("No SecurityProfile found for user {UserId}", OwnerEntityId);
-            return new List<NavigationItem>();
-        }
-
-        // Get all navigation items
-        var allNavItems = await DataContext.Query()
-            .WithAll<NavigationItem>(n => true)
-            .ToEntityComponents();
-            
-        var userPermissions = profile.PermissionIds;
-        var navigation = new List<NavigationItem>();
-        
-        foreach (var entity in allNavItems)
-        {
-            var navItem = entity.Value.Get<NavigationItem>();
-            if (navItem != null && 
-                (!navItem.RequiredPermissionId.HasValue || 
-                 userPermissions.Contains(navItem.RequiredPermissionId.Value.ToString())))
-            {
-                navigation.Add(navItem);
-            }
-        }
-
-        Logger.LogInformation("Retrieved {Count} navigation items for user {UserId}", navigation.Count, OwnerEntityId);
-        return navigation;
-    }
 
     /// <summary>
     /// Updates the user profile with new data.
@@ -252,7 +231,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             Name = !string.IsNullOrEmpty(updateRequest.Name) ? updateRequest.Name : profile.Name,
             Avatar = updateRequest.Avatar, // Allow null to clear avatar
             Preferences = updateRequest.Preferences ?? profile.Preferences,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);

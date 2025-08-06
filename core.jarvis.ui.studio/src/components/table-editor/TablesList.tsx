@@ -26,23 +26,23 @@ function PopoverSchemaSelector({ schemas, selectedSchema, onSelect }: { schemas:
     <div ref={ref} className="relative w-full">
       <button
         type="button"
-        className="w-full flex items-center bg-[hsl(0,0%,9%)] border border-[hsl(0,0%,18%)] h-8 px-3 py-0 font-['Inter',sans-serif] rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#3fcf8e] focus:ring-offset-0 antialiased"
+        className="w-full flex items-center bg-[hsl(0,0%,9%)] border border-[hsl(0,0%,18%)] h-sm px-3 py-0 font-['Inter',sans-serif] rounded-[4px] focus:outline-none focus:ring-2 focus:ring-[#3fcf8e] focus:ring-offset-0 antialiased"
         onClick={() => setOpen((v) => !v)}
       >
         <span className="text-xs text-[#9ca3af] mr-2 font-['Inter',sans-serif] antialiased">schema</span>
         <span className="text-[14px] text-[#e5e7eb] font-['Inter',sans-serif] antialiased">{selectedSchema}</span>
-        <ChevronDown className={`h-4 w-4 ml-auto transition-transform ${open ? 'rotate-180' : ''} opacity-50`} />
+        <ChevronDown className={`h-xs w-xs ml-auto transition-transform ${open ? 'rotate-180' : ''} opacity-50`} />
       </button>
       {open && (
-        <div className="absolute left-0 z-10 mt-1 w-[240px] bg-[hsl(0,0%,12.9%)] border border-[hsl(0,0%,18%)] rounded-[4px] shadow-lg py-1 max-h-56 overflow-y-auto animate-fadeIn">
+        <div className="absolute left-0 z-10 mt-1 w-[240px] bg-[hsl(0,0%,12.9%)] border border-[hsl(0,0%,18%)] rounded-[4px] shadow-lg py-1 max-h-lgxl overflow-y-auto animate-fadeIn">
           {schemaList.map((schema) => (
             <button
               key={schema}
-              className={`w-full text-left h-8 px-3 py-0 text-[14px] font-normal font-['Inter',sans-serif] antialiased flex items-center gap-2 hover:bg-[hsl(0,0%,19.2%)] ${schema === selectedSchema ? 'text-[#e5e7eb] bg-[hsl(0,0%,18%)]' : 'text-[#e5e7eb]'}`}
+              className={`w-full text-left h-sm px-3 py-0 text-[14px] font-normal font-['Inter',sans-serif] antialiased flex items-center gap-2 hover:bg-[hsl(0,0%,19.2%)] ${schema === selectedSchema ? 'text-[#e5e7eb] bg-[hsl(0,0%,18%)]' : 'text-[#e5e7eb]'}`}
               onClick={() => { onSelect(schema); setOpen(false); }}
             >
               {schema}
-              {schema === selectedSchema && <ChevronDown className="h-4 w-4 ml-auto opacity-50" />}
+              {schema === selectedSchema && <ChevronDown className="h-xs w-xs ml-auto opacity-50" />}
             </button>
           ))}
         </div>
@@ -75,7 +75,7 @@ export function TablesList({ selectedSchema, selectedTable, schemas, onTableSele
 
         {/* New Table Button */}
         <div className="px-3 pb-2">
-          <Button variant="outline" className="w-full bg-transparent border-[#262626] hover:bg-[#1a1a1a] text-[#888888] h-8 font-normal">
+          <Button variant="outline" className="w-full bg-transparent border-[#262626] hover:bg-[#1a1a1a] text-[#888888] h-sm font-normal">
             <span className="text-sm">New table</span>
           </Button>
         </div>
@@ -83,7 +83,7 @@ export function TablesList({ selectedSchema, selectedTable, schemas, onTableSele
         {/* Search Tables */}
         <div className="px-3 pb-2">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-[#666666]" />
+            <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-xs w-xs text-[#666666]" />
             <input
               type="text"
               placeholder="Search tables..."
@@ -110,9 +110,9 @@ export function TablesList({ selectedSchema, selectedTable, schemas, onTableSele
                   }`}
                 >
                   {isSpecial ? (
-                    <FolderOpen className="h-4 w-4 flex-shrink-0 text-[#fb923c]" />
+                    <FolderOpen className="h-xs w-xs flex-shrink-0 text-[#fb923c]" />
                   ) : (
-                    <FileText className="h-4 w-4 flex-shrink-0 text-[#666666]" />
+                    <FileText className="h-xs w-xs flex-shrink-0 text-[#666666]" />
                   )}
                   <span className="text-sm font-normal truncate">{table}</span>
                 </button>

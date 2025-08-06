@@ -144,8 +144,7 @@ public class DataContextHandlerTests : IntegrationTestBase
             using var scope = _serviceProvider.CreateScope();
             var dataContext = scope.ServiceProvider.GetRequiredService<IDataContext>();
             
-            // Simulate some delay to increase chance of actual concurrency
-            await Task.Delay(10);
+            // No artificial delay needed - concurrent operations handled by connection pool
             
             var handler = dataContext.For<TestHandler>(entityId);
             var component = await handler.Get();

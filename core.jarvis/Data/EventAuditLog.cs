@@ -27,7 +27,7 @@ namespace core.jarvis.Data
         /// <summary>
         /// When the audit log was last updated.
         /// </summary>
-        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
         
         /// <summary>
         /// Version number for snapshot tracking. Increments on each update.

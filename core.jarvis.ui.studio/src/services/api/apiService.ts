@@ -7,10 +7,28 @@ import type {
   ApiResponse
 } from './types';
 import { mockUsers, fullNavigationItems } from './mockData';
+import { 
+  storeTokens, 
+  getStoredTokens, 
+  clearTokens,
+  ACCESS_TOKEN_KEY
+} from '../../utils/tokenUtils';
 
 const MOCK_DELAY = 500; // Simulate network delay
-const TOKEN_KEY = 'jarvis_auth_token';
+const TOKEN_KEY = ACCESS_TOKEN_KEY;
 const USER_KEY = 'jarvis_current_user';
+
+// Type for API responses that may use PascalCase
+interface ApiAuthResponse {
+  AccessToken?: string;
+  accessToken?: string;
+  RefreshToken?: string;
+  refreshToken?: string;
+  OwnerEntityId?: string;
+  ownerEntityId?: string;
+  Email?: string;
+  email?: string;
+}
 
 export interface IApiService {
   login(credentials: LoginCredentials): Promise<ApiResponse<AuthResponse>>;
@@ -22,7 +40,7 @@ export interface IApiService {
   getUsers(): Promise<ApiResponse<User[]>>;
 }
 
-class MockApiService implements IApiService {
+export class MockApiService implements IApiService {
   async getUsers(): Promise<ApiResponse<User[]>> {
     await this.simulateDelay();
     return { data: mockUsers };
@@ -55,7 +73,7 @@ class MockApiService implements IApiService {
     const refreshToken = this.generateToken(user.id + '-refresh');
     
     // Store auth data
-    localStorage.setItem(TOKEN_KEY, accessToken);
+    storeTokens(accessToken, refreshToken);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
 
     return {
@@ -70,17 +88,17 @@ class MockApiService implements IApiService {
 
   async logout(): Promise<void> {
     await this.simulateDelay();
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
   }
 
   async getCurrentUser(): Promise<ApiResponse<User | null>> {
     await this.simulateDelay();
 
-    const token = localStorage.getItem(TOKEN_KEY);
+    const { accessToken } = getStoredTokens();
     const userStr = localStorage.getItem(USER_KEY);
 
-    if (!token || !userStr) {
+    if (!accessToken || !userStr) {
       return { data: null };
     }
 
@@ -109,7 +127,8 @@ class MockApiService implements IApiService {
     return { data: filteredItems };
   }
 
-  async refreshToken(_token: string): Promise<ApiResponse<AuthResponse>> {
+  async refreshToken(token: string): Promise<ApiResponse<AuthResponse>> {
+    // In mock mode, we don't validate the refresh token
     await this.simulateDelay();
 
     const userResult = await this.getCurrentUser();
@@ -125,7 +144,7 @@ class MockApiService implements IApiService {
     const newAccessToken = this.generateToken(userResult.data.id);
     const newRefreshToken = this.generateToken(userResult.data.id + '-refresh');
 
-    localStorage.setItem(TOKEN_KEY, newAccessToken);
+    storeTokens(newAccessToken, newRefreshToken);
 
     return {
       data: {
@@ -158,7 +177,7 @@ class MockApiService implements IApiService {
 }
 
 // Real API service implementation
-class RealApiService implements IApiService {
+export class RealApiService implements IApiService {
   async getUsers(): Promise<ApiResponse<User[]>> {
     const response = await fetch(`${this.apiUrl}/users`, {
       method: 'GET',
@@ -166,10 +185,43 @@ class RealApiService implements IApiService {
     });
     return this.handleResponse<User[]>(response);
   }
+
+  async getAccounts(): Promise<ApiResponse<Record<string, unknown>[]>> {
+    try {
+      // For now, return mock data until we have a proper accounts endpoint
+      const mockAccounts = [
+        {
+          id: '1',
+          ownerEntityId: '021536e2-035c-450b-95e0-27732100db46',
+          email: 'curltest@example.com',
+          authMethod: 'password',
+          isActive: true,
+          createdAt: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+          ipAddress: '127.0.0.1',
+          userAgent: 'Mozilla/5.0',
+          profile: {
+            name: 'Test Admin User',
+            roleIds: [],
+            permissionIds: []
+          }
+        }
+      ];
+      return { data: mockAccounts };
+    } catch (error) {
+      return {
+        error: {
+          message: error instanceof Error ? error.message : 'Failed to fetch accounts',
+          code: 'FETCH_ERROR'
+        }
+      };
+    }
+  }
   private apiUrl: string;
 
-  constructor(apiUrl: string = import.meta.env.VITE_API_URL || 'http://localhost:7071/api') {
-    this.apiUrl = apiUrl;
+  constructor() {
+    // Always use relative URL to work with Vite proxy
+    this.apiUrl = '/api';
   }
 
   private getAuthHeaders(): HeadersInit {
@@ -203,7 +255,9 @@ class RealApiService implements IApiService {
         password: credentials.password
       };
       
-      console.log('Sending login request:', requestBody);
+      console.log('DEBUG: RealApiService.login - apiUrl:', this.apiUrl);
+      console.log('DEBUG: RealApiService.login - full URL:', `${this.apiUrl}/security/auth`);
+      console.log('DEBUG: RealApiService.login - requestBody:', requestBody);
       
       const response = await fetch(`${this.apiUrl}/security/auth`, {
         method: 'POST',
@@ -212,14 +266,10 @@ class RealApiService implements IApiService {
         },
         body: JSON.stringify(requestBody)
       });
-
-      console.log('Login response status:', response.status);
-      console.log('Login response ok:', response.ok);
       
       // If we get a 401, it means authentication failed
       if (response.status === 401) {
         const errorData = await response.json().catch(() => ({ message: 'Authentication failed' }));
-        console.log('401 error data:', errorData);
         return { 
           error: { 
             message: errorData.message || 'Invalid email or password', 
@@ -231,25 +281,22 @@ class RealApiService implements IApiService {
       const result = await this.handleResponse<AuthToken>(response);
       
       if (result.error) {
-        console.log('Login error from handleResponse:', result.error);
         return { error: result.error };
       }
 
       if (result.data) {
-        console.log('Login response data:', result.data);
         // The API returns PascalCase properties
-        const authToken = result.data as any;
+        const authToken = result.data as ApiAuthResponse;
         const accessToken = authToken.AccessToken || authToken.accessToken;
         const refreshToken = authToken.RefreshToken || authToken.refreshToken;
-        console.log('Extracted tokens - Access:', !!accessToken, 'Refresh:', !!refreshToken);
         
         if (accessToken) {
           // Store tokens
-          localStorage.setItem(TOKEN_KEY, accessToken);
+          storeTokens(accessToken, refreshToken);
           
           // Extract user info from the auth response
           const user: User = {
-            id: authToken.OwnerEntityId || authToken.ownerEntityId,
+            id: authToken.OwnerEntityId || authToken.ownerEntityId || '',
             email: credentials.email,
             name: credentials.email.split('@')[0], // Use email prefix as name for now
             roles: []
@@ -261,7 +308,7 @@ class RealApiService implements IApiService {
             data: {
               user: user,
               accessToken: accessToken,
-              refreshToken: refreshToken,
+              refreshToken: refreshToken || '',
               expiresIn: 3600 // Default to 1 hour
             }
           };
@@ -280,9 +327,9 @@ class RealApiService implements IApiService {
   }
 
   async logout(): Promise<void> {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const { accessToken } = getStoredTokens();
     
-    if (token) {
+    if (accessToken) {
       try {
         await fetch(`${this.apiUrl}/security/deauth`, {
           method: 'POST',
@@ -293,14 +340,14 @@ class RealApiService implements IApiService {
       }
     }
     
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
   }
 
   async getCurrentUser(): Promise<ApiResponse<User | null>> {
-    const token = localStorage.getItem(TOKEN_KEY);
+    const { accessToken } = getStoredTokens();
     
-    if (!token) {
+    if (!accessToken) {
       return { data: null };
     }
 
@@ -317,26 +364,121 @@ class RealApiService implements IApiService {
     }
 
     // If no stored user, token is invalid
-    localStorage.removeItem(TOKEN_KEY);
+    clearTokens();
     localStorage.removeItem(USER_KEY);
     return { data: null };
   }
 
   async getNavigation(): Promise<ApiResponse<NavigationItem[]>> {
     try {
-      const response = await fetch(`${this.apiUrl}/security/navigation`, {
-        headers: this.getAuthHeaders()
+      const query = `
+        query {
+          navigation_item_componentCollection {
+            edges {
+              node {
+                id
+                menu_id
+                label
+                icon
+                href
+                sort_order
+                is_active
+                required_permission_id
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await fetch(`${this.apiUrl}/graphql`, {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+        body: JSON.stringify({ query })
       });
 
-      return await this.handleResponse<NavigationItem[]>(response);
-    } catch (error) {
-      return {
-        error: {
-          message: error instanceof Error ? error.message : 'Failed to load navigation',
-          code: 'NAVIGATION_ERROR'
-        }
+      const result = await this.handleResponse<Record<string, unknown>>(response);
+      
+      if (result.error) {
+        return this.getFallbackNavigation();
+      }
+
+      type GraphQLNavigationResponse = {
+        navigation_item_componentCollection?: {
+          edges: Array<{
+            node: {
+              id: string;
+              label: string;
+              icon: string;
+              href: string;
+              sort_order: number;
+              is_active: boolean;
+              required_permission_id?: string;
+            };
+          }>;
+        };
       };
+      
+      const data = result.data?.data as GraphQLNavigationResponse;
+      if (data?.navigation_item_componentCollection?.edges) {
+        const navigationItems: NavigationItem[] = data.navigation_item_componentCollection.edges
+          .map(edge => edge.node)
+          .filter(item => item.is_active)
+          .sort((a, b) => a.sort_order - b.sort_order)
+          .map(item => ({
+            id: item.id,
+            label: item.label,
+            icon: item.icon,
+            href: item.href,
+            requiredPermission: item.required_permission_id ? 'navigation.read' : undefined,
+            requiredAction: 'read'
+          }));
+
+        return { data: navigationItems };
+      }
+
+      return this.getFallbackNavigation();
+    } catch {
+      return this.getFallbackNavigation();
     }
+  }
+
+  private getFallbackNavigation(): ApiResponse<NavigationItem[]> {
+    const navigationItems: NavigationItem[] = [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        icon: 'LayoutDashboard',
+        href: '/',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      },
+      {
+        id: 'pages',
+        label: 'Pages',
+        icon: 'FileText',
+        href: '/pages',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      },
+      {
+        id: 'accounts',
+        label: 'Accounts',
+        icon: 'Users',
+        href: '/accounts',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      },
+      {
+        id: 'schema',
+        label: 'Schema',
+        icon: 'Database',
+        href: '/schema',
+        requiredPermission: undefined,
+        requiredAction: 'read'
+      }
+    ];
+
+    return { data: navigationItems };
   }
 
   async refreshToken(refreshToken: string): Promise<ApiResponse<AuthResponse>> {
@@ -357,7 +499,13 @@ class RealApiService implements IApiService {
 
       if (result.data) {
         // Update stored tokens
-        localStorage.setItem(TOKEN_KEY, result.data.accessToken);
+        const authToken = result.data as ApiAuthResponse;
+        const newAccessToken = authToken.AccessToken || authToken.accessToken;
+        const newRefreshToken = authToken.RefreshToken || authToken.refreshToken;
+        
+        if (newAccessToken) {
+          storeTokens(newAccessToken, newRefreshToken);
+        }
         
         // Get updated user info
         const userInfo = await this.getCurrentUser();
@@ -366,8 +514,8 @@ class RealApiService implements IApiService {
           return {
             data: {
               user: userInfo.data,
-              accessToken: result.data.accessToken,
-              refreshToken: result.data.refreshToken,
+              accessToken: newAccessToken || '',
+              refreshToken: newRefreshToken || '',
               expiresIn: 3600
             }
           };
@@ -408,6 +556,12 @@ class RealApiService implements IApiService {
 // Factory function to create the appropriate service
 // Utility to get/set API mode
 export function getApiMode(): 'mock' | 'real' {
+  // First check environment variable
+  const envMode = import.meta.env.VITE_USE_MOCK_API;
+  if (envMode === 'false') return 'real';
+  if (envMode === 'true') return 'mock';
+  
+  // Fall back to localStorage for runtime switching
   const mode = localStorage.getItem('jarvis_api_mode');
   return mode === 'real' ? 'real' : 'mock';
 }
@@ -418,7 +572,20 @@ export function setApiMode(mode: 'mock' | 'real') {
 }
 
 export function createApiService(): IApiService {
-  if (getApiMode() === 'mock') return new MockApiService();
+  // Check environment variable first
+  const useMockApi = import.meta.env.VITE_USE_MOCK_API === 'true';
+  
+  console.log('DEBUG: VITE_USE_MOCK_API =', import.meta.env.VITE_USE_MOCK_API);
+  console.log('DEBUG: useMockApi =', useMockApi);
+  console.log('DEBUG: VITE_API_URL =', import.meta.env.VITE_API_URL);
+  
+  if (useMockApi) {
+    console.warn('Using mock API service. Set VITE_USE_MOCK_API=false to use real API.');
+    return new MockApiService();
+  }
+  
+  // Always use real API in production or when env var is false
+  console.log('DEBUG: Using RealApiService');
   return new RealApiService();
 }
 

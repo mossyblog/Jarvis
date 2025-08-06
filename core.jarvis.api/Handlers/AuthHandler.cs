@@ -41,23 +41,37 @@ public class AuthHandler : ComponentHandler<Account>
     /// Authenticates account credentials and generates tokens.
     /// Takes Account (credentials), validates against existing data, and returns AuthToken with session data.
     /// Does NOT persist anything - authentication is read-only validation.
+    /// Uses constant-time execution to prevent timing attacks and includes comprehensive security logging.
     /// </summary>
+    /// <param name="accountCredentials">Account object containing email, password, and optional metadata (IP address, user agent, client ID)</param>
+    /// <returns>
+    /// AuthToken with access token, refresh token, and session data if authentication succeeds.
+    /// Returns empty AuthToken if authentication fails for any reason (invalid credentials, inactive account, etc.).
+    /// </returns>
+    /// <exception cref="ArgumentNullException">Thrown when accountCredentials is null</exception>
+    /// <remarks>
+    /// This method implements several security features:
+    /// - Constant-time execution to prevent timing attacks
+    /// - Input validation to prevent injection attacks
+    /// - BCrypt password verification
+    /// - Security audit logging for both successful and failed attempts
+    /// - Random delays to further obfuscate timing patterns
+    /// </remarks>
     public async Task<AuthToken> Authenticate(Account accountCredentials)
     {
         // Wrap authentication in constant-time execution to prevent timing attacks
-        // For test environment, use very minimal timing to pass tests while maintaining concept
+        // Stronger timing attack protection
         var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
-        var minimumTime = isTestEnvironment ? 5 : 100; // Very low for tests, higher for production
+        var minimumTime = isTestEnvironment ? 10 : 500; // Increased minimum time for production
         
         var result = await _constantTimeService.ExecuteWithMinimumTime(async () => 
             await AuthenticateInternal(accountCredentials), 
             minimumMilliseconds: minimumTime);
         
-        // Skip random delay in test environment to reduce variance
-        if (!isTestEnvironment)
-        {
-            await _constantTimeService.AddRandomDelay(10, 50);
-        }
+        // Add random delay even in test environment for better security
+        var minDelay = isTestEnvironment ? 5 : 50;
+        var maxDelay = isTestEnvironment ? 15 : 200;
+        await _constantTimeService.AddRandomDelay(minDelay, maxDelay);
         
         return result;
     }
@@ -145,8 +159,8 @@ public class AuthHandler : ComponentHandler<Account>
             var authenticatedEntityId = account.OwnerEntityId;
 
             // Generate tokens
-            var accessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email);
-            var refreshToken = tokenService.GenerateRefreshToken();
+            var accessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email);
+            var refreshToken = tokenService.RefreshToken();
             var sessionId = Guid.NewGuid();
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
 
@@ -156,7 +170,7 @@ public class AuthHandler : ComponentHandler<Account>
                 ["sessionId"] = sessionId.ToString()
             };
 
-            var finalAccessToken = tokenService.GenerateAccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
+            var finalAccessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
 
             // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
             var authToken = new AuthToken
@@ -169,7 +183,7 @@ public class AuthHandler : ComponentHandler<Account>
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
                 SessionId = sessionId,
                 ClientId = accountCredentials.ClientId,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             // Save the auth token to the database
@@ -196,6 +210,8 @@ public class AuthHandler : ComponentHandler<Account>
     /// <summary>
     /// Checks if the provided AuthToken component represents successful authentication.
     /// </summary>
+    /// <param name="authToken">The AuthToken to validate</param>
+    /// <returns>True if the token contains a valid access token and owner entity ID, false otherwise</returns>
     public bool IsAuthenticated(AuthToken authToken)
     {
         return authToken != null && !string.IsNullOrEmpty(authToken.AccessToken) && authToken.OwnerEntityId != Guid.Empty;
@@ -204,7 +220,17 @@ public class AuthHandler : ComponentHandler<Account>
     /// <summary>
     /// Persists the authenticated session token to the database.
     /// Only call this after successful authentication.
+    /// Includes cleanup of expired tokens and session limit enforcement.
     /// </summary>
+    /// <param name="authToken">The authenticated AuthToken to persist</param>
+    /// <returns>True if the session was successfully persisted, false if validation failed or an error occurred</returns>
+    /// <remarks>
+    /// This method performs several operations:
+    /// - Validates the AuthToken before persisting
+    /// - Cleans up expired tokens for the user
+    /// - Enforces a maximum of 5 active sessions per user
+    /// - Stores only the refresh token hash (not plain tokens) for security
+    /// </remarks>
     public async Task<bool> PersistSession(AuthToken authToken)
     {
         if (!IsAuthenticated(authToken))
@@ -233,7 +259,7 @@ public class AuthHandler : ComponentHandler<Account>
                 ClientId = authToken.ClientId,
                 IsRevoked = false,
                 IssuedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             await DataContext.Commit(sessionEntity);
@@ -272,8 +298,8 @@ public class AuthHandler : ComponentHandler<Account>
             if (!domainPart.Contains('.'))
                 return false;
 
-            // Check for valid characters
-            var validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_@+";
+            // Check for valid characters (removed dangerous + character)
+            var validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-_@";
             foreach (char c in email)
             {
                 if (!validChars.Contains(c))
@@ -290,7 +316,22 @@ public class AuthHandler : ComponentHandler<Account>
     
     /// <summary>
     /// Refreshes an authentication token using a valid refresh token.
+    /// Validates the refresh token, revokes the old token, and generates new access and refresh tokens.
     /// </summary>
+    /// <param name="refreshToken">The refresh token string to validate and use for token refresh</param>
+    /// <returns>
+    /// New AuthToken with fresh access and refresh tokens if the refresh token is valid.
+    /// Returns empty AuthToken if the refresh token is invalid, expired, or revoked.
+    /// </returns>
+    /// <remarks>
+    /// This method performs the following operations:
+    /// - Hashes the refresh token for secure lookup
+    /// - Validates the refresh token against stored hash
+    /// - Checks token expiration and revocation status
+    /// - Generates new access and refresh tokens
+    /// - Revokes the old refresh token to prevent reuse
+    /// - Maintains the same session ID for continuity
+    /// </remarks>
     public async Task<AuthToken> RefreshToken(string refreshToken)
     {
         try
@@ -363,15 +404,15 @@ public class AuthHandler : ComponentHandler<Account>
             }
             
             // Generate new tokens
-            var newAccessToken = tokenService.GenerateAccessToken(account.Id, account.Email);
-            var newRefreshToken = tokenService.GenerateRefreshToken();
+            var newAccessToken = tokenService.AccessToken(account.Id, account.Email);
+            var newRefreshToken = tokenService.RefreshToken();
             
             // Revoke the old token
             var revokedToken = existingToken with 
             { 
                 IsRevoked = true, 
                 RevokedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             await DataContext.Commit(revokedToken);
             
@@ -389,7 +430,7 @@ public class AuthHandler : ComponentHandler<Account>
                 IpAddress = existingToken.IpAddress,
                 UserAgent = existingToken.UserAgent,
                 IsRevoked = false,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
             
             await DataContext.Commit(newAuthToken);
@@ -419,12 +460,23 @@ public class AuthHandler : ComponentHandler<Account>
             return IsValidEmail(input);
         }
 
-        // For passwords, allow most characters but check for obvious injection patterns
-        // Only check for the most dangerous patterns that would never be in a legitimate password
+        // Comprehensive injection pattern detection
+        // Check for SQL injection, NoSQL injection, command injection, and script injection patterns
         var dangerousPatterns = new[] { 
-            "' OR '", "'; DROP", "'; DELETE", "'; UPDATE", "'; INSERT",
-            "--", "/*", "*/", " UNION ", " SELECT ", 
-            "`", "$(", "${", "&&", "||", "\n", "\r"
+            // SQL injection patterns
+            "' OR '", "'; DROP", "'; DELETE", "'; UPDATE", "'; INSERT", "'; CREATE", "'; ALTER",
+            "\' OR ", "\';DROP", "\';DELETE", "\';UPDATE", "\';INSERT", "\';CREATE", "\';ALTER",
+            "--", "/*", "*/", " UNION ", " SELECT ", " FROM ", " WHERE ", " INTO ",
+            "EXEC(", "EXECUTE(", "SP_", "XP_", "0x", "CHAR(", "ASCII(",
+            // NoSQL injection patterns
+            "$where", "$ne", "$in", "$nin", "$gt", "$lt", "$regex", "$or", "$and",
+            // Command injection patterns
+            "`", "$(", "${", "&&", "||", ";", "|", "<", ">", "&",
+            // Script injection patterns
+            "<script", "</script", "javascript:", "vbscript:", "onload=", "onerror=",
+            "eval(", "setTimeout(", "setInterval(", "Function(",
+            // Control characters
+            "\n", "\r", "\t", "\0", "\x00"
         };
         
         foreach (var pattern in dangerousPatterns)

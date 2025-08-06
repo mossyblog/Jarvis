@@ -41,11 +41,11 @@ public class EssentialSecurityValidationTests
         var email = "test@example.com";
         
         // Act - Generate valid token
-        var validToken = tokenService.GenerateAccessToken(userId, email);
+        var validToken = tokenService.AccessToken(userId, email);
         validToken.ShouldNotBeNullOrEmpty();
         
         // Validate it works
-        var principal = tokenService.ValidateToken(validToken);
+        var principal = tokenService.Validate(validToken);
         principal.ShouldNotBeNull("Valid token must be accepted");
         principal.FindFirst("email")?.Value.ShouldBe(email);
         principal.FindFirst("sub")?.Value.ShouldBe(userId.ToString());
@@ -56,17 +56,17 @@ public class EssentialSecurityValidationTests
         
         // Test 1: Modified payload
         var tamperedToken = parts[0] + ".TAMPERED." + parts[2];
-        var result1 = tokenService.ValidateToken(tamperedToken);
+        var result1 = tokenService.Validate(tamperedToken);
         result1.ShouldBeNull("Tampered token must be rejected");
         
         // Test 2: Wrong signature
         var wrongSigToken = parts[0] + "." + parts[1] + ".WRONGSIGNATURE";
-        var result2 = tokenService.ValidateToken(wrongSigToken);
+        var result2 = tokenService.Validate(wrongSigToken);
         result2.ShouldBeNull("Wrong signature token must be rejected");
         
         // Test 3: No signature
         var noSigToken = parts[0] + "." + parts[1];
-        var result3 = tokenService.ValidateToken(noSigToken);
+        var result3 = tokenService.Validate(noSigToken);
         result3.ShouldBeNull("Token without signature must be rejected");
         
         // If we got here, JWT validation is SECURE!
@@ -195,8 +195,8 @@ public class EssentialSecurityValidationTests
         );
         
         // Act
-        var refreshToken1 = tokenService.GenerateRefreshToken();
-        var refreshToken2 = tokenService.GenerateRefreshToken();
+        var refreshToken1 = tokenService.RefreshToken();
+        var refreshToken2 = tokenService.RefreshToken();
         
         refreshToken1.ShouldNotBeNullOrEmpty();
         refreshToken2.ShouldNotBeNullOrEmpty();
@@ -233,7 +233,7 @@ public class EssentialSecurityValidationTests
         
         // 1. JWT signatures are validated ✅
         var tokenServiceType = typeof(TokenService);
-        tokenServiceType.GetMethod("ValidateToken").ShouldNotBeNull();
+        tokenServiceType.GetMethod("Validate").ShouldNotBeNull();
         
         // 2. Passwords are validated ✅
         var passwordPolicyType = typeof(PasswordPolicyService);

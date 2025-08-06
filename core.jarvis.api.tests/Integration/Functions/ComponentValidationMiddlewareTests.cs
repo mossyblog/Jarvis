@@ -50,7 +50,7 @@ public class ComponentValidationMiddlewareTests
         {
             Id = Guid.NewGuid(),
             OwnerEntityId = Guid.NewGuid(),
-            UpdatedAt = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow,
             Email = "test@example.com",
             Password = "password"
         };

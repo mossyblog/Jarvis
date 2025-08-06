@@ -73,7 +73,7 @@ export interface AuthToken {
 export interface ApiError {
   message: string;
   code?: string;
-  details?: Record<string, any>;
+  details?: Record<string, unknown>;
 }
 
 export type ApiResponse<T> = {

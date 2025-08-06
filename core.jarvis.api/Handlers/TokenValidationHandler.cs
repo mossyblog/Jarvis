@@ -25,7 +25,22 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
 
     /// <summary>
     /// Validates the token specified in the bound TokenValidation component.
+    /// Extracts the token from the request claims, validates its JWT structure and signature,
+    /// and extracts relevant claims for authorization purposes.
     /// </summary>
+    /// <returns>
+    /// A TokenValidation object with IsValid=true and extracted claims if validation succeeds.
+    /// Returns TokenValidation with IsValid=false and error details if validation fails.
+    /// </returns>
+    /// <remarks>
+    /// This method performs comprehensive token validation:
+    /// - Extracts token from the "token" claim in the request
+    /// - Validates JWT signature, structure, and expiration
+    /// - Extracts standard claims (sub, session_id, email, exp)
+    /// - Converts Unix timestamp expiration to DateTime
+    /// - Persists the validation result to the database
+    /// All validation failures include descriptive error messages for debugging.
+    /// </remarks>
     public async Task<TokenValidation> ValidateToken()
     {
         var validationRequest = await GetOrDefault();
@@ -47,7 +62,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
             {
                 IsValid = false,
                 ErrorMessage = "No token provided",
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
         }
 
@@ -55,14 +70,14 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
         {
             // Validate the JWT token
             var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-            var principal = tokenService.ValidateToken(token);
+            var principal = tokenService.Validate(token);
             if (principal == null)
             {
                 return validationRequest with
                 {
                     IsValid = false,
                     ErrorMessage = "Invalid or expired token",
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
             }
 
@@ -77,7 +92,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                 {
                     IsValid = false,
                     ErrorMessage = "Invalid user ID in token",
-                    UpdatedAt = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow
                 };
             }
 
@@ -99,7 +114,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                     ["email"] = principal.FindFirst("email")?.Value ?? string.Empty
                 },
                 ErrorMessage = null,
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
 
             await DataContext.Commit(result);
@@ -112,7 +127,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
             {
                 IsValid = false,
                 ErrorMessage = "Validation error occurred",
-                UpdatedAt = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow
             };
         }
     }

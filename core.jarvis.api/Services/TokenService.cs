@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace core.jarvis.api.Services;
@@ -11,22 +12,52 @@ namespace core.jarvis.api.Services;
 /// </summary>
 public class TokenService : ITokenService
 {
+    /// <summary>
+    /// Default access token expiration time in minutes.
+    /// Balances security and user experience for JWT tokens.
+    /// </summary>
+    private const int DefaultAccessTokenExpirationMinutes = 15;
+    
+    /// <summary>
+    /// Size in bytes for cryptographically secure refresh tokens.
+    /// Provides sufficient entropy for secure random token generation.
+    /// </summary>
+    private const int RefreshTokenSizeBytes = 32;
+    
     private readonly string _issuer;
     private readonly string _audience;
     private readonly string _secretKey;
     private readonly int _accessTokenExpirationMinutes;
     private readonly JwtSecurityTokenHandler _tokenHandler;
+    private readonly ILogger<TokenService> _logger;
 
-    public TokenService(string issuer, string audience, string secretKey, int accessTokenExpirationMinutes = 15)
+    /// <summary>
+    /// Initializes a new instance of the TokenService with the specified configuration.
+    /// </summary>
+    /// <param name="issuer">The token issuer identifier used in JWT claims</param>
+    /// <param name="audience">The intended audience for the tokens</param>
+    /// <param name="secretKey">The secret key used for token signing and validation</param>
+    /// <param name="accessTokenExpirationMinutes">The expiration time for access tokens in minutes (default: 15 minutes)</param>
+    /// <param name="logger">Optional logger instance for logging token operations</param>
+    public TokenService(string issuer, string audience, string secretKey, int accessTokenExpirationMinutes = DefaultAccessTokenExpirationMinutes, ILogger<TokenService>? logger = null)
     {
         _issuer = issuer;
         _audience = audience;
         _secretKey = secretKey;
         _accessTokenExpirationMinutes = accessTokenExpirationMinutes;
         _tokenHandler = new JwtSecurityTokenHandler();
+        _logger = logger ?? Microsoft.Extensions.Logging.Abstractions.NullLogger<TokenService>.Instance;
     }
 
-    public string GenerateAccessToken(Guid userId, string email, Dictionary<string, string>? additionalClaims = null)
+    /// <summary>
+    /// Creates a JWT access token with the specified user information and optional additional claims.
+    /// The token includes standard claims (user ID, email, JTI, IAT) and is signed with HMAC-SHA256.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user to include in the token</param>
+    /// <param name="email">The user's email address to include in the token</param>
+    /// <param name="additionalClaims">Optional dictionary of additional claims to include in the token</param>
+    /// <returns>A signed JWT access token string valid for the configured expiration time</returns>
+    public string AccessToken(Guid userId, string email, Dictionary<string, string>? additionalClaims = null)
     {
         var key = Encoding.ASCII.GetBytes(_secretKey);
         var tokenDescriptor = new SecurityTokenDescriptor
@@ -57,15 +88,38 @@ public class TokenService : ITokenService
         return _tokenHandler.WriteToken(token);
     }
 
-    public string GenerateRefreshToken()
+    /// <summary>
+    /// Generates a cryptographically secure refresh token using a random number generator.
+    /// The token is base64-encoded and contains 32 bytes of entropy for maximum security.
+    /// </summary>
+    /// <returns>A base64-encoded refresh token string suitable for secure storage and transmission</returns>
+    public string RefreshToken()
     {
-        var randomNumber = new byte[32];
+        var randomNumber = new byte[RefreshTokenSizeBytes];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(randomNumber);
         return Convert.ToBase64String(randomNumber);
     }
 
-    public ClaimsPrincipal? ValidateToken(string token)
+    /// <summary>
+    /// Validates a JWT token and extracts the claims principal if the token is valid.
+    /// Performs comprehensive validation including signature, issuer, audience, lifetime, and algorithm verification.
+    /// </summary>
+    /// <param name="token">The JWT token string to validate</param>
+    /// <returns>
+    /// ClaimsPrincipal containing the token's claims if validation succeeds; null if validation fails.
+    /// Returns null for invalid, expired, or malformed tokens.
+    /// </returns>
+    /// <remarks>
+    /// This method validates:
+    /// - Token signature using the configured secret key
+    /// - Issuer and audience claims
+    /// - Token expiration (with zero clock skew)
+    /// - Signing algorithm (must be HMAC-SHA256)
+    /// - Token structure and format
+    /// All validation failures are logged for security monitoring.
+    /// </remarks>
+    public ClaimsPrincipal? Validate(string token)
     {
         if (string.IsNullOrWhiteSpace(token))
         {
@@ -105,18 +159,26 @@ public class TokenService : ITokenService
 
             return principal;
         }
-        catch (SecurityTokenException)
+        catch (SecurityTokenException ex)
         {
-            // Invalid token - return null instead of throwing
+            // Invalid token - log the security issue and return null instead of throwing
+            _logger.LogWarning(ex, "Security token validation failed for token");
             return null;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Token validation failed - return null instead of throwing
+            // Unexpected token validation error - log the issue and return null instead of throwing
+            _logger.LogError(ex, "Unexpected error during token validation");
             return null;
         }
     }
 
+    /// <summary>
+    /// Computes a SHA-256 hash of the refresh token for secure storage in the database.
+    /// The hash is base64-encoded for storage and lookup operations.
+    /// </summary>
+    /// <param name="refreshToken">The refresh token string to hash</param>
+    /// <returns>A base64-encoded SHA-256 hash of the refresh token</returns>
     public string HashRefreshToken(string refreshToken)
     {
         using var sha256 = SHA256.Create();
@@ -125,6 +187,17 @@ public class TokenService : ITokenService
         return Convert.ToBase64String(hash);
     }
 
+    /// <summary>
+    /// Verifies a refresh token against its stored hash using constant-time comparison to prevent timing attacks.
+    /// Computes the hash of the provided token and compares it with the stored hash.
+    /// </summary>
+    /// <param name="refreshToken">The refresh token to verify</param>
+    /// <param name="hashedToken">The stored hash to compare against</param>
+    /// <returns>True if the refresh token matches the hash; false otherwise</returns>
+    /// <remarks>
+    /// Uses constant-time comparison to prevent timing-based attacks that could leak information
+    /// about the stored hash through execution time differences.
+    /// </remarks>
     public bool VerifyRefreshToken(string refreshToken, string hashedToken)
     {
         var computedHash = HashRefreshToken(refreshToken);

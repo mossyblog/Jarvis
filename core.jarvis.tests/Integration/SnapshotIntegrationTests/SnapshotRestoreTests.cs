@@ -28,17 +28,14 @@ public class SnapshotRestoreTests : IntegrationTestBase
             Value = 1 
         };
         await TestDataContext().Commit(component);
-        await Task.Delay(300);
         
         component.Name = "Version2";
         component.Value = 2;
         await TestDataContext().Commit(component);
-        await Task.Delay(300);
         
         component.Name = "Version3";
         component.Value = 3;
         await TestDataContext().Commit(component);
-        await Task.Delay(300);
         
         // Act - Restore to version 2
         var snapshotRecord = await TestDataContext().Snapshots()
@@ -64,7 +61,6 @@ public class SnapshotRestoreTests : IntegrationTestBase
         };
         
         await TestDataContext().Commit(restoredComponent);
-        await Task.Delay(300);
         
         // Assert
         var current = await TestDataContext()
@@ -105,14 +101,13 @@ public class SnapshotRestoreTests : IntegrationTestBase
             Value = 10 
         };
         await TestDataContext().Commit(component);
-        await Task.Delay(1000); // Wait 1 second
         
+        // Capture timestamp after first commit
         var midTime = DateTime.UtcNow;
         
         component.Name = "Afternoon";
         component.Value = 20;
         await TestDataContext().Commit(component);
-        await Task.Delay(500);
         
         // Act
         var snapshotRecord = await TestDataContext().Snapshots()
@@ -156,12 +151,10 @@ public class SnapshotRestoreTests : IntegrationTestBase
             Value = 100 
         };
         await TestDataContext().Commit(component);
-        await Task.Delay(300);
         
         component.Name = "After";
         component.Value = 200;
         await TestDataContext().Commit(component);
-        await Task.Delay(300);
         
         // Act - Get previous version
         var snapshotRecord = await TestDataContext().Snapshots()

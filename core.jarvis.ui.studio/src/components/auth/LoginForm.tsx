@@ -1,10 +1,8 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import {
   Form,
@@ -14,6 +12,11 @@ import {
   FormLabel,
   FormMessage,
 } from '../ui/form';
+import { 
+  LoadingButton, 
+  ErrorAlert, 
+  useSimpleRetry 
+} from '../ui/loading-and-error';
 
 const loginSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -23,8 +26,6 @@ const loginSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -32,14 +33,13 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: 'test@example.com',
-      password: 'test123',
+      password: 'TestPassword123!',
     },
   });
 
-  const onSubmit = async (values: LoginFormValues) => {
-    try {
-      setIsLoading(true);
-      setError('');
+  const loginWithRetry = useSimpleRetry(
+    async (...args: unknown[]) => {
+      const values = args[0] as LoginFormValues;
       console.log('LoginForm: Starting login...');
       await login(values);
       console.log('LoginForm: Login successful, navigating to /');
@@ -48,21 +48,33 @@ export function LoginForm() {
       setTimeout(() => {
         navigate('/');
       }, 100);
+    },
+    { maxRetries: 2, delay: 1000 }
+  );
+
+  const onSubmit = async (values: LoginFormValues) => {
+    try {
+      await loginWithRetry.execute(values);
     } catch (err) {
       console.error('LoginForm: Login failed', err);
-      setError(err instanceof Error ? err.message : 'Login failed');
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        {error && (
-          <div className="bg-destructive/10 text-destructive p-3 rounded-md text-sm">
-            {error}
-          </div>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        {loginWithRetry.error && (
+          <ErrorAlert 
+            error={loginWithRetry.error}
+            onRetry={() => {
+              if (form.formState.isValid) {
+                onSubmit(form.getValues());
+              }
+            }}
+            canRetry={loginWithRetry.canRetry}
+            retryCount={loginWithRetry.retryCount}
+            onDismiss={loginWithRetry.reset}
+          />
         )}
 
         <FormField
@@ -103,9 +115,15 @@ export function LoginForm() {
           )}
         />
 
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Signing in...' : 'Sign in'}
-        </Button>
+        <LoadingButton 
+          type="submit" 
+          className="w-full" 
+          isLoading={loginWithRetry.isRetrying}
+          loadingText="Signing in..."
+          disabled={!form.formState.isValid}
+        >
+          Sign in
+        </LoadingButton>
       </form>
     </Form>
   );

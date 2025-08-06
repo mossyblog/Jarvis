@@ -37,7 +37,7 @@ public class Entity
     public Guid ParentId { get; set; } // Guid.Empty = no parent
 
     /// <summary>
-    /// List of child entity IDs. Maps to childrenids in database.
+    /// Array of child entity IDs. Maps to children_ids in database.
     /// </summary>
-    public List<Guid> ChildrenIds { get; set; } = new List<Guid>();
+    public Guid[] ChildrenIds { get; set; } = new Guid[0];
 }

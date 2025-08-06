@@ -1,0 +1,347 @@
+name: UI Studio Performance Monitor
+
+on:
+  schedule:
+    # Run performance monitoring every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      benchmark_type:
+        description: 'Type of benchmark to run'
+        required: true
+        default: 'lighthouse'
+        type: choice
+        options:
+          - lighthouse
+          - bundle-size
+          - load-time
+          - runtime-performance
+          - all
+
+env:
+  NODE_VERSION: '18'
+  WORKING_DIR: core.jarvis.ui.studio
+
+jobs:
+  # Lighthouse performance auditing
+  lighthouse-audit:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.event.inputs.benchmark_type == 'lighthouse' || github.event.inputs.benchmark_type == 'all' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Build production app
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+        
+      - name: Run Lighthouse CI
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Start production server
+          npm run preview &
+          SERVER_PID=$!
+          
+          # Wait for server to be ready
+          npx wait-on http://localhost:4173 --timeout 60000
+          
+          # Run Lighthouse audit
+          lhci autorun --upload.target=temporary-public-storage
+          
+          # Stop server
+          kill $SERVER_PID
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-results
+          path: .lighthouseci/
+          retention-days: 30
+
+  # Bundle size analysis
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event.inputs.benchmark_type == 'bundle-size' || github.event.inputs.benchmark_type == 'all' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install bundle analyzer
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm install --save-dev webpack-bundle-analyzer
+        
+      - name: Build with bundle analysis
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Build and analyze bundle
+          npm run build
+          
+          # Generate bundle analysis report
+          npx vite-bundle-analyzer dist/
+          
+      - name: Check bundle size limits
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Check if bundle size exceeds limits
+          node scripts/check-bundle-size.js
+          
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-analysis
+          path: |
+            ${{ env.WORKING_DIR }}/dist/
+            ${{ env.WORKING_DIR }}/bundle-report/
+          retention-days: 30
+
+  # Load time monitoring
+  load-time-monitoring:
+    name: Load Time Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.event.inputs.benchmark_type == 'load-time' || github.event.inputs.benchmark_type == 'all' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run load time tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Test load times from different geographic locations
+          npx playwright test tests/performance/load-time.spec.ts --project=performance-desktop
+        env:
+          CI: true
+          LOAD_TIME_MONITORING: true
+          
+      - name: Generate load time report
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Process load time data and generate report
+          node scripts/load-time-analysis.js
+          
+      - name: Upload load time results
+        uses: actions/upload-artifact@v4
+        with:
+          name: load-time-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/performance/
+            ${{ env.WORKING_DIR }}/load-time-report/
+          retention-days: 30
+
+  # Runtime performance monitoring
+  runtime-performance:
+    name: Runtime Performance Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    if: github.event.inputs.benchmark_type == 'runtime-performance' || github.event.inputs.benchmark_type == 'all' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: ${{ env.WORKING_DIR }}/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm ci
+        
+      - name: Install Playwright
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npx playwright install --with-deps chromium
+        
+      - name: Build application
+        working-directory: ${{ env.WORKING_DIR }}
+        run: npm run build
+        
+      - name: Run runtime performance tests
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Test CPU usage, memory consumption, and frame rates
+          npx playwright test tests/performance/runtime.spec.ts --project=performance-desktop
+        env:
+          CI: true
+          RUNTIME_PERFORMANCE_MONITORING: true
+          
+      - name: Generate runtime performance report
+        working-directory: ${{ env.WORKING_DIR }}
+        run: |
+          # Analyze runtime metrics and generate report
+          node scripts/runtime-performance-analysis.js
+          
+      - name: Upload runtime performance results
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-performance-results
+          path: |
+            ${{ env.WORKING_DIR }}/test-results/performance/
+            ${{ env.WORKING_DIR }}/runtime-performance-report/
+          retention-days: 30
+
+  # Performance regression detection
+  performance-regression:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: [lighthouse-audit, bundle-analysis, load-time-monitoring, runtime-performance]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: Download all performance artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: performance-data/
+          
+      - name: Install analysis tools
+        run: npm install -g lighthouse-ci
+        
+      - name: Analyze performance trends
+        run: |
+          # Compare current results with historical data
+          node scripts/performance-regression-analysis.js
+        env:
+          PERFORMANCE_DATA_PATH: performance-data/
+          
+      - name: Check for performance regressions
+        run: |
+          # Alert if performance has degraded significantly
+          if [ -f performance-regression-detected.flag ]; then
+            echo "::error::Performance regression detected!"
+            exit 1
+          fi
+          
+      - name: Upload performance trend data
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-trend-analysis
+          path: |
+            performance-trends/
+            performance-regression-detected.flag
+          retention-days: 90
+          
+      - name: Create performance issue on regression
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            let regressionDetails = 'Performance regression detected in monitoring run.';
+            
+            try {
+              if (fs.existsSync('performance-regression-details.json')) {
+                const details = JSON.parse(fs.readFileSync('performance-regression-details.json', 'utf8'));
+                regressionDetails = `## Performance Regression Detected\n\n${JSON.stringify(details, null, 2)}`;
+              }
+            } catch (error) {
+              console.log('Could not read regression details:', error.message);
+            }
+            
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `🐌 Performance Regression Detected - ${new Date().toISOString().split('T')[0]}`,
+              body: `${regressionDetails}\n\n**Action Required:** Please investigate the performance regression and optimize the application.\n\n[View Monitoring Run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})`,
+              labels: ['performance', 'regression', 'needs-investigation']
+            });
+
+  # Store performance metrics
+  store-metrics:
+    name: Store Performance Metrics
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [lighthouse-audit, bundle-analysis, load-time-monitoring, runtime-performance]
+    if: always()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all performance artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: performance-data/
+          
+      - name: Process and store metrics
+        run: |
+          # Extract key metrics and store in time series format
+          node scripts/store-performance-metrics.js
+        env:
+          METRICS_STORAGE_TOKEN: ${{ secrets.METRICS_STORAGE_TOKEN }}
+          PERFORMANCE_DATA_PATH: performance-data/
+          
+      - name: Update performance dashboard
+        run: |
+          # Update performance dashboard with latest metrics
+          curl -X POST "${{ secrets.DASHBOARD_WEBHOOK_URL }}" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.DASHBOARD_TOKEN }}" \
+            -d @performance-metrics.json
+        env:
+          DASHBOARD_WEBHOOK_URL: ${{ secrets.DASHBOARD_WEBHOOK_URL }}
+          DASHBOARD_TOKEN: ${{ secrets.DASHBOARD_TOKEN }}

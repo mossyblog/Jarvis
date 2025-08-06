@@ -366,7 +366,7 @@ public class PermissionServiceTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(account);
         return account;

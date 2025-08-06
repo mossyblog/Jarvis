@@ -1,4 +1,5 @@
-import { GitBranch, Check, ChevronsUpDown } from 'lucide-react'
+import { GitBranch, ChevronsUpDown, Check } from 'lucide-react';
+import { LucideIcon } from '../../ui/icon';
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -24,7 +25,7 @@ export const BranchDropdown = () => {
   return (
     <>
       <a href="#" className="flex items-center gap-2 flex-shrink-0 text-sm">
-        <GitBranch size={14} strokeWidth={1.5} className="text-foreground-lighter" />
+        <LucideIcon icon={GitBranch} size="sm" className="text-foreground-lighter" />
         <span className="text-foreground">{currentBranch}</span>
       </a>
       <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
@@ -32,7 +33,7 @@ export const BranchDropdown = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="px-1.5 py-4 [&_svg]:w-5 [&_svg]:h-5 ml-1"
+            className="px-1.5 py-4 [&_svg]:w-sm [&_svg]:h-sm ml-1"
           >
             <ChevronsUpDown strokeWidth={1.5} />
           </Button>
@@ -52,7 +53,7 @@ export const BranchDropdown = () => {
                 <DropdownMenuItem key={branch} className="cursor-pointer px-2 py-1.5">
                   <div className="flex items-center justify-between w-full">
                     <span className="text-sm">{branch}</span>
-                    {branch === currentBranch && <Check size={14} />}
+                    {branch === currentBranch && <LucideIcon icon={Check} size="sm" />}
                   </div>
                 </DropdownMenuItem>
               ))}

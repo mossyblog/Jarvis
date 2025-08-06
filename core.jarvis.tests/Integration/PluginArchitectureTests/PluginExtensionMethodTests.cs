@@ -11,6 +11,7 @@ namespace core.jarvis.tests.Integration.PluginArchitectureTests;
 /// Verifies that plugins can provide domain-specific extension methods for DataContext.
 /// Example: dataContext.Invoice(entityId) instead of dataContext.For<InvoiceHandler>(entityId)
 /// </summary>
+[Collection("Sequential")]
 public class PluginExtensionMethodTests : IntegrationTestBase
 {
     /// <summary>

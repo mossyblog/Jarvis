@@ -10,7 +10,7 @@ public record WorkOrderComponent : IComponent
 {
     public Guid Id { get; init; } = Guid.NewGuid();
     public Guid OwnerEntityId { get; set; }
-    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
     
     public string WorkOrderNumber { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;

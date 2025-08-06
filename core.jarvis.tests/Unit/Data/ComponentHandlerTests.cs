@@ -214,6 +214,10 @@ public class FakeDataContext : IDataContext {
     public Task<List<Guid>> Descendants(Guid entityId) => Task.FromResult(new List<Guid>());
     public Task Emit<TEvent>(TEvent @event) where TEvent : core.jarvis.Events.IEvent => Task.CompletedTask;
     public Task EmitBatch<TEvent>(IEnumerable<TEvent> events) where TEvent : core.jarvis.Events.IEvent => Task.CompletedTask;
+    public Entity NewEntity() => new Entity(Guid.NewGuid());
+    public Task EnsureEntityTableExists() => Task.CompletedTask;
+    public Task ExecuteInTransaction(Func<Task> operation) => operation();
+    public Task<T> ExecuteInTransaction<T>(Func<Task<T>> operation) => operation();
 }
 
 public class FakeLogger<T> : ILogger<T> {

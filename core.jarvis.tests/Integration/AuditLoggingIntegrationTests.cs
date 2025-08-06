@@ -6,6 +6,7 @@ using core.jarvis.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Shouldly;
+using static core.jarvis.tests.Helpers.AuditTestHelpers;
 
 namespace core.jarvis.tests.Integration;
 
@@ -19,8 +20,21 @@ namespace core.jarvis.tests.Integration;
 /// ARCHITECTURAL SIGNIFICANCE: Validates that audit logging is consistently implemented across all operations
 /// FUTURE RESILIENCE: Protects against regressions where new operations might skip audit logging
 /// </summary>
+[Collection("Sequential")]
 public class AuditLoggingIntegrationTests : IntegrationTestBase
 {
+    private readonly List<Guid> _trackedAuditEntities = new();
+    
+    public new async Task DisposeAsync()
+    {
+        // Clean up audit events for tracked entities
+        foreach (var entityId in _trackedAuditEntities)
+        {
+            await CleanupAuditEventsForEntity(entityId);
+        }
+        
+        await base.DisposeAsync();
+    }
     /// <summary>
     /// Tests that component creation generates proper audit events.
     /// 
@@ -345,20 +359,48 @@ public class AuditLoggingIntegrationTests : IntegrationTestBase
         };
 
         // Act - Create component (should trigger snapshot)
+        Logger().LogInformation("Creating component {ComponentId} for entity {EntityId} with name '{Name}'", 
+            component.Id, entityId, component.Name);
         await TestDataContext().Commit(component);
+        
+        // Ensure first operation is flushed
+        await EnsureDbOperationsFlushed(Logger());
 
         // Update component (should trigger another snapshot)
         component.Name = "Updated for Snapshot";
+        Logger().LogInformation("Updating component {ComponentId} with new name '{Name}'", 
+            component.Id, component.Name);
         await TestDataContext().Commit(component);
-
-        // Assert
-        var auditEvents = await GetAuditEventsForEntity(entityId);
-        var snapshotEvents = auditEvents.Where(e => e.EventType == AuditEventTypes.SnapshotCreated).ToList();
         
-        snapshotEvents.Count.ShouldBeGreaterThanOrEqualTo(2); // One for create, one for update
-        snapshotEvents.All(e => e.Metadata.Contains("Version")).ShouldBeTrue();
-        snapshotEvents.Any(e => e.Metadata.Contains("CREATE")).ShouldBeTrue();
-        snapshotEvents.Any(e => e.Metadata.Contains("UPDATE")).ShouldBeTrue();
+        // Ensure second operation is flushed
+        await EnsureDbOperationsFlushed(Logger());
+
+        // Assert with retry logic for eventual consistency
+        var snapshotEvents = await WaitForAuditEvents(
+            () => GetAuditEventsForEntity(entityId),
+            AuditEventTypes.SnapshotCreated,
+            expectedCount: 2,
+            Logger(),
+            maxRetries: 5,
+            delayMs: 500);
+        
+        // Detailed assertions with better error messages
+        snapshotEvents.Count.ShouldBeGreaterThanOrEqualTo(2, 
+            $"Expected at least 2 snapshot events but found {snapshotEvents.Count}. " +
+            $"Events found: {string.Join(", ", snapshotEvents.Select(e => e.Metadata))}");
+        
+        // Verify all events have Version in metadata
+        foreach (var evt in snapshotEvents)
+        {
+            AssertAuditEventMetadata(evt, "Version", "Snapshot event");
+        }
+        
+        // Verify we have both CREATE and UPDATE operations
+        var hasCreate = snapshotEvents.Any(e => e.Metadata.Contains("CREATE"));
+        var hasUpdate = snapshotEvents.Any(e => e.Metadata.Contains("UPDATE"));
+        
+        hasCreate.ShouldBeTrue($"Should have at least one CREATE snapshot event. Events: {string.Join("; ", snapshotEvents.Select(e => e.Metadata))}");
+        hasUpdate.ShouldBeTrue($"Should have at least one UPDATE snapshot event. Events: {string.Join("; ", snapshotEvents.Select(e => e.Metadata))}");
     }
 
     /// <summary>
@@ -389,9 +431,6 @@ public class AuditLoggingIntegrationTests : IntegrationTestBase
 
         // Act
         await TestDataContext().Insert(auditEvent);
-        
-        // Wait for audit to be committed
-        await Task.Delay(200);
 
         // Assert - Check that the insert was audited
         var auditEvents = await GetAuditEventsForEntity(entityId); // Use the entity ID, not Guid.Empty
@@ -476,78 +515,87 @@ public class AuditLoggingIntegrationTests : IntegrationTestBase
     public async Task ConcurrentOperations_ShouldCreateAllAuditEvents()
     {
         // Arrange
-        var entityId = await CreateTestEntity();
         var componentCount = 5;
         var componentIds = new List<Guid>();
+        var entityIds = new List<Guid>();
 
-        // First, let's verify the audit service is working by creating a simple audit event directly
+        // Create a separate entity for each component since TestComponent has unique constraint on owner_entity_id
+        for (int i = 0; i < componentCount; i++)
+        {
+            entityIds.Add(await CreateTestEntity());
+        }
+
+        // First, verify the audit service is working with the first entity
         var auditService = _serviceProvider.GetRequiredService<IAuditService>();
-        await auditService.LogEvent("TEST_DIRECT_EVENT", entityId, new { test = "direct" });
+        await auditService.LogEvent("TEST_DIRECT_EVENT", entityIds[0], new { test = "direct" });
+        await EnsureDbOperationsFlushed(Logger());
         
-        // Act - Create components sequentially (not actually concurrent for now)
+        // Act - Create components with proper timing, each with its own entity
         for (int i = 0; i < componentCount; i++)
         {
             var component = new TestComponent
             {
                 Id = Guid.NewGuid(),
-                OwnerEntityId = entityId,
+                OwnerEntityId = entityIds[i],
                 Name = $"Concurrent Component {i}",
                 Value = i,
                 Version = 1
             };
             componentIds.Add(component.Id);
             
-            // Log before commit
-            Logger().LogInformation("Creating component {Index} with ID {ComponentId} for entity {EntityId}", i, component.Id, entityId);
+            Logger().LogInformation("Creating component {Index} with ID {ComponentId} for entity {EntityId}", 
+                i, component.Id, entityIds[i]);
             
             await TestDataContext().Commit(component);
-            await Task.Delay(100); // Longer delay
         }
         
-        // Much longer delay to ensure audit events are committed
-        await Task.Delay(1000);
+        // Ensure all operations are flushed
+        await EnsureDbOperationsFlushed(Logger(), 1000);
 
-        // Assert - Get ALL audit events to see what's there
-        using var scope = _serviceProvider.CreateScope();
-        var pgClient = scope.ServiceProvider.GetRequiredService<IPgClient>();
-        var allAuditEvents = await pgClient.From<AuditEvent>().Get();
+        // Assert - Wait for the expected audit events
+        var directEvent = await WaitForCondition(
+            async () => (await GetAuditEventsForEntity(entityIds[0]))
+                .FirstOrDefault(e => e.EventType == "TEST_DIRECT_EVENT"),
+            e => e != null,
+            "Waiting for TEST_DIRECT_EVENT",
+            Logger(),
+            timeoutMs: 5000);
         
-        Logger().LogWarning("TOTAL audit events in database: {Count}", allAuditEvents.Count);
-        foreach (var evt in allAuditEvents.Take(10))
+        directEvent.ShouldNotBeNull("Direct test event should be found");
+        
+        // Collect all create events from all entities
+        var allCreateEvents = new List<AuditEvent>();
+        foreach (var entityId in entityIds)
         {
-            Logger().LogWarning("Found event: Type={Type}, EntityId={EntityId}, Metadata={Metadata}", 
-                evt.EventType, evt.OwnerEntityId, evt.Metadata);
+            var events = await GetAuditEventsForEntity(entityId);
+            allCreateEvents.AddRange(events.Where(e => e.EventType == "TESTCOMPONENT_CREATED"));
         }
         
-        // Now get events for our entity
-        var auditEvents = await GetAuditEventsForEntity(entityId);
-        Logger().LogWarning("Audit events for entity {EntityId}: {Count}", entityId, auditEvents.Count);
+        Logger().LogInformation("Found {Count} TESTCOMPONENT_CREATED events across all entities", 
+            allCreateEvents.Count);
         
-        // Look for component creation events specifically (not snapshot events)
-        var createEvents = auditEvents
-            .Where(e => e.EventType == "TESTCOMPONENT_CREATED")
-            .ToList();
+        // Verify we got all expected events
+        allCreateEvents.Count.ShouldBe(componentCount, 
+            $"Expected {componentCount} create events but found {allCreateEvents.Count}");
         
-        Logger().LogWarning("Create events found: {Count}", createEvents.Count);
-        foreach (var evt in createEvents)
+        // Verify each component ID is represented
+        foreach (var componentId in componentIds)
         {
-            Logger().LogWarning("Event: Type={Type}, Metadata={Metadata}", evt.EventType, evt.Metadata);
+            var hasEvent = allCreateEvents.Any(e => e.Metadata.Contains(componentId.ToString()));
+            hasEvent.ShouldBeTrue($"Component {componentId} should have a creation audit event");
         }
         
-        // Also check for our direct test event
-        var testEvent = auditEvents.FirstOrDefault(e => e.EventType == "TEST_DIRECT_EVENT");
-        if (testEvent != null)
+        // Get final count of all events across all entities
+        var totalEventCount = 0;
+        foreach (var entityId in entityIds)
         {
-            Logger().LogWarning("Found direct test event: {Metadata}", testEvent.Metadata);
-        }
-        else
-        {
-            Logger().LogWarning("Direct test event NOT found!");
+            var events = await GetAuditEventsForEntity(entityId);
+            totalEventCount += events.Count;
+            Logger().LogInformation("Entity {EntityId} has {Count} audit events", entityId, events.Count);
         }
         
-        // We should have at least the direct event + 5 component creates
-        auditEvents.Count.ShouldBeGreaterThanOrEqualTo(6);
-        createEvents.Count.ShouldBe(componentCount);
+        // We should have at least the direct event + component creates + possible snapshot events
+        totalEventCount.ShouldBeGreaterThanOrEqualTo(componentCount + 1);
     }
 
     // Helper methods
@@ -555,6 +603,10 @@ public class AuditLoggingIntegrationTests : IntegrationTestBase
     {
         var entityId = Guid.NewGuid();
         TrackEntity(entityId);
+        
+        // Also track for audit cleanup
+        _trackedAuditEntities.Add(entityId);
+        
         return await Task.FromResult(entityId);
     }
     
@@ -570,14 +622,32 @@ public class AuditLoggingIntegrationTests : IntegrationTestBase
                 .Filter("owner_entity_id", "eq", entityId)
                 .Get();
             
+            Logger().LogDebug("Cleaning up {Count} audit events for entity {EntityId}", 
+                auditEvents.Count, entityId);
+            
             foreach (var auditEvent in auditEvents)
             {
                 await pgClient.From<AuditEvent>()
                     .Filter("id", "eq", auditEvent.Id)
                     .Delete();
             }
+            
+            // Also clean up any snapshots
+            var snapshots = await pgClient.From<ComponentSnapshots>()
+                .Filter("entity_id", "eq", entityId)
+                .Get();
+                
+            foreach (var snapshot in snapshots)
+            {
+                await pgClient.From<ComponentSnapshots>()
+                    .Filter("id", "eq", snapshot.Id)
+                    .Delete();
+            }
         }
-        catch { /* Ignore cleanup errors */ }
+        catch (Exception ex)
+        { 
+            Logger().LogWarning(ex, "Failed to cleanup audit events for entity {EntityId}", entityId);
+        }
     }
 
     private async Task<List<AuditEvent>> GetAuditEventsForEntity(Guid entityId)
@@ -585,10 +655,23 @@ public class AuditLoggingIntegrationTests : IntegrationTestBase
         // Use a scope to ensure we get the same PgClient instance used by DataContext
         using var scope = _serviceProvider.CreateScope();
         var pgClient = scope.ServiceProvider.GetRequiredService<IPgClient>();
-        var auditEvents = await pgClient.From<AuditEvent>()
-            .Filter("owner_entity_id", "eq", entityId)
-            .Get();
-        return auditEvents;
+        
+        try
+        {
+            var auditEvents = await pgClient.From<AuditEvent>()
+                .Filter("owner_entity_id", "eq", entityId)
+                .Get();
+            
+            Logger().LogDebug("Retrieved {Count} audit events for entity {EntityId}", 
+                auditEvents.Count, entityId);
+            
+            return auditEvents;
+        }
+        catch (Exception ex)
+        {
+            Logger().LogError(ex, "Failed to retrieve audit events for entity {EntityId}", entityId);
+            return new List<AuditEvent>();
+        }
     }
 
     private async Task<T?> GetComponent<T>(Guid entityId) where T : class, IComponent, new()

@@ -100,7 +100,7 @@ public class ValidateFunction
             }
 
             // Validate the token using TokenService
-            var principal = _tokenService.ValidateToken(token);
+            var principal = _tokenService.Validate(token);
             
             if (principal == null)
             {

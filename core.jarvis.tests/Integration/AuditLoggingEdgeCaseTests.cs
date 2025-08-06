@@ -17,6 +17,7 @@ namespace core.jarvis.tests.Integration;
 /// ARCHITECTURAL SIGNIFICANCE: Validates audit system resilience
 /// FUTURE RESILIENCE: Ensures audit system handles unexpected scenarios
 /// </summary>
+[Collection("Sequential")]
 public class AuditLoggingEdgeCaseTests : IntegrationTestBase
 {
     /// <summary>
@@ -181,8 +182,6 @@ public class AuditLoggingEdgeCaseTests : IntegrationTestBase
         for (int i = 0; i < eventCount; i++)
         {
             await auditService.LogEvent($"RAPID_EVENT_{i}", entityId, new { Index = i });
-            // Small delay to avoid overwhelming the connection
-            if (i % 3 == 0) await Task.Delay(10);
         }
 
         // Assert
@@ -264,13 +263,9 @@ public class AuditLoggingEdgeCaseTests : IntegrationTestBase
         
         // First create a simple audit event to ensure the entity is in the system
         await auditService.LogEvent("ENTITY_CREATED", entityId, new { Note = "Test entity for special chars" });
-        await Task.Delay(100);
         
         // Now log the safe metadata
         await auditService.LogEvent("SAFE_SPECIAL_CHARS_TEST", entityId, safeMetadata);
-
-        // Small delay to ensure the event is committed
-        await Task.Delay(300);
 
         // Assert - Check if basic entity creation event was logged
         var auditEvents = await GetAuditEventsForEntity(entityId);

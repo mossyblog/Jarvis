@@ -15,20 +15,30 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
     }
 
     /// <summary>
-    /// Saves the system setup component.
+    /// Saves the system setup component to the database.
+    /// Updates the OwnerEntityId and LastUpdated timestamp before committing.
     /// </summary>
+    /// <returns>The saved SystemSetup component with updated metadata</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the SystemSetup component is not found</exception>
     public async Task<SystemSetup> Save()
     {
         var setup = await GetOrDefault() ?? throw new InvalidOperationException("SystemSetup component not found");
         
-        setup = setup with { OwnerEntityId = OwnerEntityId, UpdatedAt = DateTime.UtcNow };
+        setup = setup with { OwnerEntityId = OwnerEntityId, LastUpdated = DateTime.UtcNow };
         await DataContext.Commit(setup);
         return setup;
     }
 
     /// <summary>
     /// Ensures default navigation items exist in the system.
+    /// Creates standard navigation menu items (Dashboard, Accounts, Roles, Permissions, Security)
+    /// if they don't already exist in the database.
     /// </summary>
+    /// <returns>A list of all NavigationItem objects that were created or already existed</returns>
+    /// <remarks>
+    /// This method is typically called during system initialization to ensure
+    /// the basic navigation structure is available for users.
+    /// </remarks>
     public async Task<List<NavigationItem>> EnsureDefaultNavigation()
     {
         var defaultNavItems = new List<NavigationItem>
@@ -80,9 +90,16 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
         foreach (var navItem in defaultNavItems)
         {
             // Check if navigation item already exists
-            var existingItems = await DataContext.Query()
-                .WithAll<NavigationItem>(n => n.MenuId == navItem.MenuId)
+            var allItems = await DataContext.Query()
+                .WithAll<NavigationItem>()
                 .ToEntityComponents();
+                
+            var existingItems = allItems
+                .Where(kvp => 
+                {
+                    var item = kvp.Value.Get<NavigationItem>();
+                    return item != null && item.MenuId == navItem.MenuId;
+                });
 
             if (!existingItems.Any())
             {
@@ -112,7 +129,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
     public async Task<List<Role>> GetAllRoles()
     {
         var roleEntities = await DataContext.Query()
-            .WithAll<Role>(r => true)
+            .WithAll<Role>()
             .ToEntityComponents();
 
         var roles = new List<Role>();
@@ -160,9 +177,16 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
         foreach (var role in defaultRoles)
         {
             // Check if role already exists
-            var existingRoles = await DataContext.Query()
-                .WithAll<Role>(r => r.Name == role.Name)
+            var allRoles = await DataContext.Query()
+                .WithAll<Role>()
                 .ToEntityComponents();
+                
+            var existingRoles = allRoles
+                .Where(kvp => 
+                {
+                    var r = kvp.Value.Get<Role>();
+                    return r != null && r.Name == role.Name;
+                });
 
             if (!existingRoles.Any())
             {

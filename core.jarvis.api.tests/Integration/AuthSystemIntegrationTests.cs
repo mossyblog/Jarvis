@@ -63,7 +63,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await TestDataContext().Commit(account);
@@ -117,7 +117,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await TestDataContext().Commit(account);
@@ -168,7 +168,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await TestDataContext().Commit(account);
@@ -247,7 +247,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = false, // Account is inactive
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await TestDataContext().Commit(account);
@@ -296,7 +296,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         var profile = new SecurityProfile
@@ -330,7 +330,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         
         // Verify the JWT token is valid
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-        var claims = tokenService.ValidateToken(authToken.AccessToken);
+        var claims = tokenService.Validate(authToken.AccessToken);
         claims.ShouldNotBeNull();
     }
 

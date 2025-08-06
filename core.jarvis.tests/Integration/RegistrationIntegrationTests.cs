@@ -15,6 +15,7 @@ namespace core.jarvis.tests.Integration;
 /// Integration tests for user registration flow.
 /// Tests the complete registration process including Account and SecurityProfile creation.
 /// </summary>
+[Collection("Sequential")]
 public class RegistrationIntegrationTests : IntegrationTestBase
 {
     private RegistrationSystem GetRegistrationSystem() => _serviceProvider.GetRequiredService<RegistrationSystem>();
@@ -30,7 +31,20 @@ public class RegistrationIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Registration_WithValidData_CreatesAccountAndProfile()
     {
-        // Arrange
+        // Arrange - Create default role first
+        var defaultRoleId = Guid.NewGuid();
+        var defaultRole = new core.jarvis.api.Models.Role
+        {
+            Id = Guid.NewGuid(),
+            OwnerEntityId = defaultRoleId,
+            Name = "default",
+            Description = "Default user role",
+            PermissionIds = Array.Empty<string>(),
+            LastUpdated = DateTime.UtcNow
+        };
+        await TestDataContext().Commit(defaultRole);
+        TrackEntity(defaultRoleId);
+        
         var requestJson = """
         {
             "email": "newuser@test.com",
@@ -61,8 +75,8 @@ public class RegistrationIntegrationTests : IntegrationTestBase
         
         // Verify SecurityProfile details
         profile.Name.ShouldBe("Test User");
-        profile.RoleIds.ShouldBeEmpty();
-        profile.PermissionIds.ShouldBeEmpty();
+        profile.RoleIds.ShouldContain(defaultRoleId.ToString()); // Should have the default role
+        profile.PermissionIds.ShouldBeEmpty(); // Default role has no permissions
         profile.OwnerEntityId.ShouldBe(account.OwnerEntityId);
         
         // Track for cleanup
@@ -92,7 +106,7 @@ public class RegistrationIntegrationTests : IntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(existingAccount);
         TrackEntity(existingEntityId);
@@ -281,7 +295,20 @@ public class RegistrationIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Registration_Success_LogsSecurityAuditEvent()
     {
-        // Arrange
+        // Arrange - Create default role first
+        var defaultRoleId = Guid.NewGuid();
+        var defaultRole = new core.jarvis.api.Models.Role
+        {
+            Id = Guid.NewGuid(),
+            OwnerEntityId = defaultRoleId,
+            Name = "default",
+            Description = "Default user role",
+            PermissionIds = Array.Empty<string>(),
+            LastUpdated = DateTime.UtcNow
+        };
+        await TestDataContext().Commit(defaultRole);
+        TrackEntity(defaultRoleId);
+        
         var requestJson = """
         {
             "email": "audittest@test.com",
@@ -317,7 +344,20 @@ public class RegistrationIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task Registration_WithMixedCaseEmail_NormalizesToLowercase()
     {
-        // Arrange
+        // Arrange - Create default role first
+        var defaultRoleId = Guid.NewGuid();
+        var defaultRole = new core.jarvis.api.Models.Role
+        {
+            Id = Guid.NewGuid(),
+            OwnerEntityId = defaultRoleId,
+            Name = "default",
+            Description = "Default user role",
+            PermissionIds = Array.Empty<string>(),
+            LastUpdated = DateTime.UtcNow
+        };
+        await TestDataContext().Commit(defaultRole);
+        TrackEntity(defaultRoleId);
+        
         var requestJson = """
         {
             "email": "MixedCase@Test.COM",

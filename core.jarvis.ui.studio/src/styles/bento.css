@@ -1,0 +1,991 @@
+/**
+ * Bento Grid System Styles
+ * 
+ * CSS styles for the Bento grid system components, including
+ * grid layout, drag-and-drop states, and responsive behavior.
+ */
+
+/* ============================================================================
+   Grid Container Styles
+   ============================================================================ */
+
+.bento-grid-wrapper {
+  @apply relative w-full h-full;
+  /* Clean foundation - no distracting patterns */
+}
+
+.bento-grid {
+  @apply relative w-full min-h-full;
+  /* Grid styles are applied via inline styles for dynamic columns */
+}
+
+.bento-grid--editing {
+  @apply cursor-default;
+  /* Enhanced background for edit mode */
+  background-color: rgba(0, 0, 0, 0.01);
+  transition: background-color 300ms ease;
+}
+
+.bento-grid--hovering {
+  /* Grid responds to hover */
+  background-color: rgba(59, 130, 246, 0.005);
+}
+
+.bento-grid--interacting {
+  /* Grid becomes more pronounced during interaction */
+  background-color: rgba(59, 130, 246, 0.01);
+}
+
+.bento-grid--show-grid {
+  /* Grid overlay handles visualization */
+}
+
+/* ============================================================================
+   Grid Overlay Styles
+   ============================================================================ */
+
+.grid-overlay {
+  @apply pointer-events-none;
+  /* Progressive visibility handled by component */
+}
+
+/* Grid dots and lines transitions */
+.grid-overlay > div {
+  will-change: opacity, background-color;
+}
+
+/* Alignment guides */
+.grid-alignment-guide {
+  @apply absolute pointer-events-none;
+  animation: guide-appear 150ms ease-out;
+}
+
+@keyframes guide-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Drop zone preview with more personality */
+.grid-drop-zone {
+  animation: drop-zone-dance 2s ease-in-out infinite;
+}
+
+@keyframes drop-zone-dance {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.01);
+  }
+  75% {
+    opacity: 0.6;
+    transform: scale(1.02);
+  }
+}
+
+/* Strategic drop zone breathing animation */
+@keyframes drop-zone-breathe {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+    border-color: rgba(34, 197, 94, 0.6);
+  }
+  50% {
+    opacity: 0.85;
+    transform: scale(1.005);
+    border-color: rgba(34, 197, 94, 0.8);
+  }
+}
+
+/* ============================================================================
+   Grid Component Styles
+   ============================================================================ */
+
+.bento-component {
+  @apply relative bg-card border border-border rounded-lg overflow-hidden;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Ensure components fill their grid area */
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  /* Components sit above grid dots but below drag previews */
+  z-index: 2;
+  /* Enhanced cursor for better UX */
+  cursor: default;
+}
+
+.bento-component:hover {
+  @apply shadow-lg;
+  /* Subtle lift effect */
+  transform: translateY(-1px);
+}
+
+.bento-component--editing {
+  @apply cursor-grab;
+  /* Enhanced interaction affordance */
+  position: relative;
+}
+
+.bento-component--editing::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, transparent 0%, rgba(59, 130, 246, 0.03) 50%, transparent 100%);
+  opacity: 0;
+  transition: opacity 200ms ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.bento-component--editing:hover {
+  @apply ring-2 ring-primary/30 shadow-lg;
+  /* Enhanced shadow and slight scale */
+  transform: translateY(-2px) scale(1.005);
+  cursor: grab;
+}
+
+.bento-component--editing:hover::before {
+  opacity: 1;
+}
+
+/* Enhanced hover state for better visual feedback */
+.bento-component--hovering {
+  @apply ring-2 ring-primary/25 shadow-md;
+  transform: translateY(-1px) scale(1.002);
+}
+
+.bento-component--hovering::before {
+  opacity: 0.7;
+}
+
+.bento-component--selected {
+  @apply ring-2 ring-primary;
+}
+
+.bento-component--dragging {
+  @apply opacity-30 shadow-2xl;
+  z-index: 50;
+  /* Enhanced dragging feedback */
+  transform: scale(1.05) rotate(2deg);
+  cursor: grabbing;
+  filter: blur(0.5px);
+}
+
+.bento-component--resizing {
+  @apply ring-2 ring-blue-500;
+  user-select: none;
+  z-index: 25 !important;
+}
+
+/* Prevent text selection during resize globally */
+body.resizing {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+.bento-component--locked {
+  @apply cursor-not-allowed opacity-75;
+}
+
+.bento-component--locked:hover {
+  @apply shadow-none ring-0;
+}
+
+/* Component content */
+.bento-component__content {
+  @apply relative z-0;
+}
+
+/* Full-width handle bar for improved dragging */
+.bento-component__handle-bar {
+  @apply relative overflow-hidden;
+  will-change: transform, opacity;
+  touch-action: none; /* Prevent scrolling while dragging on touch devices */
+  /* Ensure the entire handle bar is clickable and grippable */
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.bento-component__handle-bar:hover {
+  transform: translateY(0) scale(1.002);
+  /* Enhanced hover effect for better feedback */
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.05) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(59, 130, 246, 0.05) 100%);
+}
+
+.bento-component__handle-bar:active {
+  cursor: grabbing;
+  transform: translateY(1px) scale(0.998);
+  /* Visual feedback when actively dragging */
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.1) 0%, rgba(59, 130, 246, 0.2) 50%, rgba(59, 130, 246, 0.1) 100%);
+}
+
+/* Improved grip indicator spacing and visibility */
+.bento-component__handle-bar .grip-container {
+  @apply flex items-center justify-center w-full;
+  /* Better distribution of grip dots across the width */
+  gap: clamp(0.25rem, 2vw, 0.5rem);
+}
+
+.bento-component__handle-bar .grip-dot {
+  @apply w-xs h-xs bg-primary/40 rounded-full transition-all duration-200;
+  /* Subtle animation on hover */
+  will-change: background-color, transform;
+}
+
+.bento-component__handle-bar:hover .grip-dot {
+  @apply bg-primary/70;
+  transform: scale(1.1);
+}
+
+.bento-component__handle-bar:active .grip-dot {
+  @apply bg-primary/80;
+  transform: scale(0.9);
+}
+
+/* Simplified drag handle styles - removed since using full-width handle bar */
+/* These styles are kept for potential future use but not currently applied */
+.bento-component__drag-handle {
+  display: none; /* Hidden since we're using full-width handle bar */
+}
+
+/* Enhanced component actions */
+.bento-component__actions {
+  @apply bg-background/95 backdrop-blur-sm border border-border rounded-md p-1;
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.1);
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-component__actions:hover {
+  @apply shadow-md;
+  transform: scale(1.02);
+}
+
+/* Enhanced resize handles with better affordances */
+.bento-component__resize-handle {
+  @apply bg-primary hover:bg-primary/90 border border-primary-foreground/20;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  /* Enhanced hit area */
+  box-shadow: 0 0 0 8px transparent;
+  position: relative;
+}
+
+.bento-component__resize-handle::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: rgba(59, 130, 246, 0.1);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.bento-component__resize-handle:hover {
+  @apply scale-125;
+  box-shadow: 0 2px 8px -2px rgba(59, 130, 246, 0.3);
+  animation: resize-handle-wiggle 0.5s ease-in-out;
+}
+
+@keyframes resize-handle-wiggle {
+  0%, 100% { transform: scale(1.25) rotate(0deg); }
+  25% { transform: scale(1.25) rotate(-2deg); }
+  75% { transform: scale(1.25) rotate(2deg); }
+}
+
+.bento-component__resize-handle:hover::before {
+  opacity: 1;
+}
+
+/* Active resize handle */
+.bento-component--resizing .bento-component__resize-handle {
+  @apply opacity-100 bg-primary;
+}
+
+/* Grid interaction states */
+.bento-grid[data-interaction="hover"] {
+  /* Grid subtly responds to hover */
+}
+
+.bento-grid[data-interaction="dragging"],
+.bento-grid[data-interaction="resizing"] {
+  /* Grid becomes more visible during active manipulation */
+}
+
+/* Resize ghost overlay */
+.bento-component__resize-ghost {
+  @apply absolute inset-0 bg-primary/10 border-2 border-primary border-dashed rounded-md pointer-events-none;
+}
+
+/* Selection border */
+.bento-component__selection-border {
+  animation: selection-pulse 2s ease-in-out infinite;
+}
+
+@keyframes selection-pulse {
+  0%, 100% {
+    @apply border-primary;
+  }
+  50% {
+    @apply border-primary/60;
+  }
+}
+
+/* ============================================================================
+   Enhanced Grid Overlay Styles
+   ============================================================================ */
+
+.grid-overlay {
+  /* Progressive visibility and smooth transitions */
+  will-change: opacity;
+}
+
+.grid-overlay--visible {
+  /* Grid is becoming visible */
+  animation: grid-fade-in 300ms ease-out;
+}
+
+.grid-overlay--hovering {
+  /* Grid responds to hover with subtle pulse */
+  animation: grid-pulse-subtle 2s ease-in-out infinite;
+}
+
+.grid-overlay--interacting {
+  /* Grid is fully active during interactions */
+  animation: grid-pulse-active 1.5s ease-in-out infinite;
+}
+
+@keyframes grid-fade-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes grid-pulse-subtle {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@keyframes grid-pulse-active {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+/* ============================================================================
+   Enhanced Drag Preview Styles
+   ============================================================================ */
+
+.drag-preview {
+  @apply pointer-events-none select-none;
+  filter: drop-shadow(0 25px 35px -5px rgb(0 0 0 / 0.2)) drop-shadow(0 15px 15px -5px rgb(0 0 0 / 0.15));
+  animation: drag-float 1.5s ease-in-out infinite;
+  /* GPU acceleration */
+  will-change: transform;
+}
+
+@keyframes drag-float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-1px) rotate(0.5deg);
+  }
+  75% {
+    transform: translateY(-2px) rotate(-0.5deg);
+  }
+}
+
+/* Color-coded drop zone feedback with improved layering */
+.drop-zone-preview {
+  position: relative;
+  overflow: hidden;
+  /* Ensure drop zones don't interfere with drag preview */
+  z-index: 5 !important;
+}
+
+.drop-zone-valid {
+  border-color: theme(colors.green.500) !important;
+  background-color: rgba(34, 197, 94, 0.12) !important;
+  animation: drop-zone-valid-pulse 2s ease-in-out infinite;
+  /* Clear visual hierarchy */
+  z-index: 8 !important;
+}
+
+.drop-zone-invalid {
+  border-color: theme(colors.red.500) !important;
+  background-color: rgba(239, 68, 68, 0.12) !important;
+  animation: drop-zone-invalid-shake 0.6s ease-in-out;
+  z-index: 8 !important;
+}
+
+.drop-zone-warning {
+  border-color: theme(colors.amber.500) !important;
+  background-color: rgba(245, 158, 11, 0.12) !important;
+  animation: drop-zone-warning-pulse 1.2s ease-in-out infinite;
+  z-index: 8 !important;
+}
+
+@keyframes drop-zone-valid-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0.15);
+  }
+}
+
+@keyframes drop-zone-invalid-shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+@keyframes drop-zone-warning-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.1);
+  }
+}
+
+/* ============================================================================
+   Responsive Styles
+   ============================================================================ */
+
+/* Desktop styles with better visibility */
+@media (min-width: 1024px) {
+  .bento-component__handle-bar {
+    /* Subtle visibility by default, full visibility on hover */
+    @apply opacity-0 group-hover:opacity-100;
+    transition: opacity 200ms ease, transform 200ms ease;
+  }
+  
+  .bento-component--editing .bento-component__handle-bar {
+    /* More visible in edit mode */
+    @apply opacity-40 group-hover:opacity-100;
+  }
+  
+  .bento-component__actions {
+    /* Always slightly visible for better discoverability */
+    @apply opacity-30 group-hover:opacity-100;
+    transition: opacity 150ms ease;
+  }
+  
+  .bento-component__resize-handle {
+    /* Always slightly visible for better discoverability */
+    @apply opacity-20 group-hover:opacity-100;
+    transition: opacity 150ms ease;
+  }
+  
+  .bento-component--editing .bento-component__actions,
+  .bento-component--editing .bento-component__resize-handle {
+    /* More visible in edit mode */
+    @apply opacity-60 group-hover:opacity-100;
+  }
+}
+
+/* Tablet styles */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .bento-grid {
+    /* Tablet-specific grid adjustments */
+  }
+  
+  .bento-component__handle-bar {
+    /* Always visible on tablet for touch interaction */
+    @apply opacity-80;
+    height: 28px !important; /* Slightly taller for easier touch */
+  }
+  
+  .bento-component__actions,
+  .bento-component__resize-handle {
+    /* Always visible on tablet for touch interaction */
+    @apply opacity-70;
+  }
+}
+
+/* Mobile styles */
+@media (max-width: 767px) {
+  .bento-grid {
+    /* Mobile-specific grid adjustments */
+    @apply gap-2;
+  }
+  
+  .bento-component {
+    @apply rounded-md;
+  }
+  
+  .bento-component__handle-bar {
+    /* Always visible and taller on mobile for touch interaction */
+    @apply opacity-100;
+    height: 36px !important; /* Taller for easier touch */
+  }
+  
+  .bento-component__actions,
+  .bento-component__resize-handle {
+    /* Always visible on mobile for touch interaction */
+    @apply opacity-100;
+  }
+  
+  .bento-component__resize-handle {
+    /* Larger resize handles for touch */
+    width: 12px !important;
+    height: 12px !important;
+  }
+}
+
+/* ============================================================================
+   Enhanced Animation System
+   ============================================================================ */
+
+/* Micro-animations for better UX */
+@keyframes animate-pulse-subtle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: animate-pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Enhanced scale animations */
+@keyframes scale-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scale-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-scale-out {
+  animation: scale-out 150ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ============================================================================
+   Legacy Animation Styles (Enhanced)
+   ============================================================================ */
+
+/* Component enter animation */
+.bento-component-enter {
+  @apply opacity-0 scale-95;
+}
+
+.bento-component-enter-active {
+  @apply opacity-100 scale-100;
+  transition: all 0.3s ease-out;
+}
+
+/* Component exit animation */
+.bento-component-exit {
+  @apply opacity-100 scale-100;
+}
+
+.bento-component-exit-active {
+  @apply opacity-0 scale-95;
+  transition: all 0.2s ease-in;
+}
+
+/* Enhanced drag start animation */
+.bento-component--drag-start {
+  animation: drag-start 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes drag-start {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  30% {
+    transform: scale(1.08) rotate(1deg);
+  }
+  100% {
+    transform: scale(1.05) rotate(2deg);
+  }
+}
+
+/* Smooth hover lift animation */
+@keyframes hover-lift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-2px);
+  }
+}
+
+.animate-hover-lift {
+  animation: hover-lift 200ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ============================================================================
+   Dark Mode Styles
+   ============================================================================ */
+
+.dark .bento-component {
+  @apply border-border;
+}
+
+.dark .bento-component:hover {
+  @apply shadow-lg shadow-black/20;
+}
+
+.dark .bento-component__actions {
+  @apply bg-background/95 border-border;
+}
+
+.dark .grid-overlay {
+  /* Dark mode grid overlay adjustments */
+}
+
+/* Dark mode adjustments */
+.dark .bento-grid--editing {
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+/* ============================================================================
+   Delightful Animations
+   ============================================================================ */
+
+/* Wobble animation for personality */
+.bento-component--wobble {
+  animation: gentle-wobble 0.6s ease-in-out;
+}
+
+@keyframes gentle-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+/* Celebration animation for successful resize */
+.bento-component--celebrate-resize {
+  animation: celebrate-pulse 1s ease-out;
+}
+
+@keyframes celebrate-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
+  100% { transform: scale(1); }
+}
+
+/* Just added animation */
+.bento-component--just-added {
+  animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounce-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.3) rotate(-10deg);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1) rotate(2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* Farewell animation for deletion */
+@keyframes farewell-bounce {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.1) rotate(-5deg); }
+  50% { transform: scale(1.05) rotate(3deg); }
+  75% { transform: scale(0.95) rotate(-2deg); }
+  100% { transform: scale(0.8) rotate(0deg); opacity: 0; }
+}
+
+/* Confetti animation */
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-200px) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.animate-confetti {
+  animation: confetti 2s ease-out forwards;
+}
+
+/* Success message bounce */
+@keyframes bounce-in-message {
+  0% {
+    transform: translateX(-50%) translateY(-20px) scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: translateX(-50%) translateY(0) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-bounce-in {
+  animation: bounce-in-message 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Drag preview animation */
+@keyframes drag-preview {
+  0%, 100% {
+    transform: scale(0.8) rotate(-1deg);
+  }
+  50% {
+    transform: scale(0.85) rotate(1deg);
+  }
+}
+
+.animate-drag-preview {
+  animation: drag-preview 1s ease-in-out infinite;
+}
+
+/* Enhanced hover animations */
+.bento-component:hover {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-component--editing:hover {
+  transform: translateY(-1px);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Handle bar interactions - enhanced for full-width dragging */
+.bento-component__handle-bar:hover {
+  /* Gradient background for better visual feedback */
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.15) 50%, rgba(59, 130, 246, 0.08) 100%);
+}
+
+/* Enhanced grip dot hover states */
+.bento-component__handle-bar:hover .grip-dot {
+  @apply bg-primary/70;
+  transform: scale(1.15);
+  animation: grip-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes grip-pulse {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Playful button interactions */
+.bento-component__actions button:hover {
+  transform: scale(1.1);
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-component__actions button:active {
+  transform: scale(0.95);
+  transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Empty state styling */
+.bento-grid--empty {
+  min-height: 400px;
+  position: relative;
+}
+
+.bento-grid--empty::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Grid cell indicators for empty state */
+.bento-grid--empty.bento-grid--editing::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at center, rgba(59, 130, 246, 0.1) 2px, transparent 2px);
+  background-size: calc(100% / 12) 100px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+}
+
+/* Enhanced sparkles for celebration */
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+.sparkle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: #ffd700;
+  border-radius: 50%;
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+.sparkle:nth-child(2) { animation-delay: 0.2s; }
+.sparkle:nth-child(3) { animation-delay: 0.4s; }
+.sparkle:nth-child(4) { animation-delay: 0.6s; }
+.sparkle:nth-child(5) { animation-delay: 0.8s; }
+
+/* Shimmer effect for enhanced previews */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* Enhanced magnetic snap indicator with proper z-index */
+@keyframes magnetic-snap {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.3), 0 8px 25px -5px rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 12px rgba(59, 130, 246, 0), 0 4px 12px -2px rgba(59, 130, 246, 0);
+  }
+}
+
+.magnetic-snap {
+  animation: magnetic-snap 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Ensure magnetic snap appears above drop zones */
+  z-index: 20 !important;
+}
+
+/* Smooth grab cursor transitions */
+.cursor-grab-smooth {
+  cursor: grab;
+  transition: cursor 0.1s ease;
+}
+
+.cursor-grab-smooth:active {
+  cursor: grabbing;
+}
+
+/* Enhanced component border on edit mode */
+.bento-component--editing::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(45deg, transparent, hsl(var(--primary) / 0.1), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: exclude;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.bento-component--editing:hover::after {
+  opacity: 1;
+}
+
+/* Pulse effect for important elements */
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.8), 0 0 30px rgba(59, 130, 246, 0.4);
+  }
+}
+
+/* ============================================================================
+   Print Styles
+   ============================================================================ */
+
+@media print {
+  .bento-component__handle-bar,
+  .bento-component__actions,
+  .bento-component__resize-handle,
+  .bento-component__selection-border,
+  .grid-overlay {
+    @apply hidden;
+  }
+  
+  .bento-component {
+    @apply break-inside-avoid shadow-none border border-border;
+  }
+}

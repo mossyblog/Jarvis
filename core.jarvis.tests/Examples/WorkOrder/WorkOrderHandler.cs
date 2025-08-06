@@ -60,7 +60,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
         var updated = workOrder with
         {
             Status = WorkOrderStatus.Submitted,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(updated);
@@ -86,7 +86,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
             Status = WorkOrderStatus.Approved,
             ApprovedByAccountId = approverId,
             ApprovedDate = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(updated);
@@ -118,7 +118,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
             Status = WorkOrderStatus.Assigned,
             AssignedToAccountId = technicianId,
             ScheduledDate = scheduledDate,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(updated);
@@ -143,7 +143,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
         var updated = workOrder with
         {
             Status = WorkOrderStatus.InProgress,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(updated);
@@ -173,7 +173,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
             ActualHours = actualHours,
             Notes = completionNotes,
             CompletedDate = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(updated);
@@ -202,7 +202,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
         {
             Status = WorkOrderStatus.Cancelled,
             CancellationReason = reason,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         
         await DataContext.Commit(updated);

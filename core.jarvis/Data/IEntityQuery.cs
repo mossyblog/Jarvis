@@ -16,6 +16,14 @@ public interface IEntityQuery
     /// <param name="filter">The filter expression to apply.</param>
     /// <returns>The query builder for chaining.</returns>
     IEntityQuery WithAll<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new();
+    
+    /// <summary>
+    /// Adds an intersection (AND) filter for entities that have a specific component type.
+    /// No filtering is applied - all entities with this component type are included.
+    /// </summary>
+    /// <typeparam name="T">The component type to filter on.</typeparam>
+    /// <returns>The query builder for chaining.</returns>
+    IEntityQuery WithAll<T>() where T : class, IComponent, new();
 
     /// <summary>
     /// Adds a union (OR) filter for entities that have a specific component matching the predicate.

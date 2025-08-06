@@ -54,7 +54,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(account);
         
@@ -66,7 +66,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
             RoleIds = new[] { "admin" },
             PermissionIds = new[] { "read", "write" },
             Preferences = """{"theme": "dark", "language": "en"}""",
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(securityProfile);
         
@@ -91,7 +91,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
         
         // Verify token is valid
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-        var principal = tokenService.ValidateToken(authToken.AccessToken);
+        var principal = tokenService.Validate(authToken.AccessToken);
         principal.ShouldNotBeNull();
         
         // Note: Roles claim will only be present if SecurityProfile is found at authentication time
@@ -129,7 +129,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(account);
         
@@ -139,7 +139,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
             OwnerEntityId = userEntityId,
             Name = "Test User",
             Preferences = """{"theme": "dark", "nested": {"value": 123}, "array": [1,2,3]}""",
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(securityProfile);
         
@@ -190,7 +190,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(account);
         
@@ -243,7 +243,7 @@ public class AuthHandlerTests : ApiIntegrationTestBase
             AuthMethod = "password",
             IsActive = true,
             CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
         await TestDataContext().Commit(account);
         

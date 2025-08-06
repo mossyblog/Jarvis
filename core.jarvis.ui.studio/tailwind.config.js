@@ -18,49 +18,19 @@ export default {
         // Base unit: 8px
         'unit': '8px',
         // T-shirt sizes (multiples of 8)
-        'xs': '4px',   // 0.5 * 8
-        'sm': '8px',   // 1 * 8
-        'md': '16px',  // 2 * 8
-        'lg': '24px',  // 3 * 8
-        'xl': '32px',  // 4 * 8
-        '2xl': '40px', // 5 * 8
-        '3xl': '48px', // 6 * 8
-        '4xl': '64px', // 8 * 8
-        '5xl': '80px', // 10 * 8
-        '6xl': '96px', // 12 * 8
-        // Numeric values for more flexibility
-        '0.5': '4px',
-        '1.5': '12px',
-        '2.5': '20px',
-        '3.5': '28px',
-        '4.5': '36px',
-        '5.5': '44px',
-        '6.5': '52px',
-        '7.5': '60px',
-        '8.5': '68px',
-        '9.5': '76px',
-        '10.5': '84px',
-        '11.5': '92px',
-        '13': '104px',
-        '14': '112px',
-        '15': '120px',
-        '16': '128px',
-        '18': '144px',
-        '20': '160px',
-        '24': '192px',
-        '28': '224px',
-        '32': '256px',
-        '36': '288px',
-        '40': '320px',
-        '44': '352px',
-        '48': '384px',
-        '52': '416px',
-        '56': '448px',
-        '60': '480px',
-        '64': '512px',
-        '72': '576px',
-        '80': '640px',
-        '96': '768px',
+        'xs': '8px',   // 1 * 8
+        'sm': '16px',  // 2 * 8
+        'md': '24px',  // 3 * 8
+        'lg': '32px',  // 4 * 8
+        'xl': '40px',  // 5 * 8
+        '2xl': '48px', // 6 * 8
+        '3xl': '64px', // 8 * 8
+        '4xl': '128px', // 16 * 8
+        '5xl': '160px', // 20 * 8
+        '6xl': '256px', // 32 * 8
+        '7xl': '320px', // 40 * 8
+        '8xl': '384px'  // 48 * 8
+
       },
       fontSize: {
         // Font sizes following 8px grid where possible
@@ -124,15 +94,9 @@ export default {
         '7xl': '1280px',
       },
   		fontFamily: {
-  			sans: [
-  				'var(--font-custom)'
-  			],
-  			custom: [
-  				'var(--font-custom)'
-  			],
-  			mono: [
-  				'var(--font-source-code-pro)'
-  			]
+  			sans: 'var(--font-custom)',
+  			custom: 'var(--font-custom)',
+  			mono: 'var(--font-mono)'
   		},
   		colors: {
   			border: {

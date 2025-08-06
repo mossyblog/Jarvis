@@ -45,7 +45,7 @@ public static class ErrorResponseService
             Code = errorCode,
             Message = errorInfo.Message,
             StatusCode = (int)errorInfo.StatusCode,
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
     }
 

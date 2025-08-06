@@ -17,8 +17,12 @@ public class RoleHandler : ComponentHandler<Role>
     }
 
     /// <summary>
-    /// Grants a permission to this role.
+    /// Grants a permission to this role by adding it to the PermissionIds collection.
+    /// If the permission is already granted, no changes are made.
     /// </summary>
+    /// <param name="permissionId">The unique identifier of the permission to grant</param>
+    /// <returns>The updated Role component with the new permission added</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the Role component is not found</exception>
     public async Task<Role> GrantPermission(Guid permissionId)
     {
         var role = await GetOrDefault() ?? throw new InvalidOperationException("Role component not found");
@@ -37,7 +41,7 @@ public class RoleHandler : ComponentHandler<Role>
         var updated = role with 
         { 
             PermissionIds = permissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);
@@ -46,8 +50,12 @@ public class RoleHandler : ComponentHandler<Role>
     }
 
     /// <summary>
-    /// Revokes a permission from this role.
+    /// Revokes a permission from this role by removing it from the PermissionIds collection.
+    /// If the permission is not currently granted, no changes are made.
     /// </summary>
+    /// <param name="permissionId">The unique identifier of the permission to revoke</param>
+    /// <returns>The updated Role component with the permission removed</returns>
+    /// <exception cref="InvalidOperationException">Thrown when the Role component is not found</exception>
     public async Task<Role> RevokePermission(Guid permissionId)
     {
         var role = await GetOrDefault() ?? throw new InvalidOperationException("Role component not found");
@@ -66,7 +74,7 @@ public class RoleHandler : ComponentHandler<Role>
         var updated = role with 
         { 
             PermissionIds = permissionIds.ToArray(),
-            UpdatedAt = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.Commit(updated);

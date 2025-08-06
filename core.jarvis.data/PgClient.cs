@@ -3,6 +3,7 @@ using core.jarvis.data.RLS;
 using Dapper;
 using Npgsql;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
 
 namespace core.jarvis.data
 {
@@ -11,12 +12,13 @@ namespace core.jarvis.data
     /// Handles JWT-based RLS, authentication, and table access with snake_case mapping.
     /// On initialization, verifies connection and minimum authentication schema/policies.
     /// </summary>
-    public class PgClient
+    public class PgClient : IDisposable
     {
         private readonly NpgsqlConnection _conn;
         private string? _jwt;
         private Dictionary<string, string>? _jwtClaims;
         private readonly RLSPolicyRegistry _rlsPolicies;
+        private readonly ILogger? _logger;
         
         /// <summary>
         /// Gets the current user ID extracted from the JWT token.
@@ -25,22 +27,36 @@ namespace core.jarvis.data
 
         /// <summary>
         /// Initializes a new PgClient with the given Npgsql connection.
-        /// Verifies connection and minimum authentication schema/policies.
+        /// Note: Call VerifyMinimumsAsync() after construction to verify connection.
         /// </summary>
         /// <param name="conn">The Npgsql database connection.</param>
         /// <param name="rlsPolicies">Optional RLS policy registry. If not provided, uses default policies.</param>
-        public PgClient(NpgsqlConnection conn, RLSPolicyRegistry? rlsPolicies = null)
+        /// <param name="logger">Optional logger for debugging and diagnostics.</param>
+        public PgClient(NpgsqlConnection conn, RLSPolicyRegistry? rlsPolicies = null, ILogger? logger = null)
         {
             _conn = conn;
             _rlsPolicies = rlsPolicies ?? new RLSPolicyRegistry();
+            _logger = logger;
             
             // Register default policies if using default registry
             if (rlsPolicies == null)
             {
                 DefaultRLSPolicies.RegisterDefaultPolicies(_rlsPolicies);
             }
-            
-            VerifyMinimums().GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Creates and initializes a new PgClient with proper async verification.
+        /// </summary>
+        /// <param name="conn">The Npgsql database connection.</param>
+        /// <param name="rlsPolicies">Optional RLS policy registry. If not provided, uses default policies.</param>
+        /// <param name="logger">Optional logger for debugging and diagnostics.</param>
+        /// <returns>A fully initialized PgClient instance.</returns>
+        public static async Task<PgClient> CreateAsync(NpgsqlConnection conn, RLSPolicyRegistry? rlsPolicies = null, ILogger? logger = null)
+        {
+            var client = new PgClient(conn, rlsPolicies, logger);
+            await client.VerifyMinimums();
+            return client;
         }
 
         /// <summary>
@@ -48,10 +64,18 @@ namespace core.jarvis.data
         /// </summary>
         private async Task VerifyMinimums()
         {
-            if (_conn.State != System.Data.ConnectionState.Open)
-                await _conn.OpenAsync();
-            
-            // Connection verification is sufficient - table creation is handled by the component system
+            try
+            {
+                if (_conn.State != System.Data.ConnectionState.Open)
+                    await _conn.OpenAsync();
+                
+                // Connection verification is sufficient - table creation is handled by the component system
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to verify database connection");
+                throw;
+            }
         }
 
 
@@ -157,8 +181,16 @@ namespace core.jarvis.data
                 var escapedValue = claim.Value.Replace("'", "''");
                 var sql = $"SET SESSION \"{variableName}\" = '{escapedValue}';";
                 
-                using var cmd = new NpgsqlCommand(sql, _conn);
-                await cmd.ExecuteNonQueryAsync();
+                try
+                {
+                    using var cmd = new NpgsqlCommand(sql, _conn);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogError(ex, "Failed to set session variable {VariableName}", variableName);
+                    throw;
+                }
             }
         }
 
@@ -222,7 +254,7 @@ namespace core.jarvis.data
         /// <returns>PgTable instance for the entity type.</returns>
         public PgTable<T> From<T>() where T : class, new()
         {
-            return new PgTable<T>(_conn, this, _rlsPolicies, _jwtClaims ?? new Dictionary<string, string>());
+            return new PgTable<T>(_conn, this, _rlsPolicies, _jwtClaims ?? new Dictionary<string, string>(), _logger);
         }
 
         /// <summary>
@@ -247,7 +279,15 @@ namespace core.jarvis.data
             // Set JWT claims for RLS if available
             await JWTClaims();
 
-            await _conn.ExecuteAsync(sql, dynamicParams);
+            try
+            {
+                await _conn.ExecuteAsync(sql, dynamicParams);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to execute RPC {FunctionName}", functionName);
+                throw;
+            }
         }
 
         /// <summary>
@@ -263,7 +303,36 @@ namespace core.jarvis.data
             // Set JWT claims for RLS if available
             await JWTClaims();
 
-            await _conn.ExecuteAsync(sql, parameters);
+            try
+            {
+                await _conn.ExecuteAsync(sql, parameters);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Failed to execute SQL: {Sql}", sql);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Disposes the PgClient and its resources.
+        /// </summary>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Protected dispose method for proper disposal pattern.
+        /// </summary>
+        /// <param name="disposing">True if disposing managed resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                _conn?.Dispose();
+            }
         }
     }
 }

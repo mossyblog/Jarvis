@@ -32,6 +32,12 @@ public interface IDataContext
     IEntityQuery Query();
 
     /// <summary>
+    /// Creates a new Entity with a generated ID.
+    /// </summary>
+    /// <returns>A new Entity instance with a unique ID.</returns>
+    Entity NewEntity();
+
+    /// <summary>
     /// Attempts to save a component through the centralized DataContext with optimistic concurrency control.
     /// Use this instead of direct Supabase client operations.
     /// </summary>
@@ -159,4 +165,30 @@ public interface IDataContext
     /// <param name="events">The events to emit.</param>
     /// <returns>Task representing the batch emission operation.</returns>
     Task EmitBatch<TEvent>(IEnumerable<TEvent> events) where TEvent : Events.IEvent;
+
+    /// <summary>
+    /// Ensures the Entity table exists for relationship management.
+    /// This method is public to allow test initialization to create the table.
+    /// </summary>
+    /// <returns>Task representing the table creation operation.</returns>
+    Task EnsureEntityTableExists();
+
+    /// <summary>
+    /// Executes the provided operation within a database transaction.
+    /// If the operation succeeds, the transaction is committed.
+    /// If an exception is thrown, the transaction is rolled back.
+    /// </summary>
+    /// <typeparam name="T">The return type of the operation.</typeparam>
+    /// <param name="operation">The operation to execute within the transaction.</param>
+    /// <returns>The result of the operation.</returns>
+    Task<T> ExecuteInTransaction<T>(Func<Task<T>> operation);
+
+    /// <summary>
+    /// Executes the provided operation within a database transaction.
+    /// If the operation succeeds, the transaction is committed.
+    /// If an exception is thrown, the transaction is rolled back.
+    /// </summary>
+    /// <param name="operation">The operation to execute within the transaction.</param>
+    /// <returns>Task representing the transaction operation.</returns>
+    Task ExecuteInTransaction(Func<Task> operation);
 }
