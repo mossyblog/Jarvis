@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Activity, CheckCircle, XCircle, Clock, Wifi, WifiOff, AlertCircle, Code, Database, Globe } from 'lucide-react';
 import { useApiStatus } from '../../contexts/ApiStatusContext';
 import { cn } from '../../lib/utils';
+import { LucideIcon as Icon } from '@/components/ui/icon';
 
 interface BuildInfo {
   version: string;
@@ -122,11 +123,11 @@ export function StatusFooter() {
 
   return (
     <footer className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border z-40" role="contentinfo" aria-label="Application status information">
-      <div className="flex items-center justify-between px-4 py-2 text-xs">
+      <div className="flex items-center justify-between px-lg py-sm text-xs">
         {/* Left section - Build & Version Info */}
-        <div className="flex items-center gap-4" role="region" aria-label="Build and version information">
-          <div className="flex items-center gap-2">
-            <Code size={14} className="text-muted-foreground" />
+        <div className="flex items-center gap-md" role="region" aria-label="Build and version information">
+          <div className="flex items-center gap-sm">
+            <Icon icon={Code} size="sm" className="text-muted-foreground" />
             <span className="text-muted-foreground">v{buildInfo.version}</span>
             <span className="text-muted-foreground">•</span>
             <span className="text-muted-foreground">{buildInfo.environment}</span>
@@ -143,9 +144,9 @@ export function StatusFooter() {
         </div>
 
         {/* Center section - Network Statistics */}
-        <div className="hidden md:flex items-center gap-4" role="region" aria-label="Network statistics">
-          <div className="flex items-center gap-2">
-            <Activity size={14} className="text-primary" />
+        <div className="hidden md:flex items-center gap-md" role="region" aria-label="Network statistics">
+          <div className="flex items-center gap-sm">
+            <Icon icon={Activity} size="sm" className="text-primary" />
             <span className="text-muted-foreground">Requests:</span>
             <span className="font-mono">{networkStats.requestCount}</span>
             <span className="text-primary">↑</span>
@@ -155,39 +156,39 @@ export function StatusFooter() {
 
           {networkStats.errorCount > 0 && (
             <div className="flex items-center gap-1">
-              <AlertCircle size={14} className="text-destructive" />
+              <Icon icon={AlertCircle} size="sm" className="text-destructive" />
               <span className="text-destructive font-mono">{networkStats.errorCount}</span>
             </div>
           )}
 
           {networkStats.avgResponseTime > 0 && (
             <div className="flex items-center gap-1">
-              <Clock size={14} className="text-muted-foreground" />
+              <Icon icon={Clock} size="sm" className="text-muted-foreground" />
               <span className="text-muted-foreground">{networkStats.avgResponseTime}ms</span>
             </div>
           )}
         </div>
 
         {/* Right section - Connection Status */}
-        <div className="flex items-center gap-4" role="region" aria-label="Connection status">
+        <div className="flex items-center gap-md" role="region" aria-label="Connection status">
           {/* API Status */}
-          <div className="flex items-center gap-2">
-            <Database size={14} className={cn(connectionStatus.color)} />
+          <div className="flex items-center gap-sm">
+            <Icon icon={Database} size="sm" className={connectionStatus.color} />
             <span className={cn('text-xs', connectionStatus.color)}>
               {connectionStatus.text}
             </span>
           </div>
 
           {/* Network Status */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-sm">
             {isOnline ? (
               <>
-                <Wifi size={14} className="text-success" />
+                <Icon icon={Wifi} size="sm" className="text-success" />
                 <span className="text-success">Online</span>
               </>
             ) : (
               <>
-                <WifiOff size={14} className="text-destructive" />
+                <Icon icon={WifiOff} size="sm" className="text-destructive" />
                 <span className="text-destructive">Offline</span>
               </>
             )}
@@ -195,8 +196,8 @@ export function StatusFooter() {
 
           {/* Error indicator */}
           {lastError && (
-            <div className="flex items-center gap-1 max-w-48">
-              <AlertCircle size={14} className="text-destructive flex-shrink-0" />
+            <div className="flex items-center gap-1 max-w-xs8">
+              <Icon icon={AlertCircle} size="sm" className="text-destructive flex-shrink-0" />
               <span className="text-destructive truncate" title={lastError}>
                 {lastError}
               </span>
@@ -206,7 +207,7 @@ export function StatusFooter() {
       </div>
 
       {/* Mobile-optimized bottom row */}
-      <div className="md:hidden flex items-center justify-center gap-4 px-4 py-1 text-[10px] text-muted-foreground border-t border-border/50">
+      <div className="md:hidden flex items-center justify-center gap-md px-lg py-xs text-[10px] text-muted-foreground border-t border-border/50">
         <span>Reqs: {networkStats.requestCount}↑ {networkStats.responseCount}↓</span>
         {networkStats.errorCount > 0 && (
           <span className="text-destructive">Errors: {networkStats.errorCount}</span>

@@ -136,7 +136,7 @@ export const SearchHighlight: React.FC<SearchHighlightProps> = ({
   searchTerm,
   highlights: providedHighlights,
   caseSensitive = false,
-  highlightClassName = 'bg-yellow-200 dark:bg-yellow-900/50 font-medium text-foreground rounded-sm px-0.5',
+  highlightClassName = 'bg-yellow-xs00 dark:bg-yellow-lg00/50 font-medium text-foreground rounded-sm px-0.5',
   className = '',
   as = 'span',
   maxLength,
@@ -294,7 +294,7 @@ export const SearchBadge: React.FC<SearchBadgeProps> = ({
     default: 'bg-primary text-primary-foreground',
     secondary: 'bg-secondary text-secondary-foreground',
     success: 'bg-green-500 text-white',
-    warning: 'bg-yellow-500 text-white',
+    warning: 'bg-yellow-sm00 text-white',
     destructive: 'bg-destructive text-destructive-foreground'
   };
 
@@ -362,7 +362,7 @@ export const SearchResultList = <T,>({
   if (isLoading) {
     return (
       <div className={cn('flex justify-center py-8', className)}>
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+        <div className="animate-spin rounded-full h-md w-md border-b-2 border-primary" />
         <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
       </div>
     );

@@ -242,7 +242,7 @@ body.resizing {
 }
 
 .bento-component__handle-bar .grip-dot {
-  @apply w-1 h-1 bg-primary/40 rounded-full transition-all duration-200;
+  @apply w-xs h-xs bg-primary/40 rounded-full transition-all duration-200;
   /* Subtle animation on hover */
   will-change: background-color, transform;
 }

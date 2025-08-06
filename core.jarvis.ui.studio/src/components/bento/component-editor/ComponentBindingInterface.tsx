@@ -511,7 +511,7 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
       <DialogContent className="sm:max-w-4xl max-h-[80vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Database className="h-5 w-5" />
+            <Database className="h-sm w-sm" />
             ECS Component Browser
           </DialogTitle>
           <DialogDescription>
@@ -522,7 +522,7 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
         {/* Search and Filters */}
         <div className="flex items-center gap-4 py-4 border-b">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
             <Input
               placeholder="Search components..."
               value={searchQuery}
@@ -534,7 +534,7 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
           <Select value={selectedCategory || 'all'} onValueChange={(value) => 
             setSelectedCategory(value === 'all' ? null : value)
           }>
-            <SelectTrigger className="w-48">
+            <SelectTrigger className="w-xs8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -548,7 +548,7 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
           </Select>
           
           <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'name' | 'category' | 'updated')}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-252">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -560,7 +560,7 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
         </div>
 
         {/* Components Grid */}
-        <ScrollArea className="h-96">
+        <ScrollArea className="h-412">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
             {filteredComponents.map(component => (
               <Card 
@@ -585,9 +585,9 @@ const ECSComponentBrowser: React.FC<ECSComponentBrowserProps> = ({
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
-                      {component.permissions.read && <Eye className="h-3 w-3 text-green-600" />}
-                      {component.permissions.write && <Database className="h-3 w-3 text-blue-600" />}
-                      {component.permissions.admin && <Lock className="h-3 w-3 text-orange-600" />}
+                      {component.permissions.read && <Eye className="h-2xs w-2xs text-green-600" />}
+                      {component.permissions.write && <Database className="h-2xs w-2xs text-blue-600" />}
+                      {component.permissions.admin && <Lock className="h-2xs w-2xs text-orange-600" />}
                     </div>
                   </div>
                 </CardHeader>
@@ -759,7 +759,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
     <>
       {/* Main Interface */}
       <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50">
-        <div className="fixed inset-y-0 right-0 w-full max-w-6xl bg-background border-l border-border overflow-hidden">
+        <div className="fixed inset-y-0 right-0 w-full max-w-mdxl bg-background border-l border-border overflow-hidden">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-border">
             <div>
@@ -775,7 +775,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                 </Badge>
               )}
               <Button variant="ghost" size="sm" onClick={onClose}>
-                <X className="h-4 w-4" />
+                <X className="h-xs w-xs" />
               </Button>
             </div>
           </div>
@@ -809,12 +809,12 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                       !isActive && !isCompleted && "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-xs w-xs" />
                     {step.label}
-                    {isCompleted && !isActive && <Check className="h-3 w-3 ml-1" />}
+                    {isCompleted && !isActive && <Check className="h-2xs w-2xs ml-1" />}
                   </button>
                   {index < 4 && (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground mx-2" />
+                    <ChevronRight className="h-xs w-xs text-muted-foreground mx-2" />
                   )}
                 </React.Fragment>
               );
@@ -826,13 +826,13 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
             {activeTab === 'component' && (
               <div className="space-y-6">
                 <div className="text-center py-12">
-                  <Database className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                  <Database className="h-3xl w-3xl mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">Select ECS Component</h3>
                   <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                     Choose an ECS component to bind to your UI component. This will provide the data structure and fields available for mapping.
                   </p>
                   <Button onClick={() => setShowECSBrowser(true)}>
-                    <Search className="h-4 w-4 mr-2" />
+                    <Search className="h-xs w-xs mr-2" />
                     Browse ECS Components
                   </Button>
                 </div>
@@ -856,7 +856,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <FileText className="h-5 w-5" />
+                      <FileText className="h-sm w-sm" />
                       Read Configuration
                     </CardTitle>
                   </CardHeader>
@@ -869,7 +869,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                           ...prev,
                           readConfig: { ...prev.readConfig!, query: e.target.value }
                         }))}
-                        className="font-mono text-sm h-32"
+                        className="font-mono text-sm h-232"
                         placeholder="Enter GraphQL query..."
                       />
                     </div>
@@ -951,7 +951,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <TestTube className="h-5 w-5" />
+                      <TestTube className="h-sm w-sm" />
                       Test Binding
                     </CardTitle>
                   </CardHeader>
@@ -962,9 +962,9 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                         disabled={isLoading || !selectedECSComponent}
                       >
                         {isLoading ? (
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-xs w-xs mr-2 animate-spin" />
                         ) : (
-                          <Play className="h-4 w-4 mr-2" />
+                          <Play className="h-xs w-xs mr-2" />
                         )}
                         Run Test
                       </Button>
@@ -1007,7 +1007,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                         {testResult.data != null && (
                           <div className="space-y-2">
                             <Label>Sample Data:</Label>
-                            <pre className="text-xs p-3 bg-muted rounded font-mono overflow-auto max-h-40">
+                            <pre className="text-xs p-3 bg-muted rounded font-mono overflow-auto max-h-mdxl">
                               {JSON.stringify(testResult.data as Record<string, unknown>, null, 2)}
                             </pre>
                           </div>
@@ -1024,7 +1024,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                 <Card>
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
-                      <Upload className="h-5 w-5" />
+                      <Upload className="h-sm w-sm" />
                       Deployment Configuration
                     </CardTitle>
                   </CardHeader>
@@ -1147,7 +1147,7 @@ export const ComponentBindingInterface: React.FC<ComponentBindingInterfaceProps>
                 onClick={handleSaveBinding}
                 disabled={!selectedECSComponent || readOnly}
               >
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="h-xs w-xs mr-2" />
                 Save Binding
               </Button>
             </div>

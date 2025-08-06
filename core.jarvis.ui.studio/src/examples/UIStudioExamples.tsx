@@ -115,7 +115,7 @@ export function PageManagerExample({ userId }: PageManagerProps) {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-sm w-sm border-b-2 border-blue-600"></div>
         <span className="ml-2">Loading pages...</span>
       </div>
     );
@@ -167,7 +167,7 @@ export function PageManagerExample({ userId }: PageManagerProps) {
                 <span className={`px-2 py-1 text-xs rounded ${
                   page.isPublished 
                     ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
+                    : 'bg-yellow-xl0 text-yellow-800'
                 }`}>
                   {page.isPublished ? 'Published' : 'Draft'}
                 </span>
@@ -282,7 +282,7 @@ export function BentoGridEditorExample({ pageEntityId, layoutEntityId, userId }:
   if (bindingsLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-sm w-sm border-b-2 border-blue-600"></div>
         <span className="ml-2">Loading components...</span>
       </div>
     );
@@ -599,7 +599,7 @@ export function VersionControlExample({ resourceId, userId }: VersionControlProp
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-4">
-        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-xs w-xs border-b-2 border-blue-600"></div>
         <span className="ml-2">Loading versions...</span>
       </div>
     );
@@ -619,7 +619,7 @@ export function VersionControlExample({ resourceId, userId }: VersionControlProp
       </div>
 
       {versions && versions.length > 0 ? (
-        <div className="space-y-2 max-h-96 overflow-y-auto">
+        <div className="space-y-2 max-h-412 overflow-y-auto">
           {versions.map((version) => (
             <div
               key={version.id}
@@ -672,7 +672,7 @@ export function UIStudioCompleteExample() {
   ] as const;
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-mdxl mx-auto p-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
           UIStudio Integration Examples

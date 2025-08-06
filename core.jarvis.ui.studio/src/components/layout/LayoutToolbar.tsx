@@ -65,6 +65,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
+import { LucideIcon } from '@/components/ui/icon';
 
 // ============================================================================
 // Types
@@ -90,7 +91,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Metric Card',
     category: 'Dashboard',
     description: 'Display key metrics with charts',
-    icon: <BarChart3 size={16} />,
+    icon: <LucideIcon icon={BarChart3} size="sm" />,
     defaultSize: { w: 2, h: 2 }
   },
   {
@@ -98,7 +99,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Chart',
     category: 'Dashboard',
     description: 'Data visualization component',
-    icon: <TrendingUp size={16} />,
+    icon: <LucideIcon icon={TrendingUp} size="sm" />,
     defaultSize: { w: 4, h: 3 }
   },
   {
@@ -106,7 +107,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'KPI',
     category: 'Dashboard',
     description: 'Key performance indicator',
-    icon: <Target size={16} />,
+    icon: <LucideIcon icon={Target} size="sm" />,
     defaultSize: { w: 2, h: 1 }
   },
   {
@@ -114,7 +115,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Gauge',
     category: 'Dashboard',
     description: 'Progress gauge visualization',
-    icon: <Gauge size={16} />,
+    icon: <LucideIcon icon={Gauge} size="sm" />,
     defaultSize: { w: 2, h: 2 }
   },
   
@@ -124,7 +125,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Data Table',
     category: 'Data',
     description: 'Tabular data display',
-    icon: <Table size={16} />,
+    icon: <LucideIcon icon={Table} size="sm" />,
     defaultSize: { w: 6, h: 4 }
   },
   {
@@ -132,7 +133,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'List View',
     category: 'Data',
     description: 'Scrollable list of items',
-    icon: <FileText size={16} />,
+    icon: <LucideIcon icon={FileText} size="sm" />,
     defaultSize: { w: 3, h: 4 }
   },
   {
@@ -140,7 +141,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Grid View',
     category: 'Data',
     description: 'Card grid layout',
-    icon: <GridView size={16} />,
+    icon: <LucideIcon icon={GridView} size="sm" />,
     defaultSize: { w: 4, h: 3 }
   },
   
@@ -150,7 +151,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Text Block',
     category: 'Content',
     description: 'Rich text content',
-    icon: <FileText size={16} />,
+    icon: <LucideIcon icon={FileText} size="sm" />,
     defaultSize: { w: 3, h: 2 }
   },
   {
@@ -158,7 +159,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Heading',
     category: 'Content',
     description: 'Section heading',
-    icon: <Type size={16} />,
+    icon: <LucideIcon icon={Type} size="sm" />,
     defaultSize: { w: 4, h: 1 }
   },
   {
@@ -166,7 +167,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Card',
     category: 'Content',
     description: 'Content card container',
-    icon: <CreditCard size={16} />,
+    icon: <LucideIcon icon={CreditCard} size="sm" />,
     defaultSize: { w: 2, h: 3 }
   },
   
@@ -176,7 +177,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Image',
     category: 'Media',
     description: 'Image display component',
-    icon: <Image size={16} />,
+    icon: <LucideIcon icon={Image} size="sm" />,
     defaultSize: { w: 2, h: 2 }
   },
   {
@@ -184,7 +185,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Video',
     category: 'Media',
     description: 'Video player component',
-    icon: <Video size={16} />,
+    icon: <LucideIcon icon={Video} size="sm" />,
     defaultSize: { w: 3, h: 2 }
   },
   {
@@ -192,7 +193,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Gallery',
     category: 'Media',
     description: 'Image gallery',
-    icon: <Image size={16} />,
+    icon: <LucideIcon icon={Image} size="sm" />,
     defaultSize: { w: 4, h: 3 }
   },
   
@@ -202,7 +203,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Button',
     category: 'Actions',
     description: 'Action button',
-    icon: <Circle size={16} />,
+    icon: <LucideIcon icon={Circle} size="sm" />,
     defaultSize: { w: 1, h: 1 }
   },
   {
@@ -210,7 +211,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Button Group',
     category: 'Actions',
     description: 'Group of action buttons',
-    icon: <Sliders size={16} />,
+    icon: <LucideIcon icon={Sliders} size="sm" />,
     defaultSize: { w: 2, h: 1 }
   },
   {
@@ -218,7 +219,7 @@ const COMPONENT_DEFINITIONS: ComponentDefinition[] = [
     name: 'Form',
     category: 'Actions',
     description: 'Input form',
-    icon: <Edit size={16} />,
+    icon: <LucideIcon icon={Edit} size="sm" />,
     defaultSize: { w: 3, h: 4 }
   }
 ];
@@ -245,31 +246,31 @@ export const LayoutToolbar: React.FC = () => {
     {
       id: 'dashboard',
       label: 'Dashboard',
-      icon: <BarChart3 size={16} />,
+      icon: <BarChart3 className="w-sm h-sm" />,
       color: 'blue'
     },
     {
       id: 'data',
       label: 'Data',
-      icon: <Database size={16} />,
+      icon: <LucideIcon icon={Database} size="sm" />,
       color: 'green'
     },
     {
       id: 'content',
       label: 'Content',
-      icon: <FileText size={16} />,
+      icon: <LucideIcon icon={FileText} size="sm" />,
       color: 'purple'
     },
     {
       id: 'media',
       label: 'Media',
-      icon: <Image size={16} />,
+      icon: <LucideIcon icon={Image} size="sm" />,
       color: 'orange'
     },
     {
       id: 'actions',
       label: 'Actions',
-      icon: <MousePointer2 size={16} />,
+      icon: <LucideIcon icon={MousePointer2} size="sm" />,
       color: 'red'
     }
   ]);
@@ -372,7 +373,7 @@ export const LayoutToolbar: React.FC = () => {
           className="layout-toolbar border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 overflow-hidden"
         >
           {/* Ribbon Header with Tabs and Controls */}
-          <div className="flex items-center justify-between px-4 h-12 border-b">
+          <div className="flex items-center justify-between px-4 h-2xl border-b">
             {/* Ribbon Tab Bar */}
             <RibbonTabBar
               tabs={ribbonTabs}
@@ -388,53 +389,51 @@ export const LayoutToolbar: React.FC = () => {
               {/* Grid Toggle */}
               <Button
                 variant={showGrid ? "secondary" : "ghost"}
-                size="sm"
+                size="icon"
                 onClick={toggleGrid}
-                className="h-8 px-2"
                 title="Toggle grid overlay"
               >
-                <Grid3X3 className="h-sm w-sm" />
+                <LucideIcon icon={Grid3X3} size="sm" />
               </Button>
               
               {/* Preview Toggle */}
               <Button
                 variant={isPreviewMode ? "secondary" : "ghost"}
-                size="sm"
+                size="icon"
                 onClick={handlePreviewToggle}
-                className="h-8 px-2"
                 title="Toggle preview mode"
               >
-                {isPreviewMode ? <Pause className="h-sm w-sm" /> : <Play className="h-sm w-sm" />}
+                {isPreviewMode ? <LucideIcon icon={Pause} size="sm" /> : <LucideIcon icon={Play} size="sm" />}
               </Button>
 
-              <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-sm" />
               
               {/* Tools Dropdown */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 px-2">
-                    <Settings className="h-sm w-sm" />
-                    <ChevronDown className="h-3 w-3 ml-1" />
+                  <Button variant="ghost" size="icon">
+                    <LucideIcon icon={Settings} size="sm" />
+                    <LucideIcon icon={ChevronDown} size="xs" className="ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuContent align="end" className="w-mdxl">
                   <DropdownMenuItem onClick={handleExport}>
-                    <Download className="h-4 w-4 mr-2" />
+                    <LucideIcon icon={Download} size="xs" className="mr-2" />
                     Export Page
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowVersionHistory(true)}>
-                    <History className="h-4 w-4 mr-2" />
+                    <LucideIcon icon={History} size="xs" className="mr-2" />
                     Version History
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
-                    <RotateCcw className="h-4 w-4 mr-2" />
+                    <LucideIcon icon={RotateCcw} size="xs" className="mr-2" />
                     Reset Layout
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              <Separator orientation="vertical" className="h-6" />
+              <Separator orientation="vertical" className="h-sm" />
 
               {/* Save Action */}
               <div className="flex items-center gap-2">
@@ -448,9 +447,9 @@ export const LayoutToolbar: React.FC = () => {
                   size="sm"
                   onClick={handleSave}
                   disabled={!hasUnsavedChanges}
-                  className="h-8 px-3"
+                  className="h-md px-3"
                 >
-                  <Save className="h-4 w-4 mr-1" />
+                  <LucideIcon icon={Save} size="xs" className="mr-1" />
                   Save
                 </Button>
                 
@@ -460,10 +459,10 @@ export const LayoutToolbar: React.FC = () => {
                     <Button
                       variant="default"
                       size="sm"
-                      className="h-8 px-3 bg-green-600 hover:bg-green-700"
+                      className="h-lg px-3 bg-green-600 hover:bg-green-700"
                       disabled={hasUnsavedChanges}
                     >
-                      <Send className="h-4 w-4 mr-1" />
+                      <LucideIcon icon={Send} size="xs" className="mr-1" />
                       Publish
                     </Button>
                   </DialogTrigger>
@@ -536,7 +535,7 @@ export const LayoutToolbar: React.FC = () => {
                         onClick={handlePublish}
                         className="bg-green-600 hover:bg-green-700"
                       >
-                        <Send className="h-4 w-4 mr-2" />
+                        <LucideIcon icon={Send} size="xs" className="mr-2" />
                         {publishSettings.publishNow ? 'Publish Now' : 'Schedule'}
                       </Button>
                     </DialogFooter>
@@ -553,7 +552,7 @@ export const LayoutToolbar: React.FC = () => {
                 <div className="flex items-center justify-center py-8 text-center">
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2 text-lg font-medium text-muted-foreground">
-                      <Eye className="h-5 w-5" />
+                      <Eye className="h-sm w-sm" />
                       Preview Mode Active
                     </div>
                     <p className="text-sm text-muted-foreground max-w-md">
@@ -628,11 +627,11 @@ export const LayoutToolbar: React.FC = () => {
                 {index !== 0 && (
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm">
-                      <Eye className="h-4 w-4 mr-1" />
+                      <LucideIcon icon={Eye} size="xs" className="mr-1" />
                       Preview
                     </Button>
                     <Button variant="outline" size="sm">
-                      <RotateCcw className="h-4 w-4 mr-1" />
+                      <LucideIcon icon={RotateCcw} size="xs" className="mr-1" />
                       Restore
                     </Button>
                   </div>

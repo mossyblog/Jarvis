@@ -195,7 +195,7 @@ export function BulkActionsToolbar<T = unknown>({
       <>
         {IconComponent && (
           <IconComponent className={cn(
-            "h-4 w-4",
+            "h-xs w-xs",
             isExecuting && "animate-spin"
           )} />
         )}
@@ -282,7 +282,7 @@ export function BulkActionsToolbar<T = unknown>({
           // Animation
           visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none',
           // Responsive
-          "max-w-[calc(100vw-2rem)] overflow-hidden",
+          "max-w-[calc(100vw-xsrem)] overflow-hidden",
           "sm:max-w-none",
           className
         )}
@@ -302,7 +302,7 @@ export function BulkActionsToolbar<T = unknown>({
         )}
 
         {/* Separator */}
-        {showCount && <div className="w-px h-6 bg-border flex-shrink-0" />}
+        {showCount && <div className="w-px h-md bg-border flex-shrink-0" />}
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 overflow-hidden">
@@ -315,7 +315,7 @@ export function BulkActionsToolbar<T = unknown>({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="sm" className="flex-shrink-0">
-                  <MoreHorizontal className="h-4 w-4" />
+                  <MoreHorizontal className="h-xs w-xs" />
                   <span className="sr-only">More actions</span>
                 </Button>
               </DropdownMenuTrigger>
@@ -341,7 +341,7 @@ export function BulkActionsToolbar<T = unknown>({
           className="flex-shrink-0 ml-auto"
           aria-label={closeLabel}
         >
-          <X className="h-4 w-4" />
+          <X className="h-xs w-xs" />
         </Button>
 
         {/* Destructive Action Confirmation Dialog */}

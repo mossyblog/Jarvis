@@ -352,19 +352,19 @@ const StatusIndicatorItem: React.FC<StatusIndicatorItemProps> = ({ indicator, co
       case 'connected':
       case 'success':
       case 'healthy':
-        return <CheckCircle2 className="h-3 w-3 text-green-500" />;
+        return <CheckCircle2 className="h-2xs w-2xs text-green-500" />;
       case 'warning':
       case 'reconnecting':
       case 'building':
-        return <AlertCircle className="h-3 w-3 text-yellow-500" />;
+        return <AlertCircle className="h-2xs w-2xs text-yellow-sm00" />;
       case 'error':
       case 'failed':
       case 'critical':
-        return <XCircle className="h-3 w-3 text-red-500" />;
+        return <XCircle className="h-2xs w-2xs text-red-500" />;
       case 'disconnected':
-        return <WifiOff className="h-3 w-3 text-gray-500" />;
+        return <WifiOff className="h-2xs w-2xs text-gray-500" />;
       default:
-        return <Activity className="h-3 w-3 text-gray-400" />;
+        return <Activity className="h-2xs w-2xs text-gray-400" />;
     }
   };
 
@@ -377,7 +377,7 @@ const StatusIndicatorItem: React.FC<StatusIndicatorItemProps> = ({ indicator, co
       case 'warning':
       case 'reconnecting':
       case 'building':
-        return 'text-yellow-600 border-yellow-200 bg-yellow-50';
+        return 'text-yellow-md00 border-yellow-xs00 bg-yellow-sm0';
       case 'error':
       case 'failed':
       case 'critical':
@@ -542,7 +542,7 @@ export const UIStudioFooter: React.FC<UIStudioFooterProps> = ({
               />
             ))}
             {isLoading && (
-              <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />
+              <RefreshCw className="h-2xs w-2xs animate-spin text-muted-foreground" />
             )}
           </div>
         </div>
@@ -587,13 +587,13 @@ export const UIStudioFooter: React.FC<UIStudioFooterProps> = ({
             <div className="flex items-center space-x-3 text-xs text-muted-foreground">
               {metrics.uptime && (
                 <div className="flex items-center space-x-1">
-                  <Clock className="h-3 w-3" />
+                  <Clock className="h-2xs w-2xs" />
                   <span>Uptime: {metrics.uptime}</span>
                 </div>
               )}
               {metrics.activeUsers && (
                 <div className="flex items-center space-x-1">
-                  <User className="h-3 w-3" />
+                  <User className="h-2xs w-2xs" />
                   <span>{metrics.activeUsers} users</span>
                 </div>
               )}
@@ -623,9 +623,9 @@ export const UIStudioFooter: React.FC<UIStudioFooterProps> = ({
                       size="sm"
                       onClick={handleRefresh}
                       disabled={isLoading}
-                      className="h-8 w-8 p-0"
+                      className="h-lg w-lg p-0"
                     >
-                      <RefreshCw className={`h-3 w-3 ${isLoading ? 'animate-spin' : ''}`} />
+                      <RefreshCw className={`h-2xs w-2xs ${isLoading ? 'animate-spin' : ''}`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -642,9 +642,9 @@ export const UIStudioFooter: React.FC<UIStudioFooterProps> = ({
                         variant="ghost"
                         size="sm"
                         onClick={onOpenSystemInfo}
-                        className="h-8 w-8 p-0"
+                        className="h-lg w-lg p-0"
                       >
-                        <Info className="h-3 w-3" />
+                        <Info className="h-2xs w-2xs" />
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -661,7 +661,7 @@ export const UIStudioFooter: React.FC<UIStudioFooterProps> = ({
         {error && (
           <div className="mt-2 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1">
             <div className="flex items-center space-x-1">
-              <AlertCircle className="h-3 w-3" />
+              <AlertCircle className="h-2xs w-2xs" />
               <span>Status update failed: {error}</span>
             </div>
           </div>

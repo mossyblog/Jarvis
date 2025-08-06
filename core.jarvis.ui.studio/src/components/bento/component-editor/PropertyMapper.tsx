@@ -346,7 +346,7 @@ const MappingRow: React.FC<MappingRowProps> = ({
 
         {/* Arrow */}
         <div className="col-span-1 flex justify-center">
-          <ArrowRight className="h-4 w-4 text-muted-foreground" />
+          <ArrowRight className="h-xs w-xs text-muted-foreground" />
         </div>
 
         {/* Query Field */}
@@ -388,7 +388,7 @@ const MappingRow: React.FC<MappingRowProps> = ({
             disabled={readOnly}
             className={cn(hasTransform && 'text-blue-600')}
           >
-            <Code className="h-3 w-3" />
+            <Code className="h-2xs w-2xs" />
           </Button>
           <Button
             variant="ghost"
@@ -396,7 +396,7 @@ const MappingRow: React.FC<MappingRowProps> = ({
             onClick={onRemove}
             disabled={readOnly}
           >
-            <X className="h-3 w-3" />
+            <X className="h-2xs w-2xs" />
           </Button>
         </div>
 
@@ -404,7 +404,7 @@ const MappingRow: React.FC<MappingRowProps> = ({
         {hasTransform && (
           <div className="col-span-12 mt-2 pt-2 border-t">
             <div className="flex items-center gap-2 text-xs text-blue-600">
-              <Wand2 className="h-3 w-3" />
+              <Wand2 className="h-2xs w-2xs" />
               <span>Transform applied</span>
               <code className="bg-muted px-1 py-0.5 rounded text-xs max-w-[200px] truncate">
                 {mapping.transform}
@@ -512,7 +512,7 @@ export const PropertyMapper: React.FC<PropertyMapperProps> = ({
     return (
       <div className={cn('property-mapper', className)}>
         <div className="text-center py-6 text-muted-foreground">
-          <AlertCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+          <AlertCircle className="h-lg w-lg mx-auto mb-2 opacity-50" />
           <p className="text-sm">No query fields detected</p>
           <p className="text-xs">Write a valid GraphQL query to map properties</p>
         </div>
@@ -543,9 +543,9 @@ export const PropertyMapper: React.FC<PropertyMapperProps> = ({
             onClick={() => setShowUnmappedOnly(!showUnmappedOnly)}
           >
             {showUnmappedOnly ? (
-              <><Eye className="h-3 w-3 mr-1" />Show All</>
+              <><Eye className="h-2xs w-2xs mr-1" />Show All</>
             ) : (
-              <><EyeOff className="h-3 w-3 mr-1" />Unmapped Only</>
+              <><EyeOff className="h-2xs w-2xs mr-1" />Unmapped Only</>
             )}
           </Button>
           
@@ -556,7 +556,7 @@ export const PropertyMapper: React.FC<PropertyMapperProps> = ({
               onClick={handleAutoMap}
               disabled={readOnly}
             >
-              <Wand2 className="h-3 w-3 mr-1" />
+              <Wand2 className="h-2xs w-2xs mr-1" />
               Auto-Map
             </Button>
           )}
@@ -599,7 +599,7 @@ export const PropertyMapper: React.FC<PropertyMapperProps> = ({
                       onClick={() => handleAddMapping(prop.name)}
                       disabled={readOnly}
                     >
-                      <Plus className="h-3 w-3 mr-1" />
+                      <Plus className="h-2xs w-2xs mr-1" />
                       Map
                     </Button>
                   </div>
@@ -628,11 +628,11 @@ export const PropertyMapper: React.FC<PropertyMapperProps> = ({
         <div className="flex items-center justify-between text-sm">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-xs w-xs text-green-600" />
               <span>{mappedProps.length} mapped</span>
             </div>
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4 text-orange-500" />
+              <AlertCircle className="h-xs w-xs text-orange-500" />
               <span>{unmappedProps.length} unmapped</span>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cn } from '../../lib/utils';
 import { Shield, Activity, AlertCircle, Info, ExternalLink } from 'lucide-react';
+import { LucideIcon as Icon } from '../ui/icon';
 
 interface Issue {
   id: string;
@@ -72,7 +73,7 @@ export function IssuesSection() {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Shield size={16} />
+            <Icon icon={Shield} size="sm" />
             <span className="uppercase tracking-wide text-xs font-medium">Security</span>
             <span className={cn(
               "px-1.5 py-0.5 rounded text-xs",
@@ -91,7 +92,7 @@ export function IssuesSection() {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Activity size={16} />
+            <Icon icon={Activity} size="sm" />
             <span className="uppercase tracking-wide text-xs font-medium">Performance</span>
             <span className={cn(
               "px-1.5 py-0.5 rounded text-xs",
@@ -115,9 +116,9 @@ export function IssuesSection() {
             {/* Icon */}
             <div className="mt-0.5">
               {issue.severity === 'warning' ? (
-                <AlertCircle size={16} className="text-warning" />
+                <Icon icon={AlertCircle} size="sm" className="text-warning" />
               ) : (
-                <Info size={16} className="text-muted-foreground" />
+                <Icon icon={Info} size="sm" className="text-muted-foreground" />
               )}
             </div>
 
@@ -135,7 +136,7 @@ export function IssuesSection() {
             {issue.action && (
               <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors">
                 <span>{issue.action}</span>
-                <ExternalLink size={12} />
+                <Icon icon={ExternalLink} size="xs" />
               </button>
             )}
           </div>

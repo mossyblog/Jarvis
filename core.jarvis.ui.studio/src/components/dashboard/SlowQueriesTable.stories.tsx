@@ -35,7 +35,7 @@ export const InCard: Story = {
 export const InDashboard: Story = {
   render: () => (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-mdxl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Performance Dashboard</h1>
           <p className="text-muted-foreground">Monitor your application performance and identify bottlenecks.</p>
@@ -54,7 +54,7 @@ export const InDashboard: Story = {
           </div>
           <div className="bg-card border rounded-lg p-4">
             <div className="text-sm text-muted-foreground">Database Load</div>
-            <div className="text-2xl font-bold text-yellow-600">68%</div>
+            <div className="text-2xl font-bold text-yellow-md00">68%</div>
             <div className="text-xs text-muted-foreground">+3% from yesterday</div>
           </div>
           <div className="bg-card border rounded-lg p-4">

@@ -45,11 +45,11 @@ export const WithActions: Story = {
     actions: (
       <div className="flex gap-2">
         <Button variant="outline" size="sm">
-          <Download className="h-4 w-4 mr-2" />
+          <Download className="h-xs w-xs mr-2" />
           Export
         </Button>
         <Button size="sm">
-          <Plus className="h-4 w-4 mr-2" />
+          <Plus className="h-xs w-xs mr-2" />
           New Project
         </Button>
       </div>
@@ -72,7 +72,7 @@ export const WithBreadcrumbsAndActions: Story = {
     ),
     actions: (
       <Button variant="outline" size="sm">
-        <Settings className="h-4 w-4 mr-2" />
+        <Settings className="h-xs w-xs mr-2" />
         Advanced
       </Button>
     ),
@@ -95,11 +95,11 @@ export const InPageLayout: Story = {
         actions={
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
-              <Download className="h-4 w-4 mr-2" />
+              <Download className="h-xs w-xs mr-2" />
               Export Data
             </Button>
             <Button size="sm">
-              <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-xs w-xs mr-2" />
               Configure
             </Button>
           </div>

@@ -150,7 +150,7 @@ export const RibbonTabBar: React.FC<RibbonTabBarProps> = ({
       {variant === 'default' && (
         <motion.div
           className={cn(
-            "absolute bottom-0 h-0.5 transition-colors duration-200",
+            "absolute bottom-0 h-none.5 transition-colors duration-200",
             colorVariants[activeColor].indicator
           )}
           initial={false}

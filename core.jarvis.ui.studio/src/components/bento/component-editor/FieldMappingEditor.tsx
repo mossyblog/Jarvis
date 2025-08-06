@@ -358,7 +358,7 @@ const ValidationEditor: React.FC<ValidationEditorProps> = ({
                 min: parseInt(e.target.value) || undefined 
               })}
               disabled={readOnly}
-              className="h-8"
+              className="h-lg"
             />
           </div>
           <div>
@@ -373,7 +373,7 @@ const ValidationEditor: React.FC<ValidationEditorProps> = ({
                 max: parseInt(e.target.value) || undefined 
               })}
               disabled={readOnly}
-              className="h-8"
+              className="h-lg"
             />
           </div>
         </div>
@@ -388,7 +388,7 @@ const ValidationEditor: React.FC<ValidationEditorProps> = ({
             onChange={(e) => handleValidationChange({ pattern: e.target.value })}
             disabled={readOnly}
             placeholder="^[a-zA-Z0-9]+$"
-            className="h-8 font-mono"
+            className="h-lg font-mono"
           />
         </div>
       )}
@@ -401,7 +401,7 @@ const ValidationEditor: React.FC<ValidationEditorProps> = ({
           onChange={(e) => handleValidationChange({ custom: e.target.value })}
           disabled={readOnly}
           placeholder="Custom validation function"
-          className="h-8 font-mono"
+          className="h-lg font-mono"
         />
       </div>
     </div>
@@ -497,7 +497,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
               onClick={() => handleMappingUpdate({})}
               disabled={readOnly}
             >
-              <Plus className="h-3 w-3 mr-1" />
+              <Plus className="h-2xs w-2xs mr-1" />
               Map Field
             </Button>
           </div>
@@ -523,7 +523,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
                   Required
                 </Badge>
               )}
-              <CheckCircle className="h-4 w-4 text-green-600" />
+              <CheckCircle className="h-xs w-xs text-green-600" />
             </div>
             <Button
               variant="ghost"
@@ -531,7 +531,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
               onClick={onRemove}
               disabled={readOnly}
             >
-              <X className="h-3 w-3" />
+              <X className="h-2xs w-2xs" />
             </Button>
           </div>
 
@@ -548,7 +548,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
                 })}
                 disabled={readOnly}
               >
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="h-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -561,7 +561,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
 
             {/* Arrow */}
             <div className="col-span-1 flex justify-center">
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              <ArrowRight className="h-xs w-xs text-muted-foreground" />
             </div>
 
             {/* Source Path */}
@@ -572,7 +572,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
                 onValueChange={(value) => handleMappingUpdate({ sourcePath: value })}
                 disabled={readOnly}
               >
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="h-lg">
                   <SelectValue placeholder="Select path..." />
                 </SelectTrigger>
                 <SelectContent>
@@ -600,7 +600,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
                 })}
                 disabled={readOnly}
               >
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="h-lg">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -609,7 +609,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
                     return (
                       <SelectItem key={control.type} value={control.type}>
                         <div className="flex items-center gap-2">
-                          <IconComponent className="h-3 w-3" />
+                          <IconComponent className="h-2xs w-2xs" />
                           <span>{control.label}</span>
                         </div>
                       </SelectItem>
@@ -625,11 +625,11 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
             <CollapsibleTrigger asChild>
               <Button variant="ghost" size="sm" className="w-full justify-between">
                 <span className="flex items-center gap-2">
-                  <Settings className="h-3 w-3" />
+                  <Settings className="h-2xs w-2xs" />
                   Advanced Configuration
                 </span>
                 <ChevronDown className={cn(
-                  'h-3 w-3 transition-transform',
+                  'h-2xs w-2xs transition-transform',
                   isExpanded && 'transform rotate-180'
                 )} />
               </Button>
@@ -646,7 +646,7 @@ const FieldMappingRow: React.FC<FieldMappingRowProps> = ({
                   onChange={(e) => handleMappingUpdate({ transform: e.target.value })}
                   disabled={readOnly}
                   placeholder="e.g., value.toUpperCase()"
-                  className="h-8 font-mono"
+                  className="h-lg font-mono"
                 />
               </div>
 
@@ -825,7 +825,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
                 onClick={handleAutoMap}
                 disabled={readOnly}
               >
-                <Wand2 className="h-3 w-3 mr-1" />
+                <Wand2 className="h-2xs w-2xs mr-1" />
                 Auto-Map Fields
               </Button>
               <Button
@@ -851,7 +851,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
                 }}
                 disabled={readOnly}
               >
-                <Download className="h-3 w-3 mr-1" />
+                <Download className="h-2xs w-2xs mr-1" />
                 Export
               </Button>
             </>
@@ -862,16 +862,16 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
       {/* Status Summary */}
       <div className="flex items-center gap-4 p-3 bg-muted/20 rounded-md text-sm">
         <div className="flex items-center gap-2">
-          <CheckCircle className="h-4 w-4 text-green-600" />
+          <CheckCircle className="h-xs w-xs text-green-600" />
           <span>{mappedFields.length} mapped</span>
         </div>
         <div className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 text-orange-500" />
+          <AlertCircle className="h-xs w-xs text-orange-500" />
           <span>{unmappedFields.length} unmapped</span>
         </div>
         {requiredUnmappedFields.length > 0 && (
           <div className="flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-500" />
+            <AlertCircle className="h-xs w-xs text-red-500" />
             <span>{requiredUnmappedFields.length} required unmapped</span>
           </div>
         )}
@@ -901,7 +901,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
         <Card className="border-blue-200 bg-blue-50/50">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm flex items-center gap-2">
-              <Lightbulb className="h-4 w-4 text-blue-600" />
+              <Lightbulb className="h-xs w-xs text-blue-600" />
               Smart Mapping Suggestions
             </CardTitle>
           </CardHeader>
@@ -941,7 +941,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="font-medium text-sm">{field.name}</span>
-                        <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                        <ArrowRight className="h-2xs w-2xs text-muted-foreground" />
                         <span className="font-mono text-xs">{suggestion.path}</span>
                         <Badge variant="outline" className={cn(
                           'text-xs',
@@ -970,7 +970,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
                       }}
                       disabled={readOnly}
                     >
-                      <Plus className="h-3 w-3 mr-1" />
+                      <Plus className="h-2xs w-2xs mr-1" />
                       Apply
                     </Button>
                   </div>
@@ -986,7 +986,7 @@ export const FieldMappingEditor: React.FC<FieldMappingEditorProps> = ({
       <Card className="border-dashed">
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
-            <Target className="h-4 w-4" />
+            <Target className="h-xs w-xs" />
             ECS Component: {ecsComponent.displayName}
           </CardTitle>
         </CardHeader>

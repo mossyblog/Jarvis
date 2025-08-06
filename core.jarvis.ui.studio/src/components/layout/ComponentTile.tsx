@@ -151,11 +151,11 @@ export const ComponentTile: React.FC<ComponentTileProps> = ({
       {/* Icon */}
       <div className="component-tile__icon transition-transform group-hover:scale-110">
         {typeof icon === 'string' ? (
-          <div className="w-8 h-8 flex items-center justify-center text-base">
+          <div className="w-lg h-lg flex items-center justify-center text-base">
             {icon}
           </div>
         ) : (
-          <div className="w-8 h-8 flex items-center justify-center">
+          <div className="w-lg h-lg flex items-center justify-center">
             {icon}
           </div>
         )}

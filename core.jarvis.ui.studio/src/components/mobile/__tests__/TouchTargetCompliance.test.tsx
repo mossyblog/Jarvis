@@ -494,7 +494,7 @@ describe('Touch Target Size Compliance', () => {
       
       // Should have adequate size for touch
       const style = window.getComputedStyle(closeButton)
-      expect(parseInt(style.width)).toBeGreaterThanOrEqual(36) // 9 * 4 (h-9 w-9)
+      expect(parseInt(style.width)).toBeGreaterThanOrEqual(36) // 9 * 4 (h-lg w-lg)
       expect(parseInt(style.height)).toBeGreaterThanOrEqual(36)
       
       document.body.removeChild(portalDiv)

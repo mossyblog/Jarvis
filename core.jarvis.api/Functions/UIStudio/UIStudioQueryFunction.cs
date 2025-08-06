@@ -766,19 +766,25 @@ public class UIStudioQueryFunction
             }
         };
 
-        // Apply filters
-        var filteredComponents = components.AsQueryable();
+        // Apply filters using LINQ on the list directly to avoid expression tree issues
+        var filteredComponents = components.AsEnumerable();
 
         if (!string.IsNullOrEmpty(category))
         {
             filteredComponents = filteredComponents.Where(c => 
-                ((dynamic)c).category.ToString().Equals(category, StringComparison.OrdinalIgnoreCase));
+            {
+                dynamic comp = c;
+                return comp.category.ToString().Equals(category, StringComparison.OrdinalIgnoreCase);
+            });
         }
 
         if (!string.IsNullOrEmpty(device))
         {
             filteredComponents = filteredComponents.Where(c => 
-                ((dynamic)c).supportedDevices.Contains(device));
+            {
+                dynamic comp = c;
+                return ((string[])comp.supportedDevices).Contains(device);
+            });
         }
 
         if (!string.IsNullOrEmpty(search))
@@ -803,7 +809,7 @@ public class UIStudioQueryFunction
         var allComponents = await GetComponentRegistryData(category, "desktop", null);
         var searchLower = searchQuery.ToLowerInvariant();
 
-        var results = allComponents.Where(c => {
+        var results = allComponents.AsEnumerable().Where(c => {
             dynamic comp = c;
             var matchesSearch = comp.name.ToString().ToLowerInvariant().Contains(searchLower) ||
                                comp.description.ToString().ToLowerInvariant().Contains(searchLower) ||
@@ -824,7 +830,7 @@ public class UIStudioQueryFunction
     private async Task<object?> GetComponentTypeMetadata(string componentType)
     {
         var allComponents = await GetComponentRegistryData(null, "desktop", null);
-        return allComponents.FirstOrDefault(c => ((dynamic)c).id.ToString() == componentType);
+        return allComponents.AsEnumerable().FirstOrDefault(c => ((dynamic)c).id.ToString() == componentType);
     }
 
     #endregion

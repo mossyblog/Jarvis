@@ -42,7 +42,7 @@ export const ApiStatusBanner: React.FC = () => {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-8 bg-destructive flex items-center justify-center px-4">
+    <div className="fixed top-0 left-0 right-0 z-50 h-lg bg-destructive flex items-center justify-center px-4">
       <div className="flex items-center gap-2 text-destructive-foreground">
         <AlertCircle size={16} />
         <span className="text-xs font-medium">

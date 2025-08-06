@@ -41,7 +41,7 @@ export function NotificationCard({
       <CardContent className="p-4">
         <div className="flex items-start space-x-3">
           {Icon && (
-            <Icon className={cn('h-5 w-5 mt-0.5', iconStyles[variant])} />
+            <Icon className={cn('h-sm w-sm mt-0.5', iconStyles[variant])} />
           )}
           <div className="flex-1 space-y-3">
             <div>

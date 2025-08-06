@@ -527,10 +527,10 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
               onClick={handleBackNavigation}
               className="flex items-center space-x-2"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-xs w-xs" />
               <span>Back to Studio</span>
             </Button>
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-md" />
             <div>
               <h1 className="text-xl font-bold sm:text-2xl">Page Builder</h1>
               <p className="text-sm text-muted-foreground sm:text-base">Error loading page</p>
@@ -539,7 +539,7 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
 
           {/* Error Alert */}
           <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="h-xs w-xs" />
             <AlertDescription className="text-sm sm:text-base">
               <div className="font-medium mb-2">Unable to load page</div>
               <div className="text-xs sm:text-sm opacity-90">{hasError}</div>
@@ -553,7 +553,7 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
               disabled={pageLoading}
               className="w-full max-w-xs sm:w-auto"
             >
-              {pageLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {pageLoading && <Loader2 className="mr-2 h-xs w-xs animate-spin" />}
               Try Again
             </Button>
           </div>
@@ -575,10 +575,10 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
               onClick={handleBackNavigation}
               className="flex items-center space-x-2"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ArrowLeft className="h-xs w-xs" />
               <span>Back to Studio</span>
             </Button>
-            <Separator orientation="vertical" className="h-6" />
+            <Separator orientation="vertical" className="h-md" />
             <div>
               <h1 className="text-xl font-bold sm:text-2xl">Page Builder</h1>
               <p className="text-sm text-muted-foreground sm:text-base">Page not found</p>
@@ -587,7 +587,7 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
 
           {/* Not Found Alert */}
           <Alert>
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="h-xs w-xs" />
             <AlertDescription className="text-sm sm:text-base">
               <div className="font-medium mb-2">Page not found</div>
               <div className="text-xs sm:text-sm opacity-90">
@@ -621,7 +621,7 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
         {/* Header - Mobile First with Proper Spacing */}
         <header className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
           <div className="px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-14 sm:h-16">
+            <div className="flex items-center justify-between h-xsxs4 sm:h-3xl">
               {/* Navigation and Title - Mobile Optimized */}
               <div className="flex items-center space-x-3 sm:space-x-4">
                 <Button
@@ -630,11 +630,11 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
                   onClick={handleBackNavigation}
                   className="flex items-center space-x-1 sm:space-x-2"
                 >
-                  <ArrowLeft className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <ArrowLeft className="h-2xs w-2xs sm:h-xs sm:w-xs" />
                   <span className="hidden sm:inline">Back</span>
                 </Button>
                 
-                <Separator orientation="vertical" className="h-4 sm:h-6" />
+                <Separator orientation="vertical" className="h-xs sm:h-md" />
                 
                 <div className="flex flex-col min-w-0">
                   <h1 className="text-sm font-semibold truncate sm:text-base lg:text-lg">
@@ -666,13 +666,13 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
                     <TooltipTrigger asChild>
                       <div className="flex items-center space-x-1">
                         {state.isConnected ? (
-                          <Wifi className="h-3 w-3 text-green-600" />
+                          <Wifi className="h-2xs w-2xs text-green-600" />
                         ) : (
-                          <WifiOff className="h-3 w-3 text-red-600" />
+                          <WifiOff className="h-2xs w-2xs text-red-600" />
                         )}
                         {state.collaborationEnabled && (
                           <>
-                            <Users className="h-3 w-3 text-muted-foreground" />
+                            <Users className="h-2xs w-2xs text-muted-foreground" />
                             <span className="text-xs text-muted-foreground">
                               {state.connectedUsers}
                             </span>
@@ -725,7 +725,7 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
                   disabled={!state.hasUnsavedChanges || state.isSaving}
                   className="hidden sm:flex"
                 >
-                  {state.isSaving && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                  {state.isSaving && <Loader2 className="mr-1 h-2xs w-2xs animate-spin" />}
                   Save
                 </Button>
                 
@@ -735,7 +735,7 @@ export const PageBuilderInterface: React.FC<PageBuilderInterfaceProps> = ({
                   disabled={state.isPublishing}
                   className="text-xs sm:text-sm"
                 >
-                  {state.isPublishing && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
+                  {state.isPublishing && <Loader2 className="mr-1 h-2xs w-2xs animate-spin" />}
                   {bentoPage.status === PageStatus.Published ? 'Update' : 'Publish'}
                 </Button>
               </div>

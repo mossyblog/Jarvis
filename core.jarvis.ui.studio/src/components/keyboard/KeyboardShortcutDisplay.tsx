@@ -194,7 +194,7 @@ export function ShortcutHelpDialog({
 
   const defaultTrigger = (
     <Button variant="ghost" size="sm">
-      <Keyboard className="h-4 w-4 mr-2" />
+      <Keyboard className="h-xs w-xs mr-2" />
       Shortcuts
     </Button>
   );
@@ -207,7 +207,7 @@ export function ShortcutHelpDialog({
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Keyboard className="h-5 w-5" />
+            <Keyboard className="h-sm w-sm" />
             {title}
           </DialogTitle>
           {description && (
@@ -274,9 +274,9 @@ export function QuickHelpButton({
               <Button 
                 variant="ghost" 
                 size="sm"
-                className={cn('h-8 w-8 p-0', className)}
+                className={cn('h-lg w-lg p-0', className)}
               >
-                <HelpCircle className="h-4 w-4" />
+                <HelpCircle className="h-xs w-xs" />
                 <span className="sr-only">Show keyboard shortcuts</span>
               </Button>
             }
@@ -322,7 +322,7 @@ export function ContextualShortcuts({
           <ShortcutHelpDialog 
             shortcuts={shortcuts}
             trigger={
-              <Button variant="ghost" size="sm" className="h-6 text-xs">
+              <Button variant="ghost" size="sm" className="h-md text-xs">
                 +{shortcuts.length - 5} more shortcuts
               </Button>
             }

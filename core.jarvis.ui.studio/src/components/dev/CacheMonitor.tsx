@@ -103,7 +103,7 @@ export function CacheMonitor({
       case 'healthy':
         return 'text-green-500';
       case 'warning':
-        return 'text-yellow-500';
+        return 'text-yellow-sm00';
       case 'error':
         return 'text-red-500';
       default:
@@ -131,7 +131,7 @@ export function CacheMonitor({
   return (
     <div
       className={`fixed ${getPositionClasses()} z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg transition-all duration-200 ${
-        isExpanded ? 'w-80' : 'w-12 h-12'
+        isExpanded ? 'w-xsxs1xl' : 'w-2xl h-2xl'
       }`}
     >
       {/* Collapsed State */}
@@ -167,14 +167,14 @@ export function CacheMonitor({
           <div className="space-y-2 mb-3">
             <div className="flex justify-between text-xs">
               <span className="text-gray-600 dark:text-gray-400">Hit Rate:</span>
-              <span className={`font-mono ${metrics.hitRate > 80 ? 'text-green-600' : metrics.hitRate > 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <span className={`font-mono ${metrics.hitRate > 80 ? 'text-green-600' : metrics.hitRate > 60 ? 'text-yellow-md00' : 'text-red-600'}`}>
                 {metrics.hitRate.toFixed(1)}%
               </span>
             </div>
             
             <div className="flex justify-between text-xs">
               <span className="text-gray-600 dark:text-gray-400">Stale Rate:</span>
-              <span className={`font-mono ${metrics.staleRate < 20 ? 'text-green-600' : metrics.staleRate < 40 ? 'text-yellow-600' : 'text-red-600'}`}>
+              <span className={`font-mono ${metrics.staleRate < 20 ? 'text-green-600' : metrics.staleRate < 40 ? 'text-yellow-md00' : 'text-red-600'}`}>
                 {metrics.staleRate.toFixed(1)}%
               </span>
             </div>
@@ -220,7 +220,7 @@ export function CacheMonitor({
 
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Error Rate:</span>
-                <span className={`font-mono ${metrics.errorRate < 5 ? 'text-green-600' : metrics.errorRate < 15 ? 'text-yellow-600' : 'text-red-600'}`}>
+                <span className={`font-mono ${metrics.errorRate < 5 ? 'text-green-600' : metrics.errorRate < 15 ? 'text-yellow-md00' : 'text-red-600'}`}>
                   {metrics.errorRate.toFixed(1)}%
                 </span>
               </div>
@@ -305,9 +305,9 @@ export function CacheHealthBadge({
   }, [cacheManager]);
 
   const sizeClasses = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4',
+    sm: 'w-xs h-xs',
+    md: 'w-xs h-xs',
+    lg: 'w-sm h-sm',
   };
 
   const getStatusColor = () => {
@@ -315,7 +315,7 @@ export function CacheHealthBadge({
       case 'healthy':
         return 'bg-green-500';
       case 'warning':
-        return 'bg-yellow-500';
+        return 'bg-yellow-sm00';
       case 'error':
         return 'bg-red-500';
       default:
@@ -336,7 +336,7 @@ export function CacheHealthBadge({
       )}
       {health.recommendations.length > 0 && (
         <div className="mt-1">
-          <div className="text-yellow-400">Recommendations:</div>
+          <div className="text-yellow-xs00">Recommendations:</div>
           {health.recommendations.map((rec, index) => (
             <div key={index}>• {rec}</div>
           ))}

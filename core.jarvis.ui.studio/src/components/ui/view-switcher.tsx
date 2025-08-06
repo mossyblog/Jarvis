@@ -12,6 +12,7 @@ import { List, Grid3X3, LayoutGrid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from './button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip';
+import { LucideIcon as StandardIcon } from './icon';
 import type { ViewMode } from '@/hooks/useViewState';
 
 // ============================================================================
@@ -64,9 +65,9 @@ const VIEW_CONFIG = {
 } as const;
 
 const SIZE_STYLES = {
-  sm: 'h-md w-md text-sm',
-  md: 'h-lg w-lg text-base',
-  lg: 'h-xl w-xl text-lg'
+  sm: 'h-sm w-sm text-sm',
+  md: 'h-md w-md text-base',
+  lg: 'h-lg w-lg text-lg'
 } as const;
 
 // ============================================================================
@@ -89,7 +90,12 @@ export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
   // Render Helpers
   // ============================================================================
 
-  const renderViewButton = (mode: ViewMode) => {
+    const renderViewButton = (mode: ViewMode) => {
+    const iconSizeMap = {
+      sm: 'xs',
+      md: 'xs',
+      lg: 'sm',
+    } as const;
     const config = VIEW_CONFIG[mode];
     const Icon = config.icon;
     const isActive = viewMode === mode;
@@ -113,13 +119,10 @@ export const ViewSwitcher: React.FC<ViewSwitcherProps> = ({
         aria-label={config.label}
         aria-pressed={isActive}
       >
-        <Icon 
-          className={cn(
-            'flex-shrink-0',
-            size === 'sm' && 'h-xs w-xs',
-            size === 'md' && 'h-xs w-xs', 
-            size === 'lg' && 'h-sm w-sm'
-          )} 
+        <StandardIcon 
+          icon={Icon} 
+          size={iconSizeMap[size]} 
+          className="flex-shrink-0" 
         />
         {showLabels && (
           <span className="font-medium">

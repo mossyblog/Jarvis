@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { IconButton } from '@/components/ui/icon-button'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,11 +39,12 @@ import { DeviceSelector } from './DeviceSelector'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { LucideIcon as Icon } from '@/components/ui/icon'
 
 // Component implementations
 const HomeIcon = () => (
   <a href="/" className="flex items-center">
-    <Home size={14} strokeWidth={1.5} className="text-foreground-lighter" />
+    <Icon icon={Home} size="sm" className="text-foreground-lighter" strokeWidth={1.5} />
   </a>
 )
 
@@ -71,9 +73,9 @@ const ConnectionStatus = () => {
   }, []);
 
   const getStatusIcon = () => {
-    if (!isOnline) return <WifiOff className="h-xs w-xs text-destructive" />;
-    if (networkQuality === 'poor') return <Wifi className="h-xs w-xs text-warning" />;
-    return <Wifi className="h-xs w-xs text-brand" />;
+    if (!isOnline) return <Icon icon={WifiOff} size="sm" className="text-destructive" />;
+    if (networkQuality === 'poor') return <Icon icon={Wifi} size="sm" className="text-warning" />;
+    return <Icon icon={Wifi} size="sm" className="text-brand" />;
   };
 
   const getStatusText = () => {
@@ -86,14 +88,13 @@ const ConnectionStatus = () => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button 
+          <IconButton 
             variant="ghost" 
             size="sm"
-            className="h-xs w-xs p-0 rounded-md"
             aria-label={`Network status: ${getStatusText()}`}
           >
             {getStatusIcon()}
-          </Button>
+          </IconButton>
         </TooltipTrigger>
         <TooltipContent>
           <p>{getStatusText()}</p>
@@ -174,19 +175,13 @@ const NotificationsPopover = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
+        <IconButton 
           variant="ghost" 
           size="sm"
-          className={cn(
-            "relative h-xs w-xs p-0 rounded-md transition-all duration-200",
-            "hover:bg-accent hover:shadow-sm",
-            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "active:scale-95 active:transition-none",
-            "disabled:opacity-50 disabled:pointer-events-none"
-          )}
+          className="relative"
           aria-label={`Notifications ${unreadCount > 0 ? `(${unreadCount} unread)` : ''}`}
         >
-          <Bell className="h-xs w-xs text-muted-foreground transition-colors group-hover:text-foreground" />
+          <Icon icon={Bell} size="xs" className="text-muted-foreground transition-colors group-hover:text-foreground" />
           {unreadCount > 0 && (
             <>
               <Badge 
@@ -201,7 +196,7 @@ const NotificationsPopover = () => {
               </Badge>
             </>
           )}
-        </Button>
+        </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-5xl">
         <DropdownMenuLabel className="flex items-center justify-between">
@@ -239,7 +234,7 @@ const NotificationsPopover = () => {
                 <div className="flex items-start gap-3 w-full">
                   <div 
                     className={cn(
-                      "w-2 h-2 rounded-full mt-2 flex-shrink-0",
+                      "w-sm h-sm rounded-full mt-2 flex-shrink-0",
                       getNotificationIcon(notification.type)
                     )}
                   />
@@ -252,7 +247,7 @@ const NotificationsPopover = () => {
                         {notification.title}
                       </p>
                       {!notification.read && (
-                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-2" />
+                        <div className="w-sm h-sm bg-blue-500 rounded-full flex-shrink-0 mt-2" />
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
@@ -268,7 +263,7 @@ const NotificationsPopover = () => {
             </>
         ) : (
           <div className="p-6 text-center">
-            <Bell className="h-xs w-xs text-muted-foreground mx-auto mb-2" />
+            <Icon icon={Bell} size="sm" className="text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">
               No new notifications
             </p>
@@ -304,20 +299,13 @@ const QuickActionsPopover = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
+        <IconButton 
           variant="ghost" 
           size="sm"
-          className={cn(
-            "h-xs w-xs p-0 rounded-md transition-all duration-200",
-            "hover:bg-accent hover:shadow-sm",
-            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "active:scale-95 active:transition-none",
-            "disabled:opacity-50 disabled:pointer-events-none"
-          )}
           aria-label="Quick actions and help"
         >
-          <Zap className="h-xs w-xs text-muted-foreground transition-colors group-hover:text-foreground" />
-        </Button>
+          <Icon icon={Zap} size="xs" className="text-muted-foreground transition-colors group-hover:text-foreground" />
+        </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-4xl">
         <DropdownMenuLabel className="px-4 py-2">
@@ -325,23 +313,20 @@ const QuickActionsPopover = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <FileText className="h-xs w-xs mr-2 text-muted-foreground" />
-          <span>Documentation</span>
-          <ExternalLink className="h-xs w-xs ml-auto text-muted-foreground" />
+          <Icon icon={FileText} size="sm" className="mr-2 text-muted-foreground" />
+          <span>New Document</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <Activity className="h-xs w-xs mr-2 text-muted-foreground" />
-          <span>API Reference</span>
-          <ExternalLink className="h-xs w-xs ml-auto text-muted-foreground" />
+          <Icon icon={Activity} size="sm" className="mr-2 text-muted-foreground" />
+          <span>View Activity Feed</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <MessageCircle className="h-xs w-xs mr-2 text-muted-foreground" />
-          <span>Community Forum</span>
-          <ExternalLink className="h-xs w-xs ml-auto text-muted-foreground" />
+          <Icon icon={MessageCircle} size="sm" className="mr-2 text-muted-foreground" />
+          <span>Start a Chat</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <Mail className="h-xs w-xs mr-2 text-muted-foreground" />
-          <span>Contact Support</span>
+          <Icon icon={Mail} size="sm" className="mr-2 text-muted-foreground" />
+          <span>Send an Email</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <div className="px-4 py-2">
@@ -377,20 +362,13 @@ const QuickActionsPopover = () => {
 const HelpPopover = () => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button 
+      <IconButton 
         variant="ghost" 
         size="sm"
-        className={cn(
-          "h-xs w-xs p-0 rounded-md transition-all duration-200",
-          "hover:bg-accent hover:shadow-sm",
-          "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-          "active:scale-95 active:transition-none",
-          "disabled:opacity-50 disabled:pointer-events-none"
-        )}
         aria-label="Help and support"
       >
-        <HelpCircle className="h-xs w-xs text-muted-foreground transition-colors group-hover:text-foreground" />
-      </Button>
+        <Icon icon={HelpCircle} size="xs" className="text-muted-foreground transition-colors group-hover:text-foreground" />
+      </IconButton>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" className="w-3xl">
       <DropdownMenuLabel className="px-4 py-2">
@@ -398,23 +376,23 @@ const HelpPopover = () => (
       </DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-        <FileText className="h-xs w-xs mr-2 text-muted-foreground" />
+        <Icon icon={FileText} size="sm" className="mr-2 text-muted-foreground" />
         <span>Documentation</span>
-        <ExternalLink className="h-xs w-xs ml-auto text-muted-foreground" />
+        <Icon icon={ExternalLink} size="sm" className="ml-auto text-muted-foreground" />
       </DropdownMenuItem>
       <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-        <FileText className="h-xs w-xs mr-2 text-muted-foreground" />
+        <Icon icon={FileText} size="sm" className="mr-2 text-muted-foreground" />
         <span>API Reference</span>
-        <ExternalLink className="h-xs w-xs ml-auto text-muted-foreground" />
+        <Icon icon={ExternalLink} size="sm" className="ml-auto text-muted-foreground" />
       </DropdownMenuItem>
       <DropdownMenuSeparator />
       <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-        <MessageCircle className="h-xs w-xs mr-2 text-muted-foreground" />
+        <Icon icon={MessageCircle} size="sm" className="mr-2 text-muted-foreground" />
         <span>Community Forum</span>
-        <ExternalLink className="h-xs w-xs ml-auto text-muted-foreground" />
+        <Icon icon={ExternalLink} size="sm" className="ml-auto text-muted-foreground" />
       </DropdownMenuItem>
       <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-        <Mail className="h-xs w-xs mr-2 text-muted-foreground" />
+        <Icon icon={Mail} size="sm" className="mr-2 text-muted-foreground" />
         <span>Contact Support</span>
       </DropdownMenuItem>
     </DropdownMenuContent>
@@ -429,20 +407,13 @@ const SettingsPopover = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
+        <IconButton 
           variant="ghost" 
           size="sm"
-          className={cn(
-            "h-xs w-xs p-0 rounded-md transition-all duration-200",
-            "hover:bg-accent hover:shadow-sm",
-            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "active:scale-95 active:transition-none",
-            "disabled:opacity-50 disabled:pointer-events-none"
-          )}
           aria-label="Settings and preferences"
         >
-          <Settings className="h-xs w-xs text-muted-foreground transition-colors group-hover:text-foreground" />
-        </Button>
+          <Icon icon={Settings} size="xs" className="text-muted-foreground transition-colors group-hover:text-foreground" />
+        </IconButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-3xl">
         <DropdownMenuLabel className="px-4 py-2">
@@ -450,15 +421,15 @@ const SettingsPopover = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <User className="h-xs w-xs mr-2 text-muted-foreground" />
+          <Icon icon={User} size="sm" className="mr-2 text-muted-foreground" />
           <span>Profile</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <Settings className="h-xs w-xs mr-2 text-muted-foreground" />
+          <Icon icon={Settings} size="sm" className="text-muted-foreground" />
           <span>Preferences</span>
         </DropdownMenuItem>
         <DropdownMenuItem className="px-4 py-2 cursor-pointer focus:bg-accent">
-          <Bell className="h-xs w-xs mr-2 text-muted-foreground" />
+          <Icon icon={Bell} size="sm" className="mr-2 text-muted-foreground" />
           <span>Notifications</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
@@ -527,20 +498,15 @@ const LayoutHeaderDivider = ({ className, ...props }: React.HTMLProps<HTMLDivEle
 )
 
 const MobileMenuButton = ({ onClick }: { onClick: () => void }) => (
-  <Button
+  <IconButton
     variant="ghost"
     size="sm"
     onClick={onClick}
-    className={cn(
-      "h-xs w-xs p-0 rounded-md transition-all duration-200 md:hidden",
-      "hover:bg-accent hover:shadow-sm",
-      "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-      "active:scale-95 active:transition-none"
-    )}
+    className="md:hidden"
     aria-label="Open mobile menu"
   >
-    <Menu className="h-xs w-xs" />
-  </Button>
+    <Icon icon={Menu} size="xs" />
+  </IconButton>
 )
 
 interface LayoutHeaderProps {
@@ -693,14 +659,14 @@ const LayoutHeader = ({
           >
             <div className="flex items-center justify-between p-4 border-b">
               <h2 className="text-lg font-semibold">Menu</h2>
-              <Button 
+              <IconButton 
                 variant="ghost" 
                 size="sm"
                 onClick={() => setMobileMenuOpen(false)}
-                className="h-xs w-xs p-0"
+                
               >
-                <X className="h-xs w-xs" />
-              </Button>
+                <Icon icon={X} size="xs" />
+              </IconButton>
             </div>
             <div className="p-4 space-y-4">
               {/* Mobile-specific navigation items can go here */}

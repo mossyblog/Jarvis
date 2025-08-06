@@ -459,7 +459,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Zap className="h-5 w-5 text-primary" />
+            <Zap className="h-sm w-sm text-primary" />
             Quick Actions
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -472,7 +472,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Badge variant="outline" className="gap-1">
-                  <Keyboard className="h-3 w-3" />
+                  <Keyboard className="h-2xs w-2xs" />
                   <span className="hidden sm:inline">Shortcuts enabled</span>
                 </Badge>
               </TooltipTrigger>
@@ -524,7 +524,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                         ? 'bg-primary text-primary-foreground' 
                         : 'bg-muted text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground'
                     )}>
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-xs w-xs" />
                     </div>
                     <CardTitle className="text-sm font-medium leading-tight">
                       {action.title}
@@ -539,7 +539,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                     )}
                     {action.shortcut && showShortcuts && (
                       <Badge variant="outline" className="text-xs gap-1 px-1">
-                        <Command className="h-2 w-2" />
+                        <Command className="h-xs w-xs" />
                         {action.shortcut.replace('Ctrl', '⌘')}
                       </Badge>
                     )}
@@ -554,7 +554,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                 
                 {action.loading && (
                   <div className="mt-sm">
-                    <div className="h-1 bg-muted rounded overflow-hidden">
+                    <div className="h-xsxs bg-muted rounded overflow-hidden">
                       <div className="h-full bg-primary rounded animate-pulse" />
                     </div>
                   </div>
@@ -571,29 +571,29 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
       <section>
         <div className="flex items-center justify-between mb-md">
           <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-secondary" />
+            <Sparkles className="h-xs w-xs text-secondary" />
             Explore & Learn
           </h3>
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-xs w-xs" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>More Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
-                <Copy className="h-4 w-4 mr-2" />
+                <Copy className="h-xs w-xs mr-2" />
                 Clone Page
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Import className="h-4 w-4 mr-2" />
+                <Import className="h-xs w-xs mr-2" />
                 Batch Import
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <FileDown className="h-4 w-4 mr-2" />
+                <FileDown className="h-xs w-xs mr-2" />
                 Bulk Export
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -613,14 +613,14 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                 disabled={action.disabled}
               >
                 <div className="flex items-center gap-sm w-full mb-xs">
-                  <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <Icon className="h-xs w-xs text-muted-foreground group-hover:text-primary transition-colors" />
                   <span className="text-sm font-medium flex-1">{action.title}</span>
                   {action.badge && (
                     <Badge variant="secondary" className="text-xs">
                       {action.badge}
                     </Badge>
                   )}
-                  <ChevronRight className="h-3 w-3 text-muted-foreground group-hover:text-primary transition-colors" />
+                  <ChevronRight className="h-2xs w-2xs text-muted-foreground group-hover:text-primary transition-colors" />
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {action.description}
@@ -655,7 +655,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
               className="w-full"
               disabled={loading.importing}
             >
-              <FileUp className="h-4 w-4 mr-2" />
+              <FileUp className="h-xs w-xs mr-2" />
               {loading.importing ? 'Importing...' : 'Choose File'}
             </Button>
             
@@ -686,7 +686,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                 disabled={loading.exporting}
                 className="h-auto flex-col p-md"
               >
-                <FileDown className="h-6 w-6 mb-2" />
+                <FileDown className="h-md w-md mb-2" />
                 <span className="font-medium">JSON</span>
                 <span className="text-xs text-muted-foreground">
                   Data and structure
@@ -699,7 +699,7 @@ export const QuickActionsPanel: React.FC<QuickActionsPanelProps> = ({
                 disabled={loading.exporting}
                 className="h-auto flex-col p-md"
               >
-                <FileDown className="h-6 w-6 mb-2" />
+                <FileDown className="h-md w-md mb-2" />
                 <span className="font-medium">ZIP</span>
                 <span className="text-xs text-muted-foreground">
                   Complete package

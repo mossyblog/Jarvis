@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useEditMode } from '@/contexts/EditModeContext';
+import { LucideIcon as Icon } from '@/components/ui/icon';
 
 interface DeviceInfo {
   id: 'desktop' | 'tablet' | 'mobile';
@@ -76,7 +77,7 @@ export const DeviceSelector: React.FC = () => {
         {/* Device Selector Buttons */}
         <div className="flex items-center bg-muted/30 rounded-md p-0.5">
           {devices.map((device) => {
-            const Icon = device.icon;
+            
             const isActive = currentDevice === device.id;
             
             return (
@@ -87,17 +88,17 @@ export const DeviceSelector: React.FC = () => {
                     size="sm"
                     onClick={() => setDevice(device.id)}
                     className={cn(
-                      "h-8 px-2 relative transition-all duration-200",
+                      "h-sm px-xs relative transition-all duration-200",
                       isActive && "bg-background shadow-sm scale-110",
                       !isActive && "hover:scale-105"
                     )}
                   >
-                    <Icon className={cn(
-                      "h-xs w-xs transition-colors",
+                    <Icon icon={device.icon} size="sm" className={cn(
+                      "transition-colors",
                       isActive && "text-primary"
                     )} />
                     {isActive && (
-                      <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
+                      <div className="absolute -bottom-0.5 left-1/2 transform -translate-x-1/2 w-xs h-none.5 bg-primary rounded-full" />
                     )}
                   </Button>
                 </TooltipTrigger>
@@ -131,10 +132,10 @@ export const DeviceSelector: React.FC = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0"
+                className="h-xs w-xs p-0"
                 onClick={() => setShowDetails(!showDetails)}
               >
-                <Info className="h-3 w-3" />
+                <Icon icon={Info} size="sm" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="bottom" className="max-w-sm">

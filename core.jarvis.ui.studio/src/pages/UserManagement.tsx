@@ -402,7 +402,7 @@ export default function UserManagement() {
                 <TableHeader>
                   <TableRow>
                     {enableSelection && (
-                      <TableHead className="w-12">
+                      <TableHead className="w-2xl">
                         <SelectionCheckbox
                           size="sm"
                           {...getSelectAllProps()}

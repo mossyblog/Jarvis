@@ -21,6 +21,7 @@ import {
 } from '../ui/dialog';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
+import { LucideIcon as Icon } from '../ui/icon';
 
 interface SidebarItem {
   id: string;
@@ -30,9 +31,9 @@ interface SidebarItem {
 }
 
 // Icon mapping function
-const getIcon = (iconName: string, size: number = 18) => {
-  const IconComponent = Icons[iconName as keyof typeof Icons] as React.ComponentType<{ size?: number }>;
-  return IconComponent ? <IconComponent size={size} /> : <FileText size={size} />;
+const getIcon = (iconName: string) => {
+  const IconComponent = Icons[iconName as keyof typeof Icons] as React.ComponentType;
+  return <Icon icon={IconComponent || FileText} size="sm" />;
 };
 
 type SidebarBehavior = 'expandable' | 'open' | 'closed';
@@ -130,13 +131,13 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
         onClick={() => setIsMobileOpen(!isMobileOpen)}
         className="fixed top-xs left-xs z-50 p-xs rounded-md bg-dash-sidebar border border-border-stronger lg:hidden"
       >
-        <Menu size={20} />
+        <Icon icon={Menu} size="md" />
       </button>
 
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-3xl h-[calc(100vh-3rem)] bg-dash-sidebar border-r border-border-stronger flex flex-col transition-[width] duration-200 ease-out overflow-hidden",
+          "fixed left-0 top-3xl h-[calc(100vh-2xsrem)] bg-dash-sidebar border-r border-border-stronger flex flex-col transition-[width] duration-200 ease-out overflow-hidden",
           isExpanded ? "w-4xl" : "w-md",
           "hidden md:flex",
           isMobileOpen && "flex",
@@ -215,7 +216,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
                   >
                     {/* Icon container - fixed position */}
                     <div className="absolute left-xs w-sm h-sm flex items-center justify-center">
-                      <Plus size={18} className="text-muted-foreground group-hover:text-foreground/90" />
+                      <Icon icon={Plus} size="sm" className="mr-xs" />
                     </div>
                     
                     {/* Label - only visible when expanded */}
@@ -291,7 +292,7 @@ export function Sidebar({ activeItem = 'home', onItemClick }: SidebarProps) {
             aria-expanded={showDropdown}
             aria-haspopup="menu"
           >
-            <PanelLeftClose size={18} className="text-muted-foreground" />
+            <Icon icon={PanelLeftClose} size="sm" className="text-muted-foreground" />
           </button>
 
           {/* Dropdown Menu */}

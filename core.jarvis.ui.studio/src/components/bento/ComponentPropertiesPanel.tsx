@@ -123,7 +123,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
       
       {/* Panel */}
       <div className={cn(
-        "fixed top-0 right-0 h-full w-6xl bg-background border-l border-border z-50",
+        "fixed top-0 right-0 h-full w-mdxl bg-background border-l border-border z-50",
         "transform transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "translate-x-full"
       )}>
@@ -139,7 +139,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-sm w-sm p-0"
           >
             <X className="icon-xs" />
           </Button>
@@ -170,7 +170,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
             variant="ghost"
             size="sm"
             onClick={() => onDelete?.(component.id)}
-            className="h-7 px-2 text-destructive hover:text-destructive"
+            className="h-sm px-xs text-destructive hover:text-destructive"
             title="Delete component"
           >
             <Trash2 className="icon-xs" />
@@ -541,7 +541,7 @@ export const ComponentPropertiesPanel: React.FC<ComponentPropertiesPanelProps> =
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 ml-2"
+                      className="h-sm w-sm p-0 ml-2"
                     >
                       <RefreshCw className="icon-xs" />
                     </Button>

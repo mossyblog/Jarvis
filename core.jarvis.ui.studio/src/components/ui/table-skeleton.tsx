@@ -14,7 +14,7 @@ export function TableSkeleton({ rows = 5, columns = 8 }: TableSkeletonProps) {
           <TableRow>
             {Array.from({ length: columns }).map((_, index) => (
               <TableHead key={index}>
-                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-xs w-4xl" />
               </TableHead>
             ))}
           </TableRow>
@@ -25,15 +25,15 @@ export function TableSkeleton({ rows = 5, columns = 8 }: TableSkeletonProps) {
               {Array.from({ length: columns }).map((_, colIndex) => (
                 <TableCell key={colIndex}>
                   <Skeleton 
-                    className={`h-4 ${
-                      colIndex === 0 ? 'w-16' : // Entity ID column
-                      colIndex === 1 ? 'w-32' : // Email column  
-                      colIndex === 2 ? 'w-24' : // Profile Name column
-                      colIndex === 3 ? 'w-16' : // Auth Method column
-                      colIndex === 4 ? 'w-16' : // Status column
-                      colIndex === 5 ? 'w-20' : // Created column
-                      colIndex === 6 ? 'w-20' : // Last Updated column
-                      'w-8' // Actions column
+                    className={`h-xs ${
+                      colIndex === 0 ? 'w-3xl' : // Entity ID column
+                      colIndex === 1 ? 'w-mdxl' : // Email column  
+                      colIndex === 2 ? 'w-4xl' : // Profile Name column
+                      colIndex === 3 ? 'w-3xl' : // Auth Method column
+                      colIndex === 4 ? 'w-3xl' : // Status column
+                      colIndex === 5 ? 'w-4xl' : // Created column
+                      colIndex === 6 ? 'w-4xl' : // Last Updated column
+                      'w-sm' // Actions column
                     }`} 
                   />
                 </TableCell>

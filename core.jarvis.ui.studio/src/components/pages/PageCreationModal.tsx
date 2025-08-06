@@ -198,10 +198,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="text-base flex items-center gap-2">
-              <Layout className="h-4 w-4" />
+              <Layout className="h-xs w-xs" />
               {template.templateName}
               {isSelected && (
-                <Check className="h-4 w-4 text-primary" />
+                <Check className="h-xs w-xs text-primary" />
               )}
             </CardTitle>
             <CardDescription className="mt-1">
@@ -212,7 +212,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
             <Badge variant="outline">{template.category}</Badge>
             {template.isPublic && (
               <Badge variant="secondary">
-                <Globe className="h-3 w-3 mr-1" />
+                <Globe className="h-2xs w-2xs mr-1" />
                 Public
               </Badge>
             )}
@@ -223,11 +223,11 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1">
-              <Users className="h-3 w-3" />
+              <Users className="h-2xs w-2xs" />
               {template.usageCount || 0}
             </span>
             <span className="flex items-center gap-1">
-              <Star className="h-3 w-3" />
+              <Star className="h-2xs w-2xs" />
               Template
             </span>
           </div>
@@ -239,7 +239,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
               onPreview(template);
             }}
           >
-            <Eye className="h-3 w-3 mr-1" />
+            <Eye className="h-2xs w-2xs mr-1" />
             Preview
           </Button>
         </div>
@@ -509,7 +509,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5" />
+              <Sparkles className="h-sm w-sm" />
               Create New Page
             </DialogTitle>
             <DialogDescription>
@@ -521,7 +521,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
           <div className="flex items-center justify-between px-6 py-4 border-b">
             {steps.map((step, index) => (
               <div key={step.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full border-2 ${
+                <div className={`flex items-center justify-center w-lg h-lg rounded-full border-2 ${
                   index === currentStep 
                     ? 'border-primary bg-primary text-primary-foreground'
                     : index < currentStep 
@@ -529,9 +529,9 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                       : 'border-muted-foreground bg-background text-muted-foreground'
                 }`}>
                   {index < currentStep ? (
-                    <Check className="h-4 w-4" />
+                    <Check className="h-xs w-xs" />
                   ) : (
-                    <step.icon className="h-4 w-4" />
+                    <step.icon className="h-xs w-xs" />
                   )}
                 </div>
                 <div className="ml-3 hidden sm:block">
@@ -545,7 +545,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                   </p>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`hidden sm:block w-12 h-px mx-4 ${
+                  <div className={`hidden sm:block w-2xl h-px mx-4 ${
                     index < currentStep ? 'bg-primary' : 'bg-muted-foreground'
                   }`} />
                 )}
@@ -610,7 +610,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                             <SelectContent>
                               <SelectItem value="static">
                                 <div className="flex items-center gap-2">
-                                  <FileText className="h-4 w-4" />
+                                  <FileText className="h-xs w-xs" />
                                   <div>
                                     <div className="font-medium">Static Page</div>
                                     <div className="text-xs text-muted-foreground">
@@ -621,7 +621,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                               </SelectItem>
                               <SelectItem value="dynamic">
                                 <div className="flex items-center gap-2">
-                                  <Database className="h-4 w-4" />
+                                  <Database className="h-xs w-xs" />
                                   <div>
                                     <div className="font-medium">Dynamic Page</div>
                                     <div className="text-xs text-muted-foreground">
@@ -700,7 +700,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                       <Card className="border-destructive">
                         <CardContent className="flex items-center justify-center py-8">
                           <div className="text-center">
-                            <AlertTriangle className="h-8 w-8 mx-auto mb-2 text-destructive" />
+                            <AlertTriangle className="h-lg w-lg mx-auto mb-2 text-destructive" />
                             <p className="text-sm text-destructive">Failed to load templates</p>
                             <p className="text-xs text-muted-foreground">You can continue without a template</p>
                           </div>
@@ -718,10 +718,10 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                           <CardContent className="flex items-center p-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <Zap className="h-5 w-5" />
+                                <Zap className="h-sm w-sm" />
                                 <span className="font-medium">Start from Scratch</span>
                                 {!watchedTemplateSelection.selectedTemplateId && (
-                                  <Check className="h-4 w-4 text-primary" />
+                                  <Check className="h-xs w-xs text-primary" />
                                 )}
                               </div>
                               <p className="text-sm text-muted-foreground mt-1">
@@ -748,7 +748,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                           <Card className="border-dashed">
                             <CardContent className="flex items-center justify-center py-8">
                               <div className="text-center">
-                                <Layout className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                                <Layout className="h-lg w-lg mx-auto mb-2 text-muted-foreground opacity-50" />
                                 <p className="text-sm text-muted-foreground">No templates available</p>
                                 <p className="text-xs text-muted-foreground">You can continue without a template</p>
                               </div>
@@ -976,7 +976,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                 {hasError && (
                   <Card className="border-destructive">
                     <CardContent className="flex items-center p-4">
-                      <AlertTriangle className="h-5 w-5 text-destructive mr-2" />
+                      <AlertTriangle className="h-sm w-sm text-destructive mr-2" />
                       <div>
                         <p className="text-sm font-medium text-destructive">
                           Failed to create page
@@ -998,7 +998,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                     onClick={handlePrevious}
                     disabled={currentStep === 0 || isLoading}
                   >
-                    <ChevronLeft className="h-4 w-4 mr-1" />
+                    <ChevronLeft className="h-xs w-xs mr-1" />
                     Previous
                   </Button>
 
@@ -1019,7 +1019,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                         disabled={!isStepValid || isLoading}
                       >
                         Next
-                        <ChevronRight className="h-4 w-4 ml-1" />
+                        <ChevronRight className="h-xs w-xs ml-1" />
                       </Button>
                     ) : (
                       <Button
@@ -1033,7 +1033,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                           </>
                         ) : (
                           <>
-                            <Check className="h-4 w-4 mr-1" />
+                            <Check className="h-xs w-xs mr-1" />
                             Create Page
                           </>
                         )}
@@ -1053,7 +1053,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
           <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
-                <Eye className="h-5 w-5" />
+                <Eye className="h-sm w-sm" />
                 Template Preview
               </DialogTitle>
               <DialogDescription>
@@ -1071,7 +1071,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                   />
                 ) : (
                   <div className="text-center">
-                    <Layout className="h-12 w-12 mx-auto mb-2 text-muted-foreground opacity-50" />
+                    <Layout className="h-2xl w-2xl mx-auto mb-2 text-muted-foreground opacity-50" />
                     <p className="text-sm text-muted-foreground">No preview available</p>
                   </div>
                 )}
@@ -1125,7 +1125,7 @@ export const PageCreationModal: React.FC<PageCreationModalProps> = ({
                 handleTemplateSelect(previewTemplate.id);
                 setPreviewTemplate(null);
               }}>
-                <Check className="h-4 w-4 mr-1" />
+                <Check className="h-xs w-xs mr-1" />
                 Select Template
               </Button>
             </DialogFooter>

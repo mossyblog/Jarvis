@@ -1,5 +1,6 @@
 import { ExternalLink } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { LucideIcon as Icon } from '../ui/icon';
 
 interface SlowQuery {
   id: string;
@@ -48,7 +49,7 @@ export function SlowQueriesTable() {
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium uppercase tracking-wide">Slow Queries</h3>
         <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <ExternalLink size={14} />
+          <Icon icon={ExternalLink} size="sm" />
         </button>
       </div>
 

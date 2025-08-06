@@ -110,10 +110,10 @@ export const WithSearchBar: Story = {
     customHeaderComponents: (
       <div className="flex items-center gap-2 flex-1 max-w-md">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
           <Input 
             placeholder="Search pages, components..."
-            className="pl-10 h-8"
+            className="pl-10 h-lg"
           />
         </div>
       </div>
@@ -127,16 +127,16 @@ export const WithActionButtons: Story = {
     showProductMenu: true,
     customHeaderComponents: (
       <div className="flex items-center gap-2">
-        <Button size="sm" className="h-8">
-          <Plus className="w-4 h-4 mr-1" />
+        <Button size="sm" className="h-lg">
+          <Plus className="w-xs h-xs mr-1" />
           New Page
         </Button>
-        <Button size="sm" variant="outline" className="h-8">
-          <Filter className="w-4 h-4 mr-1" />
+        <Button size="sm" variant="outline" className="h-lg">
+          <Filter className="w-xs h-xs mr-1" />
           Filter
         </Button>
-        <Button size="sm" variant="outline" className="h-8">
-          <Download className="w-4 h-4 mr-1" />
+        <Button size="sm" variant="outline" className="h-lg">
+          <Download className="w-xs h-xs mr-1" />
           Export
         </Button>
       </div>
@@ -155,7 +155,7 @@ export const CompactMode: Story = {
   name: 'Compact Mode',
   args: {
     showProductMenu: true,
-    className: 'h-10' // Smaller height
+    className: 'h-xl' // Smaller height
   },
   parameters: {
     docs: {

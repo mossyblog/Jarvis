@@ -1,6 +1,7 @@
 import { Moon, Sun, Palette } from 'lucide-react';
 import { useTheme, type ThemeName } from '../../contexts/ThemeContext';
 import { Button } from './button';
+import { IconButton } from './icon-button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from './dropdown-menu';
 import { themes } from '../../styles/themes';
+import { LucideIcon as Icon } from './icon';
 
 export function ThemeSwitcher() {
   const { theme, mode, setTheme, setMode } = useTheme();
@@ -23,33 +25,33 @@ export function ThemeSwitcher() {
   return (
     <div className="flex items-center gap-2">
       {/* Mode Toggle Button */}
-      <Button
+      <IconButton
         variant="ghost"
         size="sm"
         onClick={handleModeToggle}
-        className="h-xs w-xs p-0"
         title={`Switch to ${mode === 'light' ? 'dark' : 'light'} mode`}
+        aria-label="Toggle theme mode"
       >
         {mode === 'light' ? (
-          <Moon className="h-xs w-xs" />
+          <Icon icon={Moon} size="xs" />
         ) : (
-          <Sun className="h-xs w-xs" />
+          <Icon icon={Sun} size="xs" />
         )}
         <span className="sr-only">Toggle theme mode</span>
-      </Button>
+      </IconButton>
 
       {/* Theme Selection Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button 
+          <IconButton 
             variant="ghost" 
             size="sm" 
-            className="h-xs w-xs p-0"
             title="Select theme"
+            aria-label="Select theme"
           >
-            <Palette className="h-xs w-xs" />
+            <Icon icon={Palette} size="xs" />
             <span className="sr-only">Select theme</span>
-          </Button>
+          </IconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[200px]">
           <DropdownMenuLabel>Theme</DropdownMenuLabel>
@@ -88,9 +90,9 @@ export function ThemeSwitcherCompact({ showLabel = false }: ThemeSwitcherCompact
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" className="gap-2">
           {mode === 'light' ? (
-            <Sun className="h-xs w-xs" />
+            <Icon icon={Sun} size="xs" />
           ) : (
-            <Moon className="h-xs w-xs" />
+            <Icon icon={Moon} size="xs" />
           )}
           {showLabel && (
             <span className="text-sm capitalize">
@@ -108,11 +110,11 @@ export function ThemeSwitcherCompact({ showLabel = false }: ThemeSwitcherCompact
           Mode
         </DropdownMenuLabel>
         <DropdownMenuItem onClick={() => setMode('light')} className="gap-2">
-          <Sun className="h-xs w-xs" />
+          <Icon icon={Sun} size="xs" />
           Light
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setMode('dark')} className="gap-2">
-          <Moon className="h-xs w-xs" />
+          <Icon icon={Moon} size="xs" />
           Dark
         </DropdownMenuItem>
         

@@ -39,13 +39,14 @@ import { Button } from '../ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '../ui/card';
 import { Input } from '../ui/input';
 import { Badge } from '../ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog-temp'; // TEMPORARY: Using non-Radix dialog due to React 19 issue
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '../ui/dialog';
 import { Label } from '../ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select-temp'; // TEMPORARY: Using non-Radix select due to React 19 issue
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Textarea } from '../ui/textarea';
-import { Tabs, TabsList, TabsTrigger } from '../ui/tabs-temp'; // TEMPORARY: Using non-Radix tabs due to React 19 issue
+import { Tabs, TabsList, TabsTrigger } from '../ui/tabs';
 import { ScrollArea } from '../ui/scroll-area';
 import { LoadingSpinner } from '../ui/loading-spinner';
+import { LucideIcon as Icon } from '../ui/icon';
 // import { Sheet, SheetContent } from '../ui/sheet'; // TEMPORARILY DISABLED DUE TO REACT 19 ISSUE
 import { Separator } from '../ui/separator';
 import { Pagination } from '../ui/pagination';
@@ -1475,7 +1476,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
       <div className="flex h-screen overflow-hidden">
         {/* Desktop Sidebar - Hidden on Mobile */}
         <aside 
-          className="hidden lg:flex lg:flex-col lg:w-64 lg:border-r lg:bg-card/50"
+          className="hidden lg:flex lg:flex-col lg:w-xlxl lg:border-r lg:bg-card/50"
           role="complementary"
           aria-label="Navigation sidebar"
         >
@@ -1544,7 +1545,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
             tabIndex={-1}
           >
             {/* Content Container with Proper Spacing Hierarchy */}
-            <div className="max-w-7xl mx-auto space-y-lg sm:space-y-xl">
+            <div className="max-w-mdxl mx-auto space-y-lg sm:space-y-xl">
               {/* Page Header Section */}
               <section 
                 className="mb-lg sm:mb-xl"
@@ -1666,7 +1667,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
                         }}
                         placeholder="Search pages... (Press / to focus)"
                         isLoading={searchState.isSearching}
-                        inputClassName="w-full h-10 px-sm"
+                        inputClassName="w-full h-xl px-sm"
                       />
                       <div id="search-description" className="sr-only">
                         Type to search through your pages by name, description, or slug. Use arrow keys to navigate suggestions.
@@ -1683,7 +1684,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
                     >
                       <SelectTrigger 
                         id="page-type-select" 
-                        className="w-full h-10"
+                        className="w-full h-xl"
                         aria-label="Filter by page type"
                       >
                         <SelectValue placeholder="Page Type" />
@@ -1705,7 +1706,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
                     >
                       <SelectTrigger 
                         id="status-select" 
-                        className="w-full h-10"
+                        className="w-full h-xl"
                         aria-label="Filter by status"
                       >
                         <SelectValue placeholder="Status" />
@@ -1728,7 +1729,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
                     >
                       <SelectTrigger 
                         id="owner-select" 
-                        className="w-full h-10"
+                        className="w-full h-xl"
                         aria-label="Filter by owner"
                       >
                         <SelectValue placeholder="Owner" />
@@ -1750,7 +1751,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
                       className="w-full"
                       aria-label="View mode selection"
                     >
-                      <TabsList className="grid grid-cols-3 w-full h-10">
+                      <TabsList className="grid grid-cols-3 w-full h-xl">
                         <TabsTrigger value="grid" className="text-xs sm:text-sm px-sm">Grid</TabsTrigger>
                         <TabsTrigger value="list" className="text-xs sm:text-sm px-sm">List</TabsTrigger>
                         <TabsTrigger value="card" className="text-xs sm:text-sm px-sm">Card</TabsTrigger>
@@ -1793,7 +1794,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
 
               {/* Main Content Grid Section - Mobile First Responsive */}
               <section 
-                className="min-h-96"
+                className="min-h-412"
                 role="region"
                 aria-labelledby="pages-title"
               >
@@ -1833,7 +1834,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
                     {/* Pages Grid Container with Improved Spacing */}
                     <div className="space-y-md">
                     <ScrollArea 
-                      className="h-[calc(100vh-24rem)] sm:h-[calc(100vh-26rem)] lg:h-[calc(100vh-28rem)]"
+                      className="h-[calc(100vh-xs4rem)] sm:h-[calc(100vh-xs6rem)] lg:h-[calc(100vh-xs8rem)]"
                       role="grid"
                       aria-label="Pages grid"
                     >
@@ -2059,7 +2060,7 @@ export const UIStudioInterface: React.FC<UIStudioInterfaceProps> = ({
         onOpenChange={(open) => setState(prev => ({ ...prev, modals: { ...prev.modals, templateGalleryOpen: open } }))}
       >
         <DialogContent 
-          className="w-[95vw] max-w-7xl h-[90vh] p-0"
+          className="w-[95vw] max-w-mdxl h-[90vh] p-0"
           aria-describedby="template-gallery-description"
         >
           <TemplateGalleryGrid
@@ -2164,8 +2165,8 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         aria-label="UIStudio branding"
       >
         <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <FolderOpen className="h-4 w-4 text-primary-foreground" />
+          <div className="w-md h-md bg-primary rounded-lg flex items-center justify-center">
+            <Icon icon={FolderOpen} size="xs" className="text-primary-foreground" />
           </div>
           <div className="flex flex-col">
             <h2 className="text-sm font-semibold">UIStudio</h2>
@@ -2186,7 +2187,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           className="w-full justify-start"
           size="sm"
         >
-          <Plus className="h-4 w-4 mr-2" />
+          <Icon icon={Plus} size="xs" className="mr-2" />
           Create New Page
         </Button>
         <Button
@@ -2195,7 +2196,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           className="w-full justify-start"
           size="sm"
         >
-          <Layers className="h-4 w-4 mr-2" />
+          <Icon icon={Layers} size="xs" className="mr-2" />
           Browse Templates
         </Button>
       </section>
@@ -2209,18 +2210,17 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             Navigation
           </div>
           {navigationItems.map((item) => {
-            const Icon = item.icon;
             return (
               <Button
                 key={item.label}
                 variant={item.active ? 'secondary' : 'ghost'}
-                className="w-full justify-start h-9"
+                className="w-full justify-start h-lg"
                 onClick={() => handleNavigation(item)}
               >
-                <Icon className="h-4 w-4 mr-3" />
+                <Icon icon={item.icon} size="xs" className="mr-3" />
                 <span className="text-sm">{item.label}</span>
                 {!item.action && (
-                  <ChevronRight className="h-3 w-3 ml-auto opacity-50" />
+                  <Icon icon={ChevronRight} size="xs" className="ml-auto opacity-50" />
                 )}
               </Button>
             );
@@ -2236,7 +2236,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Recent Pages
                 </div>
-                <Star className="h-3 w-3 text-muted-foreground" />
+                <Icon icon={Star} size="xs" className="text-muted-foreground" />
               </div>
               <div className="space-y-1 mt-2">
                 {recentPages.map((page) => (
@@ -2247,7 +2247,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     onClick={() => handlePageSelect(page)}
                   >
                     <div className="flex items-center space-x-2 w-full">
-                      <FileText className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <Icon icon={FileText} size="xs" className="text-muted-foreground shrink-0" />
                       <div className="flex-1 min-w-0">
                         <div className="text-xs font-medium truncate">
                           {page.pageName}
@@ -2258,7 +2258,7 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                       </div>
                       <Badge 
                         variant={page.isPublished ? 'default' : 'secondary'}
-                        className="text-xs h-4 px-1"
+                        className="text-xs h-xs px-1"
                       >
                         {page.isPublished ? 'Pub' : 'Draft'}
                       </Badge>
@@ -2270,10 +2270,10 @@ const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               {/* View All Recent Pages */}
               <Button
                 variant="ghost"
-                className="w-full justify-start h-8 text-xs text-muted-foreground"
+                className="w-full justify-start h-md text-xs text-muted-foreground"
                 onClick={() => navigate('/studio/recent')}
               >
-                <Clock className="h-3 w-3 mr-2" />
+                <Clock className="h-xs w-xs mr-2" />
                 View all recent
               </Button>
             </div>

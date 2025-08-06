@@ -30,7 +30,7 @@ const ChartBar = memo<{ value: number; maxValue: number; index: number; onClick?
 
     return (
       <div
-        className="flex-1 flex flex-col items-center gap-1"
+        className="flex-1 flex flex-col items-center gap-xs"
         onClick={onClick ? () => onClick(index) : undefined}
         style={{ cursor: onClick ? 'pointer' : 'default' }}
       >
@@ -51,9 +51,9 @@ ChartBar.displayName = 'ChartBar';
 // Memoized loading skeleton
 const LoadingSkeleton = memo(() => (
   <div className="animate-pulse">
-    <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-    <div className="h-8 bg-muted rounded w-1/2 mb-4" />
-    <div className="h-32 bg-muted rounded" />
+    <div className="h-xs bg-muted rounded w-2xs/4 mb-2" />
+    <div className="h-lg bg-muted rounded w-xsxs/2 mb-4" />
+    <div className="h-232 bg-muted rounded" />
   </div>
 ));
 
@@ -87,11 +87,11 @@ export const MetricCard = memo<MetricCardProps>(({
   }), [timeLabels]);
 
   return (
-    <div className={`bg-card border border-default rounded-lg p-6 flex flex-col gap-4 ${className}`}>
+    <div className={`bg-card border border-default rounded-lg p-sm flex flex-col gap-sm ${className}`}>
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-muted rounded">
-          <Icon size={20} className="text-muted-foreground" />
+      <div className="flex items-center gap-sm">
+        <div className="p-xs bg-muted rounded">
+          <Icon className="w-md h-md text-muted-foreground" />
         </div>
         <h3 className="text-base font-medium">{title}</h3>
       </div>
@@ -109,7 +109,7 @@ export const MetricCard = memo<MetricCardProps>(({
           </div>
 
           {/* Chart */}
-          <div className="h-32 flex items-end gap-1" role="img" aria-label={`Chart showing ${title} over time`}>
+          <div className="h-232 flex items-end gap-xs" role="img" aria-label={`Chart showing ${title} over time`}>
             {data.map((value, index) => (
               <ChartBar
                 key={index}
@@ -151,11 +151,11 @@ export const MetricCardBase = ({
   const metricLabel = type === 'auth' ? 'Auth Requests' : `${type.charAt(0).toUpperCase() + type.slice(1)} Requests`;
 
   return (
-    <div className={`bg-card border border-default rounded-lg p-6 flex flex-col gap-4 ${className}`}>
+    <div className={`bg-card border border-default rounded-lg p-sm flex flex-col gap-sm ${className}`}>
       {/* Same JSX as memoized version */}
-      <div className="flex items-center gap-3">
-        <div className="p-2 bg-muted rounded">
-          <Icon size={20} className="text-muted-foreground" />
+      <div className="flex items-center gap-sm">
+        <div className="p-xs bg-muted rounded">
+          <Icon className="w-md h-md text-muted-foreground" />
         </div>
         <h3 className="text-base font-medium">{title}</h3>
       </div>
@@ -171,11 +171,11 @@ export const MetricCardBase = ({
             <div className="text-2xl font-light">{formatNumber(requests)}</div>
           </div>
 
-          <div className="h-32 flex items-end gap-1" role="img" aria-label={`Chart showing ${title} over time`}>
+          <div className="h-232 flex items-end gap-xs" role="img" aria-label={`Chart showing ${title} over time`}>
             {data.map((value, index) => (
               <div
                 key={index}
-                className="flex-1 flex flex-col items-center gap-1"
+                className="flex-1 flex flex-col items-center gap-xs"
                 onClick={onChartClick ? () => onChartClick(index) : undefined}
                 style={{ cursor: onChartClick ? 'pointer' : 'default' }}
               >

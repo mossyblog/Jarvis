@@ -373,7 +373,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           {collaborationEnabled && (
             <div className="flex items-center gap-xs">
               <div className={cn(
-                'w-2 h-2 rounded-full',
+                'w-xs h-xs rounded-full',
                 isConnected ? 'bg-green-500' : 'bg-red-500'
               )} />
               <span className="text-xs text-muted-foreground">
@@ -392,7 +392,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               onClick={toggleMobileMenu}
               className="lg:hidden"
             >
-              <Grid3X3 className="h-4 w-4" />
+              <Grid3X3 className="h-xs w-xs" />
             </Button>
           )}
           
@@ -406,25 +406,25 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               size={state.isMobileLayout ? 'sm' : 'sm'}
               onClick={() => handleDeviceChange('desktop' as DeviceType)}
             >
-              <Monitor className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Monitor className="h-xs w-xs sm:h-xs sm:w-xs" />
             </Button>
             <Button
               variant={state.currentDevice === 'tablet' ? 'secondary' : 'ghost'}
               size={state.isMobileLayout ? 'sm' : 'sm'}
               onClick={() => handleDeviceChange('tablet' as DeviceType)}
             >
-              <Tablet className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Tablet className="h-xs w-xs sm:h-xs sm:w-xs" />
             </Button>
             <Button
               variant={state.currentDevice === 'mobile' ? 'secondary' : 'ghost'}
               size={state.isMobileLayout ? 'sm' : 'sm'}
               onClick={() => handleDeviceChange('mobile' as DeviceType)}
             >
-              <Smartphone className="h-3 w-3 sm:h-4 sm:w-4" />
+              <Smartphone className="h-xs w-xs sm:h-xs sm:w-xs" />
             </Button>
           </div>
           
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-xs" />
           
           {/* View Controls - Responsive */}
           <div className={cn(
@@ -436,7 +436,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               size="sm"
               onClick={toggleGridVisibility}
             >
-              <Grid3X3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <Grid3X3 className="h-xs w-xs sm:h-xs sm:w-xs mr-1" />
               <span className="hidden sm:inline">Grid</span>
             </Button>
             
@@ -445,12 +445,12 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               size="sm"
               onClick={togglePreviewMode}
             >
-              <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <Eye className="h-xs w-xs sm:h-xs sm:w-xs mr-1" />
               <span className="hidden sm:inline">Preview</span>
             </Button>
           </div>
           
-          <Separator orientation="vertical" className="h-6" />
+          <Separator orientation="vertical" className="h-xs" />
           
           {/* Action Controls - Mobile Optimized */}
           <div className="flex items-center gap-1">
@@ -460,11 +460,11 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               state.isMobileLayout ? 'hidden' : 'flex'
             )}>
               <Button variant="outline" size="sm" disabled>
-                <Undo className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Undo className="h-xs w-xs sm:h-xs sm:w-xs" />
               </Button>
               
               <Button variant="outline" size="sm" disabled>
-                <Redo className="h-3 w-3 sm:h-4 sm:w-4" />
+                <Redo className="h-xs w-xs sm:h-xs sm:w-xs" />
               </Button>
             </div>
             
@@ -476,7 +476,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               disabled={!state.hasUnsavedChanges}
               className={cn(state.isMobileLayout ? 'hidden' : 'flex')}
             >
-              <Save className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <Save className="h-xs w-xs sm:h-xs sm:w-xs mr-1" />
               <span className="hidden sm:inline">Save</span>
             </Button>
             
@@ -487,7 +487,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               onClick={handlePreview}
               className={cn(state.isMobileLayout ? 'hidden' : 'flex')}
             >
-              <Share className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <Share className="h-xs w-xs sm:h-xs sm:w-xs mr-1" />
               <span className="hidden sm:inline">Preview</span>
             </Button>
             
@@ -496,7 +496,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
               size="sm"
               onClick={handlePublish}
             >
-              <Play className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+              <Play className="h-xs w-xs sm:h-xs sm:w-xs mr-1" />
               <span className={cn(state.isMobileLayout ? 'hidden sm:inline' : 'inline')}>
                 Publish
               </span>
@@ -516,14 +516,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
           state.isMobileLayout 
             ? cn(
                 'w-full border-b border-r-0',
-                state.showMobileMenu ? 'h-64' : 'h-0 overflow-hidden'
+                state.showMobileMenu ? 'h-xlxl' : 'h-none overflow-hidden'
               )
-            : 'w-80 h-full'
+            : 'w-xsxs1xl h-full'
         )}>
           <Tabs value={state.activeTab} onValueChange={handleTabChange} className="h-full">
             <TabsList className={cn(
               'grid w-full m-2',
-              state.isMobileLayout ? 'grid-cols-3 h-8' : 'grid-cols-3'
+              state.isMobileLayout ? 'grid-cols-3 h-md' : 'grid-cols-3'
             )}>
               <TabsTrigger value="design" className={cn(state.isMobileLayout && 'text-xs')}>
                 Design
@@ -604,14 +604,14 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
                     size="sm"
                     onClick={toggleGridVisibility}
                   >
-                    <Grid3X3 className="h-3 w-3" />
+                    <Grid3X3 className="h-xs w-xs" />
                   </Button>
                   <Button
                     variant={state.isPreviewMode ? 'secondary' : 'outline'}
                     size="sm"
                     onClick={togglePreviewMode}
                   >
-                    <Eye className="h-3 w-3" />
+                    <Eye className="h-xs w-xs" />
                   </Button>
                 </div>
               ) : (
@@ -621,7 +621,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
                     size="sm"
                     onClick={() => setState(prev => ({ ...prev, activeTab: 'layout' }))}
                   >
-                    <Settings className="h-4 w-4 mr-1" />
+                    <Settings className="h-xs w-xs mr-1" />
                     Configure Layout
                   </Button>
                 </div>
@@ -667,7 +667,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
                     <div className="text-center">
                       <Grid3X3 className={cn(
                         'mx-auto mb-4 opacity-50',
-                        state.isMobileLayout ? 'h-8 w-8' : 'h-12 w-12'
+                        state.isMobileLayout ? 'h-sm w-sm' : 'h-2xl w-2xl'
                       )} />
                       <p className={cn(
                         state.isMobileLayout ? 'text-sm' : 'text-base'
@@ -691,7 +691,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
             'page-builder__properties bg-card',
             state.isMobileLayout 
               ? 'border-t w-full' 
-              : 'w-80 border-l'
+              : 'w-xsxs1xl border-l'
           )}>
             <div className={cn(
               'border-b',
@@ -761,7 +761,7 @@ export const PageBuilder: React.FC<PageBuilderProps> = ({
         <div className="fixed top-16 right-4 bg-card border rounded-lg p-2 shadow-lg">
           <div className="flex items-center gap-xs">
             <div className={cn(
-              'w-2 h-2 rounded-full',
+              'w-xs h-xs rounded-full',
               isConnected ? 'bg-green-500' : 'bg-red-500'
             )} />
             <span className="text-xs text-muted-foreground">

@@ -41,7 +41,7 @@ function SkeletonText({ lines = 3, className }: SkeletonTextProps) {
           key={i}
           className={cn(
             "h-xs",
-            i === lines - 1 ? "w-3/4" : "w-full" // Last line is shorter
+            i === lines - 1 ? "w-2xs/4" : "w-full" // Last line is shorter
           )} 
         />
       ))}
@@ -59,16 +59,16 @@ function SkeletonCard({ className, hasImage = true, hasActions = true }: Skeleto
   return (
     <div className={cn("p-4 border rounded-lg space-y-4", className)}>
       {hasImage && (
-        <Skeleton className="h-6xl w-full" />
+        <Skeleton className="h-mdxl w-full" />
       )}
       <div className="space-y-2">
-        <Skeleton className="h-xs w-3/4" />
+        <Skeleton className="h-xs w-2xs/4" />
         <SkeletonText lines={2} />
       </div>
       {hasActions && (
         <div className="flex gap-2">
-          <Skeleton className="h-sm w-20" />
-          <Skeleton className="h-sm w-16" />
+          <Skeleton className="h-sm w-4xl" />
+          <Skeleton className="h-sm w-3xl" />
         </div>
       )}
     </div>
@@ -109,7 +109,7 @@ function SkeletonTable({
                 key={colIndex} 
                 className={cn(
                   "h-xs",
-                  colIndex === 0 ? "w-3/4" : "w-full" // First column shorter for names
+                  colIndex === 0 ? "w-2xs/4" : "w-full" // First column shorter for names
                 )} 
               />
             ))}
@@ -141,8 +141,8 @@ function SkeletonList({
             <Skeleton className="h-sm w-sm rounded-full flex-shrink-0" />
           )}
           <div className="flex-1 space-y-1">
-            <Skeleton className="h-xs w-1/3" />
-            <Skeleton className="h-xs w-2/3" />
+            <Skeleton className="h-xs w-xsxs/3" />
+            <Skeleton className="h-xs w-xs/3" />
           </div>
           {hasActions && (
             <div className="flex gap-2 flex-shrink-0">
@@ -167,14 +167,14 @@ function SkeletonForm({ fields = 4, hasSubmit = true, className }: SkeletonFormP
     <div className={cn("space-y-4", className)}>
       {Array.from({ length: fields }).map((_, i) => (
         <div key={i} className="space-y-2">
-          <Skeleton className="h-xs w-1/4" />
+          <Skeleton className="h-xs w-xsxs/4" />
           <Skeleton className="h-sm w-full" />
         </div>
       ))}
       {hasSubmit && (
         <div className="flex gap-2 pt-2">
-          <Skeleton className="h-sm w-24" />
-          <Skeleton className="h-sm w-20" />
+          <Skeleton className="h-sm w-5xl" />
+          <Skeleton className="h-sm w-4xl" />
         </div>
       )}
     </div>
@@ -209,7 +209,7 @@ function SkeletonChart({ type = 'bar', className }: SkeletonChartProps) {
   if (type === 'pie') {
     return (
       <div className={cn("flex items-center justify-center p-8", className)}>
-        <Skeleton className="h-6xl w-6xl rounded-full" />
+        <Skeleton className="h-mdxl w-mdxl rounded-full" />
       </div>
     );
   }
@@ -217,10 +217,10 @@ function SkeletonChart({ type = 'bar', className }: SkeletonChartProps) {
   return (
     <div className={cn("p-4", className)}>
       <div className="space-y-2 mb-4">
-        <Skeleton className="h-xs w-1/3" />
-        <Skeleton className="h-xs w-1/2" />
+        <Skeleton className="h-xs w-xsxs/3" />
+        <Skeleton className="h-xs w-xsxs/2" />
       </div>
-      <div className="h-64 flex items-end gap-2">
+      <div className="h-xlxl flex items-end gap-2">
         {Array.from({ length: 8 }).map((_, i) => (
           <Skeleton 
             key={i} 
@@ -249,17 +249,17 @@ function SkeletonNavigation({
   return (
     <div className={cn("flex items-center justify-between p-4", className)}>
       {hasLogo && (
-        <Skeleton className="h-xs w-32" />
+        <Skeleton className="h-xs w-252" />
       )}
       <div className="flex gap-6">
         {Array.from({ length: items }).map((_, i) => (
-          <Skeleton key={i} className="h-xs w-16" />
+          <Skeleton key={i} className="h-xs w-3xl" />
         ))}
       </div>
       {hasProfile && (
         <div className="flex items-center gap-2">
           <Skeleton className="h-xs w-xs rounded-full" />
-          <Skeleton className="h-xs w-20" />
+          <Skeleton className="h-xs w-4xl" />
         </div>
       )}
     </div>
@@ -287,7 +287,7 @@ function SkeletonPage({
       
       <div className="flex-1 flex">
         {hasSidebar && (
-          <div className="w-64 border-r p-4 space-y-2">
+          <div className="w-xlxl border-r p-4 space-y-2">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-xs w-full" />
             ))}
@@ -296,8 +296,8 @@ function SkeletonPage({
         
         <div className="flex-1 p-6 space-y-6">
           <div className="space-y-2">
-            <Skeleton className="h-xs w-1/3" />
-            <Skeleton className="h-xs w-2/3" />
+            <Skeleton className="h-xs w-xsxs/3" />
+            <Skeleton className="h-xs w-xs/3" />
           </div>
           
           <SkeletonGrid />

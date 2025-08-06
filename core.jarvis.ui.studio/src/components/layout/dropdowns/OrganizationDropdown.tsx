@@ -1,4 +1,5 @@
 import { Building, Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { LucideIcon as Icon } from '@/components/ui/icon'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,7 +24,7 @@ export const OrganizationDropdown = () => {
   return (
     <>
       <a href={`/org/${HARDCODED_DATA.organization.slug}`} className="flex items-center gap-2 flex-shrink-0 text-sm">
-        <Building size={14} strokeWidth={1.5} className="text-foreground-lighter" />
+        <Icon icon={Building} size="sm" className="text-foreground-lighter" strokeWidth={1.5} />
         <span className="text-foreground">{HARDCODED_DATA.organization.name}</span>
       </a>
       <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
@@ -31,9 +32,9 @@ export const OrganizationDropdown = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="px-1.5 py-4 [&_svg]:w-5 [&_svg]:h-5 ml-1"
+            className="px-1.5 py-4 ml-1"
           >
-            <ChevronsUpDown strokeWidth={1.5} />
+            <Icon icon={ChevronsUpDown} size="sm" strokeWidth={1.5} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-[320px] p-0">
@@ -50,7 +51,7 @@ export const OrganizationDropdown = () => {
               <DropdownMenuItem className="cursor-pointer px-2 py-1.5">
                 <div className="flex items-center justify-between w-full">
                   <span className="text-sm">{HARDCODED_DATA.organization.name}</span>
-                  <Check size={14} />
+                  <Icon icon={Check} size="sm" />
                 </div>
               </DropdownMenuItem>
             </div>
@@ -63,7 +64,7 @@ export const OrganizationDropdown = () => {
             <DropdownMenuSeparator className="my-0" />
             <div className="py-1">
               <DropdownMenuItem className="cursor-pointer px-2 py-1.5">
-                <Plus size={14} strokeWidth={1.5} className="mr-2" />
+                <Icon icon={Plus} size="sm" className="mr-2" strokeWidth={1.5} />
                 <span className="text-sm">New organization</span>
               </DropdownMenuItem>
             </div>

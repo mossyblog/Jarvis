@@ -1,4 +1,5 @@
-import { Box, Check, ChevronsUpDown, Plus } from 'lucide-react'
+import { Box, Check, Plus, ChevronsUpDown } from 'lucide-react'
+import { LucideIcon } from '../../ui/icon'
 import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,7 +24,7 @@ export const ProjectDropdown = () => {
   return (
     <>
       <a href={`/project/${HARDCODED_DATA.project.ref}`} className="flex items-center gap-2 flex-shrink-0 text-sm">
-        <Box size={14} strokeWidth={1.5} className="text-foreground-lighter" />
+        <LucideIcon icon={Box} size="sm" className="text-foreground-lighter" />
         <span className="text-foreground">{HARDCODED_DATA.project.name}</span>
       </a>
       <DropdownMenu open={open} onOpenChange={setOpen} modal={false}>
@@ -31,7 +32,7 @@ export const ProjectDropdown = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="px-1.5 py-4 [&_svg]:w-5 [&_svg]:h-5 ml-1"
+            className="px-1.5 py-4 [&_svg]:w-sm [&_svg]:h-sm ml-1"
           >
             <ChevronsUpDown strokeWidth={1.5} />
           </Button>
@@ -50,14 +51,14 @@ export const ProjectDropdown = () => {
               <DropdownMenuItem className="cursor-pointer px-2 py-1.5">
                 <div className="flex items-center justify-between w-full">
                   <span className="text-sm">{HARDCODED_DATA.project.name}</span>
-                  <Check size={14} />
+                  <LucideIcon icon={Check} size="sm" />
                 </div>
               </DropdownMenuItem>
             </div>
             <DropdownMenuSeparator className="my-0" />
             <div className="py-1">
               <DropdownMenuItem className="cursor-pointer px-2 py-1.5">
-                <Plus size={14} strokeWidth={1.5} className="mr-2" />
+                <LucideIcon icon={Plus} size="sm" className="mr-2" />
                 <span className="text-sm">New project</span>
               </DropdownMenuItem>
             </div>

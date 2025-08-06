@@ -185,7 +185,7 @@ function DefaultErrorFallback({
     <div className="my-4 p-3 border border-destructive/20 bg-destructive/5 rounded-md">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
+          <AlertTriangle className="h-xs w-xs text-destructive" />
           <span className="text-sm text-destructive">{userMessage}</span>
         </div>
         {canRetry && (
@@ -193,9 +193,9 @@ function DefaultErrorFallback({
             variant="outline"
             size="sm"
             onClick={retry}
-            className="ml-4 h-8 px-3"
+            className="ml-4 h-md px-3"
           >
-            <RefreshCw className="h-3 w-3 mr-1" />
+            <RefreshCw className="h-xs w-xs mr-1" />
             Retry
           </Button>
         )}
@@ -223,13 +223,13 @@ function PageErrorFallback({
       <div className="max-w-md w-full mx-auto p-6">
         <div className="text-center">
           {/* Error Icon */}
-          <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-destructive/10 mb-6">
+          <div className="mx-auto flex items-center justify-center h-3xl w-3xl rounded-full bg-destructive/10 mb-6">
             {isAuth ? (
-              <Home className="h-8 w-8 text-destructive" />
+              <Home className="h-md w-md text-destructive" />
             ) : isNetwork ? (
-              <RefreshCw className="h-8 w-8 text-destructive" />
+              <RefreshCw className="h-md w-md text-destructive" />
             ) : (
-              <AlertTriangle className="h-8 w-8 text-destructive" />
+              <AlertTriangle className="h-md w-md text-destructive" />
             )}
           </div>
 
@@ -255,7 +255,7 @@ function PageErrorFallback({
           <div className="flex flex-col gap-3">
             {canRetry && (
               <Button onClick={retry} className="w-full">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="h-xs w-xs mr-2" />
                 Try Again
               </Button>
             )}
@@ -266,7 +266,7 @@ function PageErrorFallback({
                 onClick={() => window.location.href = '/login'}
                 className="w-full"
               >
-                <Home className="h-4 w-4 mr-2" />
+                <Home className="h-xs w-xs mr-2" />
                 Go to Login
               </Button>
             )}
@@ -277,7 +277,7 @@ function PageErrorFallback({
                 onClick={() => window.location.href = '/'}
                 className="w-full"
               >
-                <Home className="h-4 w-4 mr-2" />
+                <Home className="h-xs w-xs mr-2" />
                 Go to Home
               </Button>
             )}
@@ -287,7 +287,7 @@ function PageErrorFallback({
           {import.meta.env.DEV && (
             <details className="mt-8 text-left">
               <summary className="cursor-pointer text-sm text-muted-foreground hover:text-foreground">
-                <Bug className="inline h-4 w-4 mr-1" />
+                <Bug className="inline h-xs w-xs mr-1" />
                 Debug Information
               </summary>
               <pre className="mt-2 p-3 bg-muted rounded text-xs overflow-auto">
@@ -313,7 +313,7 @@ function SectionErrorFallback({
   return (
     <div className="flex items-center justify-center min-h-[200px] p-6 border-2 border-dashed border-destructive/20 rounded-lg bg-destructive/5">
       <div className="text-center max-w-sm">
-        <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-4" />
+        <AlertTriangle className="h-md w-md text-destructive mx-auto mb-4" />
         <h3 className="text-lg font-semibold text-foreground mb-2">
           Unable to load content
         </h3>
@@ -327,7 +327,7 @@ function SectionErrorFallback({
         </p>
         {canRetry && (
           <Button onClick={retry} size="sm">
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="h-xs w-xs mr-2" />
             Retry
           </Button>
         )}

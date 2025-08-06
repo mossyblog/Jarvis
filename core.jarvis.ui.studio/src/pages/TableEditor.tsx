@@ -81,7 +81,7 @@ const TableEditor = () => {
                 value={sqlInput}
                 onChange={e => setSqlInput(e.target.value)}
                 placeholder="Enter SQL command here..."
-                className="flex-1 resize-y min-h-[60px] max-h-40 rounded-md bg-[#0a0a0a] border border-[#262626] text-[#fafafa] p-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#3fcf8e] focus:border-[#3fcf8e] transition-colors"
+                className="flex-1 resize-y min-h-2xl max-h-mdxl rounded-md bg-[#0a0a0a] border border-[#262626] text-[#fafafa] p-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#3fcf8e] focus:border-[#3fcf8e] transition-colors"
                 spellCheck={false}
                 autoComplete="off"
               />

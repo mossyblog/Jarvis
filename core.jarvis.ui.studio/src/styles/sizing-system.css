@@ -15,14 +15,23 @@
   
   --size-unit: 8px;
   
-  /* T-shirt size multipliers (divisible by 8) */
-  --size-xs-multiplier: 1;    /* 8px */
-  --size-sm-multiplier: 2;    /* 16px */
-  --size-md-multiplier: 3;    /* 24px */
-  --size-lg-multiplier: 4;    /* 32px */
-  --size-xl-multiplier: 5;    /* 40px */
-  --size-2xl-multiplier: 6;   /* 48px */
-  --size-3xl-multiplier: 8;   /* 64px */
+  /* T-shirt size multipliers for PADDING (4-8px max) */
+  --size-xs-multiplier: 0.5;  /* 4px */
+  --size-sm-multiplier: 1;    /* 8px */
+  --size-md-multiplier: 1;    /* 8px */
+  --size-lg-multiplier: 1;    /* 8px */
+  --size-xl-multiplier: 1;    /* 8px */
+  --size-2xl-multiplier: 1;   /* 8px */
+  --size-3xl-multiplier: 1;   /* 8px */
+
+  /* T-shirt size multipliers for GAPS/MARGINS (can be larger) */
+  --gap-xs-multiplier: 1;     /* 8px */
+  --gap-sm-multiplier: 2;     /* 16px */
+  --gap-md-multiplier: 3;     /* 24px */
+  --gap-lg-multiplier: 4;     /* 32px */
+  --gap-xl-multiplier: 5;     /* 40px */
+  --gap-2xl-multiplier: 6;    /* 48px */
+  --gap-3xl-multiplier: 8;    /* 64px */
 
   /* ============================================================================ */
   /* SPACING SYSTEM */
@@ -52,16 +61,23 @@
   /* COMPONENT WIDTHS */
   /* ============================================================================ */
   
-  --width-xs: calc(var(--size-unit) * 4);   /* 32px */
-  --width-sm: calc(var(--size-unit) * 6);   /* 48px */
-  --width-md: calc(var(--size-unit) * 8);   /* 64px */
-  --width-lg: calc(var(--size-unit) * 10);  /* 80px */
-  --width-xl: calc(var(--size-unit) * 12);  /* 96px */
-  --width-2xl: calc(var(--size-unit) * 16); /* 128px */
-  --width-3xl: calc(var(--size-unit) * 20); /* 160px */
-  --width-4xl: calc(var(--size-unit) * 32); /* 256px */
-  --width-5xl: calc(var(--size-unit) * 40); /* 320px */
-  --width-6xl: calc(var(--size-unit) * 48); /* 384px */
+  /* Width utilities using the same 8px grid multipliers */
+  --width-xs: calc(var(--size-unit) * 1); /* 8px */
+  --width-sm: calc(var(--size-unit) * 2); /* 16px */
+  --width-md: calc(var(--size-unit) * 3); /* 24px */
+  --width-lg: calc(var(--size-unit) * 4); /* 32px */
+  --width-xl: calc(var(--size-unit) * 5); /* 40px */
+  --width-2xl: calc(var(--size-unit) * 6); /* 48px */
+  --width-3xl: calc(var(--size-unit) * 8); /* 64px */
+  --width-4xl: calc(var(--size-unit) * 10); /* 80px */
+  --width-5xl: calc(var(--size-unit) * 12); /* 96px */
+  --width-6xl: calc(var(--size-unit) * 16); /* 128px */
+  --width-7xl: calc(var(--size-unit) * 20); /* 160px */
+  --width-8xl: calc(var(--size-unit) * 24); /* 192px */
+  --width-9xl: calc(var(--size-unit) * 28); /* 224px */
+  --width-10xl: calc(var(--size-unit) * 32); /* 256px */
+  --width-11xl: calc(var(--size-unit) * 40); /* 320px */
+  --width-12xl: calc(var(--size-unit) * 48); /* 384px */
 
   /* ============================================================================ */
   /* FONT SIZES (8px scale) */
@@ -190,14 +206,14 @@
 .my-2xl { margin-top: var(--spacing-2xl); margin-bottom: var(--spacing-2xl); }
 .my-3xl { margin-top: var(--spacing-3xl); margin-bottom: var(--spacing-3xl); }
 
-/* Gap utilities */
-.gap-xs { gap: var(--spacing-xs); }
-.gap-sm { gap: var(--spacing-sm); }
-.gap-md { gap: var(--spacing-md); }
-.gap-lg { gap: var(--spacing-lg); }
-.gap-xl { gap: var(--spacing-xl); }
-.gap-2xl { gap: var(--spacing-2xl); }
-.gap-3xl { gap: var(--spacing-3xl); }
+/* Gap utilities - using larger multipliers */
+.gap-xs { gap: calc(var(--size-unit) * var(--gap-xs-multiplier)); }
+.gap-sm { gap: calc(var(--size-unit) * var(--gap-sm-multiplier)); }
+.gap-md { gap: calc(var(--size-unit) * var(--gap-md-multiplier)); }
+.gap-lg { gap: calc(var(--size-unit) * var(--gap-lg-multiplier)); }
+.gap-xl { gap: calc(var(--size-unit) * var(--gap-xl-multiplier)); }
+.gap-2xl { gap: calc(var(--size-unit) * var(--gap-2xl-multiplier)); }
+.gap-3xl { gap: calc(var(--size-unit) * var(--gap-3xl-multiplier)); }
 
 /* ============================================================================ */
 /* UTILITY CLASSES - DIMENSIONS */
@@ -223,6 +239,12 @@
 .w-4xl { width: var(--width-4xl); }
 .w-5xl { width: var(--width-5xl); }
 .w-6xl { width: var(--width-6xl); }
+.w-7xl { width: var(--width-7xl); }
+.w-8xl { width: var(--width-8xl); }
+.w-9xl { width: var(--width-9xl); }
+.w-10xl { width: var(--width-10xl); }
+.w-11xl { width: var(--width-11xl); }
+.w-12xl { width: var(--width-12xl); }
 
 /* Min-height utilities */
 .min-h-xs { min-height: var(--height-xs); }
@@ -244,6 +266,12 @@
 .min-w-4xl { min-width: var(--width-4xl); }
 .min-w-5xl { min-width: var(--width-5xl); }
 .min-w-6xl { min-width: var(--width-6xl); }
+.min-w-7xl { min-width: var(--width-7xl); }
+.min-w-8xl { min-width: var(--width-8xl); }
+.min-w-9xl { min-width: var(--width-9xl); }
+.min-w-10xl { min-width: var(--width-10xl); }
+.min-w-11xl { min-width: var(--width-11xl); }
+.min-w-12xl { min-width: var(--width-12xl); }
 
 /* ============================================================================ */
 /* UTILITY CLASSES - TYPOGRAPHY */

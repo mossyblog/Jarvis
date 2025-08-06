@@ -114,7 +114,7 @@ export function BrandCompliantExample() {
 
         {/* Expandable content with proper timing */}
         <div className={`overflow-hidden transition-all duration-300 ${
-          isExpanded ? 'max-h-40 mt-md' : 'max-h-0'
+          isExpanded ? 'max-h-mdxl mt-md' : 'max-h-none'
         }`}>
           <div className="space-y-sm">
             <ActionButton 

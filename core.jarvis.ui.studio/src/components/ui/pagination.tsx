@@ -113,18 +113,18 @@ export const Pagination: React.FC<PaginationProps> = ({
   // Size variants
   const sizeVariants = {
     sm: {
-      button: 'h-8 px-2 text-xs',
-      select: 'h-8 text-xs',
+      button: 'h-md px-2 text-xs',
+      select: 'h-md text-xs',
       text: 'text-xs'
     },
     md: {
-      button: 'h-9 px-3 text-sm',
-      select: 'h-9 text-sm',
+      button: 'h-lg px-3 text-sm',
+      select: 'h-lg text-sm',
       text: 'text-sm'
     },
     lg: {
-      button: 'h-10 px-4 text-base',
-      select: 'h-10 text-base',
+      button: 'h-xl px-4 text-base',
+      select: 'h-xl text-base',
       text: 'text-base'
     }
   };
@@ -169,7 +169,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               disabled={disabled || loading}
             >
               <SelectTrigger 
-                className={cn('w-16', variant.select)}
+                className={cn('w-3xl', variant.select)}
                 aria-label="Items per page"
               >
                 <SelectValue />
@@ -196,7 +196,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               disabled={!hasPreviousPage || disabled || loading}
               aria-label="Go to first page"
             >
-              <ChevronsLeft className="h-4 w-4" />
+              <ChevronsLeft className="h-xs w-xs" />
             </Button>
 
             {/* Previous Page Button */}
@@ -207,7 +207,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               disabled={!hasPreviousPage || disabled || loading}
               aria-label="Go to previous page"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-xs w-xs" />
             </Button>
 
             {/* Page Number Buttons */}
@@ -274,7 +274,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               disabled={!hasNextPage || disabled || loading}
               aria-label="Go to next page"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-xs w-xs" />
             </Button>
 
             {/* Last Page Button */}
@@ -285,7 +285,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               disabled={!hasNextPage || disabled || loading}
               aria-label="Go to last page"
             >
-              <ChevronsRight className="h-4 w-4" />
+              <ChevronsRight className="h-xs w-xs" />
             </Button>
           </div>
         )}

@@ -230,7 +230,7 @@ interface LoadingDotsProps {
 
 export function LoadingDots({ className, size = 'default' }: LoadingDotsProps) {
   const sizeClasses = {
-    sm: 'h-0.5 w-0.5',
+    sm: 'h-xs w-xs',
     default: 'h-xs w-xs',
     lg: 'h-xs w-xs'
   };

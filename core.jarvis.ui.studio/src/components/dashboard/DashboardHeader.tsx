@@ -1,5 +1,6 @@
-import { Circle } from 'lucide-react';
+import { Circle, ChevronDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { LucideIcon } from '../ui/icon';
 
 interface DashboardHeaderProps {
   projectName: string;
@@ -37,8 +38,9 @@ export function DashboardHeader({
               </div>
               
               <div className="flex items-center gap-2">
-                <Circle 
-                  size={8} 
+                <LucideIcon 
+                  icon={Circle}
+                  size="xs"
                   className={cn('fill-current', statusColors[projectStatus])}
                 />
                 <span className="text-sm font-medium">Project Status</span>
@@ -64,10 +66,11 @@ export function DashboardHeader({
             {/* Time Range Selector */}
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted-foreground">Last 60 minutes</span>
-              <button className="text-muted-foreground hover:text-foreground">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M4 6L8 10L12 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+              <button className="text-muted-foreground hover:text-foreground transition-colors p-xs rounded-sm hover:bg-muted/50">
+                <LucideIcon 
+                  icon={ChevronDown}
+                  size="sm"
+                />
               </button>
               <span className="text-muted-foreground ml-4">
                 Statistics for last 60 minutes

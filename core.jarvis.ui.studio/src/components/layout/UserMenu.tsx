@@ -31,9 +31,9 @@ export function UserMenu() {
         <Button 
           variant="ghost" 
           size="sm"
-          className="flex items-center gap-2 h-8 px-2"
+          className="flex items-center gap-2 h-lg px-2"
         >
-          <div className="w-6 h-6 rounded-full bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center">
+          <div className="w-md h-md rounded-full bg-gradient-to-br from-brand to-brand-600 flex items-center justify-center">
             <span className="text-xs font-medium text-white">
               {user.name.charAt(0).toUpperCase()}
             </span>
@@ -41,10 +41,10 @@ export function UserMenu() {
           <span className="text-sm font-medium hidden sm:inline-block">
             {user.name}
           </span>
-          <ChevronDown className="h-3 w-3 opacity-50" />
+          <ChevronDown className="h-2xs w-2xs opacity-50" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end">
+      <DropdownMenuContent className="w-sm6" align="end">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium">{user.name}</p>
@@ -64,11 +64,11 @@ export function UserMenu() {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/settings')}>
-          <Settings className="mr-2 h-4 w-4" />
+          <Settings className="mr-2 h-xs w-xs" />
           <span>Settings</span>
         </DropdownMenuItem>
         <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 h-xs w-xs" />
           <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

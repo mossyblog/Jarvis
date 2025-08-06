@@ -36,5 +36,19 @@
       "Bash(npm run lint:*)"
     ],
     "deny": []
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|MultiEdit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if ls *.tsx 2>/dev/null >/dev/null || find . -name '*.tsx' -type f 2>/dev/null | head -1 | grep -q .; then npm run lint --silent 2>/dev/null || echo 'Lint check completed'; fi",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
   }
 }

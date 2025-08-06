@@ -315,7 +315,7 @@ export const Templates: React.FC = () => {
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-base leading-tight">{template.name}</CardTitle>
                           {template.featured && (
-                            <Star className="h-xs w-xs text-yellow-500 fill-current flex-shrink-0" />
+                            <Star className="h-xs w-xs text-yellow-sm00 fill-current flex-shrink-0" />
                           )}
                         </div>
                         
@@ -355,7 +355,7 @@ export const Templates: React.FC = () => {
 
           <TabsContent value="featured" className="space-y-8">
             <div className="text-center py-12">
-              <Sparkles className="h-3xl w-3xl mx-auto text-yellow-500 mb-4" />
+              <Sparkles className="h-3xl w-3xl mx-auto text-yellow-sm00 mb-4" />
               <h3 className="text-xl font-semibold mb-2">Featured Templates</h3>
               <p className="text-muted-foreground mb-6 max-w-md mx-auto">
                 Discover our handpicked selection of the most popular and well-designed templates.

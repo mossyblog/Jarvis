@@ -24,7 +24,7 @@ const meta: Meta<typeof QuickActionsPanel> = {
   decorators: [
     (Story) => (
       <KeyboardNavigationProvider>
-        <div className="max-w-7xl mx-auto p-6">
+        <div className="max-w-mdxl mx-auto p-6">
           <Story />
         </div>
       </KeyboardNavigationProvider>

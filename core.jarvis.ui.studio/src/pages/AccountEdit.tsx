@@ -18,6 +18,7 @@ import { Separator } from '../components/ui/separator';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Switch } from '../components/ui/switch';
 import { cn } from '../lib/utils';
+import { LucideIcon as Icon } from '../components/ui/icon';
 
 interface AccountFormData {
   email: string;
@@ -357,7 +358,7 @@ export default function AccountEdit() {
               
               {/* Full width line under all tabs */}
               <div className={cn(
-                "absolute bottom-0 left-0 right-0 h-0.5 transition-colors",
+                "absolute bottom-0 left-0 right-0 h-none.5 transition-colors",
                 activeTab === 'details' && "bg-blue-500",
                 activeTab === 'security' && "bg-green-500",
                 activeTab === 'activity' && "bg-purple-500",
@@ -486,7 +487,7 @@ export default function AccountEdit() {
                                         {getInitials(displayName)}
                                       </span>
                                     ) : (
-                                      <User className="w-sm h-sm text-muted-foreground" />
+                                      <Icon icon={User} size="sm" className="text-muted-foreground" />
                                     )}
                                   </div>
                                 )}

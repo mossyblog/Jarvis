@@ -21,12 +21,12 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        xs: "h-lg px-sm text-xs gap-xs [&_svg]:h-md [&_svg]:w-md rounded-sm",
-        sm: "h-xl px-md text-sm gap-sm [&_svg]:h-md [&_svg]:w-md rounded-sm", 
-        default: "h-xl px-lg text-sm gap-sm [&_svg]:h-md [&_svg]:w-md rounded-sm",
-        lg: "h-2xl px-xl text-md gap-md [&_svg]:h-lg [&_svg]:w-lg rounded-md",
-        xl: "h-3xl px-2xl text-lg gap-md [&_svg]:h-xl [&_svg]:w-xl rounded-md",
-        icon: "h-xl w-xl min-w-xl min-h-xl p-sm flex-shrink-0 [&_svg]:h-md [&_svg]:w-md [&_svg]:flex-shrink-0 rounded-sm",
+        xs: "h-lg px-sm text-xs gap-xs [&_svg]:h-xs [&_svg]:w-xs [&_svg]:flex-shrink-0 rounded-sm",
+        sm: "h-xl px-md text-sm gap-sm [&_svg]:h-sm [&_svg]:w-sm [&_svg]:flex-shrink-0 rounded-sm", 
+        default: "h-xl px-lg text-sm gap-sm [&_svg]:h-sm [&_svg]:w-sm [&_svg]:flex-shrink-0 rounded-sm",
+        lg: "h-2xl px-xl text-md gap-md [&_svg]:h-md [&_svg]:w-md [&_svg]:flex-shrink-0 rounded-md",
+        xl: "h-3xl px-2xl text-lg gap-md [&_svg]:h-lg [&_svg]:w-lg [&_svg]:flex-shrink-0 rounded-md",
+        icon: "h-xl w-xl min-w-xl min-h-xl p-sm flex-shrink-0 [&_svg]:h-sm [&_svg]:w-sm [&_svg]:flex-shrink-0 rounded-sm hover:bg-muted/50 transition-colors",
       },
     },
     defaultVariants: {

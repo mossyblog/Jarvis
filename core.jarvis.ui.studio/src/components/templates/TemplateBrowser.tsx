@@ -162,8 +162,8 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                 {template.category}
               </Badge>
               {template.metadata.featured && (
-                <Badge className="text-xs bg-yellow-100 text-yellow-800">
-                  <Star className="h-3 w-3 mr-1" />
+                <Badge className="text-xs bg-yellow-xl0 text-yellow-800">
+                  <Star className="h-2xs w-2xs mr-1" />
                   Featured
                 </Badge>
               )}
@@ -178,7 +178,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
             <TabsTrigger value="create">Create Page</TabsTrigger>
           </TabsList>
 
-          <div className="mt-4 h-96">
+          <div className="mt-4 h-412">
             <TabsContent value="overview" className="h-full">
               <ScrollArea className="h-full">
                 <div className="space-y-6 pr-4">
@@ -260,8 +260,8 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
             <TabsContent value="preview" className="h-full">
               <div className="h-full bg-muted/30 rounded-lg flex items-center justify-center">
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto">
-                    <Eye className="h-8 w-8 text-muted-foreground" />
+                  <div className="w-3xl h-3xl bg-muted rounded-lg flex items-center justify-center mx-auto">
+                    <Eye className="h-lg w-lg text-muted-foreground" />
                   </div>
                   <div>
                     <h4 className="font-medium">Template Preview</h4>
@@ -270,7 +270,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
                     </p>
                   </div>
                   <Button variant="outline" size="sm">
-                    <Play className="h-4 w-4 mr-2" />
+                    <Play className="h-xs w-xs mr-2" />
                     Live Preview
                   </Button>
                 </div>
@@ -335,7 +335,7 @@ const TemplatePreview: React.FC<TemplatePreviewProps> = ({
           </Button>
           {activeTab === 'create' ? (
             <Button onClick={handleUseTemplate}>
-              <Zap className="h-4 w-4 mr-2" />
+              <Zap className="h-xs w-xs mr-2" />
               Create Page
             </Button>
           ) : (
@@ -477,14 +477,14 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
+              <X className="h-xs w-xs" />
             </Button>
           </div>
 
           {/* Filters and Search */}
           <div className="flex items-center gap-4 p-6 border-b border-border">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
               <Input
                 placeholder="Search templates..."
                 value={searchQuery}
@@ -500,7 +500,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                 category: value === 'all' ? null : value 
               }))}
             >
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-xs8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -520,7 +520,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                 sortBy: value as TemplateFilter['sortBy']
               }))}
             >
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-252">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -535,9 +535,9 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
           {/* Templates Grid */}
           <ScrollArea className="flex-1 p-6">
             {loading ? (
-              <div className="flex items-center justify-center h-64">
+              <div className="flex items-center justify-center h-xlxl">
                 <div className="text-center space-y-2">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+                  <div className="animate-spin rounded-full h-lg w-lg border-b-2 border-primary mx-auto"></div>
                   <p className="text-sm text-muted-foreground">Loading templates...</p>
                 </div>
               </div>
@@ -559,7 +559,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                           />
                         ) : (
                           <div className="text-center">
-                            <Grid3X3 className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                            <Grid3X3 className="h-lg w-lg text-muted-foreground mx-auto mb-2" />
                             <span className="text-xs text-muted-foreground">Preview</span>
                           </div>
                         )}
@@ -569,7 +569,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                         <div className="flex items-start justify-between">
                           <CardTitle className="text-base leading-tight">{template.name}</CardTitle>
                           {template.metadata.featured && (
-                            <Star className="h-4 w-4 text-yellow-500 fill-current flex-shrink-0" />
+                            <Star className="h-xs w-xs text-yellow-sm00 fill-current flex-shrink-0" />
                           )}
                         </div>
                         
@@ -578,7 +578,7 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                             {template.category}
                           </Badge>
                           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                            <TrendingUp className="h-3 w-3" />
+                            <TrendingUp className="h-2xs w-2xs" />
                             {template.metadata.rating.toFixed(1)}
                           </div>
                         </div>
@@ -592,11 +592,11 @@ export const TemplateBrowser: React.FC<TemplateBrowserProps> = ({
                       
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Download className="h-3 w-3" />
+                          <Download className="h-2xs w-2xs" />
                           {template.metadata.downloads}
                         </div>
                         <div className="flex items-center gap-1">
-                          <Layers className="h-3 w-3" />
+                          <Layers className="h-2xs w-2xs" />
                           {template.components.length} components
                         </div>
                       </div>

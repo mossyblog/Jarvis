@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { X, GripHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LucideIcon as Icon } from '@/components/ui/icon';
 import { Button } from '@/components/ui/button';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 
@@ -390,10 +391,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               minHeight: '44px', // Minimum touch target
             }}
           >
-            <GripHorizontal
-              className="text-muted-foreground"
-              size={24}
-            />
+            <Icon icon={GripHorizontal} size="md" className="text-muted-foreground" />
           </div>
         )}
         
@@ -410,10 +408,10 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
               variant="ghost"
               size="sm"
               onClick={handleClose}
-              className="h-9 w-9 p-0 hover:bg-muted"
+              className="h-lg w-lg p-0 hover:bg-muted"
               aria-label="Close sheet"
             >
-              <X size={18} />
+              <Icon icon={X} size="sm" />
             </Button>
           </div>
         )}

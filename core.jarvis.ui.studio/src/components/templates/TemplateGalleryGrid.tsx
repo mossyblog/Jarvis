@@ -635,15 +635,15 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
     for (let i = 0; i < 5; i++) {
       if (i < fullStars) {
         stars.push(
-          <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+          <Star key={i} className="h-2xs w-2xs fill-yellow-xs00 text-yellow-xs00" />
         );
       } else if (i === fullStars && hasHalfStar) {
         stars.push(
-          <Star key={i} className="h-3 w-3 fill-yellow-200 text-yellow-400" />
+          <Star key={i} className="h-2xs w-2xs fill-yellow-xs00 text-yellow-xs00" />
         );
       } else {
         stars.push(
-          <Star key={i} className="h-3 w-3 text-gray-300" />
+          <Star key={i} className="h-2xs w-2xs text-gray-300" />
         );
       }
     }
@@ -668,7 +668,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
 
   if (isLoading) {
     return (
-      <div className={`flex items-center justify-center min-h-96 ${className}`}>
+      <div className={`flex items-center justify-center min-h-412 ${className}`}>
         <LoadingSpinner />
         <span className="ml-2 text-lg">Loading templates...</span>
       </div>
@@ -677,7 +677,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
 
   if (hasError) {
     return (
-      <div className={`flex flex-col items-center justify-center min-h-96 ${className}`}>
+      <div className={`flex flex-col items-center justify-center min-h-412 ${className}`}>
         <div className="text-red-500 text-lg mb-4">Error loading templates</div>
         <div className="text-gray-600 mb-4">{hasError}</div>
         <Button onClick={() => templatesResult.refetch()}>
@@ -705,7 +705,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
           </div>
           {onClose && (
             <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="h-4 w-4" />
+              <X className="h-xs w-xs" />
             </Button>
           )}
         </div>
@@ -715,7 +715,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
           {/* Search and View Toggle */}
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="relative flex-1 max-w-sm">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
               <Input
                 placeholder="Search templates..."
                 value={filters.search}
@@ -732,11 +732,11 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
             >
               <TabsList>
                 <TabsTrigger value="grid" className="flex items-center gap-2">
-                  <Grid3X3 className="h-4 w-4" />
+                  <Grid3X3 className="h-xs w-xs" />
                   Grid
                 </TabsTrigger>
                 <TabsTrigger value="list" className="flex items-center gap-2">
-                  <List className="h-4 w-4" />
+                  <List className="h-xs w-xs" />
                   List
                 </TabsTrigger>
               </TabsList>
@@ -865,10 +865,10 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
       </div>
 
       {/* Templates Grid/List */}
-      <ScrollArea className="h-[calc(100vh-24rem)]">
+      <ScrollArea className="h-[calc(100vh-xs4rem)]">
         {filteredTemplates.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Filter className="h-12 w-12 text-muted-foreground mb-4" />
+            <Filter className="h-2xl w-2xl text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium mb-2">No templates found</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Try adjusting your filters or search terms
@@ -916,7 +916,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                     <div className="flex p-6">
                       {/* Preview Image */}
                       {template.previewImage && (
-                        <div className="w-32 h-24 rounded-lg overflow-hidden mr-6 shrink-0">
+                        <div className="w-252 h-xs4 rounded-lg overflow-hidden mr-6 shrink-0">
                           <img
                             src={template.previewImage}
                             alt={`${template.templateName} preview`}
@@ -948,11 +948,11 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                         <div className="flex items-center gap-4 text-sm text-muted-foreground">
                           {renderStarRating(rating)}
                           <div className="flex items-center gap-1">
-                            <Users className="h-3 w-3" />
+                            <Users className="h-2xs w-2xs" />
                             {template.usageCount} uses
                           </div>
                           <div className="flex items-center gap-1">
-                            <Tag className="h-3 w-3" />
+                            <Tag className="h-2xs w-2xs" />
                             {template.category}
                           </div>
                         </div>
@@ -961,7 +961,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                       {/* Action Button */}
                       <div className="ml-4 shrink-0">
                         <Button variant="outline" size="sm">
-                          <Eye className="h-4 w-4 mr-2" />
+                          <Eye className="h-xs w-xs mr-2" />
                           Preview
                         </Button>
                       </div>
@@ -1021,11 +1021,11 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                       
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <div className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
+                          <Users className="h-2xs w-2xs" />
                           {template.usageCount} uses
                         </div>
                         <div className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
+                          <Calendar className="h-2xs w-2xs" />
                           {new Date(template.lastUpdated).toLocaleDateString()}
                         </div>
                       </div>
@@ -1050,7 +1050,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                   
                   <CardFooter className="pt-2">
                     <Button variant="outline" size="sm" className="w-full">
-                      <Eye className="h-4 w-4 mr-2" />
+                      <Eye className="h-xs w-xs mr-2" />
                       Preview & Apply
                     </Button>
                   </CardFooter>
@@ -1100,7 +1100,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                   <Card>
                     <CardContent className="pt-4">
                       <div className="flex items-center gap-2 text-sm">
-                        <Trophy className="h-4 w-4 text-yellow-500" />
+                        <Trophy className="h-xs w-xs text-yellow-sm00" />
                         <span className="font-medium">Rating</span>
                       </div>
                       {renderStarRating(calculateTemplateRating(previewState.template))}
@@ -1110,7 +1110,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                   <Card>
                     <CardContent className="pt-4">
                       <div className="flex items-center gap-2 text-sm">
-                        <Users className="h-4 w-4 text-blue-500" />
+                        <Users className="h-xs w-xs text-blue-500" />
                         <span className="font-medium">Usage</span>
                       </div>
                       <p className="text-lg font-semibold">{previewState.template.usageCount} times</p>
@@ -1120,7 +1120,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                   <Card>
                     <CardContent className="pt-4">
                       <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="h-4 w-4 text-green-500" />
+                        <Calendar className="h-xs w-xs text-green-500" />
                         <span className="font-medium">Updated</span>
                       </div>
                       <p className="text-lg font-semibold">
@@ -1204,7 +1204,7 @@ export const TemplateGalleryGrid: React.FC<TemplateGalleryGridProps> = ({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="h-4 w-4" />
+                      <Sparkles className="h-xs w-xs" />
                       Apply Template
                     </>
                   )}

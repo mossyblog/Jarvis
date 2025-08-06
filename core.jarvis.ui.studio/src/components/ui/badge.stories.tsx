@@ -64,7 +64,7 @@ export const StatusBadges: Story = {
         <h4 className="text-sm font-medium">Status Indicators</h4>
         <div className="flex gap-2 flex-wrap">
           <Badge className="bg-green-100 text-green-800 hover:bg-green-100/80">Active</Badge>
-          <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-100/80">Pending</Badge>
+          <Badge className="bg-yellow-xl0 text-yellow-800 hover:bg-yellow-xl0/80">Pending</Badge>
           <Badge className="bg-red-100 text-red-800 hover:bg-red-100/80">Error</Badge>
           <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100/80">Processing</Badge>
         </div>
@@ -97,11 +97,11 @@ export const WithIcons: Story = {
     <div className="space-y-4">
       <div className="flex gap-2 flex-wrap">
         <Badge className="gap-1">
-          <div className="w-2 h-2 bg-current rounded-full" />
+          <div className="w-xs h-xs bg-current rounded-full" />
           Online
         </Badge>
         <Badge variant="secondary" className="gap-1">
-          <div className="w-2 h-2 bg-current rounded-full" />
+          <div className="w-xs h-xs bg-current rounded-full" />
           Offline
         </Badge>
         <Badge variant="destructive" className="gap-1">

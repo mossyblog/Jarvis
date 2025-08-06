@@ -1659,7 +1659,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   
                   {/* Collaboration indicators */}
                   {isLocked && (
-                    <div className="absolute top-2 right-2 bg-yellow-500 text-yellow-50 text-xs px-2 py-1 rounded-full">
+                    <div className="absolute top-2 right-2 bg-yellow-sm00 text-yellow-sm0 text-xs px-2 py-1 rounded-full">
                       🔒 Editing
                     </div>
                   )}
@@ -1697,7 +1697,7 @@ export const BentoGrid: React.FC<BentoGridProps> = ({
                   fontSize: '1.5rem',
                 }}
               >
-                <Star className="text-yellow-500" size={20} />
+                <Star className="text-yellow-sm00" size={20} />
               </div>
             ))}
           </div>

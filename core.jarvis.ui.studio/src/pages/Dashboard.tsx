@@ -12,6 +12,7 @@ import { useViewState } from '../hooks/useViewState';
 import { ViewSwitcher } from '../components/ui/view-switcher';
 import { Circle, ChevronDown } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { LucideIcon as Icon } from '../components/ui/icon';
 
 import type { RecentPageMetadata } from '../utils/recentPagesManager';
 import { populateMockRecentPages } from '../utils/mockRecentPages';
@@ -88,7 +89,7 @@ export function Dashboard() {
           title="Dashboard"
           description="Monitor your project's performance, database activity, and system health."
           actions={
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-md">
               <ViewSwitcher
                 viewMode={viewMode}
                 onViewModeChange={setViewMode}
@@ -98,9 +99,10 @@ export function Dashboard() {
                 availableModes={['list', 'grid', 'card']}
               />
               <div className="flex items-center gap-2">
-                <Circle 
-                  size={8} 
-                  className={cn('fill-current', statusColors[projectStatus])}
+                <Icon 
+                  icon={Circle} 
+                  size="xs" 
+                  className={cn('fill-current', statusColors[projectStatus])} 
                 />
                 <span className="text-sm font-medium">Project Status</span>
               </div>
@@ -113,25 +115,25 @@ export function Dashboard() {
           {/* Project Stats */}
           <section className="space-y-6" role="region" aria-labelledby="project-stats-heading">
             <h2 id="project-stats-heading" className="sr-only">Project Statistics</h2>
-            <div className="flex flex-wrap gap-8 text-sm">
-              <div className="flex flex-col gap-1">
+            <div className="flex flex-wrap gap-lg text-sm">
+              <div className="flex flex-col gap-xs">
                 <span className="typography-caption">Tables</span>
                 <span className="text-2xl font-light font-custom">5</span>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-xs">
                 <span className="typography-caption">Functions</span>
                 <span className="text-2xl font-light font-custom">0</span>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-xs">
                 <span className="typography-caption">Replicas</span>
                 <span className="text-2xl font-light font-custom">0</span>
               </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-sm text-sm">
               <span className="typography-caption">Last 60 minutes</span>
               <button className="text-muted-foreground hover:text-foreground">
-                <ChevronDown size={16} strokeWidth={1.5} />
+                <Icon icon={ChevronDown} size="sm" strokeWidth={1.5} />
               </button>
               <span className="typography-caption ml-4">
                 Statistics for last 60 minutes
@@ -142,10 +144,10 @@ export function Dashboard() {
           {/* Metrics Grid */}
           <section 
             className={cn(
-              "gap-4", 
-              viewMode === 'list' && "space-y-4",
+              "gap-md", 
+              viewMode === 'list' && "space-y-md",
               viewMode === 'grid' && "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
-              viewMode === 'card' && "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+              viewMode === 'card' && "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-lg"
             )} 
             role="region" 
             aria-labelledby="metrics-heading"

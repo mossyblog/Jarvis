@@ -115,4 +115,44 @@
     width: 100%;
     max-width: var(--device-max-width, 100%);
   }
+
+  /* T-shirt size utilities for min/max constraints */
+  .min-h-xs { min-height: 8px; }
+  .min-h-sm { min-height: 16px; }
+  .min-h-md { min-height: 24px; }
+  .min-h-lg { min-height: 32px; }
+  .min-h-xl { min-height: 40px; }
+  .min-h-2xl { min-height: 48px; }
+  .min-h-3xl { min-height: 64px; }
+  .min-h-4xl { min-height: 80px; }
+  .min-h-5xl { min-height: 96px; }
+  .min-h-6xl { min-height: 128px; }
+  .min-h-7xl { min-height: 160px; }
+
+  .max-h-xs { max-height: 8px; }
+  .max-h-sm { max-height: 16px; }
+  .max-h-md { max-height: 24px; }
+  .max-h-lg { max-height: 32px; }
+  .max-h-xl { max-height: 40px; }
+  .max-h-2xl { max-height: 48px; }
+  .max-h-3xl { max-height: 64px; }
+  .max-h-4xl { max-height: 80px; }
+  .max-h-5xl { max-height: 96px; }
+  .max-h-6xl { max-height: 128px; }
+  .max-h-7xl { max-height: 160px; }
+  .max-h-8xl { max-height: 192px; }
+  .max-h-9xl { max-height: 224px; }
+  .max-h-10xl { max-height: 256px; }
+  .max-h-11xl { max-height: 320px; }
+  .max-h-12xl { max-height: 384px; }
+
+  /* Custom width utilities */
+  .w-2\.5 { width: 20px; }
+  .w-3\.5 { width: 28px; }
+  .w-xs { width: 8px; }
+  .h-2\.5 { height: 20px; }
+  .h-3\.5 { height: 28px; }
+  .h-xs { height: 8px; }
+  .h-0\.5 { height: 4px; }
+  .w-0\.5 { width: 4px; }
 }

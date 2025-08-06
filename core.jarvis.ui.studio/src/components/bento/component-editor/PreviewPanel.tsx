@@ -186,13 +186,13 @@ const DeviceFrame: React.FC<DeviceFrameProps> = ({ device, children, className }
       style={frameStyles}
     >
       {device === 'mobile' && (
-        <div className="bg-muted h-1 w-16 mx-auto mb-2 rounded-full" />
+        <div className="bg-muted h-xsxs w-3xl mx-auto mb-2 rounded-full" />
       )}
       <div className="h-full w-full overflow-auto">
         {children}
       </div>
       {device === 'mobile' && (
-        <div className="bg-muted h-1 w-8 mx-auto mt-2 rounded-full" />
+        <div className="bg-muted h-xsxs w-lg mx-auto mt-2 rounded-full" />
       )}
     </div>
   );
@@ -311,7 +311,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold flex items-center gap-2">
-            <Eye className="h-5 w-5" />
+            <Eye className="h-sm w-sm" />
             Component Preview
           </h3>
           <Button
@@ -320,7 +320,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             onClick={handleRefreshData}
             disabled={state.isLoading}
           >
-            <RefreshCw className={cn('h-4 w-4 mr-1', state.isLoading && 'animate-spin')} />
+            <RefreshCw className={cn('h-xs w-xs mr-1', state.isLoading && 'animate-spin')} />
             Refresh
           </Button>
         </div>
@@ -339,9 +339,9 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
                     variant={currentDevice === option.value ? 'secondary' : 'ghost'}
                     size="sm"
                     onClick={() => handleDeviceChange(option.value)}
-                    className="h-8"
+                    className="h-lg"
                   >
-                    <IconComponent className="h-4 w-4" />
+                    <IconComponent className="h-xs w-xs" />
                   </Button>
                 );
               })}
@@ -352,7 +352,7 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">Data:</span>
             <Select value={state.dataMode} onValueChange={handleDataModeChange}>
-              <SelectTrigger className="w-32">
+              <SelectTrigger className="w-252">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -370,14 +370,14 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
         <CardContent className="p-6">
           <DeviceFrame device={currentDevice}>
             {state.isLoading ? (
-              <div className="flex items-center justify-center h-32">
+              <div className="flex items-center justify-center h-232">
                 <div className="text-center">
-                  <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
+                  <RefreshCw className="h-lg w-lg animate-spin mx-auto mb-2 text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">Loading preview...</p>
                 </div>
               </div>
             ) : state.error ? (
-              <div className="flex items-center justify-center h-32">
+              <div className="flex items-center justify-center h-232">
                 <div className="text-center">
                   <div className="text-destructive mb-2">Preview Error</div>
                   <p className="text-sm text-muted-foreground">{state.error}</p>
@@ -449,17 +449,17 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
             <CardHeader className="pb-2 cursor-pointer hover:bg-muted/50 transition-colors">
               <CardTitle className="text-sm flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Database className="h-4 w-4" />
+                  <Database className="h-xs w-xs" />
                   Sample Data
                 </div>
-                <ChevronDown className={cn('h-4 w-4 transition-transform', state.showData && 'transform rotate-180')} />
+                <ChevronDown className={cn('h-xs w-xs transition-transform', state.showData && 'transform rotate-180')} />
               </CardTitle>
             </CardHeader>
           </CollapsibleTrigger>
           <CollapsibleContent>
             <CardContent className="pt-0">
               <div className="bg-muted/50 rounded-md p-3">
-                <pre className="text-xs overflow-auto max-h-48">
+                <pre className="text-xs overflow-auto max-h-xs8">
                   {JSON.stringify(previewData, null, 2)}
                 </pre>
               </div>
@@ -472,11 +472,11 @@ export const PreviewPanel: React.FC<PreviewPanelProps> = ({
       <div className="flex items-center justify-between pt-2 border-t">
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" disabled>
-            <Share className="h-4 w-4 mr-1" />
+            <Share className="h-xs w-xs mr-1" />
             Share Preview
           </Button>
           <Button variant="outline" size="sm" disabled>
-            <Download className="h-4 w-4 mr-1" />
+            <Download className="h-xs w-xs mr-1" />
             Export
           </Button>
         </div>

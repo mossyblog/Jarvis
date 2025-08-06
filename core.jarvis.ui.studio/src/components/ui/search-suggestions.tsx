@@ -216,7 +216,7 @@ const SuggestionItem: React.FC<SuggestionItemProps> = ({
         {showIcon && (
           <Icon 
             className={cn(
-              'h-4 w-4 shrink-0',
+              'h-xs w-xs shrink-0',
               suggestion.type === 'popular' ? 'text-orange-500' : 'text-muted-foreground'
             )} 
           />
@@ -237,7 +237,7 @@ const SuggestionItem: React.FC<SuggestionItemProps> = ({
         <div className="flex items-center space-x-2 shrink-0">
           {suggestion.type === 'popular' && (
             <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
-              <Star className="h-3 w-3 mr-1" />
+              <Star className="h-2xs w-2xs mr-1" />
               Popular
             </Badge>
           )}
@@ -252,18 +252,18 @@ const SuggestionItem: React.FC<SuggestionItemProps> = ({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground"
+              className="h-md w-md p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive hover:text-destructive-foreground"
               onClick={(e) => {
                 e.stopPropagation();
                 onRemove();
               }}
               aria-label={`Remove "${suggestion.text}" from history`}
             >
-              <X className="h-3 w-3" />
+              <X className="h-2xs w-2xs" />
             </Button>
           )}
           
-          <ArrowUpRight className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+          <ArrowUpRight className="h-2xs w-2xs text-muted-foreground opacity-0 group-hover:opacity-100" />
         </div>
       </div>
     </div>
@@ -309,23 +309,23 @@ export const SearchSuggestions: React.FC<SearchSuggestionsProps> = ({
       className={cn(
         'absolute top-full left-0 right-0 z-50 mt-1',
         'bg-popover border border-border rounded-md shadow-lg',
-        'max-h-80 overflow-hidden',
+        'max-h-lg0 overflow-hidden',
         className
       )}
       role="listbox"
       aria-label="Search suggestions"
     >
-      <ScrollArea className="max-h-80">
+      <ScrollArea className="max-h-lg0">
         {isLoading ? (
           // Loading state
           <div className="flex items-center justify-center py-6">
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
+            <div className="animate-spin rounded-full h-sm w-sm border-b-2 border-primary" />
             <span className="ml-2 text-sm text-muted-foreground">Loading suggestions...</span>
           </div>
         ) : !hasAnySuggestions ? (
           // Empty state
           <div className="py-6 px-3 text-center">
-            <Search className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+            <Search className="h-lg w-lg text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">{emptyMessage}</p>
             {searchTerm.trim() && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -522,7 +522,7 @@ export const SearchInputWithSuggestions: React.FC<SearchInputWithSuggestionsProp
         
         {isLoading && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary" />
+            <div className="animate-spin rounded-full h-xs w-xs border-b-2 border-primary" />
           </div>
         )}
       </div>

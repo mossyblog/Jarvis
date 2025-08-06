@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { Button } from '../ui/button';
 import { Alert, AlertDescription } from '../ui/alert';
 import { Plus, Save, Check, AlertCircle, CheckCircle2, X, Loader2 } from 'lucide-react';
+import { LucideIcon as Icon } from '../ui/icon';
 import { useCreateUIStudioPage } from '../../hooks/useUIStudio';
 
 export interface UIStudioInterfaceSimpleProps {
@@ -194,7 +195,7 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
         <div className="flex items-center justify-between px-6 py-4">
           <h1 className="text-2xl font-bold">UIStudio</h1>
           <Button onClick={handleCreatePage} className="gap-2">
-            <Plus className="w-4 h-4" />
+            <Icon icon={Plus} size="sm" />
             Create New Page
           </Button>
         </div>
@@ -209,7 +210,7 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
               Create beautiful pages with our visual editor
             </p>
             <Button onClick={handleCreatePage} size="lg" className="gap-2">
-              <Plus className="w-5 h-5" />
+              <Icon icon={Plus} size="md" />
               Create Your First Page
             </Button>
           </div>
@@ -221,8 +222,8 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {createdPages.map((page) => (
                   <div key={page.id} className="border rounded-lg p-4 bg-green-50 border-green-200">
-                    <div className="h-32 bg-green-100 rounded mb-3 flex items-center justify-center">
-                      <Check className="w-8 h-8 text-green-600" />
+                    <div className="h-232 bg-green-100 rounded mb-3 flex items-center justify-center">
+                      <Icon icon={Check} size="xl" className="text-green-600" />
                     </div>
                     <h4 className="font-medium mb-1 text-green-800">{page.name}</h4>
                     <p className="text-sm text-green-600 mb-1">{page.url}</p>
@@ -237,7 +238,7 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
                 {/* Placeholder cards */}
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="border rounded-lg p-4">
-                    <div className="h-32 bg-muted rounded mb-3"></div>
+                    <div className="h-232 bg-muted rounded mb-3"></div>
                     <h4 className="font-medium mb-1">Page {i}</h4>
                     <p className="text-sm text-muted-foreground">Last edited 2 hours ago</p>
                   </div>
@@ -271,10 +272,10 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
                     variant="ghost"
                     size="icon"
                     onClick={handleCloseModal}
-                    className="h-6 w-6 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="h-md w-md rounded-md hover:bg-gray-100 dark:hover:bg-gray-800"
                     aria-label="Close modal"
                   >
-                    <X className="h-4 w-4" />
+                    <Icon icon={X} size="sm" />
                   </Button>
                 )}
               </div>
@@ -284,7 +285,7 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
               {/* Error Alert */}
               {error && (
                 <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
+                  <Icon icon={AlertCircle} size="sm" />
                   <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
@@ -292,7 +293,7 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
               {/* Success Alert */}
               {success && (
                 <Alert className="mb-4 border-green-200 bg-green-50 text-green-800">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <Icon icon={CheckCircle2} size="sm" />
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
@@ -361,17 +362,17 @@ export const UIStudioInterfaceSimple: React.FC<UIStudioInterfaceSimpleProps> = (
                 >
                   {isCreating ? (
                     <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Icon icon={Loader2} size="sm" className="animate-spin" />
                       Creating Page...
                     </>
                   ) : success ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4" />
+                      <Icon icon={CheckCircle2} size="sm" />
                       Created Successfully!
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4" />
+                      <Icon icon={Save} size="sm" />
                       Create & Save Page
                     </>
                   )}

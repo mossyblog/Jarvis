@@ -71,7 +71,7 @@ export function RetryButton({
       {isRetrying ? (
         <LoadingSpinner size="sm" className="mr-2" />
       ) : (
-        <RefreshCw className="h-4 w-4 mr-2" />
+        <RefreshCw className="h-xs w-xs mr-2" />
       )}
       {buttonText}
       {maxRetries && retryCount >= maxRetries && (
@@ -125,7 +125,7 @@ export function RetryStatus({
     return (
       <div className={cn("space-y-2", className)}>
         <div className="flex items-center gap-2 text-sm text-destructive">
-          <AlertTriangle className="h-4 w-4" />
+          <AlertTriangle className="h-xs w-xs" />
           <span>Maximum retry attempts reached</span>
         </div>
         {errorObj && (
@@ -156,7 +156,7 @@ export function RetryStatus({
   if (retryCount > 0 && !errorObj) {
     return (
       <div className={cn("flex items-center gap-2 text-sm text-green-600", className)}>
-        <CheckCircle className="h-4 w-4" />
+        <CheckCircle className="h-xs w-xs" />
         <span>Succeeded after {retryCount} retry{retryCount > 1 ? 's' : ''}</span>
       </div>
     );
@@ -205,7 +205,7 @@ export function RetryProgress({
 
       {nextRetryIn !== undefined && nextRetryIn > 0 && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
+          <Clock className="h-2xs w-2xs" />
           <span>Next retry in {nextRetryIn}s</span>
         </div>
       )}
@@ -257,7 +257,7 @@ export function RetryPanel({
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-full bg-destructive/10">
-          <AlertTriangle className="h-5 w-5 text-destructive" />
+          <AlertTriangle className="h-sm w-sm text-destructive" />
         </div>
         <div className="flex-1">
           <h3 className="font-medium text-foreground">{title}</h3>
@@ -409,16 +409,16 @@ export function AutoRetry({
 }: AutoRetryProps) {
   return (
     <div className={cn(
-      "flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-950/10 border border-yellow-200 dark:border-yellow-800 rounded-lg",
+      "flex items-center justify-between p-3 bg-yellow-sm0 dark:bg-yellow-lg50/10 border border-yellow-xs00 dark:border-yellow-800 rounded-lg",
       className
     )}>
       <div className="flex items-center gap-3">
-        <LoadingSpinner size="sm" className="text-yellow-600" />
+        <LoadingSpinner size="sm" className="text-yellow-md00" />
         <div className="text-sm">
-          <div className="font-medium text-yellow-800 dark:text-yellow-200">
+          <div className="font-medium text-yellow-800 dark:text-yellow-xs00">
             {isRetrying ? 'Retrying...' : 'Auto-retry in progress'}
           </div>
-          <div className="text-yellow-600 dark:text-yellow-400">
+          <div className="text-yellow-md00 dark:text-yellow-xs00">
             Attempt {retryCount + 1} of {maxRetries}
             {!isRetrying && nextRetryIn > 0 && ` • Next retry in ${nextRetryIn}s`}
           </div>
@@ -430,7 +430,7 @@ export function AutoRetry({
           variant="ghost"
           size="sm"
           onClick={onCancel}
-          className="text-yellow-800 hover:bg-yellow-100 dark:text-yellow-200 dark:hover:bg-yellow-900/20"
+          className="text-yellow-800 hover:bg-yellow-xl0 dark:text-yellow-xs00 dark:hover:bg-yellow-lg00/20"
         >
           Cancel
         </Button>

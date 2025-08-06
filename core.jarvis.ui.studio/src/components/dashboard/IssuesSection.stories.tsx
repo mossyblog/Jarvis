@@ -32,7 +32,7 @@ export const InCard: Story = {
 export const InDashboard: Story = {
   render: () => (
     <div className="min-h-screen bg-background p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
+      <div className="max-w-mdxl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <p className="text-muted-foreground">Welcome back! Here's what's happening.</p>

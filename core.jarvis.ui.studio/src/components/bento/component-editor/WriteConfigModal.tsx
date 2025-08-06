@@ -339,7 +339,7 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
+            <Zap className="h-sm w-sm" />
             Configure Write Actions
           </DialogTitle>
           <DialogDescription>
@@ -380,10 +380,10 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-base flex items-center gap-2">
-                              <Database className="h-4 w-4" />
+                              <Database className="h-xs w-xs" />
                               {ecs.displayName}
                               {selectedECS === ecs.name && (
-                                <CheckCircle className="h-4 w-4 text-primary" />
+                                <CheckCircle className="h-xs w-xs text-primary" />
                               )}
                             </CardTitle>
                             <p className="text-sm text-muted-foreground mt-1">
@@ -430,7 +430,7 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
                     </p>
                   </div>
                   <Button onClick={handleAddTrigger} disabled={readOnly}>
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-xs w-xs mr-1" />
                     Add Trigger
                   </Button>
                 </div>
@@ -439,7 +439,7 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
                   <Card className="border-dashed">
                     <CardContent className="flex items-center justify-center py-8">
                       <div className="text-center">
-                        <Clock className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-50" />
+                        <Clock className="h-md w-md mx-auto mb-2 text-muted-foreground opacity-50" />
                         <p className="text-sm text-muted-foreground">No triggers configured</p>
                         <p className="text-xs text-muted-foreground">Add triggers to define when writes occur</p>
                       </div>
@@ -459,7 +459,7 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
                                 onClick={() => handleRemoveTrigger(index)}
                                 disabled={readOnly}
                               >
-                                <X className="h-3 w-3" />
+                                <X className="h-xs w-xs" />
                               </Button>
                             </div>
 
@@ -623,7 +623,7 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               {!isConfigValid && (
                 <>
-                  <AlertTriangle className="h-4 w-4 text-orange-500" />
+                  <AlertTriangle className="h-xs w-xs text-orange-500" />
                   <span>Complete all required steps to save</span>
                 </>
               )}
@@ -637,7 +637,7 @@ export const WriteConfigModal: React.FC<WriteConfigModalProps> = ({
                 onClick={handleSave}
                 disabled={!isConfigValid || readOnly}
               >
-                <CheckCircle className="h-4 w-4 mr-1" />
+                <CheckCircle className="h-xs w-xs mr-1" />
                 Save Configuration
               </Button>
             </div>

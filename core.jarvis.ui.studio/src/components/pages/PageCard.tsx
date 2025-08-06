@@ -115,7 +115,7 @@ export const PageCard: React.FC<PageCardProps> = ({
           <div className="flex items-center gap-3">
             {/* Thumbnail */}
             <div className="flex-shrink-0">
-              <div className="w-16 h-10 bg-surface-tertiary rounded-md overflow-hidden border border-border/30">
+              <div className="w-3xl h-xl bg-surface-tertiary rounded-md overflow-hidden border border-border/30">
                 <img 
                   src={thumbnailUrl}
                   alt={`${page.displayName} thumbnail`}
@@ -133,7 +133,7 @@ export const PageCard: React.FC<PageCardProps> = ({
                     <h3 className="font-medium text-sm text-primary truncate group-hover:text-accent transition-colors">
                       {page.displayName}
                     </h3>
-                    <StatusIcon className="h-3 w-3 text-muted flex-shrink-0" />
+                    <StatusIcon className="h-2xs w-2xs text-muted flex-shrink-0" />
                   </div>
                   <p className="text-xs text-tertiary mt-0.5 truncate">
                     {page.route}
@@ -155,11 +155,11 @@ export const PageCard: React.FC<PageCardProps> = ({
                   </Badge>
                   <div className="text-xs text-muted space-y-0.5">
                     <div className="flex items-center gap-1 justify-end">
-                      <Clock className="h-2.5 w-2.5" />
+                      <Clock className="h-xs.5 w-xs.5" />
                       <span>{formatDistanceToNow(new Date(page.lastAccessed), { addSuffix: true })}</span>
                     </div>
                     <div className="flex items-center gap-1 justify-end">
-                      <Eye className="h-2.5 w-2.5" />
+                      <Eye className="h-xs.5 w-xs.5" />
                       <span>{page.accessCount}</span>
                     </div>
                   </div>
@@ -170,12 +170,12 @@ export const PageCard: React.FC<PageCardProps> = ({
               {page.tags && page.tags.length > 0 && !compact && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {page.tags.slice(0, 2).map((tag) => (
-                    <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-5">
+                    <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-sm">
                       {tag}
                     </Badge>
                   ))}
                   {page.tags.length > 2 && (
-                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                    <Badge variant="outline" className="text-xs px-1.5 py-0 h-sm">
                       +{page.tags.length - 2}
                     </Badge>
                   )}
@@ -190,29 +190,29 @@ export const PageCard: React.FC<PageCardProps> = ({
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-7 w-7 p-0"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-md w-md p-0"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <MoreHorizontal className="h-3.5 w-3.5" />
+                    <MoreHorizontal className="h-2xs.5 w-2xs.5" />
                     <span className="sr-only">Page actions</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-36">
+                <DropdownMenuContent align="end" className="w-2xs6">
                   <DropdownMenuItem onClick={handleEdit} className="gap-2 text-xs">
-                    <Edit className="h-3 w-3" />
+                    <Edit className="h-2xs w-2xs" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleDuplicate} className="gap-2 text-xs">
-                    <Copy className="h-3 w-3" />
+                    <Copy className="h-2xs w-2xs" />
                     Duplicate
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handlePreview} className="gap-2 text-xs">
-                    <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-2xs w-2xs" />
                     Preview
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDelete} className="gap-2 text-xs text-destructive">
-                    <Trash2 className="h-3 w-3" />
+                    <Trash2 className="h-2xs w-2xs" />
                     Remove
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -249,7 +249,7 @@ export const PageCard: React.FC<PageCardProps> = ({
                 )}>
                   {page.displayName}
                 </h3>
-                <StatusIcon className="h-3 w-3 text-muted flex-shrink-0" />
+                <StatusIcon className="h-2xs w-2xs text-muted flex-shrink-0" />
               </div>
               <p className="text-xs text-tertiary mt-0.5 truncate">
                 {page.route}
@@ -273,11 +273,11 @@ export const PageCard: React.FC<PageCardProps> = ({
           {/* Metadata */}
           <div className="flex items-center justify-between text-xs text-muted">
             <div className="flex items-center gap-1">
-              <Clock className="h-2.5 w-2.5" />
+              <Clock className="h-xs.5 w-xs.5" />
               <span>{formatDistanceToNow(new Date(page.lastAccessed), { addSuffix: true })}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Eye className="h-2.5 w-2.5" />
+              <Eye className="h-xs.5 w-xs.5" />
               <span>{page.accessCount}</span>
             </div>
           </div>
@@ -286,12 +286,12 @@ export const PageCard: React.FC<PageCardProps> = ({
           {page.tags && page.tags.length > 0 && !compact && (
             <div className="flex flex-wrap gap-1">
               {page.tags.slice(0, 2).map((tag) => (
-                <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-5">
+                <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0 h-sm">
                   {tag}
                 </Badge>
               ))}
               {page.tags.length > 2 && (
-                <Badge variant="outline" className="text-xs px-1.5 py-0 h-5">
+                <Badge variant="outline" className="text-xs px-1.5 py-0 h-sm">
                   +{page.tags.length - 2}
                 </Badge>
               )}
@@ -304,8 +304,8 @@ export const PageCard: React.FC<PageCardProps> = ({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={handleEdit} className="h-7 w-7 p-0">
-                      <Edit className="h-3 w-3" />
+                    <Button variant="ghost" size="sm" onClick={handleEdit} className="h-md w-md p-0">
+                      <Edit className="h-2xs w-2xs" />
                       <span className="sr-only">Edit page</span>
                     </Button>
                   </TooltipTrigger>
@@ -316,8 +316,8 @@ export const PageCard: React.FC<PageCardProps> = ({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="sm" onClick={handleDuplicate} className="h-7 w-7 p-0">
-                      <Copy className="h-3 w-3" />
+                    <Button variant="ghost" size="sm" onClick={handleDuplicate} className="h-md w-md p-0">
+                      <Copy className="h-2xs w-2xs" />
                       <span className="sr-only">Duplicate page</span>
                     </Button>
                   </TooltipTrigger>
@@ -328,19 +328,19 @@ export const PageCard: React.FC<PageCardProps> = ({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-3 w-3" />
+                <Button variant="ghost" size="sm" className="h-md w-md p-0" onClick={(e) => e.stopPropagation()}>
+                  <MoreHorizontal className="h-2xs w-2xs" />
                   <span className="sr-only">More actions</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-36">
+              <DropdownMenuContent align="end" className="w-2xs6">
                 <DropdownMenuItem onClick={handlePreview} className="gap-2 text-xs">
-                  <ExternalLink className="h-3 w-3" />
+                  <ExternalLink className="h-2xs w-2xs" />
                   Preview
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleDelete} className="gap-2 text-xs text-destructive">
-                  <Trash2 className="h-3 w-3" />
+                  <Trash2 className="h-2xs w-2xs" />
                   Remove
                 </DropdownMenuItem>
               </DropdownMenuContent>

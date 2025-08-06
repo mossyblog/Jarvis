@@ -481,16 +481,16 @@ const DraggableComponent: React.FC<DraggableComponentProps & { compact?: boolean
           // Compact mobile layout
           <div className="flex items-center gap-2">
             <div className="flex-shrink-0">
-              <IconComponent className="h-4 w-4 text-primary" />
+              <IconComponent className="h-xs w-xs text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
                 <h4 className="text-xs font-medium truncate">{component.name}</h4>
                 {component.isNew && (
-                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                  <div className="w-xs h-xs bg-blue-500 rounded-full" />
                 )}
                 {component.isPremium && (
-                  <Star className="h-2 w-2 text-yellow-500" />
+                  <Star className="h-xs w-xs text-yellow-sm00" />
                 )}
               </div>
               <p className="text-xs text-muted-foreground truncate">
@@ -501,7 +501,7 @@ const DraggableComponent: React.FC<DraggableComponentProps & { compact?: boolean
               <Button
                 size="sm"
                 variant="ghost"
-                className="h-6 w-6 p-0"
+                className="h-md w-md p-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   onComponentAdd?.(component.id, { x: 0, y: 0 });
@@ -515,7 +515,7 @@ const DraggableComponent: React.FC<DraggableComponentProps & { compact?: boolean
           // Full desktop layout
           <div className="flex items-start gap-2">
             <div className="flex-shrink-0">
-              <IconComponent className="h-5 w-5 text-primary" />
+              <IconComponent className="h-sm w-sm text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1 mb-1">
@@ -524,7 +524,7 @@ const DraggableComponent: React.FC<DraggableComponentProps & { compact?: boolean
                   <Badge variant="secondary" className="text-xs">New</Badge>
                 )}
                 {component.isPremium && (
-                  <Star className="h-3 w-3 text-yellow-500" />
+                  <Star className="h-2xs w-2xs text-yellow-sm00" />
                 )}
               </div>
               <p className="text-xs text-muted-foreground line-clamp-2">
@@ -663,11 +663,11 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-2 text-muted-foreground">
               {registryLoading ? (
-                <><Loader2 className="w-3 h-3 animate-spin" />Loading registry...</>
+                <><Loader2 className="w-2xs h-2xs animate-spin" />Loading registry...</>
               ) : registryError ? (
-                <><Package2 className="w-3 h-3 text-destructive" />Registry offline</>
+                <><Package2 className="w-2xs h-2xs text-destructive" />Registry offline</>
               ) : (
-                <><Wifi className="w-3 h-3 text-green-500" />{allComponents.length} components</>
+                <><Wifi className="w-2xs h-2xs text-green-500" />{allComponents.length} components</>
               )}
             </span>
             {registryError && (
@@ -702,7 +702,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
         )}>
           <Search className={cn(
             'absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground',
-            compact ? 'h-3 w-3' : 'h-4 w-4'
+            compact ? 'h-2xs w-2xs' : 'h-xs w-xs'
           )} />
           <Input
             placeholder={compact ? "Search..." : "Search components..."}
@@ -710,12 +710,12 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             onChange={handleSearchChange}
             className={cn(
               'pl-9',
-              compact && 'h-8 text-xs'
+              compact && 'h-lg text-xs'
             )}
           />
           {searchQuery && searchInput !== searchQuery && (
             <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
-              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              <Loader2 className="h-2xs w-2xs animate-spin text-muted-foreground" />
             </div>
           )}
         </div>
@@ -729,7 +729,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             <select
               value={selectedCategory}
               onChange={(e) => handleCategoryChange(e.target.value)}
-              className="w-full h-8 text-xs border border-input bg-background rounded-md px-2"
+              className="w-full h-lg text-xs border border-input bg-background rounded-md px-2"
             >
               <option value="all">All Categories</option>
               {availableCategories.map(category => (
@@ -769,7 +769,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
                 onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
                 className="text-xs"
               >
-                <Wifi className="w-3 h-3 mr-1" />
+                <Wifi className="w-2xs h-2xs mr-1" />
                 Live Only
               </Button>
             </div>
@@ -825,19 +825,19 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
                     <div className="flex items-start gap-2">
                       <Skeleton className={cn(
                         'rounded',
-                        compact ? 'h-4 w-4' : 'h-5 w-5'
+                        compact ? 'h-xs w-xs' : 'h-sm w-sm'
                       )} />
                       <div className="flex-1 space-y-2">
                         <Skeleton className={cn(
-                          compact ? 'h-3 w-3/4' : 'h-4 w-3/4'
+                          compact ? 'h-2xs w-2xs/4' : 'h-xs w-2xs/4'
                         )} />
                         <Skeleton className={cn(
-                          compact ? 'h-2 w-full' : 'h-3 w-full'
+                          compact ? 'h-xs w-full' : 'h-2xs w-full'
                         )} />
                         {!compact && (
                           <div className="flex gap-1">
-                            <Skeleton className="h-4 w-12" />
-                            <Skeleton className="h-4 w-12" />
+                            <Skeleton className="h-xs w-2xl" />
+                            <Skeleton className="h-xs w-2xl" />
                           </div>
                         )}
                       </div>
@@ -861,11 +861,11 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
         {!registryLoading && filteredComponents.length === 0 && (
           <div className={cn(
             'flex flex-col items-center justify-center text-muted-foreground',
-            compact ? 'h-24' : 'h-32'
+            compact ? 'h-xs4' : 'h-232'
           )}>
             <Filter className={cn(
               'mb-2 opacity-50',
-              compact ? 'h-6 w-6' : 'h-8 w-8'
+              compact ? 'h-md w-md' : 'h-lg w-lg'
             )} />
             <p className={cn(
               compact ? 'text-xs' : 'text-sm'
@@ -897,7 +897,7 @@ export const ComponentPalette: React.FC<ComponentPaletteProps> = ({
             <p>Drag components onto the canvas to add them</p>
             {enableLiveUpdates && (
               <p className="flex items-center gap-1">
-                <Wifi className="w-3 h-3" />
+                <Wifi className="w-2xs h-2xs" />
                 Live updates enabled
               </p>
             )}

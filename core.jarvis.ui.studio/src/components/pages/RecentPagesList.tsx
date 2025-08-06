@@ -47,6 +47,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { LucideIcon as Icon } from '@/components/ui/icon';
 
 // Utilities and Types
 import { useRecentPages, type RecentPageMetadata } from '@/utils/recentPagesManager';
@@ -159,7 +160,7 @@ const PageCard: React.FC<PageCardProps> = ({
           <div className="flex items-center gap-4">
             {/* Thumbnail */}
             <div className="flex-shrink-0">
-              <div className="w-20 h-12 bg-muted rounded overflow-hidden border">
+              <div className="w-4xl h-2xl bg-muted rounded overflow-hidden border">
                 <img 
                   src={thumbnailUrl}
                   alt={`${page.displayName} thumbnail`}
@@ -193,11 +194,11 @@ const PageCard: React.FC<PageCardProps> = ({
                   </Badge>
                   <div className="text-xs text-muted-foreground space-y-0.5">
                     <div className="flex items-center gap-1 justify-end">
-                      <Clock className="h-3 w-3" />
+                      <Icon icon={Clock} size="xs" />
                       <span>{formatDistanceToNow(new Date(page.lastAccessed), { addSuffix: true })}</span>
                     </div>
                     <div className="flex items-center gap-1 justify-end">
-                      <Eye className="h-3 w-3" />
+                      <Icon icon={Eye} size="xs" />
                       <span>{page.accessCount} view{page.accessCount !== 1 ? 's' : ''}</span>
                     </div>
                   </div>
@@ -228,29 +229,29 @@ const PageCard: React.FC<PageCardProps> = ({
                   <Button 
                     variant="ghost" 
                     size="xs" 
-                    className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 p-0"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity h-md w-md p-0"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <MoreHorizontal className="h-3 w-3" />
+                    <Icon icon={MoreHorizontal} size="sm" />
                     <span className="sr-only">Page actions</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={handleEdit} className="gap-2">
-                    <Edit className="h-4 w-4" />
+                    <Icon icon={Edit} size="sm" />
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleDuplicate} className="gap-2">
-                    <Copy className="h-4 w-4" />
+                    <Icon icon={Copy} size="sm" />
                     Duplicate
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handlePreview} className="gap-2">
-                    <ExternalLink className="h-4 w-4" />
+                    <Icon icon={ExternalLink} size="sm" />
                     Preview
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleDelete} className="gap-2 text-destructive">
-                    <Trash2 className="h-4 w-4" />
+                    <Icon icon={Trash2} size="sm" />
                     Remove from Recent
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -305,11 +306,11 @@ const PageCard: React.FC<PageCardProps> = ({
           {/* Metadata */}
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
-              <Clock className="h-3 w-3" />
+              <Icon icon={Clock} size="xs" />
               <span>{formatDistanceToNow(new Date(page.lastAccessed), { addSuffix: true })}</span>
             </div>
             <div className="flex items-center gap-1">
-              <Eye className="h-3 w-3" />
+              <Icon icon={Eye} size="xs" />
               <span>{page.accessCount}</span>
             </div>
           </div>
@@ -336,8 +337,8 @@ const PageCard: React.FC<PageCardProps> = ({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="xs" onClick={handleEdit} className="h-6 w-6 p-0">
-                      <Edit className="h-3 w-3" />
+                    <Button variant="ghost" size="xs" onClick={handleEdit} className="h-md w-md p-0">
+                      <Icon icon={Edit} size="sm" />
                       <span className="sr-only">Edit page</span>
                     </Button>
                   </TooltipTrigger>
@@ -348,8 +349,8 @@ const PageCard: React.FC<PageCardProps> = ({
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button variant="ghost" size="xs" onClick={handleDuplicate} className="h-6 w-6 p-0">
-                      <Copy className="h-3 w-3" />
+                    <Button variant="ghost" size="xs" onClick={handleDuplicate} className="h-md w-md p-0">
+                      <Icon icon={Copy} size="sm" />
                       <span className="sr-only">Duplicate page</span>
                     </Button>
                   </TooltipTrigger>
@@ -360,19 +361,19 @@ const PageCard: React.FC<PageCardProps> = ({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="xs" className="h-6 w-6 p-0" onClick={(e) => e.stopPropagation()}>
-                  <MoreHorizontal className="h-3 w-3" />
+                <Button variant="ghost" size="xs" className="h-md w-md p-0" onClick={(e) => e.stopPropagation()}>
+                  <Icon icon={MoreHorizontal} size="sm" />
                   <span className="sr-only">More actions</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={handlePreview} className="gap-2">
-                  <ExternalLink className="h-4 w-4" />
+                  <Icon icon={ExternalLink} size="sm" />
                   Preview
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleDelete} className="gap-2 text-destructive">
-                  <Trash2 className="h-4 w-4" />
+                  <Icon icon={Trash2} size="sm" />
                   Remove from Recent
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -394,15 +395,15 @@ const PageCardSkeleton: React.FC<{ viewMode: ViewMode; compact?: boolean }> = ({
       <Card>
         <CardContent className="p-4">
           <div className="flex items-center gap-4">
-            <Skeleton className="w-20 h-12 rounded" />
+            <Skeleton className="w-4xl h-2xl rounded" />
             <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-1/3" />
-              <Skeleton className="h-3 w-1/2" />
-              {!compact && <Skeleton className="h-3 w-2/3" />}
+              <Skeleton className="h-xs w-xsxs/3" />
+              <Skeleton className="h-2xs w-xsxs/2" />
+              {!compact && <Skeleton className="h-2xs w-xs/3" />}
             </div>
             <div className="flex-shrink-0 space-y-1">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-sm w-3xl" />
+              <Skeleton className="h-2xs w-4xl" />
             </div>
           </div>
         </CardContent>
@@ -418,15 +419,15 @@ const PageCardSkeleton: React.FC<{ viewMode: ViewMode; compact?: boolean }> = ({
       <CardContent className={cn("p-4 space-y-3", compact && "p-3")}>
         <div className="flex justify-between items-start">
           <div className="space-y-1 flex-1">
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-xs w-xs/3" />
+            <Skeleton className="h-2xs w-xsxs/2" />
           </div>
-          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-sm w-3xl" />
         </div>
-        {!compact && <Skeleton className="h-3 w-full" />}
+        {!compact && <Skeleton className="h-2xs w-full" />}
         <div className="flex justify-between">
-          <Skeleton className="h-3 w-20" />
-          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-2xs w-xs0" />
+          <Skeleton className="h-2xs w-2xl" />
         </div>
       </CardContent>
     </Card>
@@ -524,11 +525,11 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
       <div className={cn("space-y-4", className)}>
         {showControls && (
           <div className="flex flex-col sm:flex-row gap-4">
-            <Skeleton className="h-10 flex-1" />
+            <Skeleton className="h-xl flex-1" />
             <div className="flex gap-2">
-              <Skeleton className="h-10 w-32" />
-              <Skeleton className="h-10 w-32" />
-              <Skeleton className="h-10 w-20" />
+              <Skeleton className="h-xl w-mdxl" />
+              <Skeleton className="h-xl w-mdxl" />
+              <Skeleton className="h-xl w-4xl" />
             </div>
           </div>
         )}
@@ -550,15 +551,15 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
     return (
       <div className={cn("text-center py-12", className)}>
         <div className="mx-auto max-w-sm">
-          <div className="mx-auto h-12 w-12 text-muted-foreground mb-4">
-            <Clock className="h-full w-full" />
+          <div className="mx-auto h-2xl w-2xl text-muted-foreground mb-4">
+            <Icon icon={Clock} size="md" />
           </div>
           <h3 className="text-lg font-medium mb-2">No Recent Pages</h3>
           <p className="text-muted-foreground text-sm mb-6">
             Start working on pages to see them appear here. Your recently accessed pages will be tracked automatically.
           </p>
           <Button variant="outline" size="xs" onClick={handleRefresh} className="gap-xs">
-            <RefreshCw className="h-3 w-3" />
+            <Icon icon={RefreshCw} size="xs" />
             Refresh
           </Button>
         </div>
@@ -573,7 +574,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Icon icon={Search} size="sm" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
               <Input
                 placeholder="Search recent pages..."
                 value={searchTerm}
@@ -585,9 +586,9 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={handleClearSearch}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-md w-md p-0"
                 >
-                  <X className="h-3 w-3" />
+                  <Icon icon={X} size="sm" />
                 </Button>
               )}
             </div>
@@ -595,8 +596,8 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
             {/* Filters and Controls */}
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-                <SelectTrigger className="w-32">
-                  <Filter className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-252">
+                  <Icon icon={Filter} size="sm" className="mr-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -608,8 +609,8 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
               </Select>
 
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                <SelectTrigger className="w-32">
-                  <SortDesc className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-252">
+                  <Icon icon={SortDesc} size="sm" className="mr-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -628,7 +629,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
                   onClick={() => setViewMode('grid')}
                   className="rounded-r-none border-r"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Icon icon={Grid3X3} size="sm" />
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -636,7 +637,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
                   onClick={() => setViewMode('list')}
                   className="rounded-l-none"
                 >
-                  <List className="h-4 w-4" />
+                  <Icon icon={List} size="sm" />
                 </Button>
               </div>
             </div>
@@ -644,7 +645,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
         )}
 
         <Alert>
-          <AlertCircle className="h-4 w-4" />
+          <Icon icon={AlertCircle} size="sm" />
           <AlertDescription>
             No pages match your current filters. Try adjusting your search or filter criteria.
           </AlertDescription>
@@ -661,7 +662,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Search */}
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Icon icon={Search} size="sm" className="absolute left-3 top-1/2 transform -translate-y-1/2 h-xs w-xs text-muted-foreground" />
               <Input
                 placeholder="Search recent pages..."
                 value={searchTerm}
@@ -673,9 +674,9 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
                   variant="ghost"
                   size="sm"
                   onClick={handleClearSearch}
-                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+                  className="absolute right-1 top-1/2 transform -translate-y-1/2 h-md w-md p-0"
                 >
-                  <X className="h-3 w-3" />
+                  <Icon icon={X} size="sm" />
                 </Button>
               )}
             </div>
@@ -683,8 +684,8 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
             {/* Filters and Controls */}
             <div className="flex gap-2">
               <Select value={statusFilter} onValueChange={(value) => setStatusFilter(value as StatusFilter)}>
-                <SelectTrigger className="w-32">
-                  <Filter className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-252">
+                  <Icon icon={Filter} size="sm" className="mr-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -696,8 +697,8 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
               </Select>
 
               <Select value={sortBy} onValueChange={(value) => setSortBy(value as SortOption)}>
-                <SelectTrigger className="w-32">
-                  <SortDesc className="h-4 w-4 mr-2" />
+                <SelectTrigger className="w-252">
+                  <Icon icon={SortDesc} size="sm" className="mr-2" />
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -716,7 +717,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
                   onClick={() => setViewMode('grid')}
                   className="rounded-r-none border-r"
                 >
-                  <Grid3X3 className="h-4 w-4" />
+                  <Icon icon={Grid3X3} size="sm" />
                 </Button>
                 <Button
                   variant={viewMode === 'list' ? 'default' : 'ghost'}
@@ -724,7 +725,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
                   onClick={() => setViewMode('list')}
                   className="rounded-l-none"
                 >
-                  <List className="h-4 w-4" />
+                  <Icon icon={List} size="sm" />
                 </Button>
               </div>
             </div>
@@ -736,7 +737,7 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
               <span>{filteredAndSortedPages.length} page{filteredAndSortedPages.length !== 1 ? 's' : ''}</span>
               {statistics.totalPages > 0 && (
                 <>
-                  <Separator orientation="vertical" className="h-4" />
+                  <Separator orientation="vertical" className="h-xs" />
                   <span>{statistics.draftPages} draft</span>
                   <span>{statistics.publishedPages} published</span>
                   <span>{statistics.archivedPages} archived</span>
@@ -746,12 +747,12 @@ export const RecentPagesList: React.FC<RecentPagesListProps> = ({
 
             <div className="flex gap-2">
               <Button variant="outline" size="xs" onClick={handleRefresh} className="gap-xs">
-                <RefreshCw className="h-3 w-3" />
+                <Icon icon={RefreshCw} size="xs" />
                 Refresh
               </Button>
               {statistics.totalPages > 0 && (
                 <Button variant="outline" size="xs" onClick={handleClearAll} className="gap-xs text-destructive">
-                  <Trash2 className="h-3 w-3" />
+                  <Icon icon={Trash2} size="xs" />
                   Clear All
                 </Button>
               )}

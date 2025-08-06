@@ -15,6 +15,7 @@
 
 import React, { forwardRef, useCallback } from 'react';
 import { Check, Minus } from 'lucide-react';
+import { LucideIcon as Icon } from './icon';
 import { cn } from '@/lib/utils';
 import type { SelectionModifiers } from '@/hooks/useSelectionState';
 
@@ -62,17 +63,14 @@ function extractModifiers(event: React.MouseEvent | React.KeyboardEvent): Select
 const sizeConfig = {
   sm: {
     container: 'w-xs h-xs',
-    icon: 'w-xs h-xs',
     text: 'text-xs'
   },
   md: {
     container: 'w-xs h-xs',
-    icon: 'w-xs h-xs',
     text: 'text-sm'
   },
   lg: {
     container: 'w-sm h-sm',
-    icon: 'w-xs h-xs',
     text: 'text-base'
   }
 };
@@ -222,10 +220,10 @@ export const SelectionCheckbox = forwardRef<HTMLInputElement, SelectionCheckboxP
       >
         {/* Check or indeterminate icon */}
         {checked && !indeterminate && (
-          <Check className={cn(sizeStyles.icon, 'stroke-[3]')} />
+          <Icon icon={Check} size="xs" className="stroke-[3]" />
         )}
         {indeterminate && (
-          <Minus className={cn(sizeStyles.icon, 'stroke-[3]')} />
+          <Icon icon={Minus} size="xs" className="stroke-[3]" />
         )}
       </div>
       

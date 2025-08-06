@@ -66,7 +66,7 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
         </div>
         
         {/* Main Content Area with Sidebar */}
-        <div className="flex flex-1 min-h-0 overflow-hidden">
+        <div className="flex flex-1 min-h-none overflow-hidden">
           {/* Hide sidebar in device emulation modes */}
           {!isEmulating && <Sidebar activeItem={activeItem} onItemClick={onItemClick} />}
           
@@ -74,7 +74,7 @@ export function DashboardLayout({ children, activeItem, onItemClick }: Dashboard
           <main 
             id="main-content"
             className={cn(
-              "flex-1 min-h-0 overflow-y-auto overflow-x-hidden transition-all duration-200 pb-16",
+              "flex-1 min-h-none overflow-y-auto overflow-x-hidden transition-all duration-200 pb-16",
               // Only push content when sidebar is in 'open' mode and not emulating
               !isEmulating && sidebarBehavior === 'open' ? "md:ml-6xl" : !isEmulating && "md:ml-3xl",
               isEmulating && "ml-0 w-full"

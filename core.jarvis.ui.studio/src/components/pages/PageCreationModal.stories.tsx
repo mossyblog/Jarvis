@@ -270,12 +270,12 @@ export const CompleteWorkflow: Story = {
           <div className="flex items-center justify-center gap-2 mb-4">
             {['Basic Info', 'Template', 'Configuration'].map((stepName, index) => (
               <div key={stepName} className="flex items-center">
-                <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-xs ${
+                <div className={`w-lg h-lg rounded-full border-2 flex items-center justify-center text-xs ${
                   index <= step ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground'
                 }`}>
                   {index + 1}
                 </div>
-                {index < 2 && <div className="w-8 h-px bg-muted-foreground mx-2" />}
+                {index < 2 && <div className="w-lg h-px bg-muted-foreground mx-2" />}
               </div>
             ))}
           </div>

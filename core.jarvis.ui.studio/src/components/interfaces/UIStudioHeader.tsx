@@ -21,6 +21,7 @@ import { cn } from '../../lib/utils';
 
 // UI Components
 import { Button } from '../ui/button';
+import { IconButton } from '../ui/icon-button';
 import { Badge } from '../ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
@@ -285,7 +286,7 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
     <header 
       className={cn(
         'border-b bg-card/50 backdrop-blur-sm sticky top-0 z-40',
-        'flex h-16 items-center justify-between px-4 sm:px-6',
+        'flex h-3xl items-center justify-between px-4 sm:px-6',
         'transition-all duration-200',
         className
       )}
@@ -298,15 +299,15 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
+              <IconButton
                 variant="ghost"
                 size="sm"
-                className="lg:hidden h-9 w-9 p-0"
+                className="lg:hidden"
                 onClick={handleMobileMenuToggle}
                 aria-label="Open navigation menu"
               >
-                <Menu className="h-5 w-5" />
-              </Button>
+                <Menu className="h-xs w-xs" />
+              </IconButton>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <p>Open menu (Alt+M)</p>
@@ -316,15 +317,15 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
 
         {/* Logo and Title */}
         <div className="flex items-center space-x-2 min-w-0">
-          <Button
+          <IconButton
             variant="ghost"
             size="sm"
-            className="h-9 w-9 p-0 hidden lg:flex"
+            className="hidden lg:flex"
             onClick={() => navigate('/studio')}
             aria-label="Go to UIStudio dashboard"
           >
-            <Home className="h-5 w-5" />
-          </Button>
+            <Home className="h-xs w-xs" />
+          </IconButton>
           
           <div className="flex flex-col min-w-0">
             <h1 className="text-lg font-bold sm:text-xl truncate">
@@ -339,23 +340,23 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
         {/* Project Selector (if enabled) */}
         {showProjectSelector && (
           <>
-            <Separator orientation="vertical" className="h-4" />
+            <Separator orientation="vertical" className="h-xs" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="hidden sm:flex">
                   <span className="text-sm">Current Project</span>
-                  <ChevronDown className="h-4 w-4 ml-1" />
+                  <ChevronDown className="h-xs w-xs ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuLabel>Switch Project</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <Star className="h-4 w-4 mr-2" />
+                  <Star className="h-xs w-xs mr-2" />
                   Personal Workspace
                 </DropdownMenuItem>
                 <DropdownMenuItem>
-                  <Users className="h-4 w-4 mr-2" />
+                  <Users className="h-xs w-xs mr-2" />
                   Team Project
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -381,9 +382,9 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
                     variant={isEditMode ? "default" : "outline"}
                     size="sm"
                     onClick={toggleEditMode}
-                    className="h-8 px-3"
+                    className="h-lg px-3"
                   >
-                    <Activity className="h-4 w-4 mr-1" />
+                    <Activity className="h-xs w-xs mr-1" />
                     <span className="text-xs">
                       {isEditMode ? 'Editing' : 'Edit Mode'}
                     </span>
@@ -405,15 +406,15 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <IconButton
                   variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0 hidden sm:flex"
+                  className="hidden sm:flex"
                   onClick={handleOpenSearch}
                   aria-label="Search pages and content"
                 >
-                  <Search className="h-4 w-4" />
-                </Button>
+                  <Search className="h-xs w-xs" />
+                </IconButton>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Search (Ctrl+K)</p>
@@ -430,10 +431,10 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
                 <Button
                   size="sm"
                   onClick={handleCreatePage}
-                  className="hidden sm:flex h-8"
+                  className="hidden sm:flex h-lg"
                   aria-label="Create new page"
                 >
-                  <Plus className="h-4 w-4 mr-1" />
+                  <Plus className="h-xs w-xs mr-1" />
                   <span className="hidden md:inline">Create</span>
                 </Button>
               </TooltipTrigger>
@@ -453,10 +454,10 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
                   variant="outline"
                   size="sm"
                   onClick={handleOpenTemplates}
-                  className="hidden sm:flex h-8"
+                  className="hidden sm:flex h-lg"
                   aria-label="Browse templates"
                 >
-                  <Layers className="h-4 w-4 mr-1" />
+                  <Layers className="h-xs w-xs mr-1" />
                   <span className="hidden lg:inline">Templates</span>
                 </Button>
               </TooltipTrigger>
@@ -471,28 +472,28 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
         <div className="sm:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                <Plus className="h-4 w-4" />
-              </Button>
+              <IconButton variant="ghost" size="sm">
+                <Plus className="h-xs w-xs" />
+              </IconButton>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {showActions.createPage && (
                 <DropdownMenuItem onClick={handleCreatePage}>
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-xs w-xs mr-2" />
                   Create Page
                 </DropdownMenuItem>
               )}
               {showActions.templates && (
                 <DropdownMenuItem onClick={handleOpenTemplates}>
-                  <Layers className="h-4 w-4 mr-2" />
+                  <Layers className="h-xs w-xs mr-2" />
                   Templates
                 </DropdownMenuItem>
               )}
               {showActions.search && (
                 <DropdownMenuItem onClick={handleOpenSearch}>
-                  <Search className="h-4 w-4 mr-2" />
+                  <Search className="h-xs w-xs mr-2" />
                   Search
                 </DropdownMenuItem>
               )}
@@ -500,24 +501,30 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
           </DropdownMenu>
         </div>
 
-        <Separator orientation="vertical" className="h-4 hidden sm:block" />
+        <Separator orientation="vertical" className="h-xs hidden sm:block" />
 
         {/* Notifications */}
         {showActions.notifications && isAuthenticated && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0 relative">
-                <Bell className="h-4 w-4" />
-                {unreadNotifications.length > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                  >
-                    {unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <TooltipTrigger asChild>
+                    <IconButton variant="ghost" size="sm" aria-label="Notifications">
+                      <div className="relative">
+                        <Bell className="h-xs w-xs" />
+                        {unreadNotifications.length > 0 && (
+                          <Badge 
+                            variant="destructive" 
+                            className="absolute -top-1 -right-1 h-sm w-sm p-0 flex items-center justify-center text-xs min-w-sm"
+                          >
+                            {unreadNotifications.length > 9 ? '9+' : unreadNotifications.length}
+                          </Badge>
+                        )}
+                      </div>
+                    </IconButton>
+                  </TooltipTrigger>
+                </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80">
               <DropdownMenuLabel className="flex items-center justify-between">
                 <span>Notifications</span>
@@ -526,7 +533,7 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={markAllNotificationsRead}
-                    className="h-6 px-2 text-xs"
+                    className="h-md px-2 text-xs"
                   >
                     Mark all read
                   </Button>
@@ -560,7 +567,7 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
                           </p>
                         </div>
                         {!notification.read && (
-                          <div className="w-2 h-2 bg-blue-500 rounded-full mt-1 ml-2" />
+                          <div className="w-xs h-xs bg-blue-500 rounded-full mt-1 ml-2" />
                         )}
                       </div>
                     </DropdownMenuItem>
@@ -572,12 +579,17 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
                 </>
               ) : (
                 <div className="p-6 text-center">
-                  <Bell className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                  <Bell className="h-lg w-lg text-muted-foreground mx-auto mb-2" />
                   <p className="text-sm text-muted-foreground">No notifications</p>
                 </div>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
+              <TooltipContent>
+                <p>Notifications{unreadNotifications.length > 0 ? ` (${unreadNotifications.length} unread)` : ''}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         )}
 
         {/* Help */}
@@ -585,134 +597,20 @@ export const UIStudioHeader: React.FC<UIStudioHeaderProps> = ({
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <Button
+                <IconButton
                   variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0"
                   onClick={() => console.log('Help clicked')}
                   aria-label="Help and support"
                 >
-                  <HelpCircle className="h-4 w-4" />
-                </Button>
+                  <HelpCircle className="h-xs w-xs" />
+                </IconButton>
               </TooltipTrigger>
               <TooltipContent>
                 <p>Help and support (?)</p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        )}
-
-        {/* Settings */}
-        {showActions.settings && isAuthenticated && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-9 w-9 p-0"
-                  onClick={() => navigate('/studio/settings')}
-                  aria-label="Settings"
-                >
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Settings</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-
-        {/* User Menu */}
-        {isAuthenticated && user ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                className="flex items-center space-x-2 h-9 px-2"
-                aria-label="User menu"
-              >
-                <Avatar className="h-7 w-7">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                    {getUserInitials(user.name)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden sm:flex flex-col items-start min-w-0">
-                  <span className="text-sm font-medium truncate max-w-32">
-                    {user.name}
-                  </span>
-                  <span className="text-xs text-muted-foreground truncate max-w-32">
-                    {getUserRole()}
-                  </span>
-                </div>
-                <ChevronDown className="h-3 w-3 opacity-50" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                  <div className="flex items-center space-x-1">
-                    <Badge variant="secondary" className="text-xs">
-                      {getUserRole()}
-                    </Badge>
-                  </div>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              
-              {/* Mobile Edit Mode Toggle */}
-              <div className="sm:hidden">
-                <DropdownMenuItem onClick={toggleEditMode}>
-                  <Activity className="h-4 w-4 mr-2" />
-                  {isEditMode ? 'Exit Edit Mode' : 'Enter Edit Mode'}
-                  {hasUnsavedChanges && (
-                    <Badge variant="destructive" className="ml-auto text-xs">
-                      Unsaved
-                    </Badge>
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-              </div>
-              
-              <DropdownMenuItem onClick={() => navigate('/studio/profile')}>
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/studio/team')}>
-                <Users className="h-4 w-4 mr-2" />
-                Team
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/studio/analytics')}>
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Analytics
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/studio/settings')}>
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={handleLogout}
-                className="text-destructive focus:text-destructive"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => navigate('/login')}
-            className="h-8"
-          >
-            Sign In
-          </Button>
         )}
       </div>
     </header>

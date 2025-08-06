@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ArrowDown, ArrowUp, Activity } from 'lucide-react';
+import { Activity, ArrowUp, ArrowDown } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { LucideIcon } from './icon';
 
 interface NetworkStats {
   requestsIn: number;
@@ -146,7 +147,7 @@ export function NetworkMonitor() {
       <div
         className={cn(
           "bg-card/95 backdrop-blur-sm border border-border rounded-lg shadow-lg transition-all duration-200",
-          isVisible ? "w-80 p-3" : "w-auto p-2 cursor-pointer hover:bg-accent/50"
+          isVisible ? "w-xsxs1xl p-3" : "w-auto p-2 cursor-pointer hover:bg-accent/50"
         )}
         onClick={() => !isVisible && setIsVisible(true)}
       >
@@ -155,7 +156,7 @@ export function NetworkMonitor() {
             {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Activity size={14} className="text-primary" />
+                <LucideIcon icon={Activity} size="sm" className="text-primary" />
                 <span className="text-xs font-medium">Network Activity</span>
               </div>
               <button
@@ -173,12 +174,12 @@ export function NetworkMonitor() {
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="space-y-1">
                 <div className="flex items-center gap-1">
-                  <ArrowUp size={10} className="text-primary" />
+                  <LucideIcon icon={ArrowUp} size="xs" className="text-primary" />
                   <span className="text-muted-foreground">Out:</span>
                   <span className="font-mono">{stats.requestsOut}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                  <ArrowDown size={10} className="text-success" />
+                  <LucideIcon icon={ArrowDown} size="xs" className="text-success" />
                   <span className="text-muted-foreground">In:</span>
                   <span className="font-mono">{stats.requestsIn}</span>
                 </div>
@@ -198,19 +199,19 @@ export function NetworkMonitor() {
             {/* Active indicator */}
             {stats.activeRequests > 0 && (
               <div className="flex items-center gap-2 text-xs text-amber-500">
-                <div className="animate-pulse w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                <div className="animate-pulse w-xsxs.5 h-xsxs.5 bg-amber-500 rounded-full" />
                 <span>{stats.activeRequests} active request{stats.activeRequests > 1 ? 's' : ''}</span>
               </div>
             )}
 
             {/* Recent activity */}
-            <div className="space-y-1 max-h-32 overflow-y-auto">
+            <div className="space-y-1 max-h-232 overflow-y-auto">
               {recentActivity.slice(0, 5).map((activity, index) => (
                 <div key={index} className="flex items-center gap-2 text-xs">
                   {activity.type === 'request' ? (
-                    <ArrowUp size={8} className="text-primary flex-shrink-0" />
+                    <LucideIcon icon={ArrowUp} size="xs" className="text-primary flex-shrink-0" />
                   ) : (
-                    <ArrowDown size={8} className="text-success flex-shrink-0" />
+                    <LucideIcon icon={ArrowDown} size="xs" className="text-success flex-shrink-0" />
                   )}
                   <span className="font-mono text-muted-foreground text-xs">
                     {activity.method}
@@ -229,14 +230,14 @@ export function NetworkMonitor() {
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Activity size={14} className={cn(
+            <LucideIcon icon={Activity} size="sm" className={cn(
               "transition-colors",
               stats.activeRequests > 0 ? "text-amber-500 animate-pulse" : "text-muted-foreground"
             )} />
             <div className="flex items-center gap-1 text-xs font-mono">
-              <ArrowDown size={10} className="text-success" />
+              <LucideIcon icon={ArrowDown} size="xs" className="text-success" />
               <span>{stats.requestsIn}</span>
-              <ArrowUp size={10} className="text-primary" />
+              <LucideIcon icon={ArrowUp} size="xs" className="text-primary" />
               <span>{stats.requestsOut}</span>
             </div>
             {stats.activeRequests > 0 && (

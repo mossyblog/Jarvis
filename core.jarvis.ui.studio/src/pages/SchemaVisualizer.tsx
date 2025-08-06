@@ -140,7 +140,7 @@ const SchemaVisualizer = () => {
   console.log('loading', loading, 'nodes', nodes, 'edges', edges);
   return (
     <DashboardLayout activeItem="schema-visualizer" onItemClick={handleSidebarItemClick}>
-      <div className="flex-1 flex flex-col bg-[#0a0a0a] text-[#fafafa] min-h-0 min-w-0 overflow-auto">
+      <div className="flex-1 flex flex-col bg-[#0a0a0a] text-[#fafafa] min-h-none min-w-0 overflow-auto">
         {loading ? (
           <div className="flex-1 flex items-center justify-center text-[#888888] text-lg">Loading schema...</div>
         ) : (

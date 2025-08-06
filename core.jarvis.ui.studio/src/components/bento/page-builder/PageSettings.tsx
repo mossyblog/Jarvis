@@ -233,7 +233,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
         <Card className="border-destructive">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="h-xs w-xs" />
               Configuration Issues
             </CardTitle>
           </CardHeader>
@@ -253,7 +253,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
+            <Settings className="h-xs w-xs" />
             Basic Information
           </CardTitle>
         </CardHeader>
@@ -340,7 +340,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Shield className="h-4 w-4" />
+            <Shield className="h-xs w-xs" />
             Security Settings
           </CardTitle>
         </CardHeader>
@@ -402,7 +402,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
                             className="h-auto p-0 ml-1"
                             onClick={() => handleRemovePermission(permission)}
                           >
-                            <X className="h-3 w-3" />
+                            <X className="h-2xs w-2xs" />
                           </Button>
                         )}
                       </Badge>
@@ -431,7 +431,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
                       </SelectContent>
                     </Select>
                     <Button onClick={handleAddPermission} disabled={!newPermission}>
-                      <Plus className="h-4 w-4" />
+                      <Plus className="h-xs w-xs" />
                     </Button>
                   </div>
                 )}
@@ -445,7 +445,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Navigation className="h-4 w-4" />
+            <Navigation className="h-xs w-xs" />
             Navigation
           </CardTitle>
         </CardHeader>
@@ -499,7 +499,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Tag className="h-4 w-4" />
+            <Tag className="h-xs w-xs" />
             Tags
           </CardTitle>
         </CardHeader>
@@ -517,7 +517,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
                       className="h-auto p-0 ml-1"
                       onClick={() => handleRemoveTag(tag)}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="h-2xs w-2xs" />
                     </Button>
                   )}
                 </Badge>
@@ -540,7 +540,7 @@ export const PageSettings: React.FC<PageSettingsProps> = ({
                 }}
               />
               <Button onClick={handleAddTag} disabled={!newTag.trim()}>
-                <Plus className="h-4 w-4" />
+                <Plus className="h-xs w-xs" />
               </Button>
             </div>
           )}

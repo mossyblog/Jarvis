@@ -15,24 +15,24 @@ export default function SkeletonTest() {
             <h2 className="text-lg font-semibold mb-4">Basic Skeleton Components</h2>
             <div className="space-y-2">
               <div className="flex items-center gap-4">
-                <span className="text-sm w-24">Default:</span>
-                <Skeleton className="h-4 w-48" />
+                <span className="text-sm w-4xl">Default:</span>
+                <Skeleton className="h-xs w-lgxl" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm w-24">Small:</span>
-                <Skeleton className="h-3 w-32" />
+                <span className="text-sm w-4xl">Small:</span>
+                <Skeleton className="h-xs w-5xl" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm w-24">Large:</span>
-                <Skeleton className="h-6 w-64" />
+                <span className="text-sm w-4xl">Large:</span>
+                <Skeleton className="h-xs w-xlxl" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm w-24">Square:</span>
-                <Skeleton className="h-8 w-8" />
+                <span className="text-sm w-4xl">Square:</span>
+                <Skeleton className="h-sm w-sm" />
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm w-24">Circle:</span>
-                <Skeleton className="h-12 w-12 rounded-full" />
+                <span className="text-sm w-4xl">Circle:</span>
+                <Skeleton className="h-2xl w-2xl rounded-full" />
               </div>
             </div>
           </div>
@@ -47,11 +47,11 @@ export default function SkeletonTest() {
           <div>
             <h2 className="text-lg font-semibold mb-4">Card Skeleton</h2>
             <div className="border border-border rounded-lg p-4 space-y-3">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
+              <Skeleton className="h-xs w-2xs/4" />
+              <Skeleton className="h-xs w-xsxs/2" />
               <div className="flex gap-2 mt-4">
-                <Skeleton className="h-8 w-20" />
-                <Skeleton className="h-8 w-20" />
+                <Skeleton className="h-sm w-4xl" />
+                <Skeleton className="h-sm w-4xl" />
               </div>
             </div>
           </div>

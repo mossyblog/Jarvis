@@ -77,17 +77,17 @@ export const AllVariants: Story = {
         <h3 className="text-lg font-semibold mb-4">Theme Switcher Variants</h3>
         <div className="space-y-6">
           <div className="flex items-center gap-4">
-            <span className="w-32 text-sm text-muted-foreground">Default:</span>
+            <span className="w-mdxl text-sm text-muted-foreground">Default:</span>
             <ThemeSwitcher />
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="w-32 text-sm text-muted-foreground">Compact:</span>
+            <span className="w-mdxl text-sm text-muted-foreground">Compact:</span>
             <ThemeSwitcherCompact />
           </div>
           
           <div className="flex items-center gap-4">
-            <span className="w-32 text-sm text-muted-foreground">With Label:</span>
+            <span className="w-mdxl text-sm text-muted-foreground">With Label:</span>
             <ThemeSwitcherCompact showLabel={true} />
           </div>
         </div>

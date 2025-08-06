@@ -107,7 +107,7 @@ const VerticalTabs: React.FC<VerticalTabsProps> = ({ activeTab, onTabChange, cla
             onClick={() => onTabChange(tab.id)}
           >
             <div className="flex items-center gap-2 w-full">
-              <IconComponent className="h-4 w-4 flex-shrink-0" />
+              <IconComponent className="h-xs w-xs flex-shrink-0" />
               <span className="font-medium text-sm">{tab.label}</span>
             </div>
             <span className="text-xs text-muted-foreground mt-1">
@@ -259,7 +259,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             onClick={() => onUpdate({ props: {} })}
             disabled={readOnly}
           >
-            <RotateCcw className="h-4 w-4 mr-2" />
+            <RotateCcw className="h-xs w-xs mr-2" />
             Reset Properties
           </Button>
           <Button
@@ -268,7 +268,7 @@ const SettingsPanel: React.FC<SettingsPanelProps> = ({
             onClick={onDelete}
             disabled={readOnly}
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className="h-xs w-xs mr-2" />
             Delete Component
           </Button>
         </div>
@@ -406,10 +406,10 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0"
+                className="h-sm w-sm p-0"
                 onClick={handleSelectionToggle}
               >
-                <X className="h-3 w-3" />
+                <X className="h-xs w-xs" />
               </Button>
             </div>
           </div>
@@ -417,10 +417,10 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       </div>
 
       {/* Editor Panel */}
-      <div className="component-editor__panel fixed right-0 top-0 bottom-0 w-96 bg-card border-l shadow-lg z-50">
+      <div className="component-editor__panel fixed right-0 top-0 bottom-0 w-2xlxl bg-card border-l shadow-lg z-50">
         <div className="flex h-full">
           {/* Vertical Tabs */}
-          <div className="w-24 border-r bg-muted/20 p-2">
+          <div className="w-4xl border-r bg-muted/20 p-2">
             <VerticalTabs
               activeTab={state.activeTab}
               onTabChange={handleTabChange}
@@ -443,7 +443,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
                   size="sm"
                   onClick={handleSelectionToggle}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-xs w-xs" />
                 </Button>
               </div>
             </div>

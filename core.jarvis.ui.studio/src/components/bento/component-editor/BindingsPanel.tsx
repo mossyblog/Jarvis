@@ -225,21 +225,21 @@ const GraphQLEditor: React.FC<GraphQLEditorProps> = ({
         <div className="mt-2 space-y-1">
           {validationResult.errors.map((error, index) => (
             <div key={index} className="flex items-center gap-2 text-sm text-destructive">
-              <AlertCircle className="h-3 w-3" />
+              <AlertCircle className="h-xs w-xs" />
               {error}
             </div>
           ))}
           
           {validationResult.warnings.map((warning, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-yellow-600">
-              <AlertCircle className="h-3 w-3" />
+            <div key={index} className="flex items-center gap-2 text-sm text-yellow-md00">
+              <AlertCircle className="h-xs w-xs" />
               {warning}
             </div>
           ))}
           
           {validationResult.isValid && (
             <div className="flex items-center gap-2 text-sm text-green-600">
-              <CheckCircle className="h-3 w-3" />
+              <CheckCircle className="h-xs w-xs" />
               Query syntax is valid
             </div>
           )}
@@ -336,7 +336,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
       {/* Header */}
       <div className="space-y-2">
         <h3 className="text-lg font-semibold flex items-center gap-2">
-          <Database className="h-5 w-5" />
+          <Database className="h-sm w-sm" />
           Data Bindings
         </h3>
         <p className="text-sm text-muted-foreground">
@@ -349,7 +349,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-base flex items-center gap-2">
-              <Code className="h-4 w-4" />
+              <Code className="h-xs w-xs" />
               GraphQL Read Query
             </CardTitle>
             <div className="flex items-center gap-2">
@@ -370,9 +370,9 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
                 disabled={!query.trim() || isTestingBindings || readOnly}
               >
                 {isTestingBindings ? (
-                  <RefreshCw className="h-4 w-4 animate-spin mr-1" />
+                  <RefreshCw className="h-xs w-xs animate-spin mr-1" />
                 ) : (
-                  <Play className="h-4 w-4 mr-1" />
+                  <Play className="h-xs w-xs mr-1" />
                 )}
                 Test Query
               </Button>
@@ -407,7 +407,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <Link className="h-4 w-4" />
+              <Link className="h-xs w-xs" />
               Property Mappings
             </CardTitle>
             <p className="text-sm text-muted-foreground">
@@ -430,7 +430,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Zap className="h-4 w-4" />
+            <Zap className="h-xs w-xs" />
             Write Actions
           </CardTitle>
           <p className="text-sm text-muted-foreground">
@@ -443,7 +443,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-xs w-xs text-green-600" />
                     <span className="text-sm font-medium">Write configuration active</span>
                   </div>
                   <Button
@@ -452,7 +452,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
                     onClick={onShowWriteConfig}
                     disabled={readOnly}
                   >
-                    <Settings className="h-4 w-4 mr-1" />
+                    <Settings className="h-xs w-xs mr-1" />
                     Configure
                   </Button>
                 </div>
@@ -485,8 +485,8 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
               <div className="text-center py-6">
                 <div className="space-y-3">
                   <div className="flex justify-center">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
-                      <Zap className="h-6 w-6 text-muted-foreground" />
+                    <div className="w-2xl h-2xl rounded-full bg-muted flex items-center justify-center">
+                      <Zap className="h-sm w-sm text-muted-foreground" />
                     </div>
                   </div>
                   <div className="space-y-1">
@@ -500,7 +500,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
                     onClick={onShowWriteConfig}
                     disabled={readOnly}
                   >
-                    <Plus className="h-4 w-4 mr-1" />
+                    <Plus className="h-xs w-xs mr-1" />
                     Configure Write Actions
                   </Button>
                 </div>
@@ -514,7 +514,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <RefreshCw className="h-4 w-4" />
+            <RefreshCw className="h-xs w-xs" />
             Auto-Refresh
           </CardTitle>
         </CardHeader>
@@ -580,7 +580,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
           onClick={() => setShowConfirmReset(true)}
           disabled={readOnly || (!query.trim() && mappings.length === 0)}
         >
-          <X className="h-4 w-4 mr-1" />
+          <X className="h-xs w-xs mr-1" />
           Reset All
         </Button>
         
@@ -588,7 +588,7 @@ export const BindingsPanel: React.FC<BindingsPanelProps> = ({
           onClick={handleApplyBindings}
           disabled={readOnly || !validationResult?.isValid}
         >
-          <CheckCircle className="h-4 w-4 mr-1" />
+          <CheckCircle className="h-xs w-xs mr-1" />
           Apply Bindings
         </Button>
       </div>

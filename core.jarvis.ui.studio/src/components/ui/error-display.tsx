@@ -43,7 +43,7 @@ const errorAlertVariants = cva(
     variants: {
       variant: {
         error: "border-destructive/50 text-destructive bg-destructive/5 [&>svg]:text-destructive",
-        warning: "border-yellow-500/50 text-yellow-700 bg-yellow-50 dark:bg-yellow-950/10 dark:text-yellow-400 [&>svg]:text-yellow-600 dark:[&>svg]:text-yellow-400",
+        warning: "border-yellow-sm00/50 text-yellow-md00 bg-yellow-sm0 dark:bg-yellow-lg50/10 dark:text-yellow-xs00 [&>svg]:text-yellow-md00 dark:[&>svg]:text-yellow-xs00",
         info: "border-blue-500/50 text-blue-700 bg-blue-50 dark:bg-blue-950/10 dark:text-blue-400 [&>svg]:text-blue-600 dark:[&>svg]:text-blue-400",
         success: "border-green-500/50 text-green-700 bg-green-50 dark:bg-green-950/10 dark:text-green-400 [&>svg]:text-green-600 dark:[&>svg]:text-green-400"
       },
@@ -130,7 +130,7 @@ export function ErrorAlert({
   return (
     <div className={cn(errorAlertVariants({ variant: autoVariant, size }), className)} {...props}>
       <div className="flex items-start gap-3">
-        <Icon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <Icon className="h-xs w-xs mt-0.5 flex-shrink-0" />
         
         <div className="flex-1 min-w-0">
           {title && (
@@ -159,9 +159,9 @@ export function ErrorAlert({
               variant="ghost" 
               size="sm" 
               onClick={onRetry}
-              className="h-8 px-2 hover:bg-current hover:bg-opacity-10"
+              className="h-md px-2 hover:bg-current hover:bg-opacity-10"
             >
-              <RefreshCw className="h-3 w-3" />
+              <RefreshCw className="h-xs w-xs" />
             </Button>
           )}
           
@@ -170,9 +170,9 @@ export function ErrorAlert({
               variant="ghost" 
               size="sm" 
               onClick={onDismiss}
-              className="h-8 px-2 hover:bg-current hover:bg-opacity-10"
+              className="h-md px-2 hover:bg-current hover:bg-opacity-10"
             >
-              <X className="h-3 w-3" />
+              <X className="h-xs w-xs" />
             </Button>
           )}
         </div>
@@ -216,16 +216,16 @@ export function InlineError({
       sizeClasses,
       className
     )}>
-      <Icon className={cn("flex-shrink-0", size === 'sm' ? 'h-3 w-3' : 'h-4 w-4')} />
+      <Icon className={cn("flex-shrink-0", size === 'sm' ? 'h-xs w-xs' : 'h-xs w-xs')} />
       <span className="flex-1 min-w-0 truncate">{userMessage}</span>
       {canRetry && onRetry && (
         <Button 
           variant="ghost" 
           size="sm" 
           onClick={onRetry}
-          className="h-6 w-6 p-0 hover:bg-destructive/10"
+          className="h-sm w-sm p-0 hover:bg-destructive/10"
         >
-          <RefreshCw className="h-3 w-3" />
+          <RefreshCw className="h-2xs w-2xs" />
         </Button>
       )}
     </div>
@@ -275,8 +275,8 @@ export function ErrorPage({
   return (
     <div className="min-h-[400px] flex items-center justify-center p-8">
       <div className="max-w-md w-full text-center">
-        <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-destructive/10 mb-6">
-          <Icon className="h-8 w-8 text-destructive" />
+        <div className="mx-auto flex items-center justify-center h-3xl w-3xl rounded-full bg-destructive/10 mb-6">
+          <Icon className="h-md w-md text-destructive" />
         </div>
 
         <h2 className="text-2xl font-bold text-foreground mb-4">
@@ -299,7 +299,7 @@ export function ErrorPage({
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
           {canRetry && onRetry && (
             <Button onClick={onRetry} className="sm:w-auto">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="h-xs w-xs mr-2" />
               Try Again
             </Button>
           )}
@@ -374,7 +374,7 @@ export function ErrorToast({
   return (
     <div className="bg-background border border-destructive/20 rounded-lg shadow-lg p-4 min-w-[300px] max-w-[400px]">
       <div className="flex items-start gap-3">
-        <Icon className="h-5 w-5 text-destructive mt-0.5 flex-shrink-0" />
+        <Icon className="h-sm w-sm text-destructive mt-0.5 flex-shrink-0" />
         
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground mb-1">Error</p>
@@ -387,9 +387,9 @@ export function ErrorToast({
               variant="ghost" 
               size="sm" 
               onClick={onRetry}
-              className="h-8 w-8 p-0"
+              className="h-md w-md p-0"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-xs w-xs" />
             </Button>
           )}
           
@@ -400,9 +400,9 @@ export function ErrorToast({
               setIsVisible(false);
               onDismiss?.();
             }}
-            className="h-8 w-8 p-0"
+            className="h-lg w-lg p-0"
           >
-            <X className="h-4 w-4" />
+            <X className="h-xs w-xs" />
           </Button>
         </div>
       </div>
@@ -428,7 +428,7 @@ export function FieldError({ error, className }: FieldErrorProps) {
     <div className={cn("text-sm text-destructive space-y-1", className)}>
       {errors.map((err, index) => (
         <div key={index} className="flex items-center gap-1">
-          <AlertCircle className="h-3 w-3 flex-shrink-0" />
+          <AlertCircle className="h-xs w-xs flex-shrink-0" />
           <span>{err}</span>
         </div>
       ))}
@@ -461,8 +461,8 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div className={cn("flex flex-col items-center justify-center p-8 text-center", className)}>
-      <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-muted mb-6">
-        <Icon className="h-8 w-8 text-muted-foreground" />
+      <div className="mx-auto flex items-center justify-center h-3xl w-3xl rounded-full bg-muted mb-6">
+        <Icon className="h-md w-md text-muted-foreground" />
       </div>
 
       <h3 className="text-lg font-semibold text-foreground mb-2">

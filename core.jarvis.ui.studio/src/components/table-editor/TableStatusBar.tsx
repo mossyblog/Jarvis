@@ -21,14 +21,14 @@ export function TableStatusBar({ currentPage, totalPages, totalRows, recordCount
           <span className="text-[#fafafa]">{recordCount} record{recordCount !== 1 ? 's' : ''}</span>
         </div>
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" className="h-7 px-3 text-xs text-[#888888] hover:text-[#fafafa] hover:bg-[#262626] font-normal">
+          <Button variant="ghost" size="sm" className="h-sm px-3 text-xs text-[#888888] hover:text-[#fafafa] hover:bg-[#262626] font-normal">
             Refresh
           </Button>
           <div className="flex">
-            <Button variant="ghost" size="sm" className="h-7 px-3 text-xs rounded-r-none border-r border-[#262626] text-[#fafafa] bg-[#1a1a1a] font-normal">
+            <Button variant="ghost" size="sm" className="h-sm px-3 text-xs rounded-r-none border-r border-[#262626] text-[#fafafa] bg-[#1a1a1a] font-normal">
               Data
             </Button>
-            <Button variant="ghost" size="sm" className="h-7 px-3 text-xs rounded-l-none text-[#888888] hover:text-[#fafafa] hover:bg-[#262626] font-normal">
+            <Button variant="ghost" size="sm" className="h-sm px-3 text-xs rounded-l-none text-[#888888] hover:text-[#fafafa] hover:bg-[#262626] font-normal">
               Definition
             </Button>
           </div>
