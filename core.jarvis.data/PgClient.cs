@@ -209,7 +209,7 @@ namespace core.jarvis.data
                 // Some JWT claims (like Microsoft's) have very long names
                 // We need to sanitize the claim key to be a valid PostgreSQL identifier
                 var sanitizedKey = SanitizeClaimKey(claim.Key);
-                var variableName = $"jwt.claims.{sanitizedKey}";
+                var variableName = $"app.{sanitizedKey}";
                 
                 // PostgreSQL custom variables need to be set with literal values
                 // We escape single quotes to prevent SQL injection
@@ -241,14 +241,17 @@ namespace core.jarvis.data
         private string SanitizeClaimKey(string claimKey)
         {
             // Handle common JWT claim types with long URIs
+            // Also map standard claims to RLS-friendly names
             var commonMappings = new Dictionary<string, string>
             {
                 ["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] = "role",
-                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] = "sub",
+                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] = "user_id",
                 ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] = "name",
                 ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] = "email",
                 ["http://schemas.microsoft.com/identity/claims/objectidentifier"] = "oid",
-                ["http://schemas.microsoft.com/identity/claims/tenantid"] = "tid"
+                ["http://schemas.microsoft.com/identity/claims/tenantid"] = "tenant_id",
+                // Map standard JWT "sub" claim to user_id for RLS owner checks
+                ["sub"] = "user_id"
             };
             
             if (commonMappings.TryGetValue(claimKey, out var shortName))
@@ -270,9 +273,9 @@ namespace core.jarvis.data
             if (sanitized.Length > 0 && char.IsDigit(sanitized[0]))
                 sanitized = "_" + sanitized;
             
-            // Truncate to 63 characters minus "jwt.claims." prefix (11 chars)
-            if (sanitized.Length > 52)
-                sanitized = sanitized.Substring(0, 52);
+            // Truncate to 63 characters minus "app." prefix (4 chars)
+            if (sanitized.Length > 59)
+                sanitized = sanitized.Substring(0, 59);
             
             return string.IsNullOrEmpty(sanitized) ? "claim" : sanitized;
         }
