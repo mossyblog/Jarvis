@@ -4,10 +4,10 @@ Handlers are the heart of Jarvis. Every piece of business logic lives in a handl
 
 ## 1. Handler Anatomy
 
-All handlers inherit from `DataContextComponentHandler<T>`:
+All handlers inherit from `ComponentHandler<T>`:
 
 ```csharp
-public abstract class DataContextComponentHandler<TComponent> : IComponentHandler<TComponent>
+public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponent>
     where TComponent : class, IComponent, new()
 {
     public Guid OwnerEntityId { get; }           // Entity this handler operates on
@@ -52,7 +52,7 @@ public record OrderComponent : IComponent
 ### Step 2: Create the Handler
 
 ```csharp
-public class OrderHandler : DataContextComponentHandler<OrderComponent>
+public class OrderHandler : ComponentHandler<OrderComponent>
 {
     public OrderHandler(IDataContext dataContext, ILogger<OrderHandler> logger)
         : base(dataContext, logger) { }
@@ -217,7 +217,7 @@ public async Task<OrderComponent> ConfirmOrder()
 ### State Machine
 
 ```csharp
-public class WorkOrderHandler : DataContextComponentHandler<WorkOrderComponent>
+public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
 {
     private static readonly Dictionary<string, string[]> ValidTransitions = new()
     {

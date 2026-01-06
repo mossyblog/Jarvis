@@ -89,7 +89,7 @@ public record OrderComponent : IComponent
 Handlers own ALL business logic for a single component type.
 
 ```csharp
-public class OrderHandler : DataContextComponentHandler<OrderComponent>
+public class OrderHandler : ComponentHandler<OrderComponent>
 {
     public OrderHandler(IDataContext dataContext, ILogger<OrderHandler> logger)
         : base(dataContext, logger) { }

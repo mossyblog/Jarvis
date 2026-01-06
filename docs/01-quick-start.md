@@ -42,7 +42,7 @@ public record ProductComponent : IComponent
 ### 2. Handler (Business Logic)
 
 ```csharp
-public class ProductHandler : DataContextComponentHandler<ProductComponent>
+public class ProductHandler : ComponentHandler<ProductComponent>
 {
     public ProductHandler(IDataContext dataContext, ILogger<ProductHandler> logger)
         : base(dataContext, logger) { }
@@ -130,7 +130,7 @@ Run: `dotnet test --filter "ProductHandler_Create"`
 
 | Pattern | Purpose |
 |---------|---------|
-| `DataContextComponentHandler<T>` | Base class for handlers |
+| `ComponentHandler<T>` | Base class for handlers |
 | `IDataContext.For<T>(entityId)` | Get handler bound to entity |
 | `Ensure(condition, message)` | Business rule validation |
 | `TryCommit(component)` | Save component |
