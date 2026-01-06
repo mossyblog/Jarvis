@@ -193,8 +193,8 @@ public class ConcurrencyControlIntegrationTests : IntegrationTestBase
         component.Version = 1; // Simulate stale version
         component.Status = "SHOULD_FAIL";
         
-        // Act & Assert - Commit should throw ConcurrencyConflictException
-        var exception = await Should.ThrowAsync<ConcurrencyConflictException>(async () =>
+        // Act & Assert - Commit should throw ConcurrencyException
+        var exception = await Should.ThrowAsync<ConcurrencyException>(async () =>
         {
             await TestDataContext().Commit(component);
         });

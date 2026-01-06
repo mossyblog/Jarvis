@@ -167,7 +167,7 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
             var query = DataContext.Query()
                 .With<T>(c => c.OwnerEntityId == OwnerEntityId);
             var result = await query.ToEntityComponents();
-            
+
             if (result.TryGetValue(OwnerEntityId, out var components))
             {
                 return components.Get<T>();
@@ -176,21 +176,10 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
         }
         catch (EntityNotFoundException)
         {
-            // Expected when component doesn't exist
+            // Expected when component doesn't exist - return null per Try pattern
             return null;
         }
-        catch (InvalidOperationException ex)
-        {
-            // Log and return null for query issues
-            Logger.LogWarning(ex, "Failed to query component {ComponentType} for entity {EntityId}", typeof(T).Name, OwnerEntityId);
-            return null;
-        }
-        catch (Exception ex)
-        {
-            // Log unexpected exceptions but don't rethrow to maintain method contract
-            Logger.LogError(ex, "Unexpected error retrieving component {ComponentType} for entity {EntityId}", typeof(T).Name, OwnerEntityId);
-            return null;
-        }
+        // Let other exceptions bubble up - don't hide real errors
     }
 
     /// <summary>
@@ -211,30 +200,23 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
     /// <returns>List of child components if found, null otherwise.</returns>
     protected async Task<List<T>?> Children<T>() where T : class, IComponent, new()
     {
-        try 
-        {
-            var childIds = await DataContext.Children(OwnerEntityId);
-            if (childIds == null || childIds.Count == 0)
-                return null;
-                
-            var query = DataContext.Query()
-                .With<T>(c => childIds.Contains(c.OwnerEntityId));
-            var result = await query.ToEntityComponents();
-            
-            var children = new List<T>();
-            foreach (var kvp in result)
-            {
-                var child = kvp.Value.Get<T>();
-                if (child != null)
-                    children.Add(child);
-            }
-            
-            return children.Count > 0 ? children : null;
-        }
-        catch
-        {
+        var childIds = await DataContext.Children(OwnerEntityId);
+        if (childIds == null || childIds.Count == 0)
             return null;
+
+        var query = DataContext.Query()
+            .With<T>(c => childIds.Contains(c.OwnerEntityId));
+        var result = await query.ToEntityComponents();
+
+        var children = new List<T>();
+        foreach (var kvp in result)
+        {
+            var child = kvp.Value.Get<T>();
+            if (child != null)
+                children.Add(child);
         }
+
+        return children.Count > 0 ? children : null;
     }
 }
 

@@ -5,7 +5,6 @@ using core.jarvis.Data;
 using core.jarvis.data;
 using core.jarvis.Exceptions;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using BCrypt.Net;
 
@@ -16,24 +15,30 @@ namespace core.jarvis.api.Handlers;
 /// </summary>
 public class AuthHandler : ComponentHandler<Account>
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly int _refreshTokenExpirationDays;
     private readonly IPasswordPolicyService _passwordPolicy;
     private readonly ISecurityAuditService _securityAudit;
     private readonly IConstantTimeService _constantTimeService;
+    private readonly ITokenService _tokenService;
+    private readonly IEntityQuery _entityQuery;
 
     public AuthHandler(
         IDataContext dataContext,
         ILogger<AuthHandler> logger,
-        IServiceProvider serviceProvider)
+        IConfiguration configuration,
+        IPasswordPolicyService passwordPolicy,
+        ISecurityAuditService securityAudit,
+        IConstantTimeService constantTimeService,
+        ITokenService tokenService,
+        IEntityQuery entityQuery)
         : base(dataContext, logger)
     {
-        _serviceProvider = serviceProvider;
-        var configuration = serviceProvider.GetRequiredService<IConfiguration>();
         _refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
-        _passwordPolicy = serviceProvider.GetRequiredService<IPasswordPolicyService>();
-        _securityAudit = serviceProvider.GetRequiredService<ISecurityAuditService>();
-        _constantTimeService = serviceProvider.GetRequiredService<IConstantTimeService>();
+        _passwordPolicy = passwordPolicy;
+        _securityAudit = securityAudit;
+        _constantTimeService = constantTimeService;
+        _tokenService = tokenService;
+        _entityQuery = entityQuery;
     }
 
     /// <summary>
@@ -93,7 +98,7 @@ public class AuthHandler : ComponentHandler<Account>
         }
 
         // Get services
-        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+        var tokenService = _tokenService;
         
         // Query account by email using the component system
         var query = DataContext.Query()
@@ -333,8 +338,8 @@ public class AuthHandler : ComponentHandler<Account>
             });
         }
 
-        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-        var entityQuery = _serviceProvider.GetRequiredService<IEntityQuery>();
+        var tokenService = _tokenService;
+        var entityQuery = _entityQuery;
         
         // Hash the refresh token for lookup
         var refreshTokenHash = tokenService.HashRefreshToken(refreshToken);

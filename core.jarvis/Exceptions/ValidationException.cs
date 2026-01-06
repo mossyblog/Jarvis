@@ -11,6 +11,16 @@ public class ValidationException : DomainException
     public Dictionary<string, string[]> Errors { get; }
 
     /// <summary>
+    /// Initializes a new instance of the <see cref="ValidationException"/> class with a message.
+    /// </summary>
+    /// <param name="message">The validation error message.</param>
+    public ValidationException(string message)
+        : base("VALIDATION_ERROR", message)
+    {
+        Errors = new Dictionary<string, string[]>();
+    }
+
+    /// <summary>
     /// Initializes a new instance of the <see cref="ValidationException"/> class for a single field error.
     /// </summary>
     /// <param name="field">The field that failed validation.</param>

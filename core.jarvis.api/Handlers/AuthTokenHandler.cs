@@ -3,7 +3,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 
 namespace core.jarvis.api.Handlers;
 
@@ -12,15 +12,18 @@ namespace core.jarvis.api.Handlers;
 /// </summary>
 public class AuthTokenHandler : ComponentHandler<AuthToken>
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly ITokenService _tokenService;
+    private readonly IConfiguration _configuration;
 
     public AuthTokenHandler(
         IDataContext dataContext,
         ILogger<AuthTokenHandler> logger,
-        IServiceProvider serviceProvider)
+        ITokenService tokenService,
+        IConfiguration configuration)
         : base(dataContext, logger)
     {
-        _serviceProvider = serviceProvider;
+        _tokenService = tokenService;
+        _configuration = configuration;
     }
 
     /// <summary>
@@ -117,7 +120,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
         try
         {
-            var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+            var tokenService = _tokenService;
 
             // Find active token by refresh token
             var tokenEntities = await DataContext.Query()
@@ -153,7 +156,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             var newAccessToken = tokenService.AccessToken(matchingToken.OwnerEntityId, string.Empty);
             var newRefreshToken = tokenService.RefreshToken();
             var expiresAt = DateTime.UtcNow.AddMinutes(15);
-            var configuration = _serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+            var configuration = _configuration;
             var refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
 
             // Revoke the old token (token rotation)
@@ -225,7 +228,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
         try
         {
-            var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+            var tokenService = _tokenService;
             var principal = tokenService.Validate(authToken.AccessToken);
             
             if (principal == null)

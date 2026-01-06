@@ -2,7 +2,6 @@ using core.jarvis.Data;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace core.jarvis.api.Handlers;
 
@@ -11,15 +10,15 @@ namespace core.jarvis.api.Handlers;
 /// </summary>
 public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 {
-    private readonly IServiceProvider _serviceProvider;
-    
+    private readonly IPermissionService? _permissionService;
+
     public AccountProfileHandler(
         IDataContext dataContext,
         ILogger<AccountProfileHandler> logger,
-        IServiceProvider serviceProvider)
+        IPermissionService? permissionService = null)
         : base(dataContext, logger)
     {
-        _serviceProvider = serviceProvider;
+        _permissionService = permissionService;
     }
 
     /// <summary>
@@ -105,24 +104,20 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             if (!Guid.TryParse(rid, out var parsedRoleId))
                 continue;
                 
-            // Get role's permissions - use handler's Get method
-            var roleHandler = DataContext.For<RoleHandler>(parsedRoleId);
-            Role? role = null;
-            try
+            // Query role directly instead of handler-to-handler call
+            var roleResults = await DataContext.Query()
+                .With<Role>(r => r.OwnerEntityId == parsedRoleId)
+                .ToEntityComponents();
+
+            if (roleResults.TryGetValue(parsedRoleId, out var roleComponents))
             {
-                role = await roleHandler.Get();
-            }
-            catch
-            {
-                // Role not found
-                // TODO: Should throw an error and not be caught silently.
-            }
-                
-            if (role != null)
-            {
-                foreach (var permId in role.PermissionIds)
+                var role = roleComponents.Get<Role>();
+                if (role != null)
                 {
-                    allPermissionIds.Add(permId);
+                    foreach (var permId in role.PermissionIds)
+                    {
+                        allPermissionIds.Add(permId);
+                    }
                 }
             }
         }
@@ -138,10 +133,9 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         Logger.LogInformation("Assigned role {RoleId} to user {UserId}", roleId, OwnerEntityId);
         
         // Invalidate permission cache since permissions have changed
-        var permissionService = _serviceProvider.GetService<IPermissionService>();
-        if (permissionService != null)
+        if (_permissionService != null)
         {
-            await permissionService.InvalidateCacheAsync(OwnerEntityId);
+            await _permissionService.InvalidateCacheAsync(OwnerEntityId);
         }
         
         return updated;
@@ -172,24 +166,20 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             if (!Guid.TryParse(rid, out var parsedRoleId))
                 continue;
                 
-            // Get role's permissions - use handler's Get method
-            var roleHandler = DataContext.For<RoleHandler>(parsedRoleId);
-            Role? role = null;
-            try
+            // Query role directly instead of handler-to-handler call
+            var roleResults = await DataContext.Query()
+                .With<Role>(r => r.OwnerEntityId == parsedRoleId)
+                .ToEntityComponents();
+
+            if (roleResults.TryGetValue(parsedRoleId, out var roleComponents))
             {
-                role = await roleHandler.Get();
-            }
-            catch
-            {
-                // Role not found
-                // TODO: Should throw an error and not be caught silently.
-            }
-                
-            if (role != null)
-            {
-                foreach (var permId in role.PermissionIds)
+                var role = roleComponents.Get<Role>();
+                if (role != null)
                 {
-                    allPermissionIds.Add(permId);
+                    foreach (var permId in role.PermissionIds)
+                    {
+                        allPermissionIds.Add(permId);
+                    }
                 }
             }
         }
@@ -205,10 +195,9 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         Logger.LogInformation("Removed role {RoleId} from user {UserId}", roleId, OwnerEntityId);
         
         // Invalidate permission cache since permissions have changed
-        var permissionService = _serviceProvider.GetService<IPermissionService>();
-        if (permissionService != null)
+        if (_permissionService != null)
         {
-            await permissionService.InvalidateCacheAsync(OwnerEntityId);
+            await _permissionService.InvalidateCacheAsync(OwnerEntityId);
         }
         
         return updated;

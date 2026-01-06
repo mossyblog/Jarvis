@@ -12,6 +12,7 @@ A three-layer architecture for .NET 8.0 applications: **Entities/Components** (d
 | [04-systems.md](04-systems.md) | Workflow orchestration | 15 min |
 | [05-testing.md](05-testing.md) | Testing without mocks | 15 min |
 | [06-database.md](06-database.md) | PostgreSQL and data access | 15 min |
+| [07-security-rls.md](07-security-rls.md) | Row-Level Security architecture | 15 min |
 
 ## The Three Layers
 
@@ -65,6 +66,8 @@ A three-layer architecture for .NET 8.0 applications: **Entities/Components** (d
 **Writing tests?** See [05-testing.md](05-testing.md)
 
 **Working with data?** Reference [06-database.md](06-database.md)
+
+**Understanding security?** See [07-security-rls.md](07-security-rls.md)
 
 ## Examples
 

@@ -6,7 +6,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.api.Systems;
 using core.jarvis.api.tests.Helpers;
-using core.jarvis.api.Exceptions;
+using core.jarvis.Exceptions;
 using core.jarvis.data;
 using core.jarvis.Data;
 using Microsoft.Extensions.DependencyInjection;

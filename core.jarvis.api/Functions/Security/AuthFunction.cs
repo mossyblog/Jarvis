@@ -3,7 +3,7 @@ using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Systems;
 using core.jarvis.api.Extensions;
-using core.jarvis.api.Exceptions;
+using core.jarvis.Exceptions;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;

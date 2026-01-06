@@ -15,8 +15,6 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults(workerApplication =>
     {
         // Configure middleware pipeline in order
-        // Exception handling middleware should be first to catch all exceptions
-        workerApplication.UseMiddleware<core.jarvis.api.Middleware.ExceptionHandlingMiddleware>();
         workerApplication.UseMiddleware<core.jarvis.api.Middleware.SecurityHeadersMiddleware>();
         // TEMPORARILY DISABLED: These middlewares consume request body
         // workerApplication.UseMiddleware<core.jarvis.api.Middleware.RateLimitingMiddleware>();

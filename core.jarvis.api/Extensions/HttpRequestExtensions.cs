@@ -1,9 +1,8 @@
 using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
 using System.Text.Json;
-using core.jarvis.api.Exceptions;
-using core.jarvis.api.Services;
 using core.jarvis.Exceptions;
+using core.jarvis.api.Services;
 
 namespace core.jarvis.api.Extensions;
 
@@ -82,7 +81,7 @@ public static class HttpRequestExtensions
     /// </summary>
     public static async Task<HttpResponseData> CreateValidationErrorResponse(
         this HttpRequestData req,
-        core.jarvis.api.Exceptions.ValidationException ex)
+        ValidationException ex)
     {
         var error = new 
         { 

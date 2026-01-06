@@ -85,38 +85,32 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
             }
         };
 
+        // Fetch all navigation items ONCE before the loop
+        var allItems = await DataContext.Query()
+            .WithAll<NavigationItem>()
+            .ToEntityComponents();
+
+        var existingByMenuId = allItems
+            .Select(kvp => kvp.Value.Get<NavigationItem>())
+            .Where(item => item != null)
+            .GroupBy(item => item!.MenuId)
+            .ToDictionary(g => g.Key, g => g.First()!);
+
         var createdItems = new List<NavigationItem>();
 
         foreach (var navItem in defaultNavItems)
         {
-            // Check if navigation item already exists
-            var allItems = await DataContext.Query()
-                .WithAll<NavigationItem>()
-                .ToEntityComponents();
-                
-            var existingItems = allItems
-                .Where(kvp => 
-                {
-                    var item = kvp.Value.Get<NavigationItem>();
-                    return item != null && item.MenuId == navItem.MenuId;
-                });
-
-            if (!existingItems.Any())
+            if (existingByMenuId.TryGetValue(navItem.MenuId, out var existingItem))
+            {
+                createdItems.Add(existingItem);
+            }
+            else
             {
                 // Create new navigation item
                 var navId = Guid.NewGuid();
                 var newNavItem = navItem with { OwnerEntityId = navId };
                 await DataContext.TryCommit(newNavItem);
                 createdItems.Add(newNavItem);
-            }
-            else
-            {
-                // Get existing item
-                var existingItem = existingItems.First().Value.Get<NavigationItem>();
-                if (existingItem != null)
-                {
-                    createdItems.Add(existingItem);
-                }
             }
         }
 
@@ -172,38 +166,32 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
             }
         };
 
+        // Fetch all roles ONCE before the loop
+        var allRoles = await DataContext.Query()
+            .WithAll<Role>()
+            .ToEntityComponents();
+
+        var existingByName = allRoles
+            .Select(kvp => kvp.Value.Get<Role>())
+            .Where(r => r != null)
+            .GroupBy(r => r!.Name)
+            .ToDictionary(g => g.Key, g => g.First()!);
+
         var createdRoles = new List<Role>();
 
         foreach (var role in defaultRoles)
         {
-            // Check if role already exists
-            var allRoles = await DataContext.Query()
-                .WithAll<Role>()
-                .ToEntityComponents();
-                
-            var existingRoles = allRoles
-                .Where(kvp => 
-                {
-                    var r = kvp.Value.Get<Role>();
-                    return r != null && r.Name == role.Name;
-                });
-
-            if (!existingRoles.Any())
+            if (existingByName.TryGetValue(role.Name, out var existingRole))
+            {
+                createdRoles.Add(existingRole);
+            }
+            else
             {
                 // Create new role
                 var roleId = Guid.NewGuid();
                 var newRole = role with { OwnerEntityId = roleId };
                 await DataContext.TryCommit(newRole);
                 createdRoles.Add(newRole);
-            }
-            else
-            {
-                // Get existing role
-                var existingRole = existingRoles.First().Value.Get<Role>();
-                if (existingRole != null)
-                {
-                    createdRoles.Add(existingRole);
-                }
             }
         }
 

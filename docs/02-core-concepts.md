@@ -40,6 +40,8 @@ Jarvis uses the Entity-Handler-System (EHS) pattern - a three-layer architecture
 
 **Data flows down. Exceptions bubble up.**
 
+> **Note:** The bottom layer (PostgreSQL with RLS) is critical. Jarvis provides framework components (`Account`, `AuthToken`, `SecurityProfile`) that feed JWT claims to the database for automatic data isolation. See [07-security-rls.md](07-security-rls.md) for details.
+
 ## 1. Entities and Components (Data Layer)
 
 Entities are containers. Components are the actual data. Neither contains business logic.
@@ -277,5 +279,20 @@ public class OrderSystem
 | **Handlers** | Business logic, validation | Try-catch, orchestration |
 | **Systems** | Workflow coordination | Business logic, validation |
 | **API** | HTTP parsing | Business logic |
+
+## 6. Framework vs Application Code
+
+Jarvis is a **framework**. Some components are framework infrastructure, not application code:
+
+| Component | Type | Purpose |
+|-----------|------|---------|
+| `Account` | Framework | Identity storage for RLS |
+| `AuthToken` | Framework | JWT carrier for RLS |
+| `SecurityProfile` | Framework | Role/permission model for RLS |
+| `AuthHandler` | Framework | Authentication for RLS |
+| `RegistrationSystem` | Framework | Identity lifecycle for RLS |
+| Your domain components | Application | Your business data |
+
+The Account/Auth components exist to feed JWT claims into PostgreSQL's Row-Level Security. They're not application-specific user data - they're framework infrastructure that enables automatic data isolation.
 
 **Next:** [03-handlers.md](03-handlers.md) - Deep dive into handler patterns

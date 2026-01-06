@@ -843,11 +843,15 @@ public class PgTable<T> where T : class, new()
                 return $"{columnName} = EXCLUDED.{columnName}";
             }));
 
+        var returningClause = typeof(IVersionedComponent).IsAssignableFrom(typeof(T))
+            ? "RETURNING version"
+            : "";
+
         var sql = $@"
-            INSERT INTO {_tableName} ({columns}) 
+            INSERT INTO {_tableName} ({columns})
             VALUES ({valueParams})
             ON CONFLICT (owner_entity_id) DO UPDATE SET {updateClauses}
-            RETURNING version";
+            {returningClause}";
 
         var parameters = ConvertEntityToParameters(entity);
         

@@ -54,17 +54,10 @@ public class DataContextCore : IDataContextCore
     public async Task<TComponent?> GetExistingComponent<TComponent>(TComponent component)
         where TComponent : class, IComponent, new()
     {
-        try
-        {
-            var results = await _pgClient.From<TComponent>()
-                .Filter("owner_entity_id", "eq", component.OwnerEntityId)
-                .Get();
-            return results.FirstOrDefault();
-        }
-        catch
-        {
-            return null;
-        }
+        var results = await _pgClient.From<TComponent>()
+            .Filter("owner_entity_id", "eq", component.OwnerEntityId)
+            .Get();
+        return results.FirstOrDefault();
     }
 
     public async Task Commit<TComponent>(TComponent component)

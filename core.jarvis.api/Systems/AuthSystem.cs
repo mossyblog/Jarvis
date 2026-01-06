@@ -1,7 +1,7 @@
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
-using core.jarvis.api.Exceptions;
+using core.jarvis.Exceptions;
 using core.jarvis.Data;
 using Microsoft.Extensions.Logging;
 

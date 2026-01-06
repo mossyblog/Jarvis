@@ -8,6 +8,7 @@ using core.jarvis.api.Systems;
 using core.jarvis.api.tests.Helpers;
 using core.jarvis.Data;
 using core.jarvis.api.Services;
+using core.jarvis.Exceptions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
@@ -182,7 +183,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         };
         
         // Act & Assert - Should throw UnauthorizedException
-        var exception = await Should.ThrowAsync<core.jarvis.api.Exceptions.UnauthorizedException>(
+        var exception = await Should.ThrowAsync<UnauthorizedException>(
             async () => await _authSystem.AuthenticateUser(accountCredentials)
         );
         
@@ -213,7 +214,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         };
         
         // Act & Assert - Should throw UnauthorizedException
-        var exception = await Should.ThrowAsync<core.jarvis.api.Exceptions.UnauthorizedException>(
+        var exception = await Should.ThrowAsync<UnauthorizedException>(
             async () => await _authSystem.AuthenticateUser(accountCredentials)
         );
         
@@ -261,7 +262,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         };
         
         // Act & Assert - Should throw UnauthorizedException
-        var exception = await Should.ThrowAsync<core.jarvis.api.Exceptions.UnauthorizedException>(
+        var exception = await Should.ThrowAsync<UnauthorizedException>(
             async () => await _authSystem.AuthenticateUser(accountCredentials)
         );
         
@@ -355,7 +356,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         };
         
         // Act & Assert - Should throw UnauthorizedException due to failed auth
-        var exception = await Should.ThrowAsync<core.jarvis.api.Exceptions.UnauthorizedException>(
+        var exception = await Should.ThrowAsync<UnauthorizedException>(
             async () => await _authSystem.AuthenticateUser(accountCredentials)
         );
         
@@ -383,7 +384,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         };
         
         // Act & Assert - Should throw UnauthorizedException due to failed auth
-        var exception = await Should.ThrowAsync<core.jarvis.api.Exceptions.UnauthorizedException>(
+        var exception = await Should.ThrowAsync<UnauthorizedException>(
             async () => await _authSystem.AuthenticateUser(accountCredentials)
         );
         
@@ -405,7 +406,7 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
         Account? accountCredentials = null;
         
         // Act & Assert - Should throw ValidationException for null component
-        var exception = await Should.ThrowAsync<core.jarvis.api.Exceptions.ValidationException>(
+        var exception = await Should.ThrowAsync<ValidationException>(
             async () => await _authSystem.AuthenticateUser(accountCredentials!)
         );
         
