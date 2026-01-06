@@ -34,3 +34,6 @@
 *.pdf binary
 *.dll binary
 *.exe binary
+
+# Use bd merge for beads JSONL files
+.beads/issues.jsonl merge=beads
