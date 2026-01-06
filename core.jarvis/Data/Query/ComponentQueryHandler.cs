@@ -35,51 +35,8 @@ public class ComponentQueryHandler<T> : IComponentQueryHandler<T>
         if (filter != null)
         {
             _logger.LogTrace("Filter provided: {Filter}", filter);
-            try
-            {
-                query = ApplyExpressionFilter(query, filter);
-                _logger.LogTrace("Expression filter applied successfully");
-            }
-            catch (Exception ex)
-            {
-                // Log the error and fall back to in-memory filtering for now
-                _logger.LogWarning(ex, "Expression filtering failed: {Message}. Filter expression: {Filter}. Falling back to in-memory filtering", ex.Message, filter);
-                
-                // Fallback to in-memory filtering
-                var allResults = await query.Get();
-                _logger.LogWarning("Loaded {RecordCount} records for in-memory filtering", allResults.Count);
-                var compiledFilter = filter.Compile();
-                
-                // Filter with null safety - catch exceptions from the filter itself
-                var filteredResults = new List<T>();
-                foreach (var item in allResults)
-                {
-                    try
-                    {
-                        if (compiledFilter(item))
-                        {
-                            filteredResults.Add(item);
-                        }
-                    }
-                    catch (NullReferenceException)
-                    {
-                        // Skip items that cause null reference exceptions in the filter
-                        _logger.LogTrace("Skipping item due to null reference in filter evaluation");
-                    }
-                }
-                
-                _logger.LogWarning("Filtered to {FilteredCount} records in memory", filteredResults.Count);
-                
-                var fallbackEntityIds = new HashSet<Guid>();
-                foreach (var model in filteredResults)
-                {
-                    if (model is IComponent component)
-                    {
-                        fallbackEntityIds.Add(component.OwnerEntityId);
-                    }
-                }
-                return fallbackEntityIds;
-            }
+            query = ApplyExpressionFilter(query, filter);
+            _logger.LogTrace("Expression filter applied successfully");
         }
         else
         {
