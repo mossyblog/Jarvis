@@ -28,9 +28,11 @@ public class AuditServiceTests : IntegrationTestBase
         // Arrange
         var logger = new NullLogger<AuditService>();
 
+        var tableManager = _serviceProvider.GetRequiredService<core.jarvis.Data.Schema.ITableManager>();
+        
         // Act & Assert
         Should.Throw<ArgumentNullException>(() => 
-            new AuditService(null!, logger))
+            new AuditService(null!, tableManager, logger))
             .ParamName.ShouldBe("pgClient");
     }
 
@@ -47,10 +49,11 @@ public class AuditServiceTests : IntegrationTestBase
     {
         // Arrange
         var pgClient = _serviceProvider.GetRequiredService<IPgClient>();
+        var tableManager = _serviceProvider.GetRequiredService<core.jarvis.Data.Schema.ITableManager>();
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() => 
-            new AuditService(pgClient, null!))
+            new AuditService(pgClient, tableManager, null!))
             .ParamName.ShouldBe("logger");
     }
 
@@ -67,11 +70,12 @@ public class AuditServiceTests : IntegrationTestBase
     {
         // Arrange
         var pgClient = _serviceProvider.GetRequiredService<IPgClient>();
+        var tableManager = _serviceProvider.GetRequiredService<core.jarvis.Data.Schema.ITableManager>();
         var logger = _serviceProvider.GetRequiredService<ILogger<AuditService>>();
 
         // Act & Assert
         Should.NotThrow(() => 
-            new AuditService(pgClient, logger));
+            new AuditService(pgClient, tableManager, logger));
     }
 
     /// <summary>

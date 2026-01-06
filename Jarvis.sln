@@ -8,10 +8,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.data", "core.ja
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.data.tests", "core.jarvis.data.tests\core.jarvis.data.tests.csproj", "{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.api", "core.jarvis.api\core.jarvis.api.csproj", "{8E903AB1-1779-4CBA-80A4-4CAF0535F7B9}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.api.tests", "core.jarvis.api.tests\core.jarvis.api.tests.csproj", "{8F7E9A08-2122-4E7D-B85E-83EEC6A29508}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -38,13 +34,5 @@ Global
 		{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8E903AB1-1779-4CBA-80A4-4CAF0535F7B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8E903AB1-1779-4CBA-80A4-4CAF0535F7B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8E903AB1-1779-4CBA-80A4-4CAF0535F7B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8E903AB1-1779-4CBA-80A4-4CAF0535F7B9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8F7E9A08-2122-4E7D-B85E-83EEC6A29508}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8F7E9A08-2122-4E7D-B85E-83EEC6A29508}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8F7E9A08-2122-4E7D-B85E-83EEC6A29508}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8F7E9A08-2122-4E7D-B85E-83EEC6A29508}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

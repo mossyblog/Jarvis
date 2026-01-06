@@ -76,7 +76,7 @@ public interface IDataContext
     /// <param name="model">The model instance to insert.</param>
     /// <returns>A task representing the insert operation.</returns>
     Task Insert<TModel>(TModel model) 
-        where TModel : class, new();
+        where TModel : class, IComponent, new();
     
     /// <summary>
     /// Creates a query builder for accessing component snapshots.

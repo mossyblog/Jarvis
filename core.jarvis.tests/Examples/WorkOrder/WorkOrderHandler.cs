@@ -8,7 +8,7 @@ namespace core.jarvis.tests.Examples.WorkOrder;
 /// Example handler demonstrating complex business workflow orchestration.
 /// Shows state machine transitions, validation, and business rules.
 /// </summary>
-public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
+public class WorkOrderHandler : ComponentHandler<FakeWorkOrderComponent>
 {
     private readonly ILogger<WorkOrderHandler> _logger;
     
@@ -21,14 +21,14 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Creates a new work order in draft status.
     /// </summary>
-    public async Task<WorkOrderComponent> CreateDraft(string description, WorkOrderPriority priority, decimal estimatedHours)
+    public async Task<FakeWorkOrderComponent> CreateDraft(string description, WorkOrderPriority priority, decimal estimatedHours)
     {
         if (string.IsNullOrWhiteSpace(description))
             throw new ValidationException("description", "Description cannot be empty");
         if (estimatedHours <= 0)
             throw new ValidationException("estimatedHours", "Estimated hours must be positive");
         
-        var workOrder = new WorkOrderComponent
+        var workOrder = new FakeWorkOrderComponent
         {
             OwnerEntityId = OwnerEntityId,
             WorkOrderNumber = GenerateWorkOrderNumber(),
@@ -48,7 +48,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Submits a draft work order for approval.
     /// </summary>
-    public async Task<WorkOrderComponent> Submit()
+    public async Task<FakeWorkOrderComponent> Submit()
     {
         var workOrder = await GetRequired();
         
@@ -72,7 +72,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Approves a submitted work order.
     /// </summary>
-    public async Task<WorkOrderComponent> Approve(Guid approverId)
+    public async Task<FakeWorkOrderComponent> Approve(Guid approverId)
     {
         var workOrder = await GetRequired();
         
@@ -99,7 +99,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Assigns work order to a technician.
     /// </summary>
-    public async Task<WorkOrderComponent> AssignTo(Guid technicianId, DateTime scheduledDate)
+    public async Task<FakeWorkOrderComponent> AssignTo(Guid technicianId, DateTime scheduledDate)
     {
         var workOrder = await GetRequired();
         
@@ -131,7 +131,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Starts work on an assigned work order.
     /// </summary>
-    public async Task<WorkOrderComponent> StartWork()
+    public async Task<FakeWorkOrderComponent> StartWork()
     {
         var workOrder = await GetRequired();
         
@@ -155,7 +155,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Completes work order with actual hours and notes.
     /// </summary>
-    public async Task<WorkOrderComponent> CompleteWork(decimal actualHours, string completionNotes)
+    public async Task<FakeWorkOrderComponent> CompleteWork(decimal actualHours, string completionNotes)
     {
         var workOrder = await GetRequired();
         
@@ -186,7 +186,7 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     /// <summary>
     /// Cancels a work order with reason.
     /// </summary>
-    public async Task<WorkOrderComponent> Cancel(string reason)
+    public async Task<FakeWorkOrderComponent> Cancel(string reason)
     {
         var workOrder = await GetRequired();
         
@@ -218,11 +218,11 @@ public class WorkOrderHandler : ComponentHandler<WorkOrderComponent>
     public async Task<WorkOrderStats> GetStatistics()
     {
         var allWorkOrders = await DataContext.Query()
-            .WithAll<WorkOrderComponent>(wo => true)
+            .WithAll<FakeWorkOrderComponent>(wo => true)
             .ToEntityComponents();
             
         var workOrders = allWorkOrders
-            .Select(kv => kv.Value.Get<WorkOrderComponent>())
+            .Select(kv => kv.Value.Get<FakeWorkOrderComponent>())
             .Where(wo => wo != null)
             .ToList();
             

@@ -1,5 +1,6 @@
+using core.jarvis.data.Exceptions;
 using core.jarvis.Exceptions;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Fixtures.Handlers;
 using core.jarvis.tests.Helpers;
 using Shouldly;
@@ -155,53 +156,59 @@ public class ConcurrencyControlIntegrationTests : IntegrationTestBase
     }
     
     /// <summary>
-    /// INTENT: Verify that Commit (force save) respects version sequencing.
-    /// PURPOSE: Test that force operations maintain version integrity.
-    /// BUSINESS CONTEXT: Administrative operations that bypass concurrency checks.
-    /// WHY IMPORTANT: Prevents version corruption even in force operations.
-    /// ARCHITECTURAL SIGNIFICANCE: Shows Commit maintains version consistency.
-    /// FUTURE RESILIENCE: Ensures version history integrity across all operations.
+    /// INTENT: Verify that Commit enforces version concurrency control like TryCommit.
+    /// PURPOSE: Test that Commit operations properly validate version conflicts.
+    /// BUSINESS CONTEXT: Commit operations must maintain data integrity through version checking.
+    /// WHY IMPORTANT: Prevents data corruption from concurrent modifications, even in Commit operations.
+    /// ARCHITECTURAL SIGNIFICANCE: Shows Commit maintains same concurrency guarantees as TryCommit.
+    /// FUTURE RESILIENCE: Ensures version-based concurrency is enforced across all commit operations.
     /// </summary>
     [Fact]
-    public async Task Commit_WithVersionedComponent_ShouldAlwaysIncrementVersion()
+    public async Task Commit_WithVersionConflict_ShouldThrowConcurrencyException()
     {
         // Arrange
         var entityId = Guid.NewGuid();
         TrackEntity(entityId);
+        var testRunId = Guid.NewGuid().ToString("N")[..8];
         
-        // Create component with version 1
         var component = new TestComponent
         {
             Id = Guid.NewGuid(),
             OwnerEntityId = entityId,
-            Name = "Initial",
-            Status = "ACTIVE"
+            Name = $"CommitConcurrencyTest-{testRunId}",
+            Status = "ACTIVE",
+            Value = 100
         };
         
+        // Step 1: Initial commit should set version to 1
         await TestDataContext().Commit(component);
         component.Version.ShouldBe(1);
         
-        // Load the component and simulate stale version
-        var staleComponent = await TestDataContext().For<TestHandler>(entityId).Get();
+        // Step 2: Successful update should increment to version 2
+        component.Name = $"Updated-{testRunId}";
+        await TestDataContext().Commit(component);
+        component.Version.ShouldBe(2);
         
-        // Update the component in database to version 2
-        var currentComponent = await TestDataContext().For<TestHandler>(entityId).Get();
-        currentComponent.Name = "Updated to V2";
-        await TestDataContext().Commit(currentComponent);
-        currentComponent.Version.ShouldBe(2);
+        // Step 3: Test that Commit throws exception with stale version (like TryCommit)
+        component.Version = 1; // Simulate stale version
+        component.Status = "SHOULD_FAIL";
         
-        // Act - Force save the stale component (has version 1)
-        staleComponent.Name = "Force Updated";
-        staleComponent.Version = 1; // Stale version
-        await TestDataContext().Commit(staleComponent);
+        // Act & Assert - Commit should throw ConcurrencyConflictException
+        var exception = await Should.ThrowAsync<ConcurrencyConflictException>(async () =>
+        {
+            await TestDataContext().Commit(component);
+        });
         
-        // Assert - Should have version 3 (incremented from database version 2)
-        staleComponent.Version.ShouldBe(3);
+        exception.Message.ShouldContain("Version mismatch");
+        exception.Message.ShouldContain("Expected version: 1");
+        exception.Message.ShouldContain("Actual version: 2");
         
-        // Verify in database
+        // Verify the database still has the valid version 2 state
         var finalComponent = await TestDataContext().For<TestHandler>(entityId).Get();
-        finalComponent.Name.ShouldBe("Force Updated");
-        finalComponent.Version.ShouldBe(3);
+        finalComponent.ShouldNotBeNull();
+        finalComponent.Name.ShouldBe($"Updated-{testRunId}"); // Should still have the valid update
+        finalComponent.Status.ShouldBe("ACTIVE"); // Should NOT have the failed update
+        finalComponent.Version.ShouldBe(2);
         
         // Cleanup
         await TestDataContext().Remove<TestComponent>(entityId);

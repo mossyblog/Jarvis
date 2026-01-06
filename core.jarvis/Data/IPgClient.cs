@@ -8,11 +8,6 @@ namespace core.jarvis.Data;
 public interface IPgClient : IDisposable
 {
     /// <summary>
-    /// Gets the underlying PgClient instance.
-    /// </summary>
-    PgClient Client { get; }
-    
-    /// <summary>
     /// Gets a table accessor for the specified entity type.
     /// </summary>
     PgTable<T> From<T>() where T : class, new();

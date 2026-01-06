@@ -26,30 +26,28 @@ public class PostgreSqlTableManager : ITableManager
         var componentType = typeof(TComponent);
         var tableName = GetTableName(componentType);
         
-        _logger.LogDebug("Ensuring table exists for component {ComponentType} -> table {TableName}", 
-            componentType.Name, tableName);
+        // Check if table exists (debug logging removed for reduced verbosity)
 
         var tableExists = await CheckTableExists(tableName);
         
         if (!tableExists)
         {
-            _logger.LogInformation("Creating table {TableName} for component {ComponentType}", 
-                tableName, componentType.Name);
+            // Creating table - only log errors, not routine operations
             await CreateTable<TComponent>();
             return;
         }
 
         // Table exists - validate schema
-        _logger.LogDebug("Table {TableName} exists, validating schema", tableName);
         await ValidateAndUpdateTableSchema<TComponent>();
     }
 
-    public async Task ValidateAllComponentTables()
+    public Task ValidateAllComponentTables()
     {
         // This would be called during application startup to validate all registered components
-        _logger.LogInformation("Validating all component tables - implement based on your component registry");
+        // Validating all component tables - implement based on your component registry
         // Implementation would iterate through all registered component types
         // and call EnsureTableExists for each one
+        return Task.CompletedTask;
     }
 
     private async Task<bool> CheckTableExists(string tableName)
@@ -82,11 +80,21 @@ public class PostgreSqlTableManager : ITableManager
         var fields = GetExpectedFields(componentType);
 
         var createTableSql = BuildCreateTableSql(tableName, fields);
-        
+
+        // Debug: Log IsAuditOrHistoryComponent result and generated SQL
+        _logger.LogDebug("Creating table {TableName} for {ComponentType}. IsAuditOrHistoryComponent={IsAudit}",
+            tableName, componentType.Name, IsAuditOrHistoryComponent(componentType));
+        var ownerEntityIdField = fields.FirstOrDefault(f => f.PropertyName == "OwnerEntityId");
+        if (ownerEntityIdField != null)
+        {
+            _logger.LogDebug("OwnerEntityId field: IsUnique={IsUnique}", ownerEntityIdField.IsUnique);
+        }
+        _logger.LogDebug("Generated SQL: {SQL}", createTableSql);
+
         try
         {
             await _pgClient.Execute(createTableSql);
-            _logger.LogInformation("Successfully created table {TableName}", tableName);
+            // Table created successfully
             
             // Create indexes
             await CreateIndexes(tableName, fields);
@@ -116,15 +124,11 @@ public class PostgreSqlTableManager : ITableManager
             if (actualColumn == null)
             {
                 // Field is missing - we can add it
-                _logger.LogDebug("Field {ColumnName} not found in table {TableName}, will add it", 
-                    expectedField.ColumnName, tableName);
                 missingFields.Add(expectedField);
             }
             else
             {
                 // Field exists - check compatibility
-                _logger.LogDebug("Field {ColumnName} exists in table {TableName}, checking compatibility", 
-                    expectedField.ColumnName, tableName);
                 if (!AreTypesCompatible(expectedField, actualColumn))
                 {
                     incompatibleFields.Add((expectedField, actualColumn));
@@ -196,8 +200,7 @@ public class PostgreSqlTableManager : ITableManager
 
     private async Task AddMissingFields(string tableName, List<ComponentFieldInfo> missingFields)
     {
-        _logger.LogInformation("Adding {Count} missing fields to table {TableName}", 
-            missingFields.Count, tableName);
+        // Adding missing fields - routine operation, no logging needed
 
         foreach (var field in missingFields)
         {
@@ -216,8 +219,7 @@ public class PostgreSqlTableManager : ITableManager
             try
             {
                 await _pgClient.Execute(alterSql);
-                _logger.LogDebug("Ensured column {ColumnName} exists in table {TableName}", 
-                    field.ColumnName, tableName);
+                // Column ensured
             }
             catch (Exception ex)
             {
@@ -230,12 +232,19 @@ public class PostgreSqlTableManager : ITableManager
 
     private string GetTableName(Type componentType)
     {
-        // Convert ComponentName to snake_case + _component suffix
+        // Convert ComponentName to snake_case
         var name = componentType.Name;
         
         // Use the same ToSnakeCase implementation as PgTable for consistency
         var snakeCase = name.ToSnakeCase();
         
+        // If the name already ends with "_component", don't add it again
+        if (snakeCase.EndsWith("_component"))
+        {
+            return snakeCase;
+        }
+        
+        // Otherwise add the _component suffix
         return $"{snakeCase}_component";
     }
 
@@ -257,7 +266,8 @@ public class PostgreSqlTableManager : ITableManager
                 PropertyType = prop.PropertyType,
                 IsNullable = IsNullableType(prop.PropertyType),
                 IsPrimaryKey = prop.Name == "Id",
-                IsUnique = prop.Name == "Id" || prop.Name == "OwnerEntityId",
+                // AuditEvent and similar types should allow multiple entries per entity
+                IsUnique = prop.Name == "Id" || (prop.Name == "OwnerEntityId" && !IsAuditOrHistoryComponent(componentType)),
                 PostgreSqlType = GetPostgreSqlType(prop.PropertyType),
                 DefaultValue = GetDefaultValue(prop.PropertyType, prop.Name)
             };
@@ -268,6 +278,25 @@ public class PostgreSqlTableManager : ITableManager
         return fields;
     }
 
+    private bool IsAuditOrHistoryComponent(Type componentType)
+    {
+        // Components that should allow multiple entries per entity:
+        // 1. Audit/history/logging components
+        // 2. Content components (posts, comments, etc.)
+        // 3. Transaction-like components
+        var typeName = componentType.Name.ToLower();
+        return typeName.Contains("audit") || 
+               typeName.Contains("history") || 
+               typeName.Contains("log") ||
+               typeName.Contains("event") ||
+               typeName.Contains("snapshot") ||
+               typeName.Contains("post") ||
+               typeName.Contains("comment") ||
+               typeName.Contains("transaction") ||
+               typeName.Contains("record") ||
+               typeName.Contains("entry");
+    }
+
     private string ConvertToSnakeCase(string pascalCase)
     {
         // Use the same ToSnakeCase implementation as PgTable for consistency
@@ -276,30 +305,105 @@ public class PostgreSqlTableManager : ITableManager
 
     private bool IsNullableType(Type type)
     {
-        return Nullable.GetUnderlyingType(type) != null || 
+        return Nullable.GetUnderlyingType(type) != null ||
                !type.IsValueType ||
                type == typeof(string);
+    }
+
+    private bool TryGetCollectionElementType(Type type, out Type? elementType)
+    {
+        elementType = null;
+
+        // Check if it's an array
+        if (type.IsArray)
+        {
+            elementType = type.GetElementType();
+            return elementType != null;
+        }
+
+        // Check if it's a generic collection
+        if (type.IsGenericType)
+        {
+            var genericDef = type.GetGenericTypeDefinition();
+
+            // Check for common collection interfaces and implementations
+            if (genericDef == typeof(List<>) ||
+                genericDef == typeof(IList<>) ||
+                genericDef == typeof(ICollection<>) ||
+                genericDef == typeof(IEnumerable<>) ||
+                genericDef == typeof(HashSet<>) ||
+                genericDef == typeof(ISet<>))
+            {
+                elementType = type.GetGenericArguments()[0];
+                return true;
+            }
+        }
+
+        // Check if it implements IEnumerable<T> (covers custom collections)
+        var enumerableInterface = type.GetInterfaces()
+            .FirstOrDefault(i => i.IsGenericType &&
+                                 i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+        if (enumerableInterface != null)
+        {
+            elementType = enumerableInterface.GetGenericArguments()[0];
+            return true;
+        }
+
+        return false;
+    }
+
+    private string? GetPostgreSqlArrayType(Type elementType)
+    {
+        return elementType switch
+        {
+            Type t when t == typeof(int) => "INTEGER[]",
+            Type t when t == typeof(long) => "BIGINT[]",
+            Type t when t == typeof(short) => "SMALLINT[]",
+            Type t when t == typeof(byte) => "SMALLINT[]",
+            Type t when t == typeof(decimal) => "DECIMAL(18,8)[]",
+            Type t when t == typeof(double) => "DOUBLE PRECISION[]",
+            Type t when t == typeof(float) => "REAL[]",
+            Type t when t == typeof(bool) => "BOOLEAN[]",
+            Type t when t == typeof(string) => "TEXT[]",
+            Type t when t == typeof(Guid) => "UUID[]",
+            Type t when t == typeof(DateTime) => "TIMESTAMPTZ[]",
+            Type t when t.IsEnum => "INTEGER[]",
+            _ => null // Return null for complex types that can't be PostgreSQL arrays
+        };
     }
 
     private string GetPostgreSqlType(Type type)
     {
         var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
 
+        // First check if it's a collection type (List<T>, IList<T>, T[], etc.)
+        if (TryGetCollectionElementType(underlyingType, out var elementType) && elementType != null)
+        {
+            // Try to map to PostgreSQL array type
+            var arrayType = GetPostgreSqlArrayType(elementType);
+            if (arrayType != null)
+            {
+                return arrayType;
+            }
+            // If element type is complex, fall through to JSONB
+        }
+
+        // Handle non-collection types
         return underlyingType switch
         {
             Type t when t == typeof(Guid) => "UUID",
             Type t when t == typeof(string) => "TEXT",
             Type t when t == typeof(int) => "INTEGER",
             Type t when t == typeof(long) => "BIGINT",
+            Type t when t == typeof(short) => "SMALLINT",
+            Type t when t == typeof(byte) => "SMALLINT",
             Type t when t == typeof(decimal) => "DECIMAL(18,8)",
             Type t when t == typeof(double) => "DOUBLE PRECISION",
             Type t when t == typeof(float) => "REAL",
             Type t when t == typeof(bool) => "BOOLEAN",
             Type t when t == typeof(DateTime) => "TIMESTAMPTZ",
             Type t when t.IsEnum => "INTEGER",
-            Type t when t.IsArray && t.GetElementType() == typeof(Guid) => "UUID[]",
-            Type t when t.IsArray && t.GetElementType() == typeof(string) => "TEXT[]",
-            Type t when t.IsArray && t.GetElementType() == typeof(int) => "INTEGER[]",
             _ => "JSONB" // Complex objects as JSONB
         };
     }
@@ -307,6 +411,17 @@ public class PostgreSqlTableManager : ITableManager
     private string? GetDefaultValue(Type type, string propertyName)
     {
         var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+
+        // Check if it's a collection that maps to PostgreSQL array
+        if (TryGetCollectionElementType(underlyingType, out var elementType) && elementType != null)
+        {
+            // For any collection that maps to a PostgreSQL array, use empty array syntax
+            var arrayType = GetPostgreSqlArrayType(elementType);
+            if (arrayType != null)
+            {
+                return "'{}'"; // PostgreSQL empty array literal
+            }
+        }
 
         return propertyName switch
         {
@@ -316,9 +431,8 @@ public class PostgreSqlTableManager : ITableManager
             "Version" => "1",
             _ when underlyingType == typeof(bool) => "FALSE",
             _ when underlyingType == typeof(decimal) || underlyingType == typeof(double) || underlyingType == typeof(float) => "0",
-            _ when underlyingType == typeof(int) || underlyingType == typeof(long) => "0",
+            _ when underlyingType == typeof(int) || underlyingType == typeof(long) || underlyingType == typeof(short) || underlyingType == typeof(byte) => "0",
             _ when underlyingType == typeof(string) => "''",
-            _ when underlyingType.IsArray && underlyingType.GetElementType() == typeof(Guid) => "'{}'",
             _ when underlyingType.IsEnum => "0",
             _ => null
         };
@@ -410,8 +524,7 @@ public class PostgreSqlTableManager : ITableManager
             try
             {
                 await _pgClient.Execute(indexSql);
-                _logger.LogDebug("Created index {IndexName} on {TableName}.{ColumnName}", 
-                    indexName, tableName, field.ColumnName);
+                // Index created
             }
             catch (Exception ex)
             {

@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using core.jarvis.api.Models;
+using core.jarvis.api.Handlers;
 using core.jarvis.Data;
 using Microsoft.Extensions.Logging;
 
@@ -106,18 +107,10 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                EventType = "AUTHENTICATION_FAILED",
-                EventTime = DateTime.UtcNow,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Severity = "MEDIUM",
-                TargetEmail = email,
-                Reason = reason ?? "Invalid credentials"
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler for ALL data operations - EHS pattern
+            var auditId = Guid.NewGuid();
+            var handler = _dataContext.For<SecurityAuditHandler>(auditId);
+            await handler.LogAuthenticationFailed(email, ipAddress, userAgent, reason);
         }
         catch (Exception ex)
         {
@@ -129,18 +122,9 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId,
-                EventType = "AUTHENTICATION_SUCCESS",
-                EventTime = DateTime.UtcNow,
-                IpAddress = ipAddress,
-                UserAgent = userAgent,
-                Severity = "INFO",
-                TargetEmail = email
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler - entity ID is the user being audited
+            var handler = _dataContext.For<SecurityAuditHandler>(userId);
+            await handler.LogAuthenticationSuccess(email, ipAddress, userAgent);
         }
         catch (Exception ex)
         {
@@ -152,16 +136,9 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId,
-                EventType = "PASSWORD_CHANGED",
-                EventTime = DateTime.UtcNow,
-                IpAddress = ipAddress,
-                Severity = "HIGH"
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler for data operations
+            var handler = _dataContext.For<SecurityAuditHandler>(userId);
+            await handler.LogPasswordChanged(ipAddress);
             
             _logger.LogInformation("Password changed for user {UserId} from {IpAddress}", userId, ipAddress);
         }
@@ -175,17 +152,10 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                EventType = "ACCOUNT_LOCKED",
-                EventTime = DateTime.UtcNow,
-                Severity = "HIGH",
-                TargetEmail = email,
-                FailedAttempts = failedAttempts,
-                LockedUntil = lockedUntil
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler - create new audit entity
+            var auditId = Guid.NewGuid();
+            var handler = _dataContext.For<SecurityAuditHandler>(auditId);
+            await handler.LogAccountLocked(email, failedAttempts, lockedUntil);
         }
         catch (Exception ex)
         {
@@ -197,17 +167,9 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId,
-                EventType = "TOKEN_REFRESHED",
-                EventTime = DateTime.UtcNow,
-                IpAddress = ipAddress,
-                Severity = "INFO",
-                SessionId = sessionId
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler - audit for user entity
+            var handler = _dataContext.For<SecurityAuditHandler>(userId);
+            await handler.LogTokenRefreshed(sessionId, ipAddress);
         }
         catch (Exception ex)
         {
@@ -219,17 +181,9 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId,
-                EventType = "TOKEN_REVOKED",
-                EventTime = DateTime.UtcNow,
-                Severity = "MEDIUM",
-                SessionId = sessionId,
-                Reason = reason
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler for data operations
+            var handler = _dataContext.For<SecurityAuditHandler>(userId);
+            await handler.LogTokenRevoked(sessionId, reason);
             
             _logger.LogInformation("Token revoked for user {UserId}, session {SessionId}: {Reason}", 
                 userId, sessionId, reason);
@@ -244,17 +198,10 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId ?? Guid.Empty,
-                EventType = $"SUSPICIOUS_{activityType.ToUpperInvariant()}",
-                EventTime = DateTime.UtcNow,
-                IpAddress = ipAddress,
-                Severity = "CRITICAL",
-                Reason = $"{activityType}: {details}"
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler - create audit entity for user or new entity
+            var auditId = userId ?? Guid.NewGuid();
+            var handler = _dataContext.For<SecurityAuditHandler>(auditId);
+            await handler.LogSuspiciousActivity(activityType, details, ipAddress);
             
             _logger.LogCritical("Suspicious activity detected: {Type} - {Details} from {IP}", 
                 activityType, details, ipAddress ?? "unknown");
@@ -269,17 +216,9 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId,
-                EventType = $"ROLE_{action.ToUpperInvariant()}",
-                EventTime = DateTime.UtcNow,
-                Severity = "HIGH",
-                TargetUserId = targetUserId,
-                RoleId = roleId
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler - audit for the user making the change
+            var handler = _dataContext.For<SecurityAuditHandler>(userId);
+            await handler.LogRoleChanged(targetUserId, action, roleId);
             
             _logger.LogInformation("Role {Action} by {UserId} on {TargetUserId} for role {RoleId}", 
                 action, userId, targetUserId, roleId);
@@ -294,18 +233,9 @@ public class SecurityAuditService : ISecurityAuditService
     {
         try
         {
-            var auditEvent = new SecurityAuditEvent
-            {
-                OwnerEntityId = userId,
-                EventType = $"PERMISSION_{action.ToUpperInvariant()}",
-                EventTime = DateTime.UtcNow,
-                Severity = "HIGH",
-                PermissionId = permissionId,
-                TargetUserId = targetId,
-                Reason = $"{action} on {targetType}"
-            };
-
-            await _dataContext.Commit(auditEvent);
+            // Use handler for all data operations
+            var handler = _dataContext.For<SecurityAuditHandler>(userId);
+            await handler.LogPermissionChanged(action, permissionId, targetType, targetId);
             
             _logger.LogInformation("Permission {Action} by {UserId} on {TargetType} {TargetId} for permission {PermissionId}", 
                 action, userId, targetType, targetId, permissionId);

@@ -79,36 +79,23 @@ public abstract class DataContextComponentHandler<TComponent> : IComponentHandle
     /// <inheritdoc/>
     public virtual async Task<TComponent> Get()
     {
-        try
+        // Use DataContext.Query() to get the component for this entity
+        var query = DataContext.Query()
+            .With<TComponent>(c => c.OwnerEntityId == EntityId);
+        var componentsByEntity = await query.ToEntityComponents();
+
+        if (!componentsByEntity.TryGetValue(EntityId, out var entityComponents))
         {
-            // Use DataContext.Query() to get the component for this entity
-            var query = DataContext.Query()
-                .With<TComponent>(c => c.OwnerEntityId == EntityId);
-            var componentsByEntity = await query.ToEntityComponents();
-
-            if (!componentsByEntity.TryGetValue(EntityId, out var entityComponents))
-            {
-                throw new EntityNotFoundException(EntityId, typeof(TComponent).Name);
-            }
-
-            var component = entityComponents.Get<TComponent>();
-            if (component == null)
-            {
-                throw new EntityNotFoundException(EntityId, typeof(TComponent).Name);
-            }
-
-            return component;
+            throw new EntityNotFoundException(EntityId, typeof(TComponent).Name);
         }
-        catch (Exception ex) when (ex is not DomainException)
+
+        var component = entityComponents.Get<TComponent>();
+        if (component == null)
         {
-            Logger.LogError(ex, "Failed to get {ComponentType} for entity {OwnerEntityId}", 
-                typeof(TComponent).Name, EntityId);
-            throw new ComponentOperationException(
-                typeof(TComponent).Name, 
-                "GET", 
-                $"Failed to retrieve {typeof(TComponent).Name}", 
-                ex);
+            throw new EntityNotFoundException(EntityId, typeof(TComponent).Name);
         }
+
+        return component;
     }
 
     /// <inheritdoc/>

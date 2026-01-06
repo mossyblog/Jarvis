@@ -49,7 +49,25 @@ public class ComponentQueryHandler<T> : IComponentQueryHandler<T>
                 var allResults = await query.Get();
                 _logger.LogWarning("Loaded {RecordCount} records for in-memory filtering", allResults.Count);
                 var compiledFilter = filter.Compile();
-                var filteredResults = allResults.Where(compiledFilter).ToList();
+                
+                // Filter with null safety - catch exceptions from the filter itself
+                var filteredResults = new List<T>();
+                foreach (var item in allResults)
+                {
+                    try
+                    {
+                        if (compiledFilter(item))
+                        {
+                            filteredResults.Add(item);
+                        }
+                    }
+                    catch (NullReferenceException)
+                    {
+                        // Skip items that cause null reference exceptions in the filter
+                        _logger.LogTrace("Skipping item due to null reference in filter evaluation");
+                    }
+                }
+                
                 _logger.LogWarning("Filtered to {FilteredCount} records in memory", filteredResults.Count);
                 
                 var fallbackEntityIds = new HashSet<Guid>();

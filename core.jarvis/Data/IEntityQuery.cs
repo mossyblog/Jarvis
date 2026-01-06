@@ -81,4 +81,54 @@ public interface IEntityQuery
     /// </summary>
     /// <returns>A dictionary mapping entity IDs to their components.</returns>
     Task<Dictionary<Guid, EntityComponents>> ToEntityComponents();
+
+    /// <summary>
+    /// Executes the query and returns Entity objects with DataContext binding for async component resolution.
+    /// This is the preferred method for retrieving entities with full component access.
+    /// </summary>
+    /// <returns>A list of Entity objects with DataContext binding.</returns>
+    Task<List<Entity>> ToList();
+
+    /// <summary>
+    /// Orders query results by a component property in ascending order.
+    /// Clears any existing ordering and sets this as the primary sort.
+    /// </summary>
+    /// <typeparam name="T">The component type containing the property to sort by.</typeparam>
+    /// <param name="keySelector">Expression selecting the property to sort by.</param>
+    /// <returns>The query builder for chaining.</returns>
+    IEntityQuery OrderBy<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new();
+
+    /// <summary>
+    /// Orders query results by a component property in descending order.
+    /// Clears any existing ordering and sets this as the primary sort.
+    /// </summary>
+    /// <typeparam name="T">The component type containing the property to sort by.</typeparam>
+    /// <param name="keySelector">Expression selecting the property to sort by.</param>
+    /// <returns>The query builder for chaining.</returns>
+    IEntityQuery OrderByDescending<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new();
+
+    /// <summary>
+    /// Adds secondary ordering by a component property in ascending order.
+    /// Must be called after OrderBy or OrderByDescending.
+    /// </summary>
+    /// <typeparam name="T">The component type containing the property to sort by.</typeparam>
+    /// <param name="keySelector">Expression selecting the property to sort by.</param>
+    /// <returns>The query builder for chaining.</returns>
+    IEntityQuery ThenBy<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new();
+
+    /// <summary>
+    /// Adds secondary ordering by a component property in descending order.
+    /// Must be called after OrderBy or OrderByDescending.
+    /// </summary>
+    /// <typeparam name="T">The component type containing the property to sort by.</typeparam>
+    /// <param name="keySelector">Expression selecting the property to sort by.</param>
+    /// <returns>The query builder for chaining.</returns>
+    IEntityQuery ThenByDescending<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new();
+
+    /// <summary>
+    /// Executes the query and returns a single Entity object with DataContext binding.
+    /// Throws InvalidOperationException if the query returns zero or more than one entity.
+    /// </summary>
+    /// <returns>A single Entity object with DataContext binding.</returns>
+    Task<Entity> Single();
 }

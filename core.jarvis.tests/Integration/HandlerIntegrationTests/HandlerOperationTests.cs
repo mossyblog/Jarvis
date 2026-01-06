@@ -1,5 +1,5 @@
 using core.jarvis.Exceptions;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Fixtures.Handlers;
 using core.jarvis.tests.Helpers;
 using Shouldly;
@@ -130,7 +130,7 @@ public class HandlerOperationTests : IntegrationTestBase
         var handler = TestDataContext().For<TestHandler>(entityId);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<BusinessRuleException>(() => handler.Activate());
+        var ex = await Should.ThrowAsync<BusinessRuleException>(() => handler.Activate());
         ex.Message.ShouldContain("already active");
 
         // Cleanup
@@ -204,7 +204,7 @@ public class HandlerOperationTests : IntegrationTestBase
         var handler = TestDataContext().For<TestHandler>(entityId);
 
         // Act & Assert
-        var ex = await Assert.ThrowsAsync<ValidationException>(() => handler.Deactivate(""));
+        var ex = await Should.ThrowAsync<ValidationException>(() => handler.Deactivate(""));
         ex.Message.ShouldContain("reason");
 
         // Cleanup

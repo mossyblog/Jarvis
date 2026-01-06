@@ -2,6 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using core.jarvis.Data.Audit;
 using core.jarvis.Data.Components;
+using core.jarvis.Data.Schema;
 using core.jarvis.ErrorHandling;
 using Microsoft.Extensions.Logging;
 
@@ -13,14 +14,17 @@ namespace core.jarvis.Data;
 public class AuditService : IAuditService
 {
     private readonly IPgClient _pgClient;
+    private readonly ITableManager _tableManager;
     private readonly ILogger<AuditService> _logger;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public AuditService(
         IPgClient pgClient,
+        ITableManager tableManager,
         ILogger<AuditService> logger)
     {
         _pgClient = pgClient ?? throw new ArgumentNullException(nameof(pgClient));
+        _tableManager = tableManager ?? throw new ArgumentNullException(nameof(tableManager));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         
         // Configure JSON options to handle circular references
@@ -75,13 +79,12 @@ public class AuditService : IAuditService
         {
             try
             {
+                // Ensure table exists before attempting database operation
+                await _tableManager.EnsureTableExists<AuditEvent>();
+                
                 await _pgClient.From<AuditEvent>().Upsert(auditEvent);
                 
-                if (isTestEnvironment)
-                {
-                    _logger.LogDebug("Successfully logged audit event {EventType} for entity {EntityId}", 
-                        eventType, entityId);
-                }
+                // Audit event logged successfully - routine operation, no logging needed
                 return; // Success
             }
             catch (Exception ex)
@@ -158,13 +161,12 @@ public class AuditService : IAuditService
         {
             try
             {
+                // Ensure table exists before attempting database operation
+                await _tableManager.EnsureTableExists<AuditEvent>();
+                
                 await _pgClient.From<AuditEvent>().Upsert(auditEvent);
                 
-                if (isTestEnvironment)
-                {
-                    _logger.LogDebug("Successfully logged audit change {EventType} for entity {EntityId}", 
-                        eventType, entityId);
-                }
+                // Audit change logged successfully - routine operation, no logging needed
                 return; // Success
             }
             catch (Exception ex)
@@ -214,6 +216,9 @@ public class AuditService : IAuditService
 
         try
         {
+            // Ensure table exists before attempting database operation
+            await _tableManager.EnsureTableExists<AuditEvent>();
+            
             await _pgClient.From<AuditEvent>().Upsert(auditEvent);
         }
         catch (Exception ex)
@@ -250,6 +255,9 @@ public class AuditService : IAuditService
 
         try
         {
+            // Ensure table exists before attempting database operation
+            await _tableManager.EnsureTableExists<AuditEvent>();
+            
             await _pgClient.From<AuditEvent>().Upsert(auditEvent);
         }
         catch (Exception ex)
@@ -285,6 +293,9 @@ public class AuditService : IAuditService
 
         try
         {
+            // Ensure table exists before attempting database operation
+            await _tableManager.EnsureTableExists<AuditEvent>();
+            
             await _pgClient.From<AuditEvent>().Upsert(auditEvent);
         }
         catch (Exception ex)

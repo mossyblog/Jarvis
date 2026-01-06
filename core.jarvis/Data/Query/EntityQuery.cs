@@ -9,21 +9,32 @@ namespace core.jarvis.Data.Query;
 public class EntityQuery : IEntityQuery
 {
     private readonly IComponentQueryHandlerRegistry _handlerRegistry;
+    private readonly IDataContext? _dataContext;
 
     // Store filters for each query type
     private readonly Dictionary<Type, LambdaExpression> _withAll = new();
     private readonly Dictionary<Type, LambdaExpression> _withAny = new();
     private readonly Dictionary<Type, LambdaExpression> _withNone = new();
     private readonly Dictionary<Type, QueryPlan> _includes = new();
+    private readonly List<OrderingExpression> _orderings = new();
 
     private class QueryPlan
     {
         public LambdaExpression? Filter { get; set; }
     }
 
-    public EntityQuery(IComponentQueryHandlerRegistry handlerRegistry)
+    private class OrderingExpression
+    {
+        public Type ComponentType { get; set; } = null!;
+        public LambdaExpression KeySelector { get; set; } = null!;
+        public bool Descending { get; set; }
+        public bool IsPrimary { get; set; }
+    }
+
+    public EntityQuery(IComponentQueryHandlerRegistry handlerRegistry, IDataContext? dataContext)
     {
         _handlerRegistry = handlerRegistry ?? throw new ArgumentNullException(nameof(handlerRegistry));
+        _dataContext = dataContext;
     }
 
     /// <inheritdoc/>
@@ -132,7 +143,16 @@ public class EntityQuery : IEntityQuery
 
         // Exclude NONE matches
         result.ExceptWith(noneSet);
-        return result.ToList();
+        
+        var entityIds = result.ToList();
+        
+        // Apply ordering if specified
+        if (_orderings.Any() && entityIds.Any())
+        {
+            entityIds = await ApplyOrdering(entityIds);
+        }
+        
+        return entityIds;
     }
 
     /// <inheritdoc/>
@@ -184,5 +204,194 @@ public class EntityQuery : IEntityQuery
                 continue;
             ec.Add(componentType, component);
         }
+    }
+
+    /// <inheritdoc/>
+    public async Task<List<Entity>> ToList()
+    {
+        if (_dataContext == null)
+            throw new InvalidOperationException("DataContext is required for ToList(). EntityQuery must be created through IDataContext.Query().");
+        
+        // Get the entity IDs that match the query
+        var entityIds = await ToEntityIds();
+        
+        // Create Entity objects with DataContext binding
+        var entities = new List<Entity>();
+        foreach (var id in entityIds)
+        {
+            var entity = new Entity(id);
+            entity.SetContext(_dataContext);
+            entities.Add(entity);
+        }
+        
+        return entities;
+    }
+
+    /// <summary>
+    /// Applies ordering to a list of entity IDs based on component properties.
+    /// </summary>
+    private async Task<List<Guid>> ApplyOrdering(List<Guid> entityIds)
+    {
+        // Load components needed for ordering
+        var orderingData = new Dictionary<Guid, Dictionary<Type, IComponent>>();
+        
+        // Get unique component types from orderings
+        var componentTypes = _orderings.Select(o => o.ComponentType).Distinct();
+        
+        foreach (var componentType in componentTypes)
+        {
+            var handler = _handlerRegistry.GetHandler(componentType);
+            var components = await handler.LoadComponents(entityIds);
+            
+            foreach (var component in components)
+            {
+                if (!orderingData.ContainsKey(component.OwnerEntityId))
+                    orderingData[component.OwnerEntityId] = new Dictionary<Type, IComponent>();
+                
+                orderingData[component.OwnerEntityId][componentType] = component;
+            }
+        }
+        
+        // Apply ordering using LINQ
+        IOrderedEnumerable<Guid>? orderedQuery = null;
+        
+        foreach (var ordering in _orderings)
+        {
+            // Compile the key selector for this ordering
+            var compiledSelector = CompileKeySelector(ordering);
+            
+            if (ordering.IsPrimary)
+            {
+                orderedQuery = ordering.Descending
+                    ? entityIds.OrderByDescending(id => GetOrderKey(id, ordering, orderingData, compiledSelector))
+                    : entityIds.OrderBy(id => GetOrderKey(id, ordering, orderingData, compiledSelector));
+            }
+            else if (orderedQuery != null)
+            {
+                orderedQuery = ordering.Descending
+                    ? orderedQuery.ThenByDescending(id => GetOrderKey(id, ordering, orderingData, compiledSelector))
+                    : orderedQuery.ThenBy(id => GetOrderKey(id, ordering, orderingData, compiledSelector));
+            }
+        }
+        
+        return orderedQuery?.ToList() ?? entityIds;
+    }
+    
+    /// <summary>
+    /// Compiles the key selector expression for a specific ordering.
+    /// </summary>
+    private static Delegate CompileKeySelector(OrderingExpression ordering)
+    {
+        // The KeySelector is Expression<Func<T, object>> but we need to compile it 
+        // to a delegate that can work with IComponent
+        return ordering.KeySelector.Compile();
+    }
+    
+    /// <summary>
+    /// Gets the sort key value for a specific entity and ordering.
+    /// </summary>
+    private static object? GetOrderKey(Guid entityId, OrderingExpression ordering, 
+        Dictionary<Guid, Dictionary<Type, IComponent>> orderingData, Delegate compiledSelector)
+    {
+        // Check if we have data for this entity
+        if (!orderingData.TryGetValue(entityId, out var entityComponents))
+            return null;
+        
+        // Check if we have the component for this ordering
+        if (!entityComponents.TryGetValue(ordering.ComponentType, out var component))
+            return null;
+        
+        // Apply the compiled selector to get the sort key
+        try
+        {
+            return compiledSelector.DynamicInvoke(component);
+        }
+        catch
+        {
+            // If there's an error invoking the selector, return null to sort to the end
+            return null;
+        }
+    }
+
+    /// <inheritdoc/>
+    public IEntityQuery OrderBy<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new()
+    {
+        _orderings.Clear();
+        _orderings.Add(new OrderingExpression
+        {
+            ComponentType = typeof(T),
+            KeySelector = keySelector,
+            Descending = false,
+            IsPrimary = true
+        });
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IEntityQuery OrderByDescending<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new()
+    {
+        _orderings.Clear();
+        _orderings.Add(new OrderingExpression
+        {
+            ComponentType = typeof(T),
+            KeySelector = keySelector,
+            Descending = true,
+            IsPrimary = true
+        });
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IEntityQuery ThenBy<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new()
+    {
+        if (!_orderings.Any())
+            throw new InvalidOperationException("ThenBy can only be used after OrderBy or OrderByDescending");
+        
+        _orderings.Add(new OrderingExpression
+        {
+            ComponentType = typeof(T),
+            KeySelector = keySelector,
+            Descending = false,
+            IsPrimary = false
+        });
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public IEntityQuery ThenByDescending<T>(Expression<Func<T, object>> keySelector) where T : class, IComponent, new()
+    {
+        if (!_orderings.Any())
+            throw new InvalidOperationException("ThenByDescending can only be used after OrderBy or OrderByDescending");
+        
+        _orderings.Add(new OrderingExpression
+        {
+            ComponentType = typeof(T),
+            KeySelector = keySelector,
+            Descending = true,
+            IsPrimary = false
+        });
+        return this;
+    }
+
+    /// <inheritdoc/>
+    public async Task<Entity> Single()
+    {
+        if (_dataContext == null)
+            throw new InvalidOperationException("DataContext is required for Single(). EntityQuery must be created through IDataContext.Query().");
+        
+        // Get the entity IDs that match the query
+        var entityIds = await ToEntityIds();
+        
+        // Check for exactly one result
+        if (!entityIds.Any())
+            throw new InvalidOperationException("Sequence contains no elements");
+        
+        if (entityIds.Count > 1)
+            throw new InvalidOperationException($"Sequence contains more than one element ({entityIds.Count} entities found)");
+        
+        // Create and return the single Entity with DataContext binding
+        var entity = new Entity(entityIds[0]);
+        entity.SetContext(_dataContext);
+        return entity;
     }
 }

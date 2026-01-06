@@ -52,25 +52,52 @@ public class SnapshotQuery : ISnapshotQuery
     
     public async Task<IEnumerable<ComponentSnapshots>> ToList()
     {
-        var query = _pgClient.From<ComponentSnapshots>();
-        
+        // Build raw SQL query since ComponentSnapshots doesn't implement IComponent
+        // Use string interpolation for simplicity in test environment
+        var whereClause = "WHERE 1=1";
+
         if (_entityId.HasValue)
-            query = query.Filter("entity_id", "eq", _entityId.Value);
-            
+            whereClause += $" AND entity_id = '{_entityId.Value}'";
+
         if (_componentId.HasValue)
-            query = query.Filter("component_id", "eq", _componentId.Value);
-            
+            whereClause += $" AND component_id = '{_componentId.Value}'";
+
         if (!string.IsNullOrEmpty(_componentType))
-            query = query.Filter("component_type", "eq", _componentType);
-        
-        var records = await query.Get();
-        
+            whereClause += $" AND component_type = '{_componentType}'";
+
+        var sql = $@"SELECT 
+            id as Id,
+            entity_id as EntityId, 
+            component_type as ComponentType, 
+            component_id as ComponentId, 
+            snapshots as Snapshots, 
+            created_at as CreatedAt, 
+            last_updated as LastUpdated 
+            FROM component_snapshots {whereClause}";
+
+        // Execute raw SQL query with explicit column aliases for proper mapping
+        var records = await _pgClient.Query<ComponentSnapshots>(sql, null);
+
+        // Debug: Log what we retrieved
+        foreach (var record in records)
+        {
+            Console.WriteLine($"Retrieved snapshot record:");
+            Console.WriteLine($"  ID: {record.Id}");
+            Console.WriteLine($"  EntityId: {record.EntityId}");
+            Console.WriteLine($"  ComponentType: {record.ComponentType}");
+            Console.WriteLine($"  ComponentId: {record.ComponentId}");
+            Console.WriteLine($"  Snapshots length: {record.Snapshots?.Length ?? 0}");
+            Console.WriteLine($"  Snapshots content: {record.Snapshots?.Substring(0, Math.Min(100, record.Snapshots?.Length ?? 0))}");
+            Console.WriteLine($"  CreatedAt: {record.CreatedAt}");
+            Console.WriteLine($"  LastUpdated: {record.LastUpdated}");
+        }
+
         // Apply client-side filtering for date range and version since they're in JSONB
         if (_startDate.HasValue || _endDate.HasValue || _version.HasValue)
         {
             records = records.Where(r => FilterSnapshots(r)).ToList();
         }
-        
+
         return records;
     }
     

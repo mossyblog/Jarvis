@@ -11,6 +11,7 @@ namespace core.jarvis.tests.Components
         public string WorkOrderId { get; set; } = string.Empty;
         public string WorkOrderNumber { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime LastUpdated { get; set; } = DateTime.UtcNow;
         public int? Version { get; set; }
     }

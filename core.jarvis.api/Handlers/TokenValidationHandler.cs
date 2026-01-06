@@ -117,7 +117,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                 LastUpdated = DateTime.UtcNow
             };
 
-            await DataContext.Commit(result);
+            await DataContext.TryCommit(result);
             return result;
         }
         catch (Exception ex)

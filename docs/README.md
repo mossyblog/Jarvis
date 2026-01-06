@@ -1,181 +1,85 @@
-# Jarvis Documentation
+# Jarvis EHS Framework Documentation
 
-**Status:** Approved  
-**Author:** Jarvis Team  
-**Owner:** Technical Documentation Team  
-**Last Updated:** 2025-07-27  
-**Review Due:** 2025-10-27  
-**Version:** 2.0  
+A three-layer architecture for .NET 8.0 applications: **Entities/Components** (data) -> **Handlers** (logic) -> **Systems** (orchestration).
 
-**Tags:** ecs, documentation, jarvis, framework, togaf  
-**Systems:** core.jarvis, core.jarvis.data, core.jarvis.api  
-**Components:** IComponent, IComponentHandler, IDataContext  
+## Quick Navigation
 
----
+| Guide | Description | Time |
+|-------|-------------|------|
+| [01-quick-start.md](01-quick-start.md) | Setup and first handler | 10 min |
+| [02-core-concepts.md](02-core-concepts.md) | EHS architecture explained | 15 min |
+| [03-handlers.md](03-handlers.md) | Building business logic | 20 min |
+| [04-systems.md](04-systems.md) | Workflow orchestration | 15 min |
+| [05-testing.md](05-testing.md) | Testing without mocks | 15 min |
+| [06-database.md](06-database.md) | PostgreSQL and data access | 15 min |
 
-## Purpose
+## The Three Layers
 
-This document serves as the main entry point for the Jarvis ECS SDK documentation, organized according to TOGAF architecture framework principles. The documentation is structured to support architectural decision-making, implementation guidance, and operational excellence.
+```
++----------------------------------------------------------+
+|                     Azure Functions                       |
+|                  (HTTP parsing only)                      |
++----------------------------------------------------------+
+                           |
+                           v
++----------------------------------------------------------+
+|                        SYSTEMS                            |
+|         Orchestrate handlers - NO business logic          |
++----------------------------------------------------------+
+                           |
+                           v
++----------------------------------------------------------+
+|                       HANDLERS                            |
+|           ALL business logic lives here                   |
+|           Validation, state transitions, rules            |
++----------------------------------------------------------+
+                           |
+                           v
++----------------------------------------------------------+
+|                 ENTITIES & COMPONENTS                     |
+|                Pure data - no behavior                    |
++----------------------------------------------------------+
+                           |
+                           v
++----------------------------------------------------------+
+|                      POSTGRESQL                           |
+|                Row-Level Security via JWT                 |
++----------------------------------------------------------+
+```
 
----
+## Critical Rules
 
-## Quick Facts
+1. **No try-catch in handlers** - Let exceptions bubble to API middleware
+2. **No mocks in tests** - Use real PostgreSQL, real handlers
+3. **Handlers own ALL business logic** - Systems only orchestrate
+4. **DataContext is the ONLY data access** - No direct database queries
 
-- **Current State:** Active - Reorganized to TOGAF structure
-- **Dependencies:** .NET 8.0, PostgreSQL 14+, Azure Functions v4
-- **Consumers:** Backend developers, system architects, DevOps engineers
-- **SLA:** Documentation updated within 7 days of major releases
+## Start Here
 
----
+**New to Jarvis?** Start with [01-quick-start.md](01-quick-start.md)
 
-## Documentation Structure (TOGAF-Based)
+**Need architecture understanding?** Read [02-core-concepts.md](02-core-concepts.md)
 
-### [00 - Overview](00_Overview/README.md)
-High-level overview documentation for the Jarvis ECS framework.
-- [Jarvis Overview](00_Overview/jarvis-overview.md) - Introduction to the framework
-- [Installation Guide](00_Overview/installation.md) - Setting up your environment
-- [First Handler](00_Overview/first-handler.md) - Quick start guide
-- [Examples](00_Overview/examples/) - Working code examples
+**Building a feature?** Follow [03-handlers.md](03-handlers.md) then [04-systems.md](04-systems.md)
 
-### [01 - Current State](01_CurrentState/README.md)
-Documentation of the current architecture and implementation.
+**Writing tests?** See [05-testing.md](05-testing.md)
 
-#### [Services](01_CurrentState/Services/README.md)
-- [Authentication, RBAC & RLS](01_CurrentState/Services/authentication-rbac-rls-technical-whitepaper.md)
-- [Connection Pooling](01_CurrentState/Services/connection-pooling-technical-whitepaper.md)
+**Working with data?** Reference [06-database.md](06-database.md)
 
-#### [Components](01_CurrentState/Components/README.md)
-- Core component documentation
-- Handler implementations
-- Component relationships
+## Examples
 
-#### [Flows](01_CurrentState/Flows/README.md)
-- Data flow patterns
-- System workflows
-- Process documentation
+Working code samples: [examples/](examples/)
 
-#### [Mappings](01_CurrentState/Mappings/README.md)
-- Entity relationships
-- Component dependencies
-- System integrations
+## Project Structure
 
-#### [Technology](01_CurrentState/Technology/README.md)
-- PostgreSQL integration
-- .NET 8.0 framework usage
-- Azure Functions deployment
+```
+jarvis/
+  core.jarvis/           # EHS framework - handlers, systems, data context
+  core.jarvis.data/      # PostgreSQL client with RLS support
+  core.jarvis.api/       # Azure Functions API layer
+  core.jarvis.tests/     # Integration tests (no mocks)
+```
 
-### [02 - Target State](02_TargetState/README.md)
-Future architecture and planned enhancements.
+## Archive
 
-### [03 - Gap Analysis](03_GapAnalysis/README.md)
-Analysis of gaps between current and target states.
-
-### [04 - Roadmap](04_Roadmap/README.md)
-Implementation roadmap and timeline.
-
-### [05 - Governance](05_Governance/README.md)
-Architecture principles, standards, and guidelines.
-- [Architecture Decisions](05_Governance/decisions/README.md)
-
-### [06 - Catalogs](06_Catalogs/README.md)
-Reusable components, patterns, and best practices.
-
-### [07 - Projects](07_Projects/README.md)
-Project-specific documentation and case studies.
-
-### [08 - Change Requests](08_ChangeRequests/README.md)
-Change management and request tracking.
-
-### [09 - Diagrams](09_Diagrams/README.md)
-Architecture diagrams and visual documentation.
-
-### [10 - Vocabulary](10_Vocabulary/README.md)
-Glossary and terminology definitions.
-
-### Additional Resources
-
-#### [Troubleshooting](troubleshooting/README.md)
-Common issues and solutions (maintained separately from TOGAF structure for quick access).
-
----
-
-## Navigation Guide
-
-### For New Users
-1. Start with [Overview](00_Overview/README.md)
-2. Follow the [Installation Guide](00_Overview/installation.md)
-3. Build your [First Handler](00_Overview/first-handler.md)
-4. Explore [Examples](00_Overview/examples/)
-
-### For Architects
-1. Review [Current State Architecture](01_CurrentState/README.md)
-2. Understand [Target State](02_TargetState/README.md)
-3. Analyze [Gaps](03_GapAnalysis/README.md)
-4. Check [Governance](05_Governance/README.md)
-
-### For Developers
-1. Browse [Component Catalogs](06_Catalogs/README.md)
-2. Study [Current Implementation](01_CurrentState/Components/README.md)
-3. Review [Best Practices](05_Governance/README.md)
-4. Check [Troubleshooting](troubleshooting/README.md)
-
----
-
-## Quick Links
-
-### Essential Documentation
-- [ECS Architecture Principles](05_Governance/ecs-principles.md)
-- [Handler Pattern Guide](05_Governance/handler-pattern.md)
-- [Comprehensive Handler Guide](01_CurrentState/Components/comprehensive-handler-guide.md)
-- [Security Model](01_CurrentState/Services/authentication-rbac-rls-technical-whitepaper.md)
-
-### API References
-- [Core Interfaces](01_CurrentState/Components/core-interfaces.md)
-- [DataContext API](01_CurrentState/Mappings/datacontext-api.md)
-- [Query API](01_CurrentState/Technology/query-api.md)
-
-### Development Resources
-- [Testing Strategies](07_Projects/testing-strategies.md)
-- [Performance Optimization](05_Governance/performance-optimization.md)
-- [Error Handling](05_Governance/error-handling.md)
-
----
-
-## Documentation Standards
-
-All documentation in this repository follows:
-- TOGAF architecture framework principles
-- Mandatory template structure with metadata headers
-- Clear ownership and review cycles
-- Consistent naming conventions (kebab-case)
-- Cross-references using relative paths
-
-For documentation guidelines, see [Information Architecture](05_Governance/information_architecture.md).
-
----
-
-## Contributing
-
-When contributing documentation:
-1. Follow the TOGAF structure
-2. Use the mandatory template format
-3. Update cross-references
-4. Maintain consistency with existing documentation
-5. Submit for review according to governance processes
-
----
-
-## Change History
-
-| Version | Date | Author | Changes |
-|---------|------|--------|---------|
-| 2.0 | 2025-07-27 | Technical Documentation Team | Reorganized to TOGAF structure |
-| 1.0 | 2025-01-01 | Jarvis Team | Initial documentation |
-
----
-
-## Related Documentation
-
-- [Information Architecture Guidelines](05_Governance/information_architecture.md)
-- [Documentation Audit Report](05_Governance/documentation-audit-report.md)
-- [CLAUDE.md](../CLAUDE.md) - AI assistant guidelines
+Historical documentation moved to [_archive/](_archive/) during the January 2025 documentation restructure.

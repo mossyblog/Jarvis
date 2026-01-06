@@ -1,5 +1,6 @@
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Helpers;
+using Microsoft.Extensions.Logging;
 using Shouldly;
 
 namespace core.jarvis.tests.Integration.SnapshotIntegrationTests;
@@ -20,27 +21,41 @@ public class SnapshotCreationTests : IntegrationTestBase
         // Arrange
         var entityId = Guid.NewGuid();
         TrackEntity(entityId);
-        var component = new TestComponent 
-        { 
-            OwnerEntityId = entityId, 
-            Name = "Test", 
-            Value = 100 
+        var component = new TestComponent
+        {
+            OwnerEntityId = entityId,
+            Name = "Test",
+            Value = 100
         };
-        
+
         // Act
         await TestDataContext().Commit(component);
-        
+
+        // Debug: Check what component ID we're looking for
+        Logger().LogInformation("Looking for snapshots for component ID: {ComponentId}", component.Id);
+        Logger().LogInformation("Component type: {ComponentType}", typeof(TestComponent).Name);
+
         // Assert - Snapshot should be available immediately after commit
         var snapshots = await TestDataContext().Snapshots()
             .ForComponent<TestComponent>(component.Id)
             .FirstOrDefault();
-            
-        snapshots.ShouldNotBeNull();
+
+        snapshots.ShouldNotBeNull($"No snapshots found for component {component.Id}. Component type: {typeof(TestComponent).Name}");
+
+        // Debug: Check what's in the snapshots JSON
+        Logger().LogInformation("Snapshots JSON: {SnapshotsJson}", snapshots.Snapshots);
+        Logger().LogInformation("Snapshot record ID: {SnapshotId}", snapshots.Id);
+        Logger().LogInformation("Snapshot record EntityId: {EntityId}", snapshots.EntityId);
+        Logger().LogInformation("Snapshot record ComponentType: {ComponentType}", snapshots.ComponentType);
+        Logger().LogInformation("Snapshot record ComponentId: {ComponentId}", snapshots.ComponentId);
+
         var snapshotList = snapshots.GetSnapshots();
+        Logger().LogInformation("Retrieved {SnapshotCount} snapshots from JSON", snapshotList.Count);
+
         snapshotList.Count.ShouldBe(1);
         snapshotList[0].Operation.ShouldBe("CREATE"); // First commit is treated as CREATE
         snapshotList[0].Version.ShouldBe(1);
-        
+
         // Verify snapshot contains correct data
         var snapshotData = snapshotList[0].Deserialize<TestComponent>();
         snapshotData.ShouldNotBeNull();
@@ -89,6 +104,17 @@ public class SnapshotCreationTests : IntegrationTestBase
             
         snapshots.ShouldNotBeNull();
         var snapshotList = snapshots.GetSnapshots();
+        
+        // Debug info
+        Logger().LogInformation("Found {Count} snapshots for component {ComponentId}", snapshotList.Count, component.Id);
+        Logger().LogInformation("Snapshots JSON length: {Length}", snapshots.Snapshots?.Length ?? 0);
+        Logger().LogInformation("Snapshots JSON content: {Content}", snapshots.Snapshots?.Substring(0, Math.Min(200, snapshots.Snapshots?.Length ?? 0)));
+        foreach (var snapshot in snapshotList)
+        {
+            Logger().LogInformation("Snapshot: Operation={Operation}, Version={Version}, Timestamp={Timestamp}", 
+                snapshot.Operation, snapshot.Version, snapshot.Timestamp);
+        }
+        
         snapshotList.Count.ShouldBe(2);
         
         // First snapshot: Original CREATE operation

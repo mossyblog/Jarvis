@@ -1,8 +1,10 @@
 ﻿using core.jarvis.data.RLS;
+using core.jarvis.data.Exceptions;
 using Dapper;
 using Npgsql;
 using NpgsqlTypes;
 using System.Data;
+using System.Diagnostics;
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
@@ -56,6 +58,9 @@ public class PgTable<T> where T : class, new()
     private readonly List<string> _whereClauses = new();
     private readonly DynamicParameters _parameters = new();
     private readonly ILogger? _logger;
+    
+    // Activity source for distributed tracing and performance monitoring
+    private static readonly ActivitySource ActivitySource = new ActivitySource("Jarvis.Database.PgTable");
 
     // Whitelist of allowed operators for filtering (prevents SQL injection)
     private static readonly HashSet<string> AllowedOperators = new() { "eq", "neq", "lt", "lte", "gt", "gte" };
@@ -117,7 +122,15 @@ public class PgTable<T> where T : class, new()
         {
             // ECS components use table_name_component convention in PostgreSQL
             // Example: UserProfile component → "user_profile_component" table
-            _tableName = $"\"{snakeCaseName}_component\"";
+            // But if the name already ends with "_component", don't add it again
+            if (snakeCaseName.EndsWith("_component"))
+            {
+                _tableName = $"\"{snakeCaseName}\"";
+            }
+            else
+            {
+                _tableName = $"\"{snakeCaseName}_component\"";
+            }
         }
         else
         {
@@ -154,6 +167,10 @@ public class PgTable<T> where T : class, new()
     /// <exception cref="PostgresException">Thrown for database-level errors (constraint violations, etc.).</exception>
     public async Task Insert(T entity)
     {
+        using var activity = ActivitySource.StartActivity("PgTable.Insert");
+        activity?.SetTag("table", _tableName);
+        activity?.SetTag("entity_type", typeof(T).Name);
+        
         // Check RLS policies for insert operation - use cached properties for performance
         var entityData = new Dictionary<string, object>();
         foreach (var prop in WritableProperties)
@@ -170,6 +187,7 @@ public class PgTable<T> where T : class, new()
         var unquotedTableName = core.jarvis.data.StringExtensions.ToSnakeCase(typeof(T).Name);
         if (!_rlsPolicies.CheckOperation(unquotedTableName, PolicyType.Insert, _jwtClaims, entityData))
         {
+            activity?.SetTag("rls_blocked", true);
             // Silently fail like PostgreSQL RLS would
             return;
         }
@@ -206,17 +224,60 @@ public class PgTable<T> where T : class, new()
         }));
         var sql = $"INSERT INTO {_tableName} ({columns}) VALUES ({values})";
 
-        await EnsureConnectionOpen();
+        using (var connActivity = ActivitySource.StartActivity("PgTable.EnsureConnectionOpen"))
+        {
+            await EnsureConnectionOpen();
+        }
 
         // Set JWT claims for RLS if client is provided
         if (_client != null)
         {
-            await _client.JWTClaims();
+            using (var jwtActivity = ActivitySource.StartActivity("PgTable.SetJWTClaims"))
+            {
+                await _client.JWTClaims();
+            }
         }
 
         // Convert entity to parameter dictionary with JSON serialization for complex objects
         var parameters = ConvertEntityToParameters(entity);
-        await _conn.ExecuteAsync(sql, parameters);
+        
+        using (var execActivity = ActivitySource.StartActivity("PgTable.ExecuteInsert"))
+        {
+            execActivity?.SetTag("sql", sql);
+            execActivity?.SetTag("connection_state", _conn.State.ToString());
+            try
+            {
+                await _conn.ExecuteAsync(sql, parameters);
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "42P01")
+            {
+                // Table doesn't exist - convert to domain exception
+                throw new TableNotFoundException(_tableName, pgEx);
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "23505")
+            {
+                // Unique constraint violation - expected failure
+                throw new ConstraintViolationException(_tableName, pgEx.SqlState, ConstraintType.Unique, 
+                    $"Unique constraint violation in table {_tableName}: {pgEx.MessageText}", pgEx);
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "23503")
+            {
+                // Foreign key constraint violation - expected failure
+                throw new ConstraintViolationException(_tableName, pgEx.SqlState, ConstraintType.ForeignKey,
+                    $"Foreign key constraint violation in table {_tableName}: {pgEx.MessageText}", pgEx);
+            }
+            catch (PostgresException pgEx) when (pgEx.SqlState == "23514")
+            {
+                // Check constraint violation - expected failure
+                throw new ConstraintViolationException(_tableName, pgEx.SqlState, ConstraintType.Check,
+                    $"Check constraint violation in table {_tableName}: {pgEx.MessageText}", pgEx);
+            }
+            catch (PostgresException pgEx)
+            {
+                // Convert other PostgreSQL errors to domain exceptions
+                throw new DataAccessException($"Failed to insert into {_tableName} table", pgEx);
+            }
+        }
     }
 
     /// <summary>
@@ -285,18 +346,36 @@ public class PgTable<T> where T : class, new()
     /// <returns>List of entities matching the query conditions and security policies.</returns>
     public async Task<List<T>> Get()
     {
+        using var activity = ActivitySource.StartActivity("PgTable.Get");
+        activity?.SetTag("table", _tableName);
+        activity?.SetTag("entity_type", typeof(T).Name);
+        
         // Step 1: Build the SELECT query with column mappings and WHERE clauses
         var sql = BuildSelectQuery();
+        activity?.SetTag("sql", sql);
         
         // Step 2: Prepare connection and security context
-        await PrepareQueryExecution();
+        using (var prepActivity = ActivitySource.StartActivity("PgTable.PrepareQueryExecution"))
+        {
+            await PrepareQueryExecution();
+        }
         
         // Step 3: Execute query with enhanced parameter handling
-        var dynamicResult = await ExecuteQuery(sql);
+        IEnumerable<dynamic> dynamicResult;
+        using (var execActivity = ActivitySource.StartActivity("PgTable.ExecuteQuery"))
+        {
+            dynamicResult = await ExecuteQuery(sql);
+        }
         
         // Step 4: Convert dynamic results to strongly-typed entities
-        var typedResults = ConvertDynamicResultsToEntities(dynamicResult);
+        List<T> typedResults;
+        using (var convertActivity = ActivitySource.StartActivity("PgTable.ConvertResults"))
+        {
+            typedResults = ConvertDynamicResultsToEntities(dynamicResult);
+            convertActivity?.SetTag("row_count", typedResults.Count);
+        }
         
+        activity?.SetTag("result_count", typedResults.Count);
         return typedResults;
     }
 
@@ -452,7 +531,20 @@ public class PgTable<T> where T : class, new()
             }
         }
         
-        return await _conn.QueryAsync(sql, enhancedParameters);
+        try
+        {
+            return await _conn.QueryAsync(sql, enhancedParameters);
+        }
+        catch (PostgresException pgEx) when (pgEx.SqlState == "42P01")
+        {
+            // Table doesn't exist - convert to domain exception
+            throw new TableNotFoundException(_tableName, pgEx);
+        }
+        catch (PostgresException pgEx)
+        {
+            // Convert other PostgreSQL errors to domain exceptions
+            throw new DataAccessException($"Failed to query {_tableName} table", pgEx);
+        }
     }
 
     /// <summary>
@@ -509,8 +601,7 @@ public class PgTable<T> where T : class, new()
     /// <param name="properties">The cached entity properties to map.</param>
     private void MapRowToEntity(T entity, IDictionary<string, object> rowDict, PropertyInfo[] properties)
     {
-        _logger?.LogDebug("MapRowToEntity for {EntityType} - Available columns: [{Columns}]", 
-            typeof(T).Name, string.Join(", ", rowDict.Keys));
+        // Debug logging removed for performance
 
 
         foreach (var property in properties)
@@ -540,33 +631,28 @@ public class PgTable<T> where T : class, new()
             
             if (foundValue)
             {
-                _logger?.LogDebug("Mapping {PropertyName} from column '{ColumnName}' = {Value}", 
-                    propertyName, foundColumnName, value);
+                // Mapping column to property
                 
                 if (value == null)
                 {
                     // Handle null values - don't set non-nullable value types to null
                     if (property.PropertyType.IsValueType && Nullable.GetUnderlyingType(property.PropertyType) == null)
                     {
-                        _logger?.LogDebug("Skipping null value for non-nullable property {PropertyName}", propertyName);
+                                // Skipping null for non-nullable property
                         continue; // Skip setting non-nullable value types to null
                     }
                     property.SetValue(entity, null);
-                    _logger?.LogDebug("Set {PropertyName} = NULL", propertyName);
                 }
                 else
                 {
                     // Use centralized type conversion for PostgreSQL-specific mappings
                     var convertedValue = PostgreSqlTypeConverter.ConvertValue(value, property.PropertyType, snakeCaseName);
                     property.SetValue(entity, convertedValue);
-                    _logger?.LogDebug("Set {PropertyName} = {ConvertedValue} (converted from {OriginalValue})", 
-                        propertyName, convertedValue, value);
                 }
             }
             else
             {
-                _logger?.LogDebug("Could not find column for property {PropertyName} (snake_case: {SnakeCaseName})", 
-                    propertyName, snakeCaseName);
+                // Property not found in result columns
             }
         }
     }
@@ -654,7 +740,20 @@ public class PgTable<T> where T : class, new()
 
         // Convert entity to parameter dictionary with JSON serialization for complex objects
         var parameters = ConvertEntityToParameters(entity);
-        await _conn.ExecuteAsync(sql, parameters);
+        try
+        {
+            await _conn.ExecuteAsync(sql, parameters);
+        }
+        catch (PostgresException pgEx) when (pgEx.SqlState == "42P01")
+        {
+            // Table doesn't exist - convert to domain exception
+            throw new TableNotFoundException(_tableName, pgEx);
+        }
+        catch (PostgresException pgEx)
+        {
+            // Convert other PostgreSQL errors to domain exceptions
+            throw new DataAccessException($"Failed to update {_tableName} table", pgEx);
+        }
     }
 
     /// <summary>
@@ -680,10 +779,8 @@ public class PgTable<T> where T : class, new()
 
         // Determine the conflict resolution strategy
         var ownerEntityIdProperty = typeof(T).GetProperty("OwnerEntityId");
-        var coreComponentTables = new[] { "account", "role", "permission", "auth_token", "security_profile" };
         var unquotedTableName = core.jarvis.data.StringExtensions.ToSnakeCase(typeof(T).Name);
-        var hasUniqueOwnerEntityId = (unquotedTableName.EndsWith("_component") && !unquotedTableName.Equals("blog_post_component")) ||
-            coreComponentTables.Contains(unquotedTableName);
+        var hasUniqueOwnerEntityId = ShouldHaveUniqueOwnerEntityId(typeof(T));
         
         await EnsureConnectionOpen();
 
@@ -693,22 +790,18 @@ public class PgTable<T> where T : class, new()
             await _client.JWTClaims();
         }
 
-        _logger?.LogDebug("Upsert: EntityType={EntityType}, hasOwnerEntityId={HasOwnerEntityId}, hasUniqueOwnerEntityId={HasUniqueOwnerEntityId}, unquotedTableName={TableName}", typeof(T).Name, ownerEntityIdProperty != null, hasUniqueOwnerEntityId, unquotedTableName);
+        // Determining upsert conflict resolution strategy
         
         if (ownerEntityIdProperty != null && hasUniqueOwnerEntityId)
         {
             // Use PostgreSQL's ON CONFLICT for components with unique owner_entity_id constraints
-            _logger?.LogDebug("Taking OwnerEntityId path: OwnerEntityId={OwnerEntityId}, Id={Id}", ownerEntityIdProperty.GetValue(entity), idProperty.GetValue(entity));
-            _logger?.LogDebug("Using UpsertWithOwnerEntityIdConflict for {EntityType} with OwnerEntityId={OwnerEntityId}, Id={Id}", 
-                typeof(T).Name, ownerEntityIdProperty.GetValue(entity), idProperty.GetValue(entity));
+            // Using OwnerEntityId-based conflict resolution
             await UpsertWithOwnerEntityIdConflict(entity);
         }
         else
         {
             // Use PostgreSQL's ON CONFLICT for entities with unique id constraints
-            _logger?.LogDebug("Taking Id path: Id={Id}", idProperty.GetValue(entity));
-            _logger?.LogDebug("Using UpsertWithIdConflict for {EntityType} with Id={Id}", 
-                typeof(T).Name, idProperty.GetValue(entity));
+            // Using Id-based conflict resolution
             await UpsertWithIdConflict(entity);
         }
     }
@@ -764,17 +857,30 @@ public class PgTable<T> where T : class, new()
         _logger?.LogDebug("UpsertWithOwnerEntityIdConflict Parameters: [parameters object]");
         
         // For IVersionedComponent, retrieve the updated version and set it on the entity
-        if (typeof(IVersionedComponent).IsAssignableFrom(typeof(T)))
+        try
         {
-            var newVersion = await _conn.QuerySingleAsync<int?>(sql, parameters);
-            _logger?.LogDebug("UpsertWithOwnerEntityIdConflict returned version: {Version}", newVersion);
-            var versionProperty = typeof(T).GetProperty("Version");
-            versionProperty?.SetValue(entity, newVersion);
-            _logger?.LogDebug("Set entity version to: {Version}", newVersion);
+            if (typeof(IVersionedComponent).IsAssignableFrom(typeof(T)))
+            {
+                var newVersion = await _conn.QuerySingleAsync<int?>(sql, parameters);
+                _logger?.LogDebug("UpsertWithOwnerEntityIdConflict returned version: {Version}", newVersion);
+                var versionProperty = typeof(T).GetProperty("Version");
+                versionProperty?.SetValue(entity, newVersion);
+                _logger?.LogDebug("Set entity version to: {Version}", newVersion);
+            }
+            else
+            {
+                await _conn.ExecuteAsync(sql, parameters);
+            }
         }
-        else
+        catch (PostgresException pgEx) when (pgEx.SqlState == "42P01")
         {
-            await _conn.ExecuteAsync(sql, parameters);
+            // Table doesn't exist - convert to domain exception
+            throw new TableNotFoundException(_tableName, pgEx);
+        }
+        catch (PostgresException pgEx)
+        {
+            // Convert other PostgreSQL errors to domain exceptions
+            throw new DataAccessException($"Failed to upsert into {_tableName} table", pgEx);
         }
         
     }
@@ -816,24 +922,41 @@ public class PgTable<T> where T : class, new()
                 return $"{columnName} = EXCLUDED.{columnName}";
             }));
 
+        // Check if entity implements IVersionedComponent to conditionally include RETURNING version
+        var isVersioned = typeof(IVersionedComponent).IsAssignableFrom(typeof(T));
+        var returningClause = isVersioned ? "RETURNING version" : "";
+        
         var sql = $@"
             INSERT INTO {_tableName} ({columns}) 
             VALUES ({valueParams})
             ON CONFLICT (id) DO UPDATE SET {updateClauses}
-            RETURNING version";
+            {returningClause}";
 
         var parameters = ConvertEntityToParameters(entity);
         
         // For IVersionedComponent, retrieve the updated version and set it on the entity
-        if (typeof(IVersionedComponent).IsAssignableFrom(typeof(T)))
+        try
         {
-            var newVersion = await _conn.QuerySingleAsync<int?>(sql, parameters);
-            var versionProperty = typeof(T).GetProperty("Version");
-            versionProperty?.SetValue(entity, newVersion);
+            if (isVersioned)
+            {
+                var newVersion = await _conn.QuerySingleAsync<int?>(sql, parameters);
+                var versionProperty = typeof(T).GetProperty("Version");
+                versionProperty?.SetValue(entity, newVersion);
+            }
+            else
+            {
+                await _conn.ExecuteAsync(sql, parameters);
+            }
         }
-        else
+        catch (PostgresException pgEx) when (pgEx.SqlState == "42P01")
         {
-            await _conn.ExecuteAsync(sql, parameters);
+            // Table doesn't exist - convert to domain exception
+            throw new TableNotFoundException(_tableName, pgEx);
+        }
+        catch (PostgresException pgEx)
+        {
+            // Convert other PostgreSQL errors to domain exceptions
+            throw new DataAccessException($"Failed to upsert into {_tableName} table", pgEx);
         }
         
     }
@@ -878,7 +1001,20 @@ public class PgTable<T> where T : class, new()
             await _client.JWTClaims();
         }
 
-        return await _conn.ExecuteAsync(sql, _parameters);
+        try
+        {
+            return await _conn.ExecuteAsync(sql, _parameters);
+        }
+        catch (PostgresException pgEx) when (pgEx.SqlState == "42P01")
+        {
+            // Table doesn't exist - convert to domain exception
+            throw new TableNotFoundException(_tableName, pgEx);
+        }
+        catch (PostgresException pgEx)
+        {
+            // Convert other PostgreSQL errors to domain exceptions
+            throw new DataAccessException($"Failed to delete from {_tableName} table", pgEx);
+        }
     }
 
     /// <summary>
@@ -953,7 +1089,23 @@ public class PgTable<T> where T : class, new()
     private async Task EnsureConnectionOpen()
     {
         if (_conn.State != System.Data.ConnectionState.Open)
+        {
+            using var activity = ActivitySource.StartActivity("PgTable.OpenConnection");
+            activity?.SetTag("connection_string_host", _conn.ConnectionString?.Split(';')[0]);
+            activity?.SetTag("state_before", _conn.State.ToString());
+            
+            var sw = System.Diagnostics.Stopwatch.StartNew();
             await _conn.OpenAsync();
+            
+            activity?.SetTag("state_after", _conn.State.ToString());
+            activity?.SetTag("open_time_ms", sw.ElapsedMilliseconds);
+            
+            if (sw.ElapsedMilliseconds > 1000)
+            {
+                // Log slow connection opens
+                Console.WriteLine($"WARNING: Connection open took {sw.ElapsedMilliseconds}ms! Connection: {_conn.ConnectionString?.Split(';')[0]}");
+            }
+        }
     }
 
     /// <summary>
@@ -996,7 +1148,7 @@ public class PgTable<T> where T : class, new()
             }
             else
             {
-                // PostgreSQL array parameter binding - critical for UUID[] columns
+                // PostgreSQL array parameter binding - critical for array columns
                 // PostgreSQL arrays require specific parameter typing for proper handling
                 if (value is Guid[] guidArray)
                 {
@@ -1005,14 +1157,39 @@ public class PgTable<T> where T : class, new()
                 }
                 else if (value is List<Guid> guidList)
                 {
-                    // Convert List<Guid> to Guid[] and use NpgsqlParameter for explicit typing
-                    // This ensures PostgreSQL correctly recognizes the parameter as UUID[]
+                    // Convert List<Guid> to Guid[] for PostgreSQL UUID[]
                     var guidArr = guidList.ToArray();
-                    var param = new NpgsqlParameter(propertyName, NpgsqlDbType.Array | NpgsqlDbType.Uuid)
-                    {
-                        Value = guidArr
-                    };
-                    parameters.AddDynamicParams(param);
+                    parameters.Add(propertyName, guidArr, DbType.Object);
+                }
+                else if (value is List<int> intList)
+                {
+                    // Convert List<int> to int[] for PostgreSQL INTEGER[]
+                    var intArr = intList.ToArray();
+                    parameters.Add(propertyName, intArr, DbType.Object);
+                }
+                else if (value is List<string> stringList)
+                {
+                    // Convert List<string> to string[] for PostgreSQL TEXT[]
+                    var stringArr = stringList.ToArray();
+                    parameters.Add(propertyName, stringArr, DbType.Object);
+                }
+                else if (value is List<decimal> decimalList)
+                {
+                    // Convert List<decimal> to decimal[] for PostgreSQL DECIMAL[]
+                    var decimalArr = decimalList.ToArray();
+                    parameters.Add(propertyName, decimalArr, DbType.Object);
+                }
+                else if (value is List<bool> boolList)
+                {
+                    // Convert List<bool> to bool[] for PostgreSQL BOOLEAN[]
+                    var boolArr = boolList.ToArray();
+                    parameters.Add(propertyName, boolArr, DbType.Object);
+                }
+                else if (value is List<DateTime> dateTimeList)
+                {
+                    // Convert List<DateTime> to DateTime[] for PostgreSQL TIMESTAMPTZ[]
+                    var dateTimeArr = dateTimeList.ToArray();
+                    parameters.Add(propertyName, dateTimeArr, DbType.Object);
                 }
                 else
                 {
@@ -1022,6 +1199,35 @@ public class PgTable<T> where T : class, new()
         }
 
         return parameters;
+    }
+
+    /// <summary>
+    /// Determines if a component type should have a unique constraint on OwnerEntityId.
+    /// Uses the same logic as PostgreSqlTableManager to ensure consistency.
+    /// </summary>
+    private static bool ShouldHaveUniqueOwnerEntityId(Type componentType)
+    {
+        // Components that should allow multiple entries per entity (no unique OwnerEntityId constraint):
+        // 1. Audit/history/logging components
+        // 2. Content components (posts, comments, etc.) 
+        // 3. Transaction-like components
+        var typeName = componentType.Name.ToLower();
+        var allowsMultiple = typeName.Contains("audit") || 
+                            typeName.Contains("history") || 
+                            typeName.Contains("log") ||
+                            typeName.Contains("event") ||
+                            typeName.Contains("snapshot") ||
+                            typeName.Contains("post") ||
+                            typeName.Contains("comment") ||
+                            typeName.Contains("transaction") ||
+                            typeName.Contains("record") ||
+                            typeName.Contains("entry");
+        
+        // If it's a component type and doesn't allow multiple entries, it should have unique OwnerEntityId
+        var isComponentType = componentType.Name.EndsWith("Component") || 
+                             componentType.GetInterfaces().Any(i => i.Name == "IComponent");
+        
+        return isComponentType && !allowsMultiple;
     }
 
 }

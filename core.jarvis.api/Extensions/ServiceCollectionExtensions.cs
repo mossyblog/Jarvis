@@ -69,6 +69,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentQueryHandler<Role>, ComponentQueryHandler<Role>>();
         services.AddScoped<IComponentQueryHandler<Permission>, ComponentQueryHandler<Permission>>();
         services.AddScoped<IComponentQueryHandler<NavigationItem>, ComponentQueryHandler<NavigationItem>>();
+        services.AddScoped<IComponentQueryHandler<SecurityAuditEvent>, ComponentQueryHandler<SecurityAuditEvent>>();
 
         // Register API-specific handlers - both as interface and concrete type
         // This allows DataContext.For<THandler> to resolve them by concrete type
@@ -102,32 +103,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IComponentHandler, NavigationHandler>();
         services.AddScoped<NavigationHandler>();
         
-        // UIStudio handlers
-        services.AddScoped<IComponentHandler, UIStudioPageHandler>();
-        services.AddScoped<UIStudioPageHandler>();
-        
-        services.AddScoped<IComponentHandler, UIStudioLayoutHandler>();
-        services.AddScoped<UIStudioLayoutHandler>();
-        
-        services.AddScoped<IComponentHandler, UIStudioComponentBindingHandler>();
-        services.AddScoped<UIStudioComponentBindingHandler>();
-        
-        services.AddScoped<IComponentHandler, UIStudioPermissionHandler>();
-        services.AddScoped<UIStudioPermissionHandler>();
-        
-        services.AddScoped<IComponentHandler, UIStudioTemplateHandler>();
-        services.AddScoped<UIStudioTemplateHandler>();
-        
-        services.AddScoped<IComponentHandler, UIStudioVersionHandler>();
-        services.AddScoped<UIStudioVersionHandler>();
-        
-        services.AddScoped<IComponentHandler, UIStudioAuditLogHandler>();
-        services.AddScoped<UIStudioAuditLogHandler>();
+        services.AddScoped<IComponentHandler, SecurityAuditHandler>();
+        services.AddScoped<SecurityAuditHandler>();
         
         // Add System services
         services.AddScoped<Systems.RegistrationSystem>();
         services.AddScoped<Systems.AuthSystem>();
-        services.AddScoped<Systems.UIStudioSystem>();
 
         // Add authentication services
         services.AddSingleton<ITokenService>(provider =>

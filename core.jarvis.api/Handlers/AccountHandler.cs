@@ -41,7 +41,7 @@ public class AccountHandler : ComponentHandler<Account>
             LastUpdated = DateTime.UtcNow 
         };
 
-        await DataContext.Commit(activated);
+        await DataContext.TryCommit(activated);
         Logger.LogInformation("Activated account {AccountId}", OwnerEntityId);
         return activated;
     }
@@ -68,7 +68,7 @@ public class AccountHandler : ComponentHandler<Account>
             LastUpdated = DateTime.UtcNow 
         };
 
-        await DataContext.Commit(deactivated);
+        await DataContext.TryCommit(deactivated);
         Logger.LogInformation("Deactivated account {AccountId}", OwnerEntityId);
         return deactivated;
     }
@@ -115,7 +115,7 @@ public class AccountHandler : ComponentHandler<Account>
             LastUpdated = DateTime.UtcNow
         };
         
-        await DataContext.Commit(account);
+        await DataContext.TryCommit(account);
         Logger.LogInformation("Registered new account {AccountId} for entity {EntityId} with email {Email} - INACTIVE", 
             account.Id, OwnerEntityId, account.Email);
         
@@ -130,7 +130,7 @@ public class AccountHandler : ComponentHandler<Account>
         // Ensure the account has the correct owner entity
         var account = newAccount with { OwnerEntityId = OwnerEntityId };
         
-        await DataContext.Commit(account);
+        await DataContext.TryCommit(account);
         Logger.LogInformation("Created account {AccountId} for entity {EntityId}", account.Id, OwnerEntityId);
         return account;
     }

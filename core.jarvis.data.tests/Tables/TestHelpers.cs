@@ -45,7 +45,7 @@ namespace core.jarvis.data.tests.Tables
             }
 
             // Use jarvis_test database with supabase_admin user to match integration tests
-            return "Host=localhost;Port=5432;Username=supabase_admin;Password=postgres;Database=jarvis_test";
+            return "Host=127.0.0.1;Port=5432;Username=supabase_admin;Password=postgres;Database=jarvis_test";
         }
 
         public static string GetSupabaseAdminConnectionString()

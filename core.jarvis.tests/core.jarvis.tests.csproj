@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
@@ -43,7 +43,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\core.jarvis\core.jarvis.csproj" />
-      <ProjectReference Include="..\core.jarvis.api\core.jarvis.api.csproj" />
+      <!-- API project reference removed to improve test performance
+           Only RegistrationIntegrationTests needs it, which should be moved to API project -->
     </ItemGroup>
 
     <ItemGroup>

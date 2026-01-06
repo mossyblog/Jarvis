@@ -76,38 +76,23 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
     /// <inheritdoc/>
     public virtual async Task<TComponent> Get()
     {
-        try
+        // Create Table if it doesn't Exist.
+        var query = DataContext.Query()
+            .With<TComponent>(c => c.OwnerEntityId == OwnerEntityId);
+        var componentsByEntity = await query.ToEntityComponents();
+
+        if (!componentsByEntity.TryGetValue(OwnerEntityId, out var entityComponents))
         {
-            var query = DataContext.Query()
-                .With<TComponent>(c => c.OwnerEntityId == OwnerEntityId);
-            var componentsByEntity = await query.ToEntityComponents();
-
-            if (!componentsByEntity.TryGetValue(OwnerEntityId, out var entityComponents))
-            {
-                throw new EntityNotFoundException(OwnerEntityId, typeof(TComponent).Name);
-            }
-
-            var component = entityComponents.Get<TComponent>();
-            if (component == null)
-            {
-                throw new EntityNotFoundException(OwnerEntityId, typeof(TComponent).Name);
-            }
-
-            return component;
+            throw new EntityNotFoundException(OwnerEntityId, typeof(TComponent).Name);
         }
-        catch (Exception ex) when (ex is not DomainException)
+
+        var component = entityComponents.Get<TComponent>();
+        if (component == null)
         {
-            ErrorHandlingPolicy.WrapAndRethrow(
-                ex,
-                $"Failed to retrieve {typeof(TComponent).Name}",
-                (msg, inner) => new ComponentOperationException(
-                    typeof(TComponent).Name,
-                    "GET",
-                    msg,
-                    inner),
-                new { ComponentType = typeof(TComponent).Name, OwnerEntityId });
-            throw; // Unreachable, but required by compiler
+            throw new EntityNotFoundException(OwnerEntityId, typeof(TComponent).Name);
         }
+
+        return component;
     }
 
     /// <inheritdoc/>
@@ -154,6 +139,20 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
         {
             throw new BusinessRuleException(GetType().Name, message);
         }
+    }
+
+    /// <summary>
+    /// Commits a component with automatic OwnerEntityId enforcement.
+    /// ALWAYS USE THIS instead of DataContext.TryCommit directly.
+    /// </summary>
+    /// <param name="component">The component to save.</param>
+    protected async Task<bool> TryCommit(TComponent component)
+    {
+        // ENFORCE: Always set OwnerEntityId to prevent developer errors
+        component.OwnerEntityId = OwnerEntityId;
+        component.LastUpdated = DateTime.UtcNow;
+        
+        return await DataContext.TryCommit(component);
     }
 
     /// <summary>

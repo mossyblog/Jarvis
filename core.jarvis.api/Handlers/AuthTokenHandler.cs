@@ -76,7 +76,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                     RevokedAt = DateTime.UtcNow,
                     LastUpdated = DateTime.UtcNow
                 };
-                await DataContext.Commit(revokedToken);
+                await DataContext.TryCommit(revokedToken);
                 Logger.LogInformation("Revoked token for session: {SessionId}", token.SessionId);
             }
         }
@@ -163,7 +163,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                 RevokedAt = DateTime.UtcNow,
                 LastUpdated = DateTime.UtcNow
             };
-            await DataContext.Commit(revokedToken);
+            await DataContext.TryCommit(revokedToken);
 
             // Create new token entity (rotation creates new session)
             var newToken = new AuthToken
@@ -182,7 +182,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                 LastUpdated = DateTime.UtcNow
             };
 
-            await DataContext.Commit(newToken);
+            await DataContext.TryCommit(newToken);
             Logger.LogInformation("Token rotated: old session {OldSession} revoked, new session {NewSession} created", 
                 matchingToken.SessionId, newToken.SessionId);
 
@@ -360,7 +360,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                         RevokedAt = DateTime.UtcNow,
                         LastUpdated = DateTime.UtcNow
                     };
-                    await DataContext.Commit(revokedToken);
+                    await DataContext.TryCommit(revokedToken);
                     Logger.LogInformation("Revoked old session {SessionId} to enforce session limit", token.SessionId);
                 }
             }

@@ -22,7 +22,7 @@ public class NavigationItemHandler : ComponentHandler<NavigationItem>
         var item = await GetOrDefault() ?? throw new InvalidOperationException("NavigationItem component not found");
         
         item = item with { OwnerEntityId = OwnerEntityId, LastUpdated = DateTime.UtcNow };
-        await DataContext.Commit(item);
+        await DataContext.TryCommit(item);
         return item;
     }
 

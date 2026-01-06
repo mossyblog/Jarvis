@@ -256,7 +256,7 @@ echo "Creating audit_event_component table..."
 execute_sql_db $DB_NAME "
 CREATE TABLE IF NOT EXISTS audit_event_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
+    owner_entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
     last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     event_type TEXT NOT NULL DEFAULT '',
     entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -264,9 +264,9 @@ CREATE TABLE IF NOT EXISTS audit_event_component (
     user_id TEXT NOT NULL DEFAULT '',
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     operation TEXT NOT NULL DEFAULT '',
-    old_value JSONB,
-    new_value JSONB,
-    metadata JSONB
+    old_value TEXT,
+    new_value TEXT,
+    metadata TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_event_component_owner_entity_id ON audit_event_component(owner_entity_id);

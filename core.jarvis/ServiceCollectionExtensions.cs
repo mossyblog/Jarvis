@@ -21,19 +21,25 @@ public static class JarvisServiceCollectionExtensions
     // Database Configuration Constants
     /// <summary>
     /// Default maximum pool size for database connection pooling.
-    /// Balances resource usage with concurrent request handling.
+    /// Increased from 20 to 50 for better concurrent request handling.
+    /// Can be overridden via JARVIS_DB_MAX_POOL_SIZE environment variable
+    /// or Jarvis:Database:ConnectionPooling:MaxPoolSize configuration.
     /// </summary>
-    private const int DefaultMaxPoolSize = 20;
-    
+    private const int DefaultMaxPoolSize = 50;
+
     /// <summary>
     /// Default minimum pool size for database connection pooling.
     /// Ensures baseline connections are always available.
+    /// Can be overridden via JARVIS_DB_MIN_POOL_SIZE environment variable
+    /// or Jarvis:Database:ConnectionPooling:MinPoolSize configuration.
     /// </summary>
-    private const int DefaultMinPoolSize = 5;
-    
+    private const int DefaultMinPoolSize = 10;
+
     /// <summary>
     /// Default connection lifetime in minutes for pooled connections.
     /// Prevents stale connections while maintaining efficiency.
+    /// Can be overridden via JARVIS_DB_CONNECTION_LIFETIME_MINUTES environment variable
+    /// or Jarvis:Database:ConnectionPooling:ConnectionLifetimeMinutes configuration.
     /// </summary>
     private const int DefaultConnectionLifetimeMinutes = 5;
     
@@ -78,55 +84,53 @@ public static class JarvisServiceCollectionExtensions
         // 5.5. Register Table Manager
         services.TryAddScoped<ITableManager, PostgreSqlTableManager>();
 
-        // 6. Register DataContext
+        // 6. Register DataContext services
+        services.TryAddScoped<IDataContextCore, DataContextCore>();
+        services.TryAddScoped<IAuditManager, AuditManager>();
+        services.TryAddScoped<IRelationshipManager, RelationshipManager>();
+        services.TryAddScoped<ITransactionManager, TransactionManager>();
+
+        // Register the main DataContext facade (maintains backward compatibility)
         services.TryAddScoped<IDataContext, DataContext>();
         services.TryAddScoped<DataContext>();
 
 
         // 8. Register PostgreSQL Client
-        // Check for connection pooling feature flag
-        var useConnectionPooling = configuration?.GetValue<bool>("Jarvis:Database:ConnectionPooling:Enabled") ?? false;
-        
-        if (useConnectionPooling)
+        // Register NpgsqlDataSource (singleton - manages the connection pool)
+        services.TryAddSingleton<NpgsqlDataSource>(sp =>
         {
-            // Register connection factory as singleton for connection pooling
-            services.TryAddSingleton<INpgsqlConnectionFactory>(sp =>
+            var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
+                ?? Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
+                ?? throw new ApplicationException("No connection string configured");
+
+            // Get pool configuration with environment variable priority, then config, then defaults
+            var maxPoolSize = GetPoolConfigValue("JARVIS_DB_MAX_POOL_SIZE",
+                configuration?.GetValue<int?>("Jarvis:Database:ConnectionPooling:MaxPoolSize"),
+                DefaultMaxPoolSize);
+            var minPoolSize = GetPoolConfigValue("JARVIS_DB_MIN_POOL_SIZE",
+                configuration?.GetValue<int?>("Jarvis:Database:ConnectionPooling:MinPoolSize"),
+                DefaultMinPoolSize);
+            var connectionLifetimeMinutes = GetPoolConfigValue("JARVIS_DB_CONNECTION_LIFETIME_MINUTES",
+                configuration?.GetValue<int?>("Jarvis:Database:ConnectionPooling:ConnectionLifetimeMinutes"),
+                DefaultConnectionLifetimeMinutes);
+
+            var builder = new NpgsqlConnectionStringBuilder(connectionString)
             {
-                var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-                    ?? Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
-                    ?? throw new ApplicationException("No connection string configured");
-                
-                var logger = sp.GetRequiredService<ILogger<NpgsqlConnectionFactory>>();
-                
-                // Get pool configuration with fallback to constants
-                var maxPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MaxPoolSize") ?? DefaultMaxPoolSize;
-                var minPoolSize = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:MinPoolSize") ?? DefaultMinPoolSize;
-                var connectionLifetimeMinutes = configuration?.GetValue<int>("Jarvis:Database:ConnectionPooling:ConnectionLifetimeMinutes") ?? DefaultConnectionLifetimeMinutes;
-                
-                return new NpgsqlConnectionFactory(
-                    connectionString,
-                    logger,
-                    maxPoolSize,
-                    minPoolSize,
-                    TimeSpan.FromMinutes(connectionLifetimeMinutes));
-            });
-            
-            // Register pooled PgClient
-            services.TryAddScoped<IPgClient, PgClientPooled>();
-        }
-        else
+                MaxPoolSize = maxPoolSize,
+                MinPoolSize = minPoolSize,
+                ConnectionLifetime = connectionLifetimeMinutes * 60
+            };
+
+            return NpgsqlDataSource.Create(builder.ConnectionString);
+        });
+
+        // Register IPgClient (scoped - one connection per request)
+        services.TryAddScoped<IPgClient>(sp =>
         {
-            // Use traditional single-connection model
-            services.TryAddScoped<IPgClient>(sp =>
-            {
-                var connectionString = Environment.GetEnvironmentVariable("DATABASE_URL")
-                    ?? Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
-                    ?? throw new ApplicationException("No connection string configured");
-                
-                var connection = new NpgsqlConnection(connectionString);
-                return new PgClientWrapper(connection);
-            });
-        }
+            var dataSource = sp.GetRequiredService<NpgsqlDataSource>();
+            var connection = dataSource.CreateConnection();
+            return new PgClientWrapper(connection, ownsConnection: true);
+        });
 
         // 9. Register Audit Service
         services.TryAddScoped<IAuditService, AuditService>();
@@ -142,8 +146,19 @@ public static class JarvisServiceCollectionExtensions
         return services;
     }
 
+    /// <summary>
+    /// Gets a pool configuration value with priority: environment variable > config > default.
+    /// </summary>
+    private static int GetPoolConfigValue(string envVarName, int? configValue, int defaultValue)
+    {
+        var envValue = Environment.GetEnvironmentVariable(envVarName);
+        if (!string.IsNullOrEmpty(envValue) && int.TryParse(envValue, out var parsed))
+        {
+            return parsed;
+        }
+        return configValue ?? defaultValue;
+    }
 
-    
     /// <summary>
     /// Builds a PostgreSQL connection string from Supabase URL and key.
     /// </summary>

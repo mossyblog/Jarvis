@@ -54,7 +54,7 @@ public class SecurityTokenHandler : ComponentHandler<AuthToken>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(authToken);
+        await DataContext.TryCommit(authToken);
         Logger.LogInformation("Created session {SessionId} for entity {EntityId}", sessionId, authenticatedEntityId);
         return authToken;
     }
@@ -82,7 +82,7 @@ public class SecurityTokenHandler : ComponentHandler<AuthToken>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(revoked);
+        await DataContext.TryCommit(revoked);
         Logger.LogInformation("Token {TokenId} has been revoked", OwnerEntityId);
         return revoked;
     }

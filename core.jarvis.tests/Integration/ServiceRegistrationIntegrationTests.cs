@@ -24,9 +24,8 @@ public class ServiceRegistrationIntegrationTests : IAsyncLifetime
     
     public async Task InitializeAsync()
     {
-        // Get connection string
+        // Get connection string to Docker-provisioned database
         _connectionString = TestDatabaseSetup.GetConnectionString();
-        await TestDatabaseSetup.EnsureSetupAsync(_connectionString);
         
         // Setup environment variable for RegisterJarvis
         Environment.SetEnvironmentVariable("TEST_DATABASE_URL", _connectionString);

@@ -1,6 +1,6 @@
 using core.jarvis.Data;
 using core.jarvis.Data.Components;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;

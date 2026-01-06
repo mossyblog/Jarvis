@@ -75,7 +75,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(userProfile);
+        await DataContext.TryCommit(userProfile);
         Logger.LogInformation("Created SecurityProfile with default role for user: {UserId}", OwnerEntityId);
         return userProfile;
     }
@@ -134,7 +134,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(updated);
+        await DataContext.TryCommit(updated);
         Logger.LogInformation("Assigned role {RoleId} to user {UserId}", roleId, OwnerEntityId);
         
         // Invalidate permission cache since permissions have changed
@@ -201,7 +201,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(updated);
+        await DataContext.TryCommit(updated);
         Logger.LogInformation("Removed role {RoleId} from user {UserId}", roleId, OwnerEntityId);
         
         // Invalidate permission cache since permissions have changed
@@ -234,7 +234,7 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(updated);
+        await DataContext.TryCommit(updated);
         Logger.LogInformation("Updated profile for user {UserId}", OwnerEntityId);
         
         return updated;

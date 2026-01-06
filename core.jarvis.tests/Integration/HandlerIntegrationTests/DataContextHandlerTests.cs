@@ -1,6 +1,6 @@
 using core.jarvis.Data;
 using core.jarvis.Exceptions;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Fixtures.Handlers;
 using core.jarvis.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +14,16 @@ namespace core.jarvis.tests.Integration.HandlerIntegrationTests;
 /// </summary>
 public class DataContextHandlerTests : IntegrationTestBase
 {
+    /// <summary>
+    /// Validates that DataContext.For() returns handler instances for registered handler types.
+    /// 
+    /// INTENT: Verify handler resolution works correctly through DataContext interface
+    /// PURPOSE: Ensure registered handlers can be retrieved for entity operations
+    /// BUSINESS CONTEXT: Business operations require handler access for component management
+    /// WHY IMPORTANT: Handler resolution is the foundation of all business logic execution
+    /// ARCHITECTURAL SIGNIFICANCE: Validates dependency injection integration for handler pattern
+    /// FUTURE RESILIENCE: Ensures handler resolution remains functional as DI configuration evolves
+    /// </summary>
     [Fact]
     public void DataContext_For_WithRegisteredHandler_ShouldReturnHandler()
     {
@@ -44,6 +54,16 @@ public class DataContextHandlerTests : IntegrationTestBase
         }
     }
 
+    /// <summary>
+    /// Validates that DataContext.For() throws ComponentNotFoundException for unregistered handler types.
+    /// 
+    /// INTENT: Verify handler resolution fails gracefully for unregistered types
+    /// PURPOSE: Ensure clear error messaging when attempting to access missing handlers
+    /// BUSINESS CONTEXT: Plugin components may not be registered, requiring clear error feedback
+    /// WHY IMPORTANT: Missing handler errors should be caught early with descriptive messages
+    /// ARCHITECTURAL SIGNIFICANCE: Validates error handling in dependency injection for handler pattern
+    /// FUTURE RESILIENCE: Ensures unregistered handler access remains consistently handled
+    /// </summary>
     [Fact]
     public void DataContext_For_WithUnregisteredHandler_ShouldThrowComponentNotFoundException()
     {
@@ -56,6 +76,16 @@ public class DataContextHandlerTests : IntegrationTestBase
             TestDataContext().For<UnregisteredTestHandler>(entityId));
     }
 
+    /// <summary>
+    /// Validates complete handler workflow from creation through business operations to data persistence.
+    /// 
+    /// INTENT: Verify end-to-end handler functionality including data operations
+    /// PURPOSE: Ensure handlers can perform complete business workflows with data persistence
+    /// BUSINESS CONTEXT: Real business operations require full handler lifecycle with database integration
+    /// WHY IMPORTANT: End-to-end testing validates the complete handler pattern implementation
+    /// ARCHITECTURAL SIGNIFICANCE: Tests integration between handlers, DataContext, and database layer
+    /// FUTURE RESILIENCE: Ensures handler workflows remain functional across architectural changes
+    /// </summary>
     [Fact]
     public async Task DataContext_For_HandlerOperations_ShouldWorkEndToEnd()
     {
@@ -80,6 +110,16 @@ public class DataContextHandlerTests : IntegrationTestBase
         await TestDataContext().Remove<TestComponent>(entityId);
     }
 
+    /// <summary>
+    /// Validates that DataContext.For() returns new handler instances for each call.
+    /// 
+    /// INTENT: Verify handler instances are created fresh for each request
+    /// PURPOSE: Ensure handlers don't share state between different operations
+    /// BUSINESS CONTEXT: Handler state isolation prevents data corruption between operations
+    /// WHY IMPORTANT: Fresh instances prevent state contamination in concurrent operations
+    /// ARCHITECTURAL SIGNIFICANCE: Validates stateless handler pattern for thread safety
+    /// FUTURE RESILIENCE: Ensures handler isolation remains consistent as concurrency increases
+    /// </summary>
     [Fact]
     public void DataContext_For_MultipleCallsSameEntity_ShouldReturnDifferentInstances()
     {
@@ -97,6 +137,16 @@ public class DataContextHandlerTests : IntegrationTestBase
         handler1.ShouldNotBeSameAs(handler2);
     }
 
+    /// <summary>
+    /// Validates that DataContext properly propagates exceptions from handler operations.
+    /// 
+    /// INTENT: Verify exception handling doesn't get lost in DataContext abstraction layer
+    /// PURPOSE: Ensure handler exceptions reach calling code for proper error handling
+    /// BUSINESS CONTEXT: Business operation errors need to be handled appropriately by callers
+    /// WHY IMPORTANT: Exception propagation enables proper error handling and user feedback
+    /// ARCHITECTURAL SIGNIFICANCE: Validates exception transparency through abstraction layers
+    /// FUTURE RESILIENCE: Ensures error handling remains functional across architectural changes
+    /// </summary>
     [Fact]
     public async Task DataContext_ErrorHandling_ShouldPropagateHandlerExceptions()
     {

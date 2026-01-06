@@ -10,15 +10,34 @@ using Shouldly;
 namespace core.jarvis.Scripts;
 
 /// <summary>
-/// This is actually a test that can be run to activate the specific user.
-/// Run with: dotnet test --filter "FullyQualifiedName~ActivateSpecificUser" --logger console --verbosity normal
+/// UTILITY SCRIPT for manually activating a specific user account.
+/// 
+/// INTENT: This is NOT a test - it's a utility script for operational purposes
+/// PURPOSE: Manually activate a specific user account created via curl or other means
+/// BUSINESS CONTEXT: Sometimes accounts need manual activation for testing/debugging
+/// WHY IMPORTANT: Provides a way to activate accounts without going through the full flow
+/// ARCHITECTURAL SIGNIFICANCE: Demonstrates direct handler usage for administrative tasks
+/// FUTURE RESILIENCE: Should be moved to a separate utilities/scripts project
+/// 
+/// USAGE: dotnet test --filter "FullyQualifiedName~ActivateSpecificUser" --logger console --verbosity normal
+/// WARNING: This performs a real operation on a real account - use with caution!
 /// </summary>
 public class ActivateUserTest : IntegrationTestBase
 {
     private const string TargetEntityId = "021536e2-035c-450b-95e0-27732100db46";
     private const string TargetEmail = "curltest@example.com";
 
-    [Fact]
+    /// <summary>
+    /// UTILITY SCRIPT: Activates a specific user account.
+    /// 
+    /// INTENT: Perform actual account activation, not test activation functionality
+    /// PURPOSE: Administrative utility for activating the curltest@example.com account
+    /// BUSINESS CONTEXT: Used for manual account management during development/debugging
+    /// WHY IMPORTANT: Provides direct database manipulation capability for edge cases
+    /// ARCHITECTURAL SIGNIFICANCE: Shows how handlers can be used for administrative tasks
+    /// FUTURE RESILIENCE: Consider moving to a separate administrative tools project
+    /// </summary>
+    [Fact(Skip = "This is a utility script, not a test. Remove Skip to run manually.")]
     public async Task ActivateSpecificUser()
     {
         Console.WriteLine("=== User Activation Test ===");

@@ -1,4 +1,4 @@
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 
 namespace core.jarvis.tests.Helpers;
 

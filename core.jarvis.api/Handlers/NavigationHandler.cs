@@ -140,7 +140,7 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
             LastUpdated = DateTime.UtcNow
         };
         
-        await DataContext.Commit(newNavItem);
+        await DataContext.TryCommit(newNavItem);
         Logger.LogInformation("Created navigation item {MenuId} for entity {EntityId}", 
                               newNavItem.MenuId, OwnerEntityId);
         
@@ -167,7 +167,7 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
             LastUpdated = DateTime.UtcNow
         };
         
-        await DataContext.Commit(updated);
+        await DataContext.TryCommit(updated);
         Logger.LogInformation("Updated navigation item {MenuId} for entity {EntityId}", 
                               updated.MenuId, OwnerEntityId);
         

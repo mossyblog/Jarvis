@@ -1,6 +1,6 @@
 using core.jarvis.Data;
 using core.jarvis.Exceptions;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.Validation;
 using Microsoft.Extensions.Logging;
 

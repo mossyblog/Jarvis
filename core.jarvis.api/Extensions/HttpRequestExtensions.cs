@@ -3,6 +3,7 @@ using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Exceptions;
 using core.jarvis.api.Services;
+using core.jarvis.Exceptions;
 
 namespace core.jarvis.api.Extensions;
 
@@ -81,7 +82,7 @@ public static class HttpRequestExtensions
     /// </summary>
     public static async Task<HttpResponseData> CreateValidationErrorResponse(
         this HttpRequestData req,
-        ValidationException ex)
+        core.jarvis.api.Exceptions.ValidationException ex)
     {
         var error = new 
         { 
@@ -104,6 +105,97 @@ public static class HttpRequestExtensions
     {
         var error = ErrorResponseService.CreateAuthenticationError();
         var response = req.CreateResponse(HttpStatusCode.Unauthorized);
+        response.Headers.Add("Content-Type", "application/json");
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
+        return response;
+    }
+
+    /// <summary>
+    /// Creates a business rule error response
+    /// </summary>
+    public static async Task<HttpResponseData> CreateBusinessRuleErrorResponse(
+        this HttpRequestData req,
+        BusinessRuleException ex)
+    {
+        var error = new 
+        { 
+            error = ex.Message,
+            code = ex.Code
+        };
+        
+        var response = req.CreateResponse(HttpStatusCode.BadRequest);
+        response.Headers.Add("Content-Type", "application/json");
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
+        return response;
+    }
+
+    /// <summary>
+    /// Creates an entity not found error response
+    /// </summary>
+    public static async Task<HttpResponseData> CreateNotFoundResponse(
+        this HttpRequestData req,
+        EntityNotFoundException ex)
+    {
+        var error = new 
+        { 
+            error = ex.Message,
+            entityId = ex.EntityId,
+            entityType = ex.EntityType
+        };
+        
+        var response = req.CreateResponse(HttpStatusCode.NotFound);
+        response.Headers.Add("Content-Type", "application/json");
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
+        return response;
+    }
+
+    /// <summary>
+    /// Creates an error response for UnauthorizedException from core.jarvis.Exceptions
+    /// </summary>
+    public static async Task<HttpResponseData> CreateUnauthorizedExceptionResponse(
+        this HttpRequestData req,
+        core.jarvis.Exceptions.UnauthorizedException ex)
+    {
+        var error = new 
+        { 
+            error = ex.Message
+        };
+        
+        var response = req.CreateResponse(HttpStatusCode.Unauthorized);
+        response.Headers.Add("Content-Type", "application/json");
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
+        return response;
+    }
+
+    /// <summary>
+    /// Creates a validation error response for core.jarvis ValidationException
+    /// </summary>
+    public static async Task<HttpResponseData> CreateCoreValidationErrorResponse(
+        this HttpRequestData req,
+        core.jarvis.Exceptions.ValidationException ex)
+    {
+        var error = new 
+        { 
+            error = "Validation failed",
+            details = ex.Errors
+        };
+        
+        var response = req.CreateResponse(HttpStatusCode.BadRequest);
+        response.Headers.Add("Content-Type", "application/json");
+        await response.WriteStringAsync(JsonSerializer.Serialize(error));
+        return response;
+    }
+
+    /// <summary>
+    /// Creates a generic internal server error response
+    /// </summary>
+    public static async Task<HttpResponseData> CreateInternalErrorResponse(
+        this HttpRequestData req,
+        Exception ex)
+    {
+        // Log the actual exception but don't expose details to client
+        var error = ErrorResponseService.CreateServerError();
+        var response = req.CreateResponse(HttpStatusCode.InternalServerError);
         response.Headers.Add("Content-Type", "application/json");
         await response.WriteStringAsync(JsonSerializer.Serialize(error));
         return response;

@@ -1,6 +1,10 @@
-# Jarvis - Entity Component System SDK for .NET
+# Jarvis - Entity-Handler-System (EHS) Framework for .NET
 
-Build scalable, maintainable .NET applications with a battle-tested Entity Component System (ECS) architecture. Jarvis provides a handler-based approach to business logic with built-in security, auditing, and multi-tenant support.
+**A Domain-Driven Architecture for Complex Business Applications**
+
+Jarvis implements a unique Entity-Handler-System (EHS) architecture - a three-layer pattern that cleanly separates data, business logic, and orchestration. Unlike traditional Entity Component Systems (ECS) designed for games, Jarvis is optimized for business applications with rich domain logic, multi-tenancy, and Azure Functions deployment.
+
+> **Note**: This is NOT a game engine ECS. Jarvis uses entity/component terminology but is architected for business domains, not real-time systems.
 
 ## 🚀 Quick Start (5 minutes)
 
@@ -30,14 +34,17 @@ public class OrderHandler : ComponentHandler<OrderComponent>
         decimal totalAmount, 
         string shippingAddress)
     {
-        // Validation
+        // Validation - exceptions bubble up naturally
         Guard.AgainstEmpty(orderNumber, nameof(orderNumber));
         Guard.AgainstEmpty(customerId, nameof(customerId));
+        
+        // Business rule validation
+        Ensure(totalAmount > 0, "Order amount must be positive");
         
         var order = new OrderComponent
         {
             Id = Guid.NewGuid(),
-            OwnerEntityId = OwnerEntityId,
+            OwnerEntityId = EntityId,
             OrderNumber = orderNumber,
             CustomerId = customerId,
             Status = "PENDING",
@@ -47,7 +54,7 @@ public class OrderHandler : ComponentHandler<OrderComponent>
             LastUpdated = DateTime.UtcNow
         };
         
-        await DataContext.TryCommit(order);
+        await TryCommit(order);
         return order;
     }
 }
@@ -66,18 +73,35 @@ Traditional architectures mix data models with business logic, leading to:
 - Difficult state management and entity relationships
 - Security concerns with direct database access
 
-### The Solution
-Jarvis separates concerns using the Entity Component System pattern:
-- **Entities**: Just IDs - the identity of things
-- **Components**: Pure data structures (records)
-- **Handlers**: All business logic in one place
-- **Systems**: Orchestration between handlers
+### The Solution: Three-Layer Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Azure Functions                         │
+│            (Thin HTTP adapters - NO business logic)         │
+├─────────────────────────────────────────────────────────────┤
+│                         Systems                             │
+│        (Orchestration, transactions, cross-entity ops)      │
+├─────────────────────────────────────────────────────────────┤
+│                        Handlers                             │
+│         (Business logic for single component types)         │
+├─────────────────────────────────────────────────────────────┤
+│                   Entities & Components                     │
+│              (Data layer - pure data, no logic)            │
+└─────────────────────────────────────────────────────────────┘
+```
+
+- **Entities**: Simple containers with just a Guid ID
+- **Components**: Pure data structures (C# records) - no behavior
+- **Handlers**: ALL business logic for a single component type (entity-scoped)
+- **Systems**: Orchestrate multiple handlers, manage transactions
+- **Functions**: Thin HTTP adapters only - NO business logic
 
 ## 📦 What's Included
 
 ### Three Complementary SDKs
 
-1. **`core.jarvis`** - The main ECS framework
+1. **`core.jarvis`** - The main EHS framework
    - Handler pattern for business logic
    - Entity querying and relationships
    - Transaction support
@@ -147,7 +171,40 @@ public class OrderService
 
 ## 🔥 Key Features
 
-### 1. Handler Pattern
+### 1. Clean Exception Bubbling
+Exceptions flow naturally through layers with centralized handling:
+```csharp
+// In Handler - just throw, no try-catch needed
+public async Task ConfirmOrder()
+{
+    var order = await Get();
+    
+    // Business rules throw domain exceptions
+    if (order.Status != "PENDING")
+        throw new BusinessRuleException("ORDER_INVALID_STATE", 
+            "Can only confirm pending orders");
+    
+    if (!order.IsPaid)
+        throw new BusinessRuleException("ORDER_NOT_PAID", 
+            "Order must be paid before confirmation");
+    
+    // Update and save
+    order.Status = "CONFIRMED";
+    await TryCommit(order);
+}
+
+// In API - exceptions handled by middleware
+public async Task<HttpResponseData> ConfirmOrder(HttpRequestData req, Guid orderId)
+{
+    // No try-catch needed - middleware handles all exceptions
+    var handler = _dataContext.For<OrderHandler>(orderId);
+    await handler.ConfirmOrder();
+    
+    return req.CreateResponse(HttpStatusCode.OK);
+}
+```
+
+### 2. Handler Pattern
 Encapsulate all business logic in testable handlers:
 ```csharp
 public class InvoiceHandler : ComponentHandler<InvoiceTestComponent>
@@ -157,12 +214,14 @@ public class InvoiceHandler : ComponentHandler<InvoiceTestComponent>
         // Complex business logic in one place
         var orderHandler = DataContext.For<OrderHandler>(orderId);
         var order = await orderHandler.Get();
+        
+        // Business rules throw exceptions - no error codes
         Ensure(order.Status == "CONFIRMED", "Can only invoice confirmed orders");
         
         var invoice = new InvoiceTestComponent
         {
             Id = Guid.NewGuid(),
-            OwnerEntityId = OwnerEntityId,
+            OwnerEntityId = EntityId,
             WorkOrderId = orderId,
             Amount = order.TotalAmountCents,
             DueDate = DateTime.UtcNow.AddDays(30),
@@ -171,29 +230,48 @@ public class InvoiceHandler : ComponentHandler<InvoiceTestComponent>
         };
         
         await DataContext.Commit(invoice);
-        
         return invoice;
     }
 }
 ```
 
-### 2. Entity Queries
-Find entities across components with type-safe queries:
+### 3. Entity Queries with Component Access
+Query entities and access their components directly:
 ```csharp
-// Find all confirmed orders with invoices
-var invoicedOrders = await dataContext.Query()
-    .WithAll<OrderComponent>(o => o.Status == "CONFIRMED")
-    .WithAll<InvoiceTestComponent>(i => true)
-    .ToEntityComponents();
+// Get entities as List<Entity> with component access
+var entities = await dataContext.Query()
+    .With<OrderComponent>(o => o.Status == "CONFIRMED")
+    .ToList();
+
+// Access components from entities
+foreach (var entity in entities)
+{
+    var order = await entity.Get<OrderComponent>();
+    var invoice = await entity.Get<InvoiceComponent>();
+    
+    if (invoice == null)
+    {
+        // Create invoice for unbilled order
+        var handler = dataContext.For<InvoiceHandler>(entity.Id);
+        await handler.GenerateFromOrder(entity.Id);
+    }
+}
 
 // Find orders without invoices (need billing)
 var unbilledOrders = await dataContext.Query()
     .WithAll<OrderComponent>(o => true)
     .WithNone<InvoiceTestComponent>(i => true)
-    .ToEntityComponents();
+    .ToList();
+
+// Query with ordering by component properties
+var prioritizedOrders = await dataContext.Query()
+    .WithAll<OrderComponent>(o => o.Status == "PENDING")
+    .OrderBy<OrderComponent>(o => o.Priority)              // Primary sort
+    .ThenByDescending<OrderComponent>(o => o.TotalAmount)  // Secondary sort
+    .ToList();
 ```
 
-### 3. Built-in Security
+### 4. Built-in Security
 JWT-based Row Level Security at the SDK level:
 ```csharp
 // Users only see their own data automatically
@@ -206,7 +284,7 @@ var orders = await client.From<Order>()
     .Get();
 ```
 
-### 4. Relationship Management
+### 5. Relationship Management
 Track entity relationships and hierarchies:
 ```csharp
 // Link entities (e.g., work order → invoices)
@@ -227,9 +305,9 @@ var descendants = await dataContext.Descendants(workOrderId);
 ## 📚 Documentation
 
 - [Quickstart Guide](docs/getting-started/installation.md) - Get running in minutes
-- [Architecture Overview](docs/architecture/ecs-principles.md) - Understand the patterns
-- [Handler Development](docs/guides/handler-development.md) - Write effective handlers
-- [API Reference](docs/api-reference/core-interfaces.md) - Complete API documentation
+- [Architecture Overview](docs/architecture/jarvis-overview.md) - Understand the EHS patterns
+- [System Pattern Guide](docs/architecture/system-pattern-technical-whitepaper.md) - Deep dive into handler orchestration
+- [API Reference](docs/api-reference/) - Complete API documentation
 - [Examples](core.jarvis.tests/Examples/) - Real-world usage patterns
 
 ## 🧪 Testing
@@ -255,23 +333,46 @@ public async Task OrderHandler_ConfirmOrder_ChangesStatus()
 }
 ```
 
-## 🏗️ Architecture
+## 🏗️ Architecture: Three-Layer EHS Pattern
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Controllers   │────▶│   IDataContext   │────▶│    Handlers     │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-                                 │                         │
-                                 ▼                         ▼
-                        ┌──────────────────┐     ┌─────────────────┐
-                        │  Entity Query    │     │   Components    │
-                        └──────────────────┘     └─────────────────┘
-                                 │                         │
-                                 ▼                         ▼
-                        ┌──────────────────┐     ┌─────────────────┐
-                        │    PgClient      │────▶│   PostgreSQL    │
-                        └──────────────────┘     └─────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   Azure Functions                      │
+│                  (HTTP Endpoints)                      │
+└─────────────────────┬───────────────────────────────────┘
+                      │ Thin HTTP adapters only
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│                     Systems                            │
+│              (Orchestration Layer)                     │
+│  - Coordinate handlers    - Manage transactions        │
+│  - Business workflows     - Cross-cutting concerns     │
+└─────────────────────┬───────────────────────────────────┘
+                      │ Orchestrates business logic
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Handlers                            │
+│                (Business Logic)                        │
+│  - Single component focus  - Domain operations         │
+│  - Clean exception flow    - CRUD operations           │
+└─────────────────────┬───────────────────────────────────┘
+                      │ Operates on pure data
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│              Entities & Components                     │
+│                  (Data Layer)                          │
+│  - Entities: Guid IDs      - Components: Records       │
+│  - PostgreSQL storage      - JWT-based security        │
+└─────────────────────────────────────────────────────────┘
 ```
+
+### Key Architectural Principles
+
+1. **Clean Separation**: Each layer has a single, clear responsibility
+2. **Exception Bubbling**: No try-catch blocks - exceptions flow up naturally
+3. **Handler Focus**: One handler per component type, encapsulates all logic
+4. **System Orchestration**: Systems coordinate multiple handlers for workflows
+5. **Thin Functions**: Azure Functions only handle HTTP concerns
 
 ## 🤝 Contributing
 

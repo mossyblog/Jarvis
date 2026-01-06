@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IdentityModel.Tokens.Jwt;
 using core.jarvis.data.RLS;
 using Dapper;
@@ -19,6 +20,10 @@ namespace core.jarvis.data
         private Dictionary<string, string>? _jwtClaims;
         private readonly RLSPolicyRegistry _rlsPolicies;
         private readonly ILogger? _logger;
+        private bool _jwtClaimsSetForConnection = false;
+        
+        // Activity source for distributed tracing
+        private static readonly ActivitySource ActivitySource = new ActivitySource("Jarvis.Database.PgClient");
         
         /// <summary>
         /// Gets the current user ID extracted from the JWT token.
@@ -43,6 +48,9 @@ namespace core.jarvis.data
             {
                 DefaultRLSPolicies.RegisterDefaultPolicies(_rlsPolicies);
             }
+            
+            // Subscribe to connection state changes to reset JWT claims flag
+            _conn.StateChange += OnConnectionStateChange;
         }
 
         /// <summary>
@@ -96,6 +104,8 @@ namespace core.jarvis.data
         /// </summary>
         private Dictionary<string, string> ParseJWTClaims(string jwt)
         {
+            using var activity = ActivitySource.StartActivity("PgClient.ParseJWTClaims");
+            
             var handler = new JwtSecurityTokenHandler();
             
             // Get JWT secret from environment or config (using double underscore for nested config)
@@ -162,13 +172,38 @@ namespace core.jarvis.data
         /// </summary>
         internal async Task JWTClaims()
         {
+            using var activity = ActivitySource.StartActivity("PgClient.JWTClaims");
+            
             if (_jwtClaims == null || _jwtClaims.Count == 0)
+            {
+                activity?.SetTag("has_claims", false);
                 return;
+            }
+            
+            // Check if JWT claims are already set for this connection
+            if (_jwtClaimsSetForConnection)
+            {
+                activity?.SetTag("already_set", true);
+                activity?.SetTag("skipped", true);
+                _logger?.LogDebug("JWT claims already set for this connection, skipping");
+                return;
+            }
 
-            await EnsureConnectionOpen();
+            activity?.SetTag("has_claims", true);
+            activity?.SetTag("claim_count", _jwtClaims.Count);
+            activity?.SetTag("already_set", false);
+            
+            using (var openActivity = ActivitySource.StartActivity("PgClient.EnsureConnectionOpen"))
+            {
+                await EnsureConnectionOpen();
+            }
 
             // Set each claim as a session variable
-            foreach (var claim in _jwtClaims)
+            using (var setClaimsActivity = ActivitySource.StartActivity("PgClient.SetSessionClaims"))
+            {
+                setClaimsActivity?.SetTag("claim_count", _jwtClaims.Count);
+                
+                foreach (var claim in _jwtClaims)
             {
                 // PostgreSQL has a 63-character limit for identifiers
                 // Some JWT claims (like Microsoft's) have very long names
@@ -192,6 +227,11 @@ namespace core.jarvis.data
                     throw;
                 }
             }
+            }
+            
+            // Mark claims as set for this connection
+            _jwtClaimsSetForConnection = true;
+            _logger?.LogDebug("JWT claims set successfully for connection");
         }
 
         /// <summary>
@@ -237,6 +277,21 @@ namespace core.jarvis.data
             return string.IsNullOrEmpty(sanitized) ? "claim" : sanitized;
         }
 
+        /// <summary>
+        /// Handles connection state changes to reset JWT claims tracking.
+        /// When a connection is closed or broken, we need to re-set JWT claims when it reopens.
+        /// </summary>
+        private void OnConnectionStateChange(object sender, System.Data.StateChangeEventArgs e)
+        {
+            // When connection closes or breaks, reset the flag so claims are re-set on next use
+            if (e.CurrentState == System.Data.ConnectionState.Closed || 
+                e.CurrentState == System.Data.ConnectionState.Broken)
+            {
+                _jwtClaimsSetForConnection = false;
+                _logger?.LogDebug("Connection state changed to {State}, resetting JWT claims flag", e.CurrentState);
+            }
+        }
+        
         /// <summary>
         /// Ensures the database connection is open.
         /// </summary>
@@ -331,7 +386,12 @@ namespace core.jarvis.data
         {
             if (disposing)
             {
-                _conn?.Dispose();
+                // Unsubscribe from state change events before disposing
+                if (_conn != null)
+                {
+                    _conn.StateChange -= OnConnectionStateChange;
+                    _conn.Dispose();
+                }
             }
         }
     }

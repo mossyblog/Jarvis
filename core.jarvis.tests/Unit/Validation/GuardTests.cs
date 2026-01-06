@@ -21,6 +21,13 @@ public class GuardTests
     {
         /// <summary>
         /// Validates that Guard.Against() throws BusinessRuleException when condition is true.
+        /// 
+        /// INTENT: Verify Guard.Against enforces business rule violations with proper exception type
+        /// PURPOSE: Ensure business rule guards fail fast when validation conditions are met
+        /// BUSINESS CONTEXT: Business rules like "cannot approve paid invoice" need enforcement
+        /// WHY IMPORTANT: Business rule violations should immediately prevent further processing
+        /// ARCHITECTURAL SIGNIFICANCE: Validates guard pattern for business rule enforcement
+        /// FUTURE RESILIENCE: Ensures business rule guards remain consistent across handlers
         /// </summary>
         [Fact]
         public void WhenConditionIsTrue_ShouldThrowBusinessRuleException()
@@ -35,6 +42,13 @@ public class GuardTests
 
         /// <summary>
         /// Validates that Guard.Against() does not throw when condition is false.
+        /// 
+        /// INTENT: Verify Guard.Against allows processing when validation conditions pass
+        /// PURPOSE: Ensure business rule guards don't interfere with valid operations
+        /// BUSINESS CONTEXT: Valid business states should allow operations to proceed normally
+        /// WHY IMPORTANT: Guards should not create false positives that block valid operations
+        /// ARCHITECTURAL SIGNIFICANCE: Validates guard pattern doesn't introduce unnecessary barriers
+        /// FUTURE RESILIENCE: Ensures guards remain permissive for valid business scenarios
         /// </summary>
         [Fact]
         public void WhenConditionIsFalse_ShouldNotThrow()
@@ -48,6 +62,13 @@ public class GuardTests
     {
         /// <summary>
         /// Validates that Guard.AgainstNull() throws ArgumentNullException when value is null.
+        /// 
+        /// INTENT: Verify null parameter validation throws appropriate exception type
+        /// PURPOSE: Ensure null checks prevent null reference exceptions in business logic
+        /// BUSINESS CONTEXT: Handler parameters must be validated to prevent runtime errors
+        /// WHY IMPORTANT: Null validation prevents cascading errors in business operations
+        /// ARCHITECTURAL SIGNIFICANCE: Validates parameter validation pattern for dependency safety
+        /// FUTURE RESILIENCE: Ensures null checks remain consistent across all handlers
         /// </summary>
         [Fact]
         public void WhenValueIsNull_ShouldThrowArgumentNullException()
@@ -64,6 +85,13 @@ public class GuardTests
 
         /// <summary>
         /// Validates that Guard.AgainstNull does not throw for non-null values.
+        /// 
+        /// INTENT: Verify null guards allow valid non-null parameters to pass through
+        /// PURPOSE: Ensure null validation doesn't interfere with valid parameter values
+        /// BUSINESS CONTEXT: Valid handler parameters should not be blocked by validation
+        /// WHY IMPORTANT: Parameter validation should not create false positives
+        /// ARCHITECTURAL SIGNIFICANCE: Validates guard pattern allows valid inputs
+        /// FUTURE RESILIENCE: Ensures parameter validation remains transparent for valid inputs
         /// </summary>
         [Fact]
         public void WhenValueIsNotNull_ShouldNotThrow()
@@ -80,6 +108,13 @@ public class GuardTests
     {
         /// <summary>
         /// Validates that Guard.AgainstEmpty throws ValidationException for null/empty/whitespace strings.
+        /// 
+        /// INTENT: Verify string validation rejects empty, null, and whitespace-only values
+        /// PURPOSE: Ensure string parameters have meaningful content for business operations
+        /// BUSINESS CONTEXT: Business operations require valid string inputs like customer names, descriptions
+        /// WHY IMPORTANT: Empty strings can cause business logic failures or invalid data storage
+        /// ARCHITECTURAL SIGNIFICANCE: Validates comprehensive string validation pattern
+        /// FUTURE RESILIENCE: Ensures string validation catches all forms of empty input
         /// </summary>
         [Theory]
         [InlineData(null)]
@@ -98,6 +133,13 @@ public class GuardTests
 
         /// <summary>
         /// Validates that Guard.AgainstEmpty does not throw for non-empty strings.
+        /// 
+        /// INTENT: Verify string validation allows valid string content to pass through
+        /// PURPOSE: Ensure string validation doesn't interfere with meaningful content
+        /// BUSINESS CONTEXT: Valid string inputs should proceed to business logic without hindrance
+        /// WHY IMPORTANT: String validation should not block legitimate business data
+        /// ARCHITECTURAL SIGNIFICANCE: Validates guard pattern transparency for valid inputs
+        /// FUTURE RESILIENCE: Ensures string validation remains permissive for valid content
         /// </summary>
         [Fact]
         public void WhenStringHasValue_ShouldNotThrow()
@@ -111,6 +153,13 @@ public class GuardTests
     {
         /// <summary>
         /// Validates that Guard.AgainstEmptyGuid throws ValidationException for Guid.Empty.
+        /// 
+        /// INTENT: Verify GUID validation rejects empty GUID values
+        /// PURPOSE: Ensure entity identifiers are valid for database operations
+        /// BUSINESS CONTEXT: Entity operations require valid GUIDs to identify records
+        /// WHY IMPORTANT: Empty GUIDs cause database query failures and data integrity issues
+        /// ARCHITECTURAL SIGNIFICANCE: Validates entity identifier validation pattern
+        /// FUTURE RESILIENCE: Ensures GUID validation remains consistent across entity operations
         /// </summary>
         [Fact]
         public void WhenGuidIsEmpty_ShouldThrowValidationException()
@@ -125,6 +174,13 @@ public class GuardTests
 
         /// <summary>
         /// Validates that Guard.AgainstEmptyGuid does not throw for valid GUIDs.
+        /// 
+        /// INTENT: Verify GUID validation allows valid GUID values to pass through
+        /// PURPOSE: Ensure GUID validation doesn't interfere with legitimate entity identifiers
+        /// BUSINESS CONTEXT: Valid entity GUIDs should proceed to database operations normally
+        /// WHY IMPORTANT: GUID validation should not block legitimate entity references
+        /// ARCHITECTURAL SIGNIFICANCE: Validates guard pattern transparency for valid identifiers
+        /// FUTURE RESILIENCE: Ensures GUID validation remains permissive for valid entity IDs
         /// </summary>
         [Fact]
         public void WhenGuidIsValid_ShouldNotThrow()
@@ -141,6 +197,13 @@ public class GuardTests
     {
         /// <summary>
         /// Validates that Guard.AgainstOutOfRange throws ValidationException for out-of-range values.
+        /// 
+        /// INTENT: Verify range validation rejects values outside specified bounds
+        /// PURPOSE: Ensure numeric parameters fall within acceptable business ranges
+        /// BUSINESS CONTEXT: Business operations have valid ranges like age 0-120, percentage 0-100
+        /// WHY IMPORTANT: Out-of-range values can cause business logic errors or invalid calculations
+        /// ARCHITECTURAL SIGNIFICANCE: Validates range validation pattern for numeric constraints
+        /// FUTURE RESILIENCE: Ensures range validation remains consistent across numeric parameters
         /// </summary>
         [Theory]
         [InlineData(0, 1, 10)]
@@ -158,6 +221,13 @@ public class GuardTests
 
         /// <summary>
         /// Validates that Guard.AgainstOutOfRange does not throw for in-range values.
+        /// 
+        /// INTENT: Verify range validation allows values within specified bounds to pass through
+        /// PURPOSE: Ensure range validation doesn't interfere with valid numeric parameters
+        /// BUSINESS CONTEXT: Valid numeric inputs should proceed to business calculations normally
+        /// WHY IMPORTANT: Range validation should not block legitimate numeric values
+        /// ARCHITECTURAL SIGNIFICANCE: Validates guard pattern transparency for valid ranges
+        /// FUTURE RESILIENCE: Ensures range validation remains permissive for valid numeric inputs
         /// </summary>
         [Theory]
         [InlineData(5, 1, 10)]
@@ -171,6 +241,13 @@ public class GuardTests
 
         /// <summary>
         /// Validates that Guard.AgainstOutOfRange works with decimal values.
+        /// 
+        /// INTENT: Verify range validation supports decimal precision for financial calculations
+        /// PURPOSE: Ensure decimal range validation works correctly for monetary values
+        /// BUSINESS CONTEXT: Financial operations require precise decimal range validation
+        /// WHY IMPORTANT: Decimal precision is critical for financial calculations and validations
+        /// ARCHITECTURAL SIGNIFICANCE: Validates range validation supports various numeric types
+        /// FUTURE RESILIENCE: Ensures decimal range validation remains accurate for financial data
         /// </summary>
         [Fact]
         public void WithDecimals_WhenValueIsOutOfRange_ShouldThrowValidationException()

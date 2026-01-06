@@ -25,7 +25,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
         var setup = await GetOrDefault() ?? throw new InvalidOperationException("SystemSetup component not found");
         
         setup = setup with { OwnerEntityId = OwnerEntityId, LastUpdated = DateTime.UtcNow };
-        await DataContext.Commit(setup);
+        await DataContext.TryCommit(setup);
         return setup;
     }
 
@@ -106,7 +106,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
                 // Create new navigation item
                 var navId = Guid.NewGuid();
                 var newNavItem = navItem with { OwnerEntityId = navId };
-                await DataContext.Commit(newNavItem);
+                await DataContext.TryCommit(newNavItem);
                 createdItems.Add(newNavItem);
             }
             else
@@ -193,7 +193,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
                 // Create new role
                 var roleId = Guid.NewGuid();
                 var newRole = role with { OwnerEntityId = roleId };
-                await DataContext.Commit(newRole);
+                await DataContext.TryCommit(newRole);
                 createdRoles.Add(newRole);
             }
             else

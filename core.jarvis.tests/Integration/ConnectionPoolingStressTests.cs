@@ -1,9 +1,10 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using core.jarvis.Data;
+using core.jarvis.Exceptions;
 using core.jarvis.tests.Examples;
 using core.jarvis.tests.Examples.Blog;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Fixtures.Handlers;
 using core.jarvis.tests.Helpers;
 using Microsoft.Extensions.DependencyInjection;
@@ -171,6 +172,7 @@ public class ConnectionPoolingStressTests : IntegrationTestBase
         // Arrange
         const int operationCount = 10;
         var createdEntities = new List<Guid>();
+        var testRunId = Guid.NewGuid().ToString("N")[..8]; // Unique test run ID
 
         // Act
         var sw = Stopwatch.StartNew();
@@ -184,21 +186,39 @@ public class ConnectionPoolingStressTests : IntegrationTestBase
             TrackEntity(entityId);
             createdEntities.Add(entityId);
             
-            // Create
+            // Create with unique name to avoid conflicts with parallel tests
             var handler = dataContext.For<TestHandler>(entityId);
-            await handler.Create($"Sequential-{i}", "INACTIVE");
+            await handler.Create($"Sequential-{testRunId}-{i}", "INACTIVE");
             
             // Read
             var component = await handler.Get();
             component.ShouldNotBeNull();
-            component.Name.ShouldBe($"Sequential-{i}");
+            component.Name.ShouldBe($"Sequential-{testRunId}-{i}");
+            component.Status.ShouldBe("INACTIVE");
             
-            // Update
-            await handler.Activate();
+            // Update - retry logic for parallel execution
+            var retryCount = 3;
+            var activated = false;
+            for (int retry = 0; retry < retryCount && !activated; retry++)
+            {
+                try
+                {
+                    await handler.Activate();
+                    activated = true;
+                }
+                catch (ConcurrencyException) when (retry < retryCount - 1)
+                {
+                    // Retry on concurrency exception (parallel test interference)
+                    await Task.Delay(10 * (retry + 1)); // Exponential backoff
+                }
+            }
             
-            // Verify update
+            activated.ShouldBeTrue("Failed to activate component after retries");
+            
+            // Verify update with fresh read
             component = await handler.Get();
-            component.Status.ShouldBe("ACTIVE");
+            component.Status.ShouldBe("ACTIVE", 
+                $"Component {entityId} should be ACTIVE after activation");
         }
         
         sw.Stop();

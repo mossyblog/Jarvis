@@ -31,9 +31,8 @@ execute_sql_db() {
     psql -U "$DB_USER" -d "$1" -c "$2"
 }
 
-# Create database if it doesn't exist
-echo "📊 Creating database $DB_NAME..."
-execute_sql "SELECT 'CREATE DATABASE $DB_NAME' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '$DB_NAME')\gexec" || true
+# Create database if it doesn't exist (DB already exists in Docker initialization)
+echo "📊 Database $DB_NAME already exists..."
 
 # Create supabase_admin role (required for pg_graphql)
 echo "👤 Creating supabase_admin role..."
@@ -224,14 +223,14 @@ CREATE TABLE IF NOT EXISTS component_snapshots (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     entity_id UUID NOT NULL,
     component_type TEXT NOT NULL DEFAULT '',
-    component_data JSONB NOT NULL DEFAULT '{}',
-    version INTEGER NOT NULL DEFAULT 0,
+    component_id UUID NOT NULL,
+    snapshots TEXT NOT NULL DEFAULT '[]',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    created_by TEXT NOT NULL DEFAULT '',
-    snapshot_reason TEXT NOT NULL DEFAULT ''
+    last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_component_snapshots_entity_id ON component_snapshots(entity_id);
+CREATE INDEX IF NOT EXISTS idx_component_snapshots_component_id ON component_snapshots(component_id);
 CREATE INDEX IF NOT EXISTS idx_component_snapshots_created_at ON component_snapshots(created_at);
 "
 
@@ -240,7 +239,7 @@ echo "📋 Creating audit_event_component table..."
 execute_sql_db "$DB_NAME" "
 CREATE TABLE IF NOT EXISTS audit_event_component (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_entity_id UUID UNIQUE NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
+    owner_entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
     last_updated TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     event_type TEXT NOT NULL DEFAULT '',
     entity_id UUID NOT NULL DEFAULT '00000000-0000-0000-0000-000000000000'::uuid,
@@ -248,9 +247,9 @@ CREATE TABLE IF NOT EXISTS audit_event_component (
     user_id TEXT NOT NULL DEFAULT '',
     timestamp TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     operation TEXT NOT NULL DEFAULT '',
-    old_value JSONB,
-    new_value JSONB,
-    metadata JSONB
+    old_value TEXT,
+    new_value TEXT,
+    metadata TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_audit_event_component_owner_entity_id ON audit_event_component(owner_entity_id);

@@ -92,14 +92,10 @@ public class RoleFunction
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid request body");
             }
 
-            // Create new role
+            // Create new role using handler - NO direct commits!
             var roleId = Guid.NewGuid();
-            role.OwnerEntityId = roleId;
-            await _dataContext.Commit(role);
-            
-            // Get the created role using handler
             var roleHandler = _dataContext.For<RoleHandler>(roleId);
-            var result = await roleHandler.Get();
+            var result = await roleHandler.CreateRole(role);
 
             var response = req.CreateResponse(HttpStatusCode.Created);
             response.Headers.Add("Content-Type", "application/json");
@@ -144,13 +140,9 @@ public class RoleFunction
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid request body");
             }
 
-            // Update the role
-            updateRole.OwnerEntityId = roleGuid;
-            await _dataContext.Commit(updateRole);
-            
-            // Get the updated role using handler
+            // Update the role using handler - NO direct commits!
             var roleHandler = _dataContext.For<RoleHandler>(roleGuid);
-            var updatedRole = await roleHandler.Get();
+            var updatedRole = await roleHandler.UpdateRole(updateRole);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");

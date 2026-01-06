@@ -26,3 +26,13 @@ Jarvis.sln.DotSettings.user
 core.jarvis.api.tests/TestResults/
 /core.jarvis.tests/TestResults/
 nul
+node_modules/
+# Log files
+*.log
+auth-debug.log
+
+# Test results
+*.trx
+TestResults/
+
+.serena/

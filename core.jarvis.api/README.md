@@ -1,5 +1,23 @@
 # Jarvis API - Azure Functions
 
+RESTful API layer for the Jarvis ECS framework, built on Azure Functions with clean exception handling, global middleware, and OpenAPI documentation.
+
+## Key Features
+
+- **Clean Exception Bubbling**: Global exception middleware handles all errors consistently
+- **No Try-Catch in Functions**: Exceptions bubble up naturally to middleware
+- **Type-Safe Components**: Direct use of IComponent types in API contracts
+- **OpenAPI/Swagger**: Full API documentation with interactive UI
+- **Security Middleware**: JWT validation, rate limiting, security headers
+
+## Architecture
+
+```
+Request → ExceptionHandlingMiddleware → SecurityMiddleware → Function → System → Handler
+                      ↑                                                            ↓
+                      └──────────── Exceptions bubble up ←────────────────────────┘
+```
+
 ## Running Locally
 
 ### Prerequisites
@@ -213,6 +231,45 @@ func start --verbose
 3. **Missing connection string:**
    - Update `local.settings.json` with your database connection
 
+## Exception Handling
+
+The API uses a clean exception bubbling pattern with centralized handling:
+
+### Domain Exceptions
+```csharp
+// In Handler - just throw
+if (!order.IsPaid)
+    throw new BusinessRuleException("ORDER_NOT_PAID", "Order must be paid");
+
+if (entity == null)
+    throw new EntityNotFoundException(entityId, "Order");
+
+if (string.IsNullOrEmpty(email))
+    throw new ValidationException("Email is required");
+```
+
+### API Functions - No Try-Catch
+```csharp
+[Function("processOrder")]
+public async Task<HttpResponseData> ProcessOrder(
+    [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req,
+    Guid orderId)
+{
+    // No try-catch - exceptions bubble to middleware
+    var system = _serviceProvider.GetRequiredService<OrderSystem>();
+    await system.ProcessOrder(orderId);
+    
+    return req.CreateResponse(HttpStatusCode.OK);
+}
+```
+
+### Automatic HTTP Response Conversion
+- `ValidationException` → 400 Bad Request
+- `BusinessRuleException` → 400 Bad Request
+- `EntityNotFoundException` → 404 Not Found
+- `UnauthorizedException` → 401 Unauthorized
+- `Exception` → 500 Internal Server Error (logged, not exposed)
+
 ## Environment Variables
 
 Set these in `local.settings.json` for local development:
@@ -225,13 +282,24 @@ Set these in `local.settings.json` for local development:
     "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
     "Jwt:SecretKey": "your-256-bit-secret-key-here",
     "Jwt:Issuer": "jarvis-api",
-    "Jwt:Audience": "jarvis-clients"
+    "Jwt:Audience": "jarvis-clients",
+    "ASPNETCORE_ENVIRONMENT": "Development"
   },
   "ConnectionStrings": {
     "JarvisDb": "Host=localhost;Database=jarvis;Username=postgres;Password=postgres"
   }
 }
 ```
+
+## Middleware Pipeline
+
+Middleware executes in order:
+
+1. **ExceptionHandlingMiddleware** - Catches all exceptions, converts to HTTP responses
+2. **SecurityHeadersMiddleware** - Adds security headers (CSP, X-Frame-Options, etc.)
+3. **AuthorizationMiddleware** - JWT validation and claims extraction
+4. **RateLimitingMiddleware** - (Optional) Request throttling
+5. **Your Function** - Business logic execution
 
 ## Production Deployment
 
@@ -246,6 +314,20 @@ az functionapp create --resource-group myResourceGroup \
   --name jarvis-api-functions \
   --storage-account mystorageaccount
 
+# Configure app settings
+az functionapp config appsettings set \
+  --name jarvis-api-functions \
+  --resource-group myResourceGroup \
+  --settings ASPNETCORE_ENVIRONMENT=Production
+
 # Deploy
 func azure functionapp publish jarvis-api-functions
 ```
+
+## Best Practices
+
+1. **Let exceptions bubble** - Don't catch in functions
+2. **Use domain exceptions** - BusinessRuleException, ValidationException
+3. **Component contracts** - Use IComponent types directly in API
+4. **Middleware handles errors** - Single point of exception handling
+5. **Log at boundaries** - Log in middleware, not in every handler

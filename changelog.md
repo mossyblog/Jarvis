@@ -1,30 +1,5 @@
 # Changelog
 
-## 2.1.4
-
-### Fixed
-- **UIStudio ECS Pattern Violations**: Critical architectural fix to enforce proper Entity Component System patterns
-  - **REMOVED** `UIStudioPage.LayoutEntityId` - eliminated direct component-to-component references
-  - **REPLACED** `UIStudioComponentBinding.PageEntityId` with `PageSlug` - components now use business keys instead of entity references
-  - **UPDATED** `UIStudioSystem` to use `LinkRelationship()` for proper parent-child entity relationships
-  - **MIGRATED** all handlers from entity reference queries to `Children()` and business key patterns
-  - **ENFORCED** SOLID/SRP principles - components are now completely independent with no inter-component coupling
-
-### Changed
-- **UIStudio API Architecture**: Updated all API endpoints to work with new ECS-compliant patterns
-  - `UIStudioComponentBindingHandler.GetByPageSlug()` replaces entity-based page queries
-  - `UIStudioFunction.CreateComponentBindings()` now uses `LinkRelationship` for page-binding associations
-  - `UIStudioQueryFunction.GetPageBindings()` queries by PageSlug instead of entity references
-  - `UIStudioVersionFunction.AddPageSnapshotData()` uses `Children()` for related component discovery
-  - All Functions updated to maintain API compatibility while using proper ECS patterns internally
-
-### Architecture
-- **Entity Component System Compliance**: Full adherence to ECS architectural principles
-  - **Entities**: Pure identifiers (Guid) with no business logic
-  - **Components**: Independent data structures with no references to other entities
-  - **Systems**: Orchestrate workflows using `LinkRelationship` for entity associations
-  - **Handlers**: Manage single component types following Single Responsibility Principle
-  - **Link Relationships**: Parent-child entity relationships replace direct component references
 
 ## 2.1.3
 

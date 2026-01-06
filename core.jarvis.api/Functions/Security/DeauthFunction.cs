@@ -100,13 +100,28 @@ public class DeauthFunction
                 return errorResponse;
             }
 
-            // Create entity for the deauth request
-            var deauthEntityId = Guid.NewGuid();
-            deauthRequest.OwnerEntityId = deauthEntityId;
-            await _dataContext.Commit(deauthRequest);
+            // Find tokens by SessionId and revoke them using handler
+            var tokenEntities = await _dataContext.Query()
+                .WithAll<AuthToken>(t => t.SessionId == deauthRequest.SessionId)
+                .ToList();
 
-            // Get entity-bound handler and deauthenticate
-            var authTokenHandler = _dataContext.For<AuthTokenHandler>(deauthEntityId);
+            if (!tokenEntities.Any())
+            {
+                var notFoundError = new Error
+                {
+                    Code = "SESSION_NOT_FOUND",
+                    Message = "Session not found or already revoked",
+                    StatusCode = 404
+                };
+                var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                notFoundResponse.Headers.Add("Content-Type", "application/json");
+                await notFoundResponse.WriteStringAsync(JsonSerializer.Serialize(notFoundError, _jsonOptions));
+                return notFoundResponse;
+            }
+
+            // Use handler to deauthenticate - handler owns ALL data operations
+            var tokenEntity = tokenEntities.First();
+            var authTokenHandler = _dataContext.For<AuthTokenHandler>(tokenEntity.Id);
             var result = await authTokenHandler.Deauthenticate();
 
             // Return the result component

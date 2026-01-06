@@ -128,28 +128,78 @@ public record AuthRequest : IComponent { } // WRONG!
 public record AuthResponse : IComponent { } // WRONG!
 ```
 
-### 5. Error Handling via Components
+### 5. Exception Handling - Let It Bubble
 
-Errors are returned as Error components, not anonymous objects.
+Handlers throw domain exceptions. Functions let them bubble to middleware. NO try-catch in functions or handlers.
 
 **✅ Correct:**
 ```csharp
-var error = new Error
+// In Handler - throw domain exceptions
+public async Task<Order> ConfirmOrder()
 {
-    OwnerEntityId = Guid.NewGuid(),
-    Code = "AUTH_FAILED",
-    Message = "Invalid credentials",
-    StatusCode = 401
-};
+    var order = await Get();
+    
+    // Throw domain exceptions - they bubble up
+    if (order.Status != "PENDING")
+        throw new BusinessRuleException("ORDER_INVALID_STATE", "Can only confirm pending orders");
+    
+    if (!order.IsPaid)
+        throw new BusinessRuleException("ORDER_NOT_PAID", "Order must be paid");
+    
+    // Update and persist
+    var confirmed = order with { Status = "CONFIRMED" };
+    await TryCommit(confirmed);
+    return confirmed;
+}
 
-await response.WriteStringAsync(JsonSerializer.Serialize(error));
+// In Function - NO try-catch
+public async Task<HttpResponseData> ConfirmOrder(HttpRequestData req, Guid orderId)
+{
+    // Let exceptions bubble to middleware
+    var handler = _dataContext.For<OrderHandler>(orderId);
+    var result = await handler.ConfirmOrder();
+    
+    var response = req.CreateResponse(HttpStatusCode.OK);
+    await response.WriteStringAsync(JsonSerializer.Serialize(result));
+    return response;
+}
 ```
 
 **❌ Wrong:**
 ```csharp
-// Never return anonymous error objects
-await response.WriteStringAsync(JsonSerializer.Serialize(new { error = "message" })); // WRONG!
+// WRONG - Don't catch in functions
+public async Task<HttpResponseData> ConfirmOrder(HttpRequestData req, Guid orderId)
+{
+    try
+    {
+        var handler = _dataContext.For<OrderHandler>(orderId);
+        var result = await handler.ConfirmOrder();
+        return req.CreateResponse(HttpStatusCode.OK);
+    }
+    catch (Exception ex) // WRONG - middleware handles this
+    {
+        return await req.CreateErrorResponse(HttpStatusCode.InternalServerError, ex.Message);
+    }
+}
+
+// WRONG - Don't return error codes
+public async Task<(bool success, string error)> ConfirmOrder() // WRONG - use exceptions
+{
+    if (!isValid)
+        return (false, "Invalid state");
+    return (true, null);
+}
 ```
+
+**Exception Types:**
+- `ValidationException` - Invalid input data
+- `BusinessRuleException` - Domain rule violation
+- `EntityNotFoundException` - Entity/component not found
+- `UnauthorizedException` - Access denied
+- `InvalidOperationException` - Invalid state transition
+
+**Middleware Handles Everything:**
+The `ExceptionHandlingMiddleware` catches all exceptions and converts them to appropriate HTTP responses with Error components.
 
 ### 6. No Data Transformation in API Layer
 

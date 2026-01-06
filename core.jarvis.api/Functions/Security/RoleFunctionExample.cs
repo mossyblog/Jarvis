@@ -89,10 +89,10 @@ public class RoleFunctionExample
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid role data");
             }
 
-            // Create the role
+            // Create the role using handler - NO direct commits!
             var roleId = Guid.NewGuid();
-            newRole = newRole with { OwnerEntityId = roleId };
-            await _dataContext.Commit(newRole);
+            var roleHandler = _dataContext.For<RoleHandler>(roleId);
+            newRole = await roleHandler.CreateRole(newRole);
 
             var response = req.CreateResponse(HttpStatusCode.Created);
             await response.WriteAsJsonAsync(newRole);
@@ -129,9 +129,9 @@ public class RoleFunctionExample
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid role data");
             }
 
-            // Update the role
-            updatedRole = updatedRole with { OwnerEntityId = roleGuid };
-            await _dataContext.Commit(updatedRole);
+            // Update the role using handler - NO direct commits!
+            var roleHandler = _dataContext.For<RoleHandler>(roleGuid);
+            updatedRole = await roleHandler.UpdateRole(updatedRole);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(updatedRole);
@@ -162,8 +162,9 @@ public class RoleFunctionExample
                 return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid role ID");
             }
 
-            // Delete the role
-            await _dataContext.Remove<Role>(roleGuid);
+            // Delete the role using handler - NO direct data operations!
+            var roleHandler = _dataContext.For<RoleHandler>(roleGuid);
+            await roleHandler.DeleteRole();
 
             return req.CreateResponse(HttpStatusCode.NoContent);
         }

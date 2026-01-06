@@ -340,7 +340,9 @@ public static class PostgreSqlTypeConverter
         var postgresArrayTypes = new HashSet<Type>
         {
             typeof(Guid[]), typeof(int[]), typeof(string[]), typeof(long[]),
-            typeof(List<Guid>), typeof(List<int>), typeof(List<string>), typeof(List<long>)
+            typeof(decimal[]), typeof(bool[]), typeof(DateTime[]), typeof(double[]), typeof(float[]),
+            typeof(List<Guid>), typeof(List<int>), typeof(List<string>), typeof(List<long>),
+            typeof(List<decimal>), typeof(List<bool>), typeof(List<DateTime>), typeof(List<double>), typeof(List<float>)
         };
 
         // Enums and nullable enums should be treated as primitives (they convert to integers)

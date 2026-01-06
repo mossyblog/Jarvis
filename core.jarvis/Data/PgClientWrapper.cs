@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using core.jarvis.data;
 using Npgsql;
@@ -17,11 +18,14 @@ public class PgClientWrapper : IPgClient, IDisposable
     private bool _disposed = false;
     private string? _currentJwt;
     
+    // Activity source for distributed tracing and performance monitoring
+    private static readonly ActivitySource ActivitySource = new ActivitySource("Jarvis.Database.PgClientWrapper");
+    
     public PgClientWrapper(string connectionString, ILogger? logger = null)
     {
         _connection = new NpgsqlConnection(connectionString);
         _logger = logger;
-        _pgClient = new PgClient(_connection, null, logger);
+        _pgClient = new PgClient(_connection, null, null); // Disable verbose data layer logging
         _ownsConnection = true;
     }
     
@@ -29,13 +33,10 @@ public class PgClientWrapper : IPgClient, IDisposable
     {
         _connection = connection;
         _logger = logger;
-        _pgClient = new PgClient(connection, null, logger);
+        _pgClient = new PgClient(connection, null, null); // Disable verbose data layer logging
         _ownsConnection = ownsConnection;
     }
-    
-    /// <inheritdoc/>
-    public PgClient Client => _pgClient;
-    
+
     /// <inheritdoc/>
     public PgTable<T> From<T>() where T : class, new()
     {
@@ -98,8 +99,20 @@ public class PgClientWrapper : IPgClient, IDisposable
     /// <inheritdoc/>
     public async Task<NpgsqlConnection> GetConnectionAsync()
     {
+        using var activity = ActivitySource.StartActivity("PgClientWrapper.GetConnection");
+        activity?.SetTag("connection_state_before", _connection.State.ToString());
+        
         if (_connection.State != System.Data.ConnectionState.Open)
-            await _connection.OpenAsync();
+        {
+            using (var openActivity = ActivitySource.StartActivity("PgClientWrapper.OpenConnection"))
+            {
+                openActivity?.SetTag("connection_string", _connection.ConnectionString?.Split(';')[0]); // Log only host part for security
+                await _connection.OpenAsync();
+                openActivity?.SetTag("connection_state_after", _connection.State.ToString());
+            }
+        }
+        
+        activity?.SetTag("connection_state_final", _connection.State.ToString());
         return _connection;
     }
     
@@ -200,9 +213,22 @@ public class PgClientWrapper : IPgClient, IDisposable
     {
         if (!_disposed && disposing)
         {
-            if (_ownsConnection)
+            if (_ownsConnection && _connection != null)
             {
-                _connection?.Dispose();
+                try
+                {
+                    // Only close if the connection was actually opened
+                    if (_connection.State != System.Data.ConnectionState.Closed)
+                    {
+                        _connection.Close();
+                    }
+                    _connection.Dispose();
+                }
+                catch (NullReferenceException)
+                {
+                    // Npgsql can throw NullReferenceException when disposing
+                    // a connection that was never fully initialized
+                }
             }
             _disposed = true;
         }

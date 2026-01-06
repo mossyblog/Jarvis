@@ -1,11 +1,16 @@
 using core.jarvis.Data;
 using core.jarvis.api.Models;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace core.jarvis.api.Handlers;
 
 /// <summary>
 /// Handler for managing Role components.
+/// ALL role data operations MUST go through this handler - NO direct commits!
 /// </summary>
 public class RoleHandler : ComponentHandler<Role>
 {
@@ -44,7 +49,7 @@ public class RoleHandler : ComponentHandler<Role>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(updated);
+        await DataContext.TryCommit(updated); // Use TryCommit - NEVER DataContext.Commit directly!
         Logger.LogInformation("Granted permission {PermissionId} to role {RoleId}", permissionId, OwnerEntityId);
         return updated;
     }
@@ -77,8 +82,71 @@ public class RoleHandler : ComponentHandler<Role>
             LastUpdated = DateTime.UtcNow
         };
 
-        await DataContext.Commit(updated);
+        await DataContext.TryCommit(updated); // Use TryCommit - NEVER DataContext.Commit directly!
         Logger.LogInformation("Revoked permission {PermissionId} from role {RoleId}", permissionId, OwnerEntityId);
         return updated;
+    }
+
+    /// <summary>
+    /// Creates a new role with the specified properties.
+    /// </summary>
+    public async Task<Role> CreateRole(Role roleData)
+    {
+        // Business validation
+        Ensure(roleData != null, "Role data required");
+        Ensure(!string.IsNullOrWhiteSpace(roleData.Name), "Role name required");
+        
+        var role = new Role
+        {
+            Id = roleData.Id != Guid.Empty ? roleData.Id : Guid.NewGuid(),
+            OwnerEntityId = OwnerEntityId,
+            Name = roleData.Name.Trim(),
+            Description = roleData.Description?.Trim(),
+            PermissionIds = roleData.PermissionIds ?? Array.Empty<string>(),
+            LastUpdated = DateTime.UtcNow
+        };
+
+        await DataContext.TryCommit(role);
+        Logger.LogInformation("Created role {RoleName} with ID {RoleId}", role.Name, role.Id);
+        return role;
+    }
+
+    /// <summary>
+    /// Updates an existing role.
+    /// </summary>
+    public async Task<Role> UpdateRole(Role updateData)
+    {
+        // Get existing role
+        var role = await GetOrDefault() ?? throw new InvalidOperationException("Role not found");
+        
+        // Business rules
+        Ensure(updateData != null, "Update data required");
+        Ensure(!string.IsNullOrWhiteSpace(updateData.Name), "Role name required");
+        
+        // Update using immutable pattern
+        var updated = role with
+        {
+            Name = updateData.Name.Trim(),
+            Description = updateData.Description?.Trim(),
+            PermissionIds = updateData.PermissionIds ?? role.PermissionIds,
+            LastUpdated = DateTime.UtcNow
+        };
+
+        await DataContext.TryCommit(updated);
+        Logger.LogInformation("Updated role {RoleId}", OwnerEntityId);
+        return updated;
+    }
+
+    /// <summary>
+    /// Deletes a role from the system.
+    /// </summary>
+    public async Task<bool> DeleteRole()
+    {
+        var role = await GetOrDefault() ?? throw new InvalidOperationException("Role not found");
+        
+        // Actually remove the role
+        await DataContext.Remove<Role>(OwnerEntityId);
+        Logger.LogInformation("Deleted role {RoleId}", OwnerEntityId);
+        return true;
     }
 }

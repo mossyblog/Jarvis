@@ -1,7 +1,6 @@
 using System.Linq;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
-using core.jarvis.api.Exceptions;
 using core.jarvis.Data;
 using core.jarvis.data;
 using core.jarvis.Exceptions;
@@ -78,132 +77,124 @@ public class AuthHandler : ComponentHandler<Account>
 
     private async Task<AuthToken> AuthenticateInternal(Account accountCredentials)
     {
-        try
+        // Basic input validation
+        if (string.IsNullOrWhiteSpace(accountCredentials.Email) || 
+            string.IsNullOrWhiteSpace(accountCredentials.Password))
         {
-            // Basic input validation
-            if (string.IsNullOrWhiteSpace(accountCredentials.Email) || 
-                string.IsNullOrWhiteSpace(accountCredentials.Password))
-            {
-                Logger.LogWarning("Invalid input: empty email or password");
-                return new AuthToken(); // Return empty token to indicate failure
-            }
-
-            // Validate input for security
-            if (!IsValidInput(accountCredentials.Email) || !IsValidInput(accountCredentials.Password))
-            {
-                Logger.LogWarning("Invalid input detected - possible injection attempt");
-                return new AuthToken(); // Return empty token to indicate failure
-            }
-
-            // Get services
-            var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-            
-            // Query account by email using the component system
-            var query = DataContext.Query()
-                .With<Account>(a => a.Email == accountCredentials.Email);
-            var componentsByEntity = await query.ToEntityComponents();
-            
-            Account? account = null;
-            foreach (var kvp in componentsByEntity)
-            {
-                var acc = kvp.Value.Get<Account>();
-                if (acc != null && acc.Email == accountCredentials.Email)
-                {
-                    account = acc;
-                    break;
-                }
-            }
-            
-            if (account == null)
-            {
-                // Log failed authentication attempt
-                await _securityAudit.LogFailedAuthentication(
-                    accountCredentials.Email, 
-                    accountCredentials.IpAddress ?? "unknown",
-                    accountCredentials.UserAgent,
-                    "Account not found"
-                );
-                
-                return new AuthToken(); // Return empty token to indicate failure
-            }
-            
-            // Check if account is active
-            if (!account.IsActive)
-            {
-                await _securityAudit.LogFailedAuthentication(
-                    accountCredentials.Email, 
-                    accountCredentials.IpAddress ?? "unknown",
-                    accountCredentials.UserAgent,
-                    "Account is not active"
-                );
-                
-                return new AuthToken();
-            }
-            
-            // Verify password using BCrypt
-            var isValidPassword = BCrypt.Net.BCrypt.Verify(accountCredentials.Password, account.PasswordHash);
-            
-            if (!isValidPassword)
-            {
-                await _securityAudit.LogFailedAuthentication(
-                    accountCredentials.Email, 
-                    accountCredentials.IpAddress ?? "unknown",
-                    accountCredentials.UserAgent,
-                    "Invalid credentials"
-                );
-                
-                return new AuthToken(); // Return empty token to indicate failure
-            }
-            
-            // Authentication successful - use the account's owner entity ID
-            var authenticatedEntityId = account.OwnerEntityId;
-
-            // Generate tokens
-            var accessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email);
-            var refreshToken = tokenService.RefreshToken();
-            var sessionId = Guid.NewGuid();
-            var expiresAt = DateTime.UtcNow.AddMinutes(15);
-
-            // Add sessionId to token claims for revocation tracking
-            var additionalClaims = new Dictionary<string, string>
-            {
-                ["sessionId"] = sessionId.ToString()
-            };
-
-            var finalAccessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
-
-            // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
-            var authToken = new AuthToken
-            {
-                OwnerEntityId = authenticatedEntityId,
-                AccessToken = finalAccessToken ?? string.Empty,
-                RefreshToken = refreshToken ?? string.Empty,
-                RefreshTokenHash = tokenService.HashRefreshToken(refreshToken ?? string.Empty),
-                ExpiresAt = expiresAt,
-                RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
-                SessionId = sessionId,
-                ClientId = accountCredentials.ClientId,
-                LastUpdated = DateTime.UtcNow
-            };
-
-            // Save the auth token to the database
-            await DataContext.Commit(authToken);
-
-            // Log successful authentication
-            await _securityAudit.LogSuccessfulAuthentication(
-                authenticatedEntityId,
-                accountCredentials.Email,
-                accountCredentials.IpAddress ?? "unknown",
-                accountCredentials.UserAgent
-            );
-
-            return authToken;
+            Logger.LogWarning("Invalid input: empty email or password");
+            return new AuthToken(); // Return empty token to indicate failure
         }
-        catch (Exception ex)
+
+        // Validate input for security
+        if (!IsValidInput(accountCredentials.Email) || !IsValidInput(accountCredentials.Password))
         {
-            Logger.LogError(ex, "Error during authentication for email: {Email}", accountCredentials.Email);
+            Logger.LogWarning("Invalid input detected - possible injection attempt");
+            return new AuthToken(); // Return empty token to indicate failure
+        }
+
+        // Get services
+        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+        
+        // Query account by email using the component system
+        var query = DataContext.Query()
+            .With<Account>(a => a.Email == accountCredentials.Email);
+        var componentsByEntity = await query.ToEntityComponents();
+        
+        Account? account = null;
+        foreach (var kvp in componentsByEntity)
+        {
+            var acc = kvp.Value.Get<Account>();
+            if (acc != null && acc.Email == accountCredentials.Email)
+            {
+                account = acc;
+                break;
+            }
+        }
+        
+        if (account == null)
+        {
+            // Log failed authentication attempt
+            await _securityAudit.LogFailedAuthentication(
+                accountCredentials.Email, 
+                accountCredentials.IpAddress ?? "unknown",
+                accountCredentials.UserAgent,
+                "Account not found"
+            );
+            
+            return new AuthToken(); // Return empty token to indicate failure
+        }
+        
+        // Check if account is active
+        if (!account.IsActive)
+        {
+            await _securityAudit.LogFailedAuthentication(
+                accountCredentials.Email, 
+                accountCredentials.IpAddress ?? "unknown",
+                accountCredentials.UserAgent,
+                "Account is not active"
+            );
+            
             return new AuthToken();
         }
+        
+        // Verify password using BCrypt
+        var isValidPassword = BCrypt.Net.BCrypt.Verify(accountCredentials.Password, account.PasswordHash);
+        
+        if (!isValidPassword)
+        {
+            await _securityAudit.LogFailedAuthentication(
+                accountCredentials.Email, 
+                accountCredentials.IpAddress ?? "unknown",
+                accountCredentials.UserAgent,
+                "Invalid credentials"
+            );
+            
+            return new AuthToken(); // Return empty token to indicate failure
+        }
+        
+        // Authentication successful - use the account's owner entity ID
+        var authenticatedEntityId = account.OwnerEntityId;
+
+        // Generate tokens
+        var accessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email);
+        var refreshToken = tokenService.RefreshToken();
+        var sessionId = Guid.NewGuid();
+        var expiresAt = DateTime.UtcNow.AddMinutes(15);
+
+        // Add sessionId to token claims for revocation tracking
+        var additionalClaims = new Dictionary<string, string>
+        {
+            ["sessionId"] = sessionId.ToString()
+        };
+
+        var finalAccessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
+
+        // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
+        var authToken = new AuthToken
+        {
+            OwnerEntityId = authenticatedEntityId,
+            AccessToken = finalAccessToken ?? string.Empty,
+            RefreshToken = refreshToken ?? string.Empty,
+            RefreshTokenHash = tokenService.HashRefreshToken(refreshToken ?? string.Empty),
+            ExpiresAt = expiresAt,
+            RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
+            SessionId = sessionId,
+            ClientId = accountCredentials.ClientId,
+            LastUpdated = DateTime.UtcNow
+        };
+
+        // Save the auth token to the database
+        await DataContext.TryCommit(authToken);
+
+        // Log successful authentication
+        await _securityAudit.LogSuccessfulAuthentication(
+            authenticatedEntityId,
+            accountCredentials.Email,
+            accountCredentials.IpAddress ?? "unknown",
+            accountCredentials.UserAgent
+        );
+
+        return authToken;
     }
 
 
@@ -262,7 +253,7 @@ public class AuthHandler : ComponentHandler<Account>
                 LastUpdated = DateTime.UtcNow
             };
 
-            await DataContext.Commit(sessionEntity);
+            await DataContext.TryCommit(sessionEntity);
             return true;
         }
         catch (Exception ex)
@@ -334,115 +325,103 @@ public class AuthHandler : ComponentHandler<Account>
     /// </remarks>
     public async Task<AuthToken> RefreshToken(string refreshToken)
     {
-        try
+        if (string.IsNullOrEmpty(refreshToken))
         {
-            if (string.IsNullOrEmpty(refreshToken))
-            {
-                Logger.LogWarning("Refresh token is empty");
-                return new AuthToken();
-            }
-
-            var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
-            var entityQuery = _serviceProvider.GetRequiredService<IEntityQuery>();
-            
-            // Hash the refresh token for lookup
-            var refreshTokenHash = tokenService.HashRefreshToken(refreshToken);
-            
-            // Find the auth token by refresh token hash
-            var entityIds = await entityQuery
-                .WithAll<AuthToken>(t => t.RefreshTokenHash == refreshTokenHash && !t.IsRevoked)
-                .ToEntityIds();
-                
-            if (!entityIds.Any())
-            {
-                Logger.LogWarning("Invalid or expired refresh token");
-                return new AuthToken();
-            }
-            
-            // Get the first auth token
-            var entityId = entityIds.First();
-            var components = await DataContext.Query()
-                .With<AuthToken>(t => t.OwnerEntityId == entityId)
-                .ToEntityComponents();
-                
-            if (!components.TryGetValue(entityId, out var entityComponents))
-            {
-                Logger.LogWarning("Auth token not found for entity {EntityId}", entityId);
-                return new AuthToken();
-            }
-            
-            var existingToken = entityComponents.Get<AuthToken>();
-            if (existingToken == null)
-            {
-                Logger.LogWarning("Auth token not found");
-                return new AuthToken();
-            }
-            
-            // Check if refresh token is expired
-            if (existingToken.RefreshExpiresAt < DateTime.UtcNow)
-            {
-                Logger.LogWarning("Refresh token expired for entity {EntityId}", existingToken.OwnerEntityId);
-                return new AuthToken();
-            }
-            
-            // Get the account associated with the token
-            var accountComponents = await DataContext.Query()
-                .With<Account>(a => a.OwnerEntityId == existingToken.OwnerEntityId)
-                .ToEntityComponents();
-                
-            if (!accountComponents.TryGetValue(existingToken.OwnerEntityId, out var accountEntityComponents))
-            {
-                Logger.LogWarning("Account not found for entity {EntityId}", existingToken.OwnerEntityId);
-                return new AuthToken();
-            }
-            
-            var account = accountEntityComponents.Get<Account>();
-            if (account == null)
-            {
-                Logger.LogWarning("Account not found for entity {EntityId}", existingToken.OwnerEntityId);
-                return new AuthToken();
-            }
-            
-            // Generate new tokens
-            var newAccessToken = tokenService.AccessToken(account.Id, account.Email);
-            var newRefreshToken = tokenService.RefreshToken();
-            
-            // Revoke the old token
-            var revokedToken = existingToken with 
+            throw new core.jarvis.Exceptions.ValidationException(new Dictionary<string, string[]> 
             { 
-                IsRevoked = true, 
-                RevokedAt = DateTime.UtcNow,
-                LastUpdated = DateTime.UtcNow
-            };
-            await DataContext.Commit(revokedToken);
+                { "refreshToken", new[] { "Refresh token is required" } } 
+            });
+        }
+
+        var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
+        var entityQuery = _serviceProvider.GetRequiredService<IEntityQuery>();
+        
+        // Hash the refresh token for lookup
+        var refreshTokenHash = tokenService.HashRefreshToken(refreshToken);
+        
+        // Find the auth token by refresh token hash
+        var entityIds = await entityQuery
+            .WithAll<AuthToken>(t => t.RefreshTokenHash == refreshTokenHash && !t.IsRevoked)
+            .ToEntityIds();
             
-            // Create new auth token
-            var newAuthToken = new AuthToken
+        if (!entityIds.Any())
             {
-                Id = Guid.NewGuid(),
-                OwnerEntityId = account.Id,
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken,
-                RefreshTokenHash = tokenService.HashRefreshToken(newRefreshToken),
-                SessionId = existingToken.SessionId, // Keep the same session
-                RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
-                ClientId = existingToken.ClientId,
-                IpAddress = existingToken.IpAddress,
-                UserAgent = existingToken.UserAgent,
-                IsRevoked = false,
-                LastUpdated = DateTime.UtcNow
-            };
-            
-            await DataContext.Commit(newAuthToken);
-            
-            Logger.LogInformation("Token refreshed for entity {EntityId}", account.Id);
-            return newAuthToken;
+                throw new core.jarvis.Exceptions.UnauthorizedException("Invalid or expired refresh token");
         }
-        catch (Exception ex)
+        
+        // Get the first auth token
+        var entityId = entityIds.First();
+        var components = await DataContext.Query()
+            .With<AuthToken>(t => t.OwnerEntityId == entityId)
+            .ToEntityComponents();
+            
+        if (!components.TryGetValue(entityId, out var entityComponents))
         {
-            Logger.LogError(ex, "Error refreshing token");
-            return new AuthToken();
+            throw new EntityNotFoundException(entityId, "AuthToken");
         }
+        
+        var existingToken = entityComponents.Get<AuthToken>();
+        if (existingToken == null)
+        {
+            throw new EntityNotFoundException(entityId, "AuthToken");
+        }
+        
+        // Check if refresh token is expired
+        if (existingToken.RefreshExpiresAt < DateTime.UtcNow)
+        {
+            throw new core.jarvis.Exceptions.UnauthorizedException("Refresh token has expired");
+        }
+        
+        // Get the account associated with the token
+        var accountComponents = await DataContext.Query()
+            .With<Account>(a => a.OwnerEntityId == existingToken.OwnerEntityId)
+            .ToEntityComponents();
+            
+        if (!accountComponents.TryGetValue(existingToken.OwnerEntityId, out var accountEntityComponents))
+        {
+            throw new EntityNotFoundException(existingToken.OwnerEntityId, "Account");
+        }
+        
+        var account = accountEntityComponents.Get<Account>();
+        if (account == null)
+        {
+            throw new EntityNotFoundException(existingToken.OwnerEntityId, "Account");
+        }
+        
+        // Generate new tokens
+        var newAccessToken = tokenService.AccessToken(account.Id, account.Email);
+        var newRefreshToken = tokenService.RefreshToken();
+        
+        // Revoke the old token
+        var revokedToken = existingToken with 
+        { 
+            IsRevoked = true, 
+            RevokedAt = DateTime.UtcNow,
+            LastUpdated = DateTime.UtcNow
+        };
+        await DataContext.TryCommit(revokedToken);
+        
+        // Create new auth token
+        var newAuthToken = new AuthToken
+        {
+            Id = Guid.NewGuid(),
+            OwnerEntityId = account.Id,
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshToken,
+            RefreshTokenHash = tokenService.HashRefreshToken(newRefreshToken),
+            SessionId = existingToken.SessionId, // Keep the same session
+            RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
+            ClientId = existingToken.ClientId,
+            IpAddress = existingToken.IpAddress,
+            UserAgent = existingToken.UserAgent,
+            IsRevoked = false,
+            LastUpdated = DateTime.UtcNow
+        };
+        
+        await DataContext.TryCommit(newAuthToken);
+        
+        Logger.LogInformation("Token refreshed for entity {EntityId}", account.Id);
+        return newAuthToken;
     }
 
     /// <summary>

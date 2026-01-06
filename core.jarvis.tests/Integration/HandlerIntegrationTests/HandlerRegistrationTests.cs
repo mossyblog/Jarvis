@@ -1,6 +1,6 @@
 using core.jarvis.Data;
 using core.jarvis.Exceptions;
-using core.jarvis.tests.Fixtures.Components;
+using core.jarvis.tests.Components;
 using core.jarvis.tests.Fixtures.Handlers;
 using core.jarvis.tests.Helpers;
 using Shouldly;

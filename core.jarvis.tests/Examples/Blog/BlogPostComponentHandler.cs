@@ -21,37 +21,21 @@ public class BlogPostComponentHandler : ComponentHandler<BlogPostComponent>
     /// </summary>
     public async Task<IList<BlogPostComponent>> GetAllPosts()
     {
-        try
+        // Get all entities that have BlogPostComponent for this specific entity
+        var entityComponents = await DataContext.Query()
+            .WithAll<BlogPostComponent>(p => p.OwnerEntityId == OwnerEntityId)  // Filter by owner entity
+            .ToEntityComponents();
+
+        var posts = new List<BlogPostComponent>();
+        foreach (var kvp in entityComponents)
         {
-            Logger.LogInformation("Getting all posts for entity {EntityId}", OwnerEntityId);
-            
-            // Get all entities that have BlogPostComponent
-            var entityComponents = await DataContext.Query()
-                .WithAll<BlogPostComponent>(p => true)  // Get all blog posts
-                .ToEntityComponents();
-
-            Logger.LogInformation("Found {Count} entity components", entityComponents.Count);
-
-            var posts = new List<BlogPostComponent>();
-            foreach (var kvp in entityComponents)
+            var post = kvp.Value.Get<BlogPostComponent>();
+            if (post != null)
             {
-                var post = kvp.Value.Get<BlogPostComponent>();
-                if (post != null)
-                {
-                    Logger.LogInformation("Found post {PostId} with OwnerEntityId {OwnerEntityId}", post.Id, post.OwnerEntityId);
-                    if (post.OwnerEntityId == OwnerEntityId)
-                        posts.Add(post);
-                }
+                posts.Add(post);
             }
-            
-            Logger.LogInformation("Returning {Count} posts for entity {EntityId}", posts.Count, OwnerEntityId);
-            return posts;
         }
-        catch (Exception ex)
-        {
-            Logger.LogError(ex, "Failed to get posts for entity {EntityId}", OwnerEntityId);
-            throw;
-        }
+        return posts;
     }
 
     /// <summary>
