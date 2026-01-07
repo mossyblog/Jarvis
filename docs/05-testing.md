@@ -465,6 +465,86 @@ dotnet test --logger "console;verbosity=detailed"
 
 ---
 
+## CRITICAL: Mandatory Account Creation for Authenticated Tests
+
+**Every test that uses JWT authentication MUST create a real account in the database.**
+
+The `UserValidationPreProcessor` validates that the user ID in JWT claims exists in the database. Tests that create JWT tokens for non-existent users ("phantom users") will fail with 401 Unauthorized.
+
+### The Phantom User Anti-Pattern (BANNED)
+
+```csharp
+// WRONG: Creates a token for a user that doesn't exist in the database
+[Fact]
+public async Task SomeEndpoint_WithToken_Works()
+{
+    var phantomUserId = Guid.NewGuid();  // This user doesn't exist!
+    var token = TokenService.AccessToken(phantomUserId, "phantom@example.com");
+
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    var response = await client.GetAsync("/api/protected");  // FAILS: 401
+}
+```
+
+### The Correct Pattern (REQUIRED)
+
+```csharp
+// CORRECT: Creates a real account before generating a token
+[Fact]
+public async Task SomeEndpoint_WithValidUser_Works()
+{
+    // Arrange - Create a REAL account
+    var email = $"test_{Guid.NewGuid()}@example.com";
+    var account = await CreateTestAccount(email, "TestPassword123!");
+    TrackEntity(account.OwnerEntityId);  // Track for cleanup
+
+    // Create security profile (required for most operations)
+    var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
+    await profileHandler.CreateWithDefaults(email);
+
+    // Generate token for the REAL user
+    var token = TokenService.AccessToken(account.OwnerEntityId, email);
+
+    client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+    var response = await client.GetAsync("/api/protected");  // Works!
+}
+
+// Helper method (add to your test class)
+private async Task<Account> CreateTestAccount(string email, string password)
+{
+    var entityId = Guid.NewGuid();
+    var passwordService = _serviceProvider.GetRequiredService<IPasswordPolicyService>();
+    var hashedPassword = passwordService.HashPassword(password);
+
+    var account = new Account
+    {
+        OwnerEntityId = entityId,
+        Email = email,
+        PasswordHash = hashedPassword,
+        Password = "",
+        AuthMethod = "password",
+        IsActive = true,
+        CreatedAt = DateTime.UtcNow,
+        LastUpdated = DateTime.UtcNow
+    };
+    await TestDataContext().Commit(account);
+    return account;
+}
+```
+
+### Why This Matters
+
+The `UserValidationPreProcessor` closes a critical security gap:
+
+1. **Before**: JWT tokens were validated cryptographically but not against the database
+2. **Problem**: Attackers could create valid JWTs for users that don't exist
+3. **Risk**: RLS policies would receive fake user IDs, potentially bypassing security
+4. **Solution**: Every authenticated request now verifies the user exists and is active
+
+**Tests that skip account creation are simulating an attack vector, not real user behavior.**
+
+---
+
 ## Anti-Patterns to Avoid
 
 | Anti-Pattern | Problem | Solution |
@@ -474,6 +554,7 @@ dotnet test --logger "console;verbosity=detailed"
 | Hardcoded test data | Test conflicts | Use `$"test_{Guid.NewGuid()}@..."` |
 | Using mocks | False confidence | Use real services |
 | Testing implementation | Brittle tests | Test observable behavior |
+| **Phantom users in JWT** | **Security hole, tests fail** | **Create real accounts first** |
 
 ---
 
@@ -487,6 +568,7 @@ dotnet test --logger "console;verbosity=detailed"
 - [ ] Test data uses unique identifiers
 - [ ] No mocks used
 - [ ] Shouldly assertions used
+- [ ] **Authenticated tests create REAL accounts in the database (no phantom users)**
 
 ---
 

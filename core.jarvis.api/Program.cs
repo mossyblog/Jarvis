@@ -67,9 +67,12 @@ app.UseFastEndpoints(config =>
     config.Serializer.Options.PropertyNamingPolicy = null; // PascalCase to match existing API
 
     // Register global pre-processors
+    // Order: RateLimiting -> UserValidation -> Permission
+    // UserValidation must run before Permission to ensure user exists
     config.Endpoints.Configurator = ep =>
     {
         ep.PreProcessor<RateLimitingPreProcessor>(Order.Before);
+        ep.PreProcessor<UserValidationPreProcessor>(Order.Before);
         ep.PreProcessor<PermissionPreProcessor>(Order.Before);
     };
 });

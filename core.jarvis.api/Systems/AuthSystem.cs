@@ -1,3 +1,5 @@
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
@@ -105,10 +107,14 @@ public class AuthSystem
             throw new UnauthorizedException("Invalid token");
         }
 
-        // Extract claims
-        var userId = principal.FindFirst("sub")?.Value;
-        var email = principal.FindFirst("email")?.Value;
-        var roles = principal.FindFirst("roles")?.Value;
+        // Extract claims - JWT library maps standard claims to long-form URIs
+        // Check both short-form (sub, email) and long-form (ClaimTypes.*) claim types
+        var userId = principal.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
+            ?? principal.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var email = principal.FindFirst(JwtRegisteredClaimNames.Email)?.Value
+            ?? principal.FindFirst(ClaimTypes.Email)?.Value;
+        var roles = principal.FindFirst("roles")?.Value
+            ?? principal.FindFirst(ClaimTypes.Role)?.Value;
 
         var result = new TokenValidationResult
         {
