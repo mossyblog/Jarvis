@@ -1,7 +1,6 @@
 using core.jarvis;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Systems;
-using core.jarvis.api.Middleware;
 using core.jarvis.api.Models;
 using core.jarvis.api.Security;
 using core.jarvis.api.Services;
@@ -35,12 +34,22 @@ public static class ServiceCollectionExtensions
 
         // Set the connection string as environment variable for core Jarvis services
         var connectionString = configuration.GetConnectionString("JarvisDb");
-        
-        // Validate database connection string
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+
+        // Validate database connection string (use test default in Test environment)
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException(
-                "Database connection string not configured. Please set ConnectionStrings__JarvisDb in .env.local or environment variables.");
+            if (isTestEnvironment)
+            {
+                // Use test database connection string from TestDatabaseSetup
+                connectionString = Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
+                    ?? "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres";
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "Database connection string not configured. Please set ConnectionStrings__JarvisDb in .env.local or environment variables.");
+            }
         }
         
         if (connectionString.Contains("Password=CHANGE_ME"))
@@ -99,13 +108,6 @@ public static class ServiceCollectionExtensions
         });
 
         // AuthHandler will get refresh token days from configuration directly
-
-        // Add middleware
-        services.AddSingleton<ComponentValidationMiddleware>();
-        services.AddSingleton<RateLimitingMiddleware>();
-        services.AddSingleton<SecurityHeadersMiddleware>();
-        services.AddSingleton<InputValidationMiddleware>();
-        services.AddSingleton<AuthorizationMiddleware>();
 
         // Add security services
         services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
