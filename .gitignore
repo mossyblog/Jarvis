@@ -36,3 +36,4 @@ auth-debug.log
 TestResults/
 
 .serena/
+auth-debug*
