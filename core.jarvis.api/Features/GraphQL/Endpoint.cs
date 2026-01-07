@@ -20,6 +20,7 @@ public class Endpoint : Endpoint<GraphQLRequest, GraphQLResult>
     public override void Configure()
     {
         Post("/graphql");
+        AllowAnonymous();
         Description(d => d
             .WithTags("GraphQL")
             .Produces<GraphQLResult>(200)

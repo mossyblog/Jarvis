@@ -9,6 +9,8 @@ using core.jarvis.tests.Examples;
 using core.jarvis.tests.Examples.Blog;
 using core.jarvis.tests.Fixtures.Handlers;
 using core.jarvis.tests.Examples.WorkOrder;
+using core.jarvis.api.Models;
+using core.jarvis.api.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
@@ -130,7 +132,11 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         // WorkOrder example handler
         services.AddTransient<Examples.WorkOrder.WorkOrderHandler>();
         services.AddTransient<IComponentHandler<Examples.WorkOrder.FakeWorkOrderComponent>, Examples.WorkOrder.WorkOrderHandler>();
-        
+
+        // Security audit handler (from API project)
+        services.AddTransient<core.jarvis.api.Handlers.SecurityAuditHandler>();
+        services.AddTransient<IComponentHandler<SecurityAuditEvent>, core.jarvis.api.Handlers.SecurityAuditHandler>();
+
         // Register query handlers for components we use in tests
         services.AddScoped<IComponentQueryHandler<tests.Components.TestComponent>, ComponentQueryHandler<tests.Components.TestComponent>>();
         services.AddScoped<IComponentQueryHandler<tests.Components.VersionedTestComponent>, ComponentQueryHandler<tests.Components.VersionedTestComponent>>();
@@ -147,6 +153,32 @@ public abstract class IntegrationTestBase : IAsyncLifetime
         services.AddScoped<IComponentQueryHandler<Examples.WorkOrder.FakeWorkOrderComponent>, ComponentQueryHandler<Examples.WorkOrder.FakeWorkOrderComponent>>();
         services.AddScoped<IComponentQueryHandler<AuditEvent>, ComponentQueryHandler<AuditEvent>>();
         services.AddScoped<IComponentQueryHandler<Integration.HandlerIntegrationTests.NavigationItemTestComponent>, ComponentQueryHandler<Integration.HandlerIntegrationTests.NavigationItemTestComponent>>();
+        services.AddScoped<IComponentQueryHandler<AuthToken>, ComponentQueryHandler<AuthToken>>();
+        services.AddScoped<IComponentQueryHandler<SecurityAuditEvent>, ComponentQueryHandler<SecurityAuditEvent>>();
+
+        // Register IConfiguration with JWT settings for SecurityTokenHandler tests
+        var configBuilder = new ConfigurationBuilder();
+        configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Jwt:SecretKey"] = "TestSecretKeyMustBeAtLeast256BitsForSecurity",
+            ["Jwt:Issuer"] = "test-issuer",
+            ["Jwt:Audience"] = "test-audience",
+            ["Jwt:RefreshTokenExpirationDays"] = "30"
+        });
+        var configuration = configBuilder.Build();
+        services.AddSingleton<IConfiguration>(configuration);
+
+        // Register ITokenService for SecurityTokenHandler tests
+        services.AddSingleton<ITokenService>(sp =>
+        {
+            var config = sp.GetRequiredService<IConfiguration>();
+            return new TokenService(
+                issuer: config["Jwt:Issuer"]!,
+                audience: config["Jwt:Audience"]!,
+                secretKey: config["Jwt:SecretKey"]!,
+                accessTokenExpirationMinutes: 15
+            );
+        });
 
         _serviceProvider = services.BuildServiceProvider();
         _scope = _serviceProvider.CreateScope();
@@ -173,6 +205,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                 await TestDataContext().Remove<Examples.WorkOrder.FakeWorkOrderComponent>(entityId);
                 await TestDataContext().Remove<AuditEvent>(entityId);
                 await TestDataContext().Remove<Integration.HandlerIntegrationTests.NavigationItemTestComponent>(entityId);
+                await TestDataContext().Remove<AuthToken>(entityId);
+                await TestDataContext().Remove<SecurityAuditEvent>(entityId);
 
                 // API component cleanup removed - should only be in ApiIntegrationTestBase
             }

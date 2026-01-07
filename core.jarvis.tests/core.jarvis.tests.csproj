@@ -43,8 +43,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\core.jarvis\core.jarvis.csproj" />
-      <!-- API project reference removed to improve test performance
-           Only RegistrationIntegrationTests needs it, which should be moved to API project -->
+      <ProjectReference Include="..\core.jarvis.api\core.jarvis.api.csproj" />
     </ItemGroup>
 
     <ItemGroup>

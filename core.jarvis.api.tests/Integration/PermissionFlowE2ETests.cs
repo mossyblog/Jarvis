@@ -785,13 +785,13 @@ public class PermissionFlowE2ETests : ApiIntegrationTestBase
 
     #region Helper Methods
 
-    private async Task<Account> CreateTestAccountWithProfile(string email)
+    private async Task<Models.Account> CreateTestAccountWithProfile(string email)
     {
         var entityId = Guid.NewGuid();
         var passwordService = _serviceProvider.GetRequiredService<IPasswordPolicyService>();
         var hashedPassword = passwordService.HashPassword("TestPassword123!");
 
-        var account = new Account
+        var account = new Models.Account
         {
             OwnerEntityId = entityId,
             Email = email,

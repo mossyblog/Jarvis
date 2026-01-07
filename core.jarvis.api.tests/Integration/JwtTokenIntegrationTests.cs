@@ -227,13 +227,13 @@ public class JwtTokenIntegrationTests : ApiIntegrationTestBase
         authToken.AccessToken.Length.ShouldBeLessThan(1000); // Typical JWT with minimal claims
     }
 
-    private async Task<Account> CreateTestAccount(string email, string password)
+    private async Task<Models.Account> CreateTestAccount(string email, string password)
     {
         var entityId = Guid.NewGuid();
         var passwordService = _serviceProvider.GetRequiredService<IPasswordPolicyService>();
         var hashedPassword = passwordService.HashPassword(password);
-        
-        var account = new Account
+
+        var account = new Models.Account
         {
             OwnerEntityId = entityId,
             Email = email,

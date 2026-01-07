@@ -2,6 +2,79 @@
 
 Jarvis testing patterns - from first test to complex business scenarios.
 
+## Tests as Living Documentation
+
+**Tests are not just verification tools—they are living documentation of intent.**
+
+When code changes, tests may break. When tests break, developers need to understand:
+1. What was the original intent?
+2. Is the test outdated or is the code wrong?
+3. What business requirement drove this test?
+
+Without documented intent, developers make guesses. Guesses lead to bugs.
+
+---
+
+## Mandatory: Intent/Purpose Documentation
+
+**Every test class and test method MUST have XML documentation with six fields:**
+
+### Class-Level Documentation
+
+```csharp
+/// <summary>
+/// INTENT: [What this test class is trying to verify]
+/// PURPOSE: [Why these tests exist as a group]
+/// BUSINESS CONTEXT: [What business requirement/user story this supports]
+/// WHY IMPORTANT: [What breaks if these tests fail]
+/// ARCHITECTURAL SIGNIFICANCE: [What system/layer/component this tests]
+/// FUTURE RESILIENCE: [What regressions this prevents]
+/// </summary>
+public class RefreshTokenEndpointTests : ApiIntegrationTestBase
+```
+
+### Method-Level Documentation
+
+```csharp
+/// <summary>
+/// INTENT: [What this specific test verifies]
+/// PURPOSE: [Why this scenario matters]
+/// BUSINESS CONTEXT: [User/business impact]
+/// WHY IMPORTANT: [Security/functionality/UX implications]
+/// ARCHITECTURAL SIGNIFICANCE: [Component/integration being tested]
+/// FUTURE RESILIENCE: [What future bugs this catches]
+/// </summary>
+[Fact]
+public async Task RefreshToken_WithValidToken_ReturnsNewAccessToken()
+```
+
+### Field Definitions
+
+| Field | Question It Answers | Example |
+|-------|---------------------|---------|
+| **INTENT** | What are we testing? | "Verify valid refresh token returns new access token" |
+| **PURPOSE** | Why does this test exist? | "Test the happy path for token refresh" |
+| **BUSINESS CONTEXT** | What user need does this serve? | "Users with valid sessions should get new tokens" |
+| **WHY IMPORTANT** | What breaks if this fails? | "Core functionality for session management" |
+| **ARCHITECTURAL SIGNIFICANCE** | What system part is tested? | "Tests AuthSystem.RefreshToken integration" |
+| **FUTURE RESILIENCE** | What regressions does this catch? | "Catches breaks in token rotation" |
+
+### Why This Matters
+
+```
+6 months from now...
+
+Developer: "This test is failing after my refactor. What was it even testing?"
+
+WITHOUT INTENT: Developer guesses, potentially breaks production.
+
+WITH INTENT: Developer reads "BUSINESS CONTEXT: Stolen refresh tokens
+should not work indefinitely" and realizes their change broke a
+security control, not just an arbitrary test.
+```
+
+---
+
 ## The No Mocks Policy
 
 Jarvis enforces a strict NO MOCKS policy.
@@ -17,39 +90,159 @@ Instead, Jarvis uses:
 - Real DataContext with actual persistence
 - Real handlers with actual business logic
 
-## IntegrationTestBase Setup
+---
 
-All integration tests inherit from `IntegrationTestBase`:
+## Directory Structure
+
+```
+core.jarvis.api.tests/
+├── Integration/                    # Tests that hit real HTTP endpoints + database
+│   ├── Auth/                       # Authentication endpoint tests
+│   ├── Accounts/                   # Account endpoint tests
+│   ├── Roles/                      # Role management endpoint tests
+│   ├── GraphQL/                    # GraphQL endpoint tests
+│   └── Handlers/                   # Handler integration tests
+│
+├── Unit/                           # Isolated component tests
+│   ├── Processors/                 # Pre/post processor tests
+│   ├── Services/                   # Service layer tests
+│   └── Systems/                    # System orchestration tests
+│
+├── Handlers/                       # Handler-specific tests
+├── Security/                       # Security-focused tests
+│
+└── Helpers/                        # Test infrastructure
+    ├── ApiIntegrationTestBase.cs   # Base for API tests
+    └── TestFactory.cs              # WebApplicationFactory setup
+
+core.jarvis.tests/
+├── Integration/                    # Core framework integration tests
+├── Unit/                           # Core framework unit tests
+└── Helpers/
+    └── IntegrationTestBase.cs      # Base for all integration tests
+```
+
+---
+
+## Test Base Classes
+
+### IntegrationTestBase
+
+Use for tests that need database access but NOT HTTP endpoints:
 
 ```csharp
-using core.jarvis.tests.Helpers;
-using Shouldly;
-
+/// <summary>
+/// INTENT: Test OrderHandler create and status operations
+/// PURPOSE: Verify order lifecycle management works correctly
+/// BUSINESS CONTEXT: Orders are core business entities requiring reliable CRUD
+/// WHY IMPORTANT: Order failures directly impact revenue
+/// ARCHITECTURAL SIGNIFICANCE: Tests handler + component persistence layer
+/// FUTURE RESILIENCE: Catches order state management regressions
+/// </summary>
 public class OrderHandlerTests : IntegrationTestBase
 {
+    /// <summary>
+    /// INTENT: Verify order creation with valid customer data
+    /// PURPOSE: Test happy path for new order creation
+    /// BUSINESS CONTEXT: Customers must be able to place orders
+    /// WHY IMPORTANT: Core e-commerce functionality
+    /// ARCHITECTURAL SIGNIFICANCE: Tests OrderHandler.CreateOrder integration
+    /// FUTURE RESILIENCE: Catches order creation regressions
+    /// </summary>
     [Fact]
     public async Task CanCreateOrder()
     {
+        // Arrange
         var entityId = Guid.NewGuid();
         TrackEntity(entityId);
 
+        // Act
         var order = await TestDataContext().For<OrderHandler>(entityId)
             .CreateOrder("Customer-123", 100.00m);
 
+        // Assert
         order.CustomerId.ShouldBe("Customer-123");
         order.Status.ShouldBe("PENDING");
     }
 }
 ```
 
-`IntegrationTestBase` provides:
+**Provides:**
 - `TestDataContext()` - Configured DataContext with real PostgreSQL
 - `TrackEntity(Guid)` - Registers entities for automatic cleanup
 - `Logger()` - Test-scoped logger for debugging
 
-## Writing Your First Test
+### ApiIntegrationTestBase
 
-Follow Arrange-Act-Assert:
+Use for tests that need HTTP endpoints AND database access:
+
+```csharp
+/// <summary>
+/// INTENT: Test POST /security/refresh endpoint for token renewal
+/// PURPOSE: Ensure refresh tokens can be exchanged for new access tokens
+/// BUSINESS CONTEXT: Users need seamless session continuation without re-authentication
+/// WHY IMPORTANT: Broken refresh flow forces users to re-login, degrading UX
+/// ARCHITECTURAL SIGNIFICANCE: Tests the full token rotation security model
+/// FUTURE RESILIENCE: Prevents regression in token lifecycle management
+/// </summary>
+public class RefreshTokenEndpointTests : ApiIntegrationTestBase
+{
+    /// <summary>
+    /// INTENT: Verify valid refresh token returns new access token
+    /// PURPOSE: Test the happy path for token refresh
+    /// BUSINESS CONTEXT: Users with valid sessions should get new tokens
+    /// WHY IMPORTANT: Core functionality for session management
+    /// ARCHITECTURAL SIGNIFICANCE: Tests AuthSystem.RefreshToken integration
+    /// FUTURE RESILIENCE: Catches breaks in token rotation
+    /// </summary>
+    [Fact]
+    public async Task RefreshToken_WithValidToken_ReturnsNewAccessToken()
+    {
+        // Arrange - Create user and authenticate
+        var email = $"refresh_valid_{Guid.NewGuid()}@example.com";
+        var ownerEntityId = Guid.NewGuid();
+        TrackEntity(ownerEntityId);
+
+        // ... create account ...
+
+        await using var factory = new JarvisApiWebApplicationFactory();
+        using var client = factory.CreateClient();
+
+        // Act - Use refresh token
+        var response = await client.PostAsync("/api/security/refresh", content);
+
+        // Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+    }
+}
+```
+
+**Provides (in addition to IntegrationTestBase):**
+- `TokenService` - JWT token generation
+- `Configuration` - Test configuration
+- `JarvisApiWebApplicationFactory` - Real HTTP client factory
+
+---
+
+## Test Naming Convention
+
+```
+MethodName_Scenario_ExpectedResult
+```
+
+Examples:
+```csharp
+RefreshToken_WithValidToken_ReturnsNewAccessToken()
+RefreshToken_WithInvalidToken_Returns401()
+CreateOrder_WithNegativeAmount_ThrowsValidationException()
+PublishPost_WhenAlreadyPublished_ThrowsBusinessRuleException()
+```
+
+---
+
+## AAA Pattern (Arrange-Act-Assert)
+
+**All tests MUST follow the AAA pattern with clear comments:**
 
 ```csharp
 [Fact]
@@ -74,6 +267,84 @@ public async Task BlogHandler_CanCreateBlogAndGeneratePost()
 }
 ```
 
+---
+
+## Entity Cleanup with TrackEntity
+
+**Always track entities created during tests:**
+
+```csharp
+var accountId = Guid.NewGuid();
+var roleId = Guid.NewGuid();
+
+// Track ALL entities for cleanup (prevents test pollution)
+TrackEntity(accountId);
+TrackEntity(roleId);
+
+await TestDataContext().Commit(account);
+await TestDataContext().Commit(role);
+
+// Tracked entities are automatically cleaned up after test
+```
+
+---
+
+## Authentication in Tests
+
+### Generating Test Tokens
+
+```csharp
+// Simple token
+var token = TokenService.AccessToken(userId, email);
+
+// Token with claims
+var token = TokenService.AccessToken(userId, email, new Dictionary<string, string>
+{
+    { "roles", "admin" }
+});
+```
+
+### Using Tokens in HTTP Requests
+
+```csharp
+await using var factory = new JarvisApiWebApplicationFactory();
+using var client = factory.CreateClient();
+
+client.DefaultRequestHeaders.Authorization =
+    new AuthenticationHeaderValue("Bearer", token);
+
+var response = await client.GetAsync("/api/protected-endpoint");
+```
+
+### Creating Test Accounts
+
+```csharp
+var email = $"test_{Guid.NewGuid()}@example.com";  // Unique email
+var password = "TestPassword123!";
+var ownerEntityId = Guid.NewGuid();
+
+TrackEntity(ownerEntityId);
+
+var passwordService = _serviceProvider.GetRequiredService<IPasswordPolicyService>();
+var hashedPassword = passwordService.HashPassword(password);
+
+var account = new Account
+{
+    OwnerEntityId = ownerEntityId,
+    Email = email,
+    PasswordHash = hashedPassword,
+    Password = "",  // Never store plain password
+    AuthMethod = "password",
+    IsActive = true,
+    CreatedAt = DateTime.UtcNow,
+    LastUpdated = DateTime.UtcNow
+};
+
+await TestDataContext().Commit(account);
+```
+
+---
+
 ## Testing Validation Rules
 
 Test that invalid input throws `ValidationException`:
@@ -90,15 +361,6 @@ public void Guard_AgainstEmpty_ThrowsForInvalidStrings(string? value)
 
     exception.Errors.ShouldContainKey("customerName");
 }
-
-[Fact]
-public void Guard_AgainstOutOfRange_ThrowsForInvalidValues()
-{
-    var exception = Should.Throw<ValidationException>(() =>
-        Guard.AgainstOutOfRange(150, 0, 100, "percentage"));
-
-    exception.Errors["percentage"].ShouldContain("percentage must be between 0 and 100");
-}
 ```
 
 Test that valid input passes:
@@ -114,58 +376,23 @@ public void Guard_AgainstOutOfRange_AllowsValidValues(int value, int min, int ma
 }
 ```
 
-## Testing Business Logic
+---
 
-Test happy path scenarios:
-
-```csharp
-[Fact]
-public async Task BlogHandler_CanPublishPost()
-{
-    var entityId = Guid.NewGuid();
-    TrackEntity(entityId);
-
-    await TestDataContext().For<BlogComponentHandler>(entityId)
-        .CreateBlog("Test Blog");
-
-    var post = await TestDataContext().For<BlogHandler>(entityId)
-        .GeneratePost(new BlogPostGenerationRequest { Topic = "Test" });
-
-    await TestDataContext().For<BlogHandler>(entityId).PublishPost(post.Id);
-
-    // Reload from database to verify persistence
-    var allPosts = await TestDataContext().For<BlogHandler>(entityId).GetAllPosts();
-    var published = allPosts.First(p => p.Id == post.Id);
-
-    published.IsPublished.ShouldBeTrue();
-    published.Status.ShouldBe("published");
-}
-```
-
-Test business rule violations:
+## Testing Business Rule Violations
 
 ```csharp
-[Fact]
-public async Task BlogHandler_ThrowsWhenPublishingNonexistentPost()
-{
-    var entityId = Guid.NewGuid();
-    TrackEntity(entityId);
-
-    await TestDataContext().For<BlogComponentHandler>(entityId)
-        .CreateBlog("Test Blog");
-
-    var ex = await Should.ThrowAsync<EntityNotFoundException>(async () =>
-    {
-        await TestDataContext().For<BlogHandler>(entityId)
-            .PublishPost(Guid.NewGuid());
-    });
-
-    ex.ShouldNotBeNull();
-}
-
+/// <summary>
+/// INTENT: Verify orders cannot be confirmed after payment
+/// PURPOSE: Test business rule enforcement for order state transitions
+/// BUSINESS CONTEXT: Paid orders are final - no changes allowed
+/// WHY IMPORTANT: Prevents financial inconsistencies
+/// ARCHITECTURAL SIGNIFICANCE: Tests state machine enforcement
+/// FUTURE RESILIENCE: Catches invalid state transition bugs
+/// </summary>
 [Fact]
 public async Task OrderHandler_ThrowsWhenConfirmingPaidOrder()
 {
+    // Arrange
     var entityId = Guid.NewGuid();
     TrackEntity(entityId);
 
@@ -173,6 +400,7 @@ public async Task OrderHandler_ThrowsWhenConfirmingPaidOrder()
     await handler.CreateOrder("customer", 100m);
     await handler.MarkAsPaid();
 
+    // Act & Assert
     var ex = await Should.ThrowAsync<BusinessRuleException>(
         () => handler.ConfirmOrder());
 
@@ -180,30 +408,44 @@ public async Task OrderHandler_ThrowsWhenConfirmingPaidOrder()
 }
 ```
 
-## Test Utilities
+---
 
-### TrackEntity for Cleanup
+## Handling Expected Failures
 
-Always track entities created during tests:
-
-```csharp
-var entityId = Guid.NewGuid();
-TrackEntity(entityId);  // Automatically cleaned up after test
-```
-
-### TestDataContext for Real Operations
-
-`TestDataContext()` returns a fully configured `IDataContext`:
+When rate limiting or other factors may affect response:
 
 ```csharp
-// Get a handler for an entity
-var handler = TestDataContext().For<OrderHandler>(entityId);
-
-// Query entities
-var entities = await TestDataContext().Query()
-    .WithAll<OrderComponent>(o => o.Status == "PENDING")
-    .ToList();
+// Accept multiple valid statuses
+var validStatuses = new[] { HttpStatusCode.Unauthorized, HttpStatusCode.TooManyRequests };
+validStatuses.ShouldContain(response.StatusCode,
+    $"Expected 401 or 429 but got {response.StatusCode}");
 ```
+
+---
+
+## Shouldly Assertion Patterns
+
+```csharp
+// Null checks
+result.ShouldNotBeNull();
+
+// Equality
+result.Name.ShouldBe("Expected");
+result.Id.ShouldNotBe(Guid.Empty);
+
+// Collections
+result.Items.ShouldNotBeEmpty();
+result.Permissions.ShouldContain("admin.read");
+
+// Strings
+result.Email.ShouldNotBeNullOrEmpty();
+result.Hash.ShouldStartWith("$2");
+
+// Comparisons
+result.CreatedAt.ShouldBeGreaterThan(DateTime.MinValue);
+```
+
+---
 
 ## Running Tests
 
@@ -221,11 +463,31 @@ dotnet test --filter "FullyQualifiedName~BlogHandler"
 dotnet test --logger "console;verbosity=detailed"
 ```
 
-## Summary
+---
 
-- NO MOCKS: Test real behavior with real dependencies
-- Inherit from `IntegrationTestBase` for all integration tests
-- Use `TrackEntity()` for cleanup, `TestDataContext()` for operations
-- Test happy paths, validation errors, and business rule violations
+## Anti-Patterns to Avoid
+
+| Anti-Pattern | Problem | Solution |
+|--------------|---------|----------|
+| Missing intent docs | Future devs don't know WHY | Add all 6 documentation fields |
+| Not tracking entities | Test pollution | Use `TrackEntity()` |
+| Hardcoded test data | Test conflicts | Use `$"test_{Guid.NewGuid()}@..."` |
+| Using mocks | False confidence | Use real services |
+| Testing implementation | Brittle tests | Test observable behavior |
+
+---
+
+## Checklist for New Tests
+
+- [ ] Class has full XML documentation (all 6 fields)
+- [ ] Each test method has full XML documentation (all 6 fields)
+- [ ] Test name follows `MethodName_Scenario_ExpectedResult` convention
+- [ ] Test follows AAA pattern with clear comments
+- [ ] All created entities are tracked with `TrackEntity()`
+- [ ] Test data uses unique identifiers
+- [ ] No mocks used
+- [ ] Shouldly assertions used
+
+---
 
 **Next:** [06-database.md](06-database.md) - Database and data access

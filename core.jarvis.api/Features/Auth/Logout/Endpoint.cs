@@ -1,4 +1,5 @@
 using FastEndpoints;
+using Microsoft.AspNetCore.Authorization;
 using core.jarvis.api.Handlers;
 using core.jarvis.Data;
 
@@ -9,6 +10,7 @@ public class LogoutRequest
     public Guid SessionId { get; set; }
 }
 
+[Authorize]
 public class Endpoint : Endpoint<LogoutRequest>
 {
     public IDataContext DataContext { get; set; } = null!;
