@@ -13,6 +13,15 @@ namespace core.jarvis.api.Middleware;
 
 /// <summary>
 /// Middleware for rate limiting requests to prevent brute force attacks.
+///
+/// LIMITATION: This implementation uses in-memory storage (ConcurrentDictionary) for rate limit tracking.
+/// This means rate limit state is NOT shared across multiple instances of the application.
+///
+/// For multi-instance/load-balanced deployments:
+/// - Rate limits will be applied per-instance, not globally
+/// - A user could potentially exceed intended limits by hitting different instances
+/// - Consider implementing Redis or another distributed cache for production deployments
+///   that require consistent rate limiting across multiple instances
 /// </summary>
 public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
 {

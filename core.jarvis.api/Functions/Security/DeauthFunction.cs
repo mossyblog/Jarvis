@@ -38,6 +38,8 @@ public class DeauthFunction
     /// <summary>
     /// POST /api/security/deauth
     /// Deauthenticates a session.
+    /// No explicit permission required - any authenticated user can deauthenticate their own session.
+    /// Authentication is enforced by AuthorizationMiddleware.
     /// </summary>
     [Function("deauth")]
     [OpenApiOperation(operationId: "deauthenticate", tags: new[] { "Security" }, Summary = "Deauthenticate session", Description = "Revokes a user session by session ID.")]

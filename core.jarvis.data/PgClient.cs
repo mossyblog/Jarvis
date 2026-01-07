@@ -210,15 +210,17 @@ namespace core.jarvis.data
                 // We need to sanitize the claim key to be a valid PostgreSQL identifier
                 var sanitizedKey = SanitizeClaimKey(claim.Key);
                 var variableName = $"app.{sanitizedKey}";
-                
-                // PostgreSQL custom variables need to be set with literal values
-                // We escape single quotes to prevent SQL injection
-                var escapedValue = claim.Value.Replace("'", "''");
-                var sql = $"SET SESSION \"{variableName}\" = '{escapedValue}';";
-                
+
+                // Use set_config() with proper parameterization to prevent SQL injection
+                // set_config(setting_name, new_value, is_local) returns the new value
+                // is_local = false means the setting persists for the session
+                const string sql = "SELECT set_config(@varName, @value, false)";
+
                 try
                 {
                     using var cmd = new NpgsqlCommand(sql, _conn);
+                    cmd.Parameters.AddWithValue("varName", variableName);
+                    cmd.Parameters.AddWithValue("value", claim.Value);
                     await cmd.ExecuteNonQueryAsync();
                 }
                 catch (Exception ex)

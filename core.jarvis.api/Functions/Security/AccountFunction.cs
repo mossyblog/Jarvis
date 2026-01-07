@@ -34,6 +34,8 @@ public class AccountFunction
 
     /// <summary>
     /// Gets the current user's profile with roles.
+    /// No explicit permission required - users can always access their own profile.
+    /// Authentication is enforced by AuthorizationMiddleware.
     /// </summary>
     [Function("GetCurrentUser")]
     public async Task<HttpResponseData> GetCurrentUser(
@@ -99,6 +101,8 @@ public class AccountFunction
 
     /// <summary>
     /// Gets the navigation items available to the current user.
+    /// No explicit permission required - users can always access their own navigation.
+    /// Authentication is enforced by AuthorizationMiddleware.
     /// </summary>
     [Function("GetUserNavigation")]
     public async Task<HttpResponseData> GetUserNavigation(
@@ -158,6 +162,8 @@ public class AccountFunction
 
     /// <summary>
     /// Updates the current user's profile.
+    /// No explicit permission required - users can always update their own profile.
+    /// Authentication is enforced by AuthorizationMiddleware.
     /// </summary>
     [Function("UpdateUserProfile")]
     public async Task<HttpResponseData> UpdateUserProfile(

@@ -7,6 +7,7 @@ using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Extensions;
+using core.jarvis.api.Attributes;
 using core.jarvis.Data;
 
 namespace core.jarvis.api.Functions.Security;
@@ -35,8 +36,10 @@ public class RoleFunction
 
     /// <summary>
     /// Gets all roles in the system.
+    /// Requires admin.roles.read permission.
     /// </summary>
     [Function("GetRoles")]
+    [RequirePermission("admin.roles.read")]
     public async Task<HttpResponseData> GetRoles(
         [HttpTrigger(AuthorizationLevel.Function, "get", Route = "security/roles")] HttpRequestData req,
         FunctionContext executionContext)
@@ -69,8 +72,10 @@ public class RoleFunction
 
     /// <summary>
     /// Creates a new role.
+    /// Requires admin.roles.write permission.
     /// </summary>
     [Function("CreateRole")]
+    [RequirePermission("admin.roles.write")]
     public async Task<HttpResponseData> CreateRole(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/roles")] HttpRequestData req,
         FunctionContext executionContext)
@@ -111,8 +116,10 @@ public class RoleFunction
 
     /// <summary>
     /// Updates a role.
+    /// Requires admin.roles.write permission.
     /// </summary>
     [Function("UpdateRole")]
+    [RequirePermission("admin.roles.write")]
     public async Task<HttpResponseData> UpdateRole(
         [HttpTrigger(AuthorizationLevel.Function, "put", Route = "security/roles/{roleId}")] HttpRequestData req,
         string roleId,
@@ -158,8 +165,10 @@ public class RoleFunction
 
     /// <summary>
     /// Ensures default roles exist.
+    /// Requires admin.roles.write permission.
     /// </summary>
     [Function("EnsureDefaultRoles")]
+    [RequirePermission("admin.roles.write")]
     public async Task<HttpResponseData> EnsureDefaultRoles(
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = "security/roles/ensure-defaults")] HttpRequestData req,
         FunctionContext executionContext)

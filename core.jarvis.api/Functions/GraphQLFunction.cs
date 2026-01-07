@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
 using core.jarvis.api.Middleware;
+using core.jarvis.api.Security;
 using core.jarvis.Data;
 using core.jarvis.Data.GraphQL;
 
@@ -18,14 +19,17 @@ public class GraphQLFunction
 {
     private readonly IDataContext _dataContext;
     private readonly ILogger<GraphQLFunction> _logger;
+    private readonly IGraphQLQueryValidator _queryValidator;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public GraphQLFunction(
         IDataContext dataContext,
-        ILogger<GraphQLFunction> logger)
+        ILogger<GraphQLFunction> logger,
+        IGraphQLQueryValidator? queryValidator = null)
     {
         _dataContext = dataContext;
         _logger = logger;
+        _queryValidator = queryValidator ?? new GraphQLQueryValidator();
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -36,6 +40,8 @@ public class GraphQLFunction
     /// <summary>
     /// Execute GraphQL queries from the UI.
     /// This is a temporary bridge until the UI can connect directly to PostgreSQL GraphQL.
+    /// No explicit permission required - any authenticated user can execute GraphQL queries.
+    /// Row-level security is enforced by the database via JWT claims.
     /// </summary>
     [Function("ExecuteGraphQL")]
     public async Task<HttpResponseData> ExecuteGraphQL(
@@ -109,6 +115,25 @@ public class GraphQLFunction
                 var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
                 errorResponse.Headers.Add("Content-Type", "application/json");
                 await errorResponse.WriteStringAsync(JsonSerializer.Serialize(badRequestError, _jsonOptions));
+                return errorResponse;
+            }
+
+            // Validate GraphQL query against security limits (depth, field count, introspection)
+            var validationResult = _queryValidator.Validate(graphqlRequest.Query);
+            if (!validationResult.IsValid)
+            {
+                _logger.LogWarning("GraphQL query validation failed: {ErrorCode} - {ErrorMessage}",
+                    validationResult.ErrorCode, validationResult.ErrorMessage);
+
+                var validationError = new Error
+                {
+                    Code = validationResult.ErrorCode ?? "QUERY_VALIDATION_FAILED",
+                    Message = validationResult.ErrorMessage ?? "Query validation failed",
+                    StatusCode = 400
+                };
+                var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                errorResponse.Headers.Add("Content-Type", "application/json");
+                await errorResponse.WriteStringAsync(JsonSerializer.Serialize(validationError, _jsonOptions));
                 return errorResponse;
             }
 

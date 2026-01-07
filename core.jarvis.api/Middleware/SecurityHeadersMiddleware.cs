@@ -15,9 +15,11 @@ public class SecurityHeadersMiddleware : IFunctionsWorkerMiddleware
     private readonly ILogger<SecurityHeadersMiddleware> _logger;
     
     // CSP policy - adjust based on your needs
-    private const string ContentSecurityPolicy = 
+    // Note: 'unsafe-inline' kept for style-src as many CSS-in-JS solutions require it
+    // 'unsafe-eval' removed from script-src to prevent XSS attacks via eval()
+    private const string ContentSecurityPolicy =
         "default-src 'self'; " +
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; " +
+        "script-src 'self' https://cdn.jsdelivr.net; " +
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
         "img-src 'self' data: https:; " +
         "font-src 'self' https://cdn.jsdelivr.net; " +

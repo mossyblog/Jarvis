@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
@@ -29,6 +30,10 @@ namespace core.jarvis.api.Middleware;
 public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly ILogger<AuthorizationMiddleware> _logger;
+
+    // Cache for reflection-based permission attribute lookups
+    // Key: method entry point string, Value: list of RequirePermissionAttribute
+    private static readonly ConcurrentDictionary<string, List<RequirePermissionAttribute>> _permissionAttributeCache = new();
 
     // Define which endpoints don't require authentication
     private static readonly HashSet<string> PublicEndpoints = new()
@@ -171,63 +176,67 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         var targetMethod = context.FunctionDefinition?.EntryPoint;
         if (!string.IsNullOrEmpty(targetMethod))
         {
-            // Parse the method info from EntryPoint (format: "Namespace.Class.Method")
-            var lastDotIndex = targetMethod.LastIndexOf('.');
-            if (lastDotIndex > 0)
+            // Get cached permission attributes or compute and cache them
+            var permissionAttributes = _permissionAttributeCache.GetOrAdd(targetMethod, entryPoint =>
             {
-                var typeName = targetMethod.Substring(0, lastDotIndex);
-                var methodName = targetMethod.Substring(lastDotIndex + 1);
-
-                // Try to find the type and method
-                var type = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => t.FullName == typeName);
-
-                if (type != null)
+                // Parse the method info from EntryPoint (format: "Namespace.Class.Method")
+                var lastDotIndex = entryPoint.LastIndexOf('.');
+                if (lastDotIndex > 0)
                 {
-                    var method = type.GetMethod(methodName);
-                    if (method != null)
+                    var typeName = entryPoint.Substring(0, lastDotIndex);
+                    var methodName = entryPoint.Substring(lastDotIndex + 1);
+
+                    // Try to find the type and method
+                    var type = AppDomain.CurrentDomain.GetAssemblies()
+                        .SelectMany(a => a.GetTypes())
+                        .FirstOrDefault(t => t.FullName == typeName);
+
+                    if (type != null)
                     {
-                        // Check for RequirePermission attributes
-                        var permissionAttributes = method.GetCustomAttributes<RequirePermissionAttribute>().ToList();
-
-                        if (permissionAttributes.Any())
+                        var method = type.GetMethod(methodName);
+                        if (method != null)
                         {
-                            // Group by operator
-                            var orPermissions = permissionAttributes
-                                .Where(p => p.Operator == PermissionOperator.Or)
-                                .Select(p => p.Permission)
-                                .ToList();
-
-                            var andPermissions = permissionAttributes
-                                .Where(p => p.Operator == PermissionOperator.And)
-                                .Select(p => p.Permission)
-                                .ToList();
-
-                            // Check OR permissions (user needs at least one)
-                            if (orPermissions.Any())
-                            {
-                                var hasAnyOrPermission = await permissionService.HasAnyPermissionAsync(userId, orPermissions.ToArray());
-                                if (!hasAnyOrPermission)
-                                {
-                                    return false;
-                                }
-                            }
-
-                            // Check AND permissions (user needs all)
-                            if (andPermissions.Any())
-                            {
-                                var hasAllAndPermissions = await permissionService.HasAllPermissionsAsync(userId, andPermissions.ToArray());
-                                if (!hasAllAndPermissions)
-                                {
-                                    return false;
-                                }
-                            }
-
-                            return true;
+                            return method.GetCustomAttributes<RequirePermissionAttribute>().ToList();
                         }
                     }
                 }
+                return new List<RequirePermissionAttribute>();
+            });
+
+            if (permissionAttributes.Any())
+            {
+                // Group by operator
+                var orPermissions = permissionAttributes
+                    .Where(p => p.Operator == PermissionOperator.Or)
+                    .Select(p => p.Permission)
+                    .ToList();
+
+                var andPermissions = permissionAttributes
+                    .Where(p => p.Operator == PermissionOperator.And)
+                    .Select(p => p.Permission)
+                    .ToList();
+
+                // Check OR permissions (user needs at least one)
+                if (orPermissions.Any())
+                {
+                    var hasAnyOrPermission = await permissionService.HasAnyPermissionAsync(userId, orPermissions.ToArray());
+                    if (!hasAnyOrPermission)
+                    {
+                        return false;
+                    }
+                }
+
+                // Check AND permissions (user needs all)
+                if (andPermissions.Any())
+                {
+                    var hasAllAndPermissions = await permissionService.HasAllPermissionsAsync(userId, andPermissions.ToArray());
+                    if (!hasAllAndPermissions)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
             }
         }
 

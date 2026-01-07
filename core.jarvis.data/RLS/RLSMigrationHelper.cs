@@ -163,9 +163,14 @@ namespace core.jarvis.data.RLS
 
         /// <summary>
         /// Generates the CREATE POLICY SQL statement for a policy.
+        /// Validates RLS expressions before generating SQL to prevent injection attacks.
         /// </summary>
+        /// <exception cref="RLSExpressionValidationException">Thrown if an expression fails validation.</exception>
         private string GenerateCreatePolicySql(RLSPolicy policy)
         {
+            // Validate expressions before using them in SQL generation
+            ValidateRLSExpressions(policy);
+
             var sb = new StringBuilder();
 
             sb.Append($"CREATE POLICY \"{policy.PolicyName}\" ON \"{policy.TableName}\"");
@@ -201,6 +206,28 @@ namespace core.jarvis.data.RLS
             sb.Append(";");
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Validates the USING and WITH CHECK expressions of an RLS policy.
+        /// </summary>
+        /// <param name="policy">The policy to validate.</param>
+        /// <exception cref="RLSExpressionValidationException">Thrown if validation fails.</exception>
+        private static void ValidateRLSExpressions(RLSPolicy policy)
+        {
+            if (!string.IsNullOrEmpty(policy.UsingExpression))
+            {
+                RLSExpressionValidator.ValidateOrThrow(
+                    policy.UsingExpression,
+                    $"USING expression for policy '{policy.PolicyName}' on table '{policy.TableName}'");
+            }
+
+            if (!string.IsNullOrEmpty(policy.WithCheckExpression))
+            {
+                RLSExpressionValidator.ValidateOrThrow(
+                    policy.WithCheckExpression,
+                    $"WITH CHECK expression for policy '{policy.PolicyName}' on table '{policy.TableName}'");
+            }
         }
 
         /// <summary>

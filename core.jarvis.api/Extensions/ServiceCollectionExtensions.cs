@@ -3,6 +3,7 @@ using core.jarvis.api.Handlers;
 using core.jarvis.api.Systems;
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Models;
+using core.jarvis.api.Security;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
@@ -114,6 +115,19 @@ public static class ServiceCollectionExtensions
         // Add permission service with caching
         services.AddMemoryCache();
         services.AddScoped<IPermissionService, PermissionService>();
+
+        // Add GraphQL query validator with configurable options
+        services.AddSingleton<IGraphQLQueryValidator>(provider =>
+        {
+            var options = new GraphQLValidationOptions
+            {
+                MaxQueryDepth = int.Parse(configuration["GraphQL:MaxQueryDepth"] ?? "10"),
+                MaxFieldCount = int.Parse(configuration["GraphQL:MaxFieldCount"] ?? "100"),
+                MaxQueryLength = int.Parse(configuration["GraphQL:MaxQueryLength"] ?? "10000"),
+                BlockIntrospection = bool.Parse(configuration["GraphQL:BlockIntrospection"] ?? "true")
+            };
+            return new GraphQLQueryValidator(options);
+        });
 
         return services;
     }
