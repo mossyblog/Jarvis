@@ -189,6 +189,7 @@ public class AccountFunction
             }
 
             // Parse request body as SecurityProfile component
+            // Handler is responsible for applying only allowed field updates
             var requestBody = await req.ReadAsStringAsync();
             var updateProfile = JsonSerializer.Deserialize<SecurityProfile>(requestBody, _jsonOptions);
             if (updateProfile == null)
@@ -205,7 +206,7 @@ public class AccountFunction
                 return errorResponse;
             }
 
-            // Update profile using System - ALL logic in handler
+            // Update profile using Handler - handler enforces which fields can be updated
             var profileHandler = _dataContext.For<AccountProfileHandler>(userId);
             var updated = await profileHandler.UpdateProfile(updateProfile);
 

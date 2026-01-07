@@ -8,6 +8,7 @@ using core.jarvis.api.Handlers;
 using core.jarvis.api.Middleware;
 using core.jarvis.api.Extensions;
 using core.jarvis.api.Attributes;
+using core.jarvis.api.Services;
 using core.jarvis.Data;
 
 namespace core.jarvis.api.Functions.Security;
@@ -19,14 +20,17 @@ public class RoleFunction
 {
     private readonly IDataContext _dataContext;
     private readonly ILogger<RoleFunction> _logger;
+    private readonly ISecurityAuditService _auditService;
     private readonly JsonSerializerOptions _jsonOptions;
 
     public RoleFunction(
         IDataContext dataContext,
-        ILogger<RoleFunction> logger)
+        ILogger<RoleFunction> logger,
+        ISecurityAuditService auditService)
     {
         _dataContext = dataContext;
         _logger = logger;
+        _auditService = auditService;
         _jsonOptions = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -150,6 +154,13 @@ public class RoleFunction
             // Update the role using handler - NO direct commits!
             var roleHandler = _dataContext.For<RoleHandler>(roleGuid);
             var updatedRole = await roleHandler.UpdateRole(updateRole);
+
+            // Log the role update for audit trail
+            await _auditService.LogRoleUpdated(
+                userId,
+                roleGuid,
+                updateRole.Name,
+                updateRole.PermissionIds?.Length ?? 0);
 
             var response = req.CreateResponse(HttpStatusCode.OK);
             response.Headers.Add("Content-Type", "application/json");

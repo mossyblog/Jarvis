@@ -1,5 +1,6 @@
 using System.Text.Json;
 using core.jarvis.Exceptions;
+using core.jarvis.Security;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 
@@ -13,8 +14,9 @@ namespace core.jarvis.Data.GraphQL
         private readonly IPgClient _pgClient;
         private readonly ILogger<GraphQLQueryBuilder> _logger;
         private readonly IAuditService? _auditService;
+        private readonly IJwtValidator? _jwtValidator;
         private readonly string _query;
-        
+
         private string? _jwt;
         private object? _variables;
         private string? _operationName;
@@ -23,14 +25,16 @@ namespace core.jarvis.Data.GraphQL
         private readonly List<Func<GraphQLContext, Task<bool>>> _validators = new();
 
         public GraphQLQueryBuilder(
-            IPgClient pgClient, 
+            IPgClient pgClient,
             ILogger<GraphQLQueryBuilder> logger,
             IAuditService? auditService,
-            string query)
+            string query,
+            IJwtValidator? jwtValidator = null)
         {
             _pgClient = pgClient ?? throw new ArgumentNullException(nameof(pgClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _auditService = auditService;
+            _jwtValidator = jwtValidator;
             _query = query ?? throw new ArgumentNullException(nameof(query));
         }
 
@@ -108,8 +112,35 @@ namespace core.jarvis.Data.GraphQL
                 throw new UnauthorizedException("GraphQL queries require authentication. Call WithAuth() before Execute()");
             }
 
-            // Parse JWT claims
-            var claims = ParseJWTClaims(_jwt);
+            // Parse and validate JWT claims
+            // SECURITY: If IJwtValidator is available, use it to validate signature
+            // Otherwise fall back to parsing without validation (for backward compatibility during migration)
+            Dictionary<string, string>? claims = null;
+            if (_jwtValidator != null)
+            {
+                claims = _jwtValidator.GetValidatedClaims(_jwt);
+                if (claims == null)
+                {
+                    // Audit the invalid token attempt
+                    if (_auditService != null)
+                    {
+                        await _auditService.LogEvent(AuditEventTypes.GraphQLUnauthorized, Guid.Empty, new
+                        {
+                            reason = "JWT signature validation failed - token may be forged or tampered",
+                            query = _query
+                        });
+                    }
+                    _logger.LogWarning("JWT signature validation failed - rejecting potentially forged token");
+                    throw new UnauthorizedException("Invalid or expired JWT token");
+                }
+            }
+            else
+            {
+                // DEPRECATED: Fallback to insecure parsing when no validator is provided
+                // This should be removed once all callers provide IJwtValidator
+                _logger.LogWarning("SECURITY: GraphQL query executed without JWT signature validation - inject IJwtValidator to fix");
+                claims = ParseJWTClaims(_jwt);
+            }
             
             // Create context for validation
             var context = new GraphQLContext
@@ -265,11 +296,20 @@ namespace core.jarvis.Data.GraphQL
             }
         }
 
+        /// <summary>
+        /// DEPRECATED: Parses JWT claims without signature validation.
+        /// This method is a security vulnerability and should not be used.
+        /// Use IJwtValidator.GetValidatedClaims() instead which validates signatures.
+        /// This method will be removed in a future version once all callers inject IJwtValidator.
+        /// </summary>
+        [Obsolete("Use IJwtValidator.GetValidatedClaims() instead - this method does not validate JWT signatures")]
         private Dictionary<string, string> ParseJWTClaims(string jwt)
         {
             try
             {
-                // This is a simplified version - in production, use proper JWT parsing
+                // SECURITY WARNING: This method does NOT validate JWT signatures!
+                // An attacker can forge arbitrary claims. This is kept only for
+                // backward compatibility during migration to IJwtValidator.
                 var parts = jwt.Split('.');
                 if (parts.Length != 3)
                 {
@@ -281,9 +321,9 @@ namespace core.jarvis.Data.GraphQL
                 var padded = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
                 var bytes = Convert.FromBase64String(padded);
                 var json = System.Text.Encoding.UTF8.GetString(bytes);
-                
+
                 var claims = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new();
-                
+
                 // Convert to string dictionary
                 return claims.ToDictionary(
                     kvp => kvp.Key,

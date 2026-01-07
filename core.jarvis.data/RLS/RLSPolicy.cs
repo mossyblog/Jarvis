@@ -200,9 +200,9 @@ namespace core.jarvis.data.RLS
                 // SDK-level enforcement
                 WhereClause = claims =>
                 {
-                    if (claims.TryGetValue("tenant_id", out var tenantId))
-                        return $"tenant_id = '{tenantId}'::uuid";
-                    return "1=0"; // No access without tenant_id
+                    if (claims.TryGetValue("tenant_id", out var tenantId) && Guid.TryParse(tenantId, out var validGuid))
+                        return $"tenant_id = '{validGuid}'::uuid";
+                    return "1=0"; // No access without valid tenant_id GUID
                 },
                 CheckFunction = (claims, data) =>
                 {
@@ -229,13 +229,13 @@ namespace core.jarvis.data.RLS
                 // SDK-level enforcement
                 WhereClause = claims =>
                 {
-                    if (!claims.TryGetValue("tenant_id", out var tenantId))
+                    if (!claims.TryGetValue("tenant_id", out var tenantId) || !Guid.TryParse(tenantId, out var validTenantGuid))
                         return "1=0";
-                    if (!claims.TryGetValue("sub", out var userId))
+                    if (!claims.TryGetValue("sub", out var userId) || !Guid.TryParse(userId, out var validUserGuid))
                         return "1=0";
 
                     // Users can see their own records OR public records from their tenant
-                    return $"tenant_id = '{tenantId}'::uuid AND (user_id = '{userId}'::uuid OR is_public = TRUE)";
+                    return $"tenant_id = '{validTenantGuid}'::uuid AND (user_id = '{validUserGuid}'::uuid OR is_public = TRUE)";
                 },
                 // PostgreSQL-level enforcement
                 PolicyName = "user_data_select",
@@ -280,12 +280,12 @@ namespace core.jarvis.data.RLS
                 // SDK-level enforcement
                 WhereClause = claims =>
                 {
-                    if (!claims.TryGetValue("tenant_id", out var tenantId))
+                    if (!claims.TryGetValue("tenant_id", out var tenantId) || !Guid.TryParse(tenantId, out var validTenantGuid))
                         return "1=0";
                     if (!claims.TryGetValue("role", out var role))
                         return "1=0";
 
-                    var conditions = new List<string> { $"tenant_id = '{tenantId}'::uuid" };
+                    var conditions = new List<string> { $"tenant_id = '{validTenantGuid}'::uuid" };
 
                     switch (role.ToLower())
                     {

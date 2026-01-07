@@ -1,5 +1,6 @@
 using System.Net;
 using core.jarvis.Data;
+using core.jarvis.api.Security;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -108,8 +109,8 @@ public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
 
         try
         {
-            // Try to deserialize as JSON object
-            var jsonObject = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+            // Try to deserialize as JSON object using safe settings
+            var jsonObject = SafeJsonSettings.Deserialize<Dictionary<string, object>>(body);
             if (jsonObject == null)
             {
                 return false;
@@ -135,7 +136,7 @@ public class ComponentValidationMiddleware : IFunctionsWorkerMiddleware
         {
             var response = httpRequestData.CreateResponse(statusCode);
             response.Headers.Add("Content-Type", "application/json");
-            await response.WriteStringAsync(JsonConvert.SerializeObject(new { error = message }));
+            await response.WriteStringAsync(SafeJsonSettings.Serialize(new { error = message }));
 
             // Set the response in the context
             context.GetInvocationResult().Value = response;

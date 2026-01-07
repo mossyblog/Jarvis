@@ -8,20 +8,27 @@ using Microsoft.Extensions.Logging;
 using System.Net;
 using Newtonsoft.Json;
 using core.jarvis.api.Models;
+using core.jarvis.api.Security;
 
 namespace core.jarvis.api.Middleware;
 
 /// <summary>
 /// Middleware for rate limiting requests to prevent brute force attacks.
 ///
-/// LIMITATION: This implementation uses in-memory storage (ConcurrentDictionary) for rate limit tracking.
-/// This means rate limit state is NOT shared across multiple instances of the application.
+/// SECURITY LIMITATION: Rate limiting uses in-memory storage and is NOT distributed.
 ///
-/// For multi-instance/load-balanced deployments:
-/// - Rate limits will be applied per-instance, not globally
-/// - A user could potentially exceed intended limits by hitting different instances
-/// - Consider implementing Redis or another distributed cache for production deployments
-///   that require consistent rate limiting across multiple instances
+/// In multi-instance deployments behind a load balancer:
+/// - Rate limits apply per-instance, not globally
+/// - Users can exceed intended limits by hitting different instances
+/// - Account lockouts are not shared across instances
+///
+/// PRODUCTION RECOMMENDATION: For multi-instance deployments, replace
+/// ConcurrentDictionary with Redis or another distributed cache.
+/// See: https://docs.microsoft.com/en-us/aspnet/core/performance/caching/distributed
+///
+/// IP ADDRESS SECURITY: This middleware uses secure IP detection that does NOT trust
+/// X-Forwarded-For headers by default. Configure TrustedProxyOptions if your deployment
+/// uses trusted reverse proxies.
 /// </summary>
 public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
 {
@@ -108,18 +115,19 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
         // For auth endpoints, also check account lockout
         if (endpoint.Contains("/auth", StringComparison.OrdinalIgnoreCase))
         {
-            var requestBody = await httpRequest.ReadAsStringAsync();
+            // Cache request body in context items to avoid race condition when stream is re-read later
+            var requestBody = await ReadAndCacheRequestBody(context, httpRequest);
             if (!string.IsNullOrEmpty(requestBody))
             {
                 try
                 {
-                    var account = JsonConvert.DeserializeObject<Account>(requestBody);
+                    var account = SafeJsonSettings.Deserialize<Account>(requestBody);
                     if (!string.IsNullOrEmpty(account?.Email))
                     {
                         if (IsAccountLocked(account.Email))
                         {
                             _logger.LogWarning("Account locked due to failed attempts: {Email}", account.Email);
-                            
+
                             // Add progressive delay to prevent timing attacks
                             var lockInfo = _accountLockStore.GetValueOrDefault(account.Email.ToLowerInvariant());
                             if (lockInfo != null)
@@ -127,7 +135,7 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
                                 var delay = lockInfo.FailedAttempts * ProgressiveDelayMilliseconds;
                                 await Task.Delay(Math.Min(delay, MaxProgressiveDelayMilliseconds));
                             }
-                            
+
                             await CreateRateLimitResponse(context, "Account temporarily locked due to multiple failed attempts.");
                             return;
                         }
@@ -156,27 +164,64 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
         return path.StartsWith("/api/security/", StringComparison.OrdinalIgnoreCase);
     }
 
-    private string GetClientIp(HttpRequestData request)
+    /// <summary>
+    /// Gets the client IP address with secure handling of forwarded headers.
+    ///
+    /// SECURITY: X-Forwarded-For headers are NOT trusted by default.
+    /// Only the socket-level IP (X-Azure-ClientIP) is used unless trusted proxies are configured.
+    /// This prevents IP spoofing attacks where attackers send fake X-Forwarded-For headers.
+    /// </summary>
+    private string GetClientIp(HttpRequestData request, TrustedProxyOptions? trustedProxyOptions = null)
     {
-        // Check for forwarded IP first (behind proxy/load balancer)
-        if (request.Headers.TryGetValues("X-Forwarded-For", out var forwardedFor))
+        // Get the socket-level IP address (not spoofable)
+        // In Azure Functions, X-Azure-ClientIP contains the actual client IP
+        string? socketIp = null;
+        if (request.Headers.TryGetValues("X-Azure-ClientIP", out var azureIp))
         {
-            var ip = forwardedFor.FirstOrDefault()?.Split(',').FirstOrDefault()?.Trim();
-            if (!string.IsNullOrEmpty(ip))
-                return ip;
+            socketIp = azureIp.FirstOrDefault()?.Trim();
         }
 
-        if (request.Headers.TryGetValues("X-Real-IP", out var realIp))
+        // Only trust X-Forwarded-For if:
+        // 1. Trusted proxy validation is enabled
+        // 2. We have configured trusted proxy IPs
+        // 3. The socket IP is from a trusted proxy
+        if (trustedProxyOptions?.EnableTrustedProxyValidation == true &&
+            trustedProxyOptions.TrustedProxyIps?.Any() == true &&
+            socketIp != null &&
+            trustedProxyOptions.TrustedProxyIps.Contains(socketIp))
         {
-            var ip = realIp.FirstOrDefault();
-            if (!string.IsNullOrEmpty(ip))
-                return ip;
+            // Request is from a trusted proxy, use X-Forwarded-For
+            if (request.Headers.TryGetValues("X-Forwarded-For", out var forwardedFor))
+            {
+                var forwardedValue = forwardedFor.FirstOrDefault();
+                if (!string.IsNullOrEmpty(forwardedValue))
+                {
+                    // Use the LAST (rightmost) IP in the chain - this is the client IP
+                    // added by the trusted proxy. Earlier IPs in the chain can be spoofed.
+                    var ips = forwardedValue.Split(',');
+                    var clientIp = ips.LastOrDefault()?.Trim();
+                    if (!string.IsNullOrEmpty(clientIp))
+                    {
+                        return clientIp;
+                    }
+                }
+            }
         }
 
-        // Fallback to remote address
+        // Default: use socket address (not spoofable)
+        if (!string.IsNullOrEmpty(socketIp))
+        {
+            return socketIp;
+        }
+
+        // Fallback for non-Azure environments (local development)
         if (request.Headers.TryGetValues("REMOTE_ADDR", out var remoteAddr))
         {
-            return remoteAddr.FirstOrDefault() ?? "unknown";
+            var addr = remoteAddr.FirstOrDefault()?.Trim();
+            if (!string.IsNullOrEmpty(addr))
+            {
+                return addr;
+            }
         }
 
         return "unknown";
@@ -229,24 +274,56 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
             });
     }
 
-    private async Task CheckForFailedAuthentication(FunctionContext context, HttpRequestData request)
+    /// <summary>
+    /// Context items key for cached request body
+    /// </summary>
+    private const string RequestBodyCacheKey = "RateLimiting_RequestBody";
+
+    /// <summary>
+    /// Reads the request body and caches it in the function context to prevent race conditions
+    /// when the body needs to be read multiple times (e.g., for account lockout check and failed auth tracking).
+    /// </summary>
+    private async Task<string?> ReadAndCacheRequestBody(FunctionContext context, HttpRequestData request)
+    {
+        // Check if already cached
+        if (context.Items.TryGetValue(RequestBodyCacheKey, out var cached))
+        {
+            return cached as string;
+        }
+
+        // Read and cache the body
+        var body = await request.ReadAsStringAsync();
+        context.Items[RequestBodyCacheKey] = body;
+        return body;
+    }
+
+    /// <summary>
+    /// Gets the cached request body from the function context.
+    /// Returns null if no body was cached.
+    /// </summary>
+    private string? GetCachedRequestBody(FunctionContext context)
+    {
+        return context.Items.TryGetValue(RequestBodyCacheKey, out var cached) ? cached as string : null;
+    }
+
+    private Task CheckForFailedAuthentication(FunctionContext context, HttpRequestData request)
     {
         // Only check auth endpoints
         if (!request.Url.AbsolutePath.Contains("/auth", StringComparison.OrdinalIgnoreCase))
-            return;
+            return Task.CompletedTask;
 
         var response = context.GetHttpResponseData();
         if (response == null || response.StatusCode == HttpStatusCode.OK)
-            return;
+            return Task.CompletedTask;
 
-        // Failed authentication attempt
-        var requestBody = await request.ReadAsStringAsync();
+        // Failed authentication attempt - use cached body to avoid race condition
+        var requestBody = GetCachedRequestBody(context);
         if (string.IsNullOrEmpty(requestBody))
-            return;
+            return Task.CompletedTask;
 
         try
         {
-            var account = JsonConvert.DeserializeObject<Account>(requestBody);
+            var account = SafeJsonSettings.Deserialize<Account>(requestBody);
             if (!string.IsNullOrEmpty(account?.Email))
             {
                 TrackFailedAttempt(account.Email);
@@ -256,6 +333,8 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
         {
             // Ignore parsing errors
         }
+
+        return Task.CompletedTask;
     }
 
     private void TrackFailedAttempt(string email)
@@ -305,7 +384,7 @@ public class RateLimitingMiddleware : IFunctionsWorkerMiddleware
             response.StatusCode = HttpStatusCode.TooManyRequests;
             response.Headers.Add("Content-Type", "application/json");
             response.Headers.Add("Retry-After", RetryAfterSeconds);
-            await response.WriteStringAsync(JsonConvert.SerializeObject(error));
+            await response.WriteStringAsync(SafeJsonSettings.Serialize(error));
         }
     }
 

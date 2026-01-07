@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.Json;
 using core.jarvis.api.Models;
+using core.jarvis.api.Security;
 using core.jarvis.api.Systems;
 using core.jarvis.api.Extensions;
 using core.jarvis.Exceptions;
@@ -70,8 +71,9 @@ public class AuthFunction
             }
             catch (System.Text.Json.JsonException ex)
             {
+                // Log detailed error server-side, return generic message to client
                 _logger.LogWarning("Invalid JSON in auth request: {Message}", ex.Message);
-                return await req.CreateErrorResponse(HttpStatusCode.BadRequest, $"Invalid JSON: {ex.Message}");
+                return await req.CreateErrorResponse(HttpStatusCode.BadRequest, "Invalid request format");
             }
 
             // Basic validation
@@ -132,7 +134,7 @@ public class AuthFunction
         {
             // Parse request
             var requestBody = await req.ReadAsStringAsync();
-            var refreshRequest = JsonConvert.DeserializeObject<RefreshTokenRequest>(requestBody);
+            var refreshRequest = SafeJsonSettings.Deserialize<RefreshTokenRequest>(requestBody);
             
             if (refreshRequest == null)
             {
@@ -180,7 +182,7 @@ public class AuthFunction
         {
             // Parse request
             var requestBody = await req.ReadAsStringAsync();
-            var validateRequest = JsonConvert.DeserializeObject<ValidateTokenRequest>(requestBody);
+            var validateRequest = SafeJsonSettings.Deserialize<ValidateTokenRequest>(requestBody);
             
             if (validateRequest == null)
             {

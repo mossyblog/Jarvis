@@ -141,4 +141,18 @@ public class SecurityAuditHandler : ComponentHandler<SecurityAuditEvent>
         };
         await TryCommit(auditEvent);
     }
+
+    public async Task LogRoleUpdated(Guid roleId, string roleName, int permissionsChangedCount)
+    {
+        var auditEvent = new SecurityAuditEvent
+        {
+            OwnerEntityId = OwnerEntityId,
+            EventType = "ROLE_UPDATED",
+            EventTime = DateTime.UtcNow,
+            RoleId = roleId.ToString(),
+            Reason = $"Role '{roleName}' updated, permissions changed: {permissionsChangedCount}",
+            Severity = "MEDIUM"
+        };
+        await TryCommit(auditEvent);
+    }
 }

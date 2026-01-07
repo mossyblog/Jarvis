@@ -21,6 +21,7 @@ public class GraphQLFunction
     private readonly ILogger<GraphQLFunction> _logger;
     private readonly IGraphQLQueryValidator _queryValidator;
     private readonly JsonSerializerOptions _jsonOptions;
+    private readonly bool _isProduction;
 
     public GraphQLFunction(
         IDataContext dataContext,
@@ -34,6 +35,28 @@ public class GraphQLFunction
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             WriteIndented = false
+        };
+        _isProduction = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Development"
+                     && Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") != "Test";
+    }
+
+    /// <summary>
+    /// Gets a production-safe error message that doesn't leak implementation details.
+    /// </summary>
+    private string GetSafeErrorMessage(Exception ex)
+    {
+        // In development/test, show detailed errors for debugging
+        if (!_isProduction)
+            return ex.Message;
+
+        // In production, return generic messages to prevent information disclosure
+        return ex switch
+        {
+            JsonException => "Invalid request format",
+            UnauthorizedAccessException => "Access denied",
+            ArgumentException => "Invalid request parameters",
+            InvalidOperationException => "Operation could not be completed",
+            _ => "An error occurred processing your request"
         };
     }
 
@@ -92,10 +115,11 @@ public class GraphQLFunction
             }
             catch (JsonException ex)
             {
+                _logger.LogWarning(ex, "Invalid JSON in GraphQL request");
                 var badRequestError = new Error
                 {
                     Code = "INVALID_JSON",
-                    Message = $"Invalid JSON: {ex.Message}",
+                    Message = GetSafeErrorMessage(ex),
                     StatusCode = 400
                 };
                 var errorResponse = req.CreateResponse(HttpStatusCode.BadRequest);
@@ -177,17 +201,20 @@ public class GraphQLFunction
         }
         catch (Exception ex)
         {
+            // Always log the full error details server-side
             _logger.LogError(ex, "Error executing GraphQL query: {Message}", ex.Message);
+
+            // Return production-safe error message to client
             var serverError = new Error
             {
-                Code = "GRAPHQL_ERROR", 
-                Message = $"GraphQL query execution failed: {ex.Message}",
+                Code = "GRAPHQL_ERROR",
+                Message = GetSafeErrorMessage(ex),
                 StatusCode = 500
             };
             var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
             errorResponse.Headers.Add("Content-Type", "application/json");
-            await errorResponse.WriteStringAsync(JsonSerializer.Serialize(new { 
-                errors = new[] { serverError } 
+            await errorResponse.WriteStringAsync(JsonSerializer.Serialize(new {
+                errors = new[] { serverError }
             }, _jsonOptions));
             return errorResponse;
         }

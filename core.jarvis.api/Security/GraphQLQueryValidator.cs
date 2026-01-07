@@ -62,6 +62,16 @@ public class GraphQLValidationOptions
     /// Default: 10000 characters.
     /// </summary>
     public int MaxQueryLength { get; set; } = 10000;
+
+    /// <summary>
+    /// Maximum number of field aliases allowed in a single query.
+    /// This prevents alias multiplication attacks where attackers use aliases
+    /// to execute the same expensive operation multiple times.
+    /// Example attack: { user1: user { id } user2: user { id } ... user100: user { id } }
+    /// Each alias results in a separate database query.
+    /// Default: 10 aliases.
+    /// </summary>
+    public int MaxAliases { get; set; } = 10;
 }
 
 /// <summary>
@@ -75,6 +85,9 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
     // Regex patterns for validation
     private static readonly Regex FieldPattern = new(@"\b\w+\s*(?:@[^{(]+)?(?:\([^)]*\))?\s*(?={|$)", RegexOptions.Compiled);
     private static readonly Regex IntrospectionPattern = new(@"__schema|__type", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+    // Pattern to detect field aliases: "aliasName: fieldName" pattern
+    // Matches: word, optional whitespace, colon, optional whitespace, word (not followed by opening paren which would be a directive)
+    private static readonly Regex AliasPattern = new(@"\b(\w+)\s*:\s*(\w+)\s*(?:\(|{|\s)", RegexOptions.Compiled);
 
     public GraphQLQueryValidator(GraphQLValidationOptions? options = null, bool? isProduction = null)
     {
@@ -106,8 +119,14 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
                 "Introspection queries are not allowed in production");
         }
 
-        // Check query depth
-        var depth = CalculateQueryDepth(query);
+        // Validate braces are balanced and check query depth
+        var (isBalanced, depth) = ValidateAndCalculateDepth(query);
+        if (!isBalanced)
+        {
+            return GraphQLValidationResult.Failure(
+                "UNBALANCED_BRACES",
+                "Query contains unbalanced braces");
+        }
         if (depth > _options.MaxQueryDepth)
         {
             return GraphQLValidationResult.Failure(
@@ -115,7 +134,16 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
                 $"Query depth {depth} exceeds maximum allowed depth of {_options.MaxQueryDepth}");
         }
 
-        // Check field count
+        // Check alias count to prevent alias multiplication attacks
+        var aliasCount = CountAliases(query);
+        if (aliasCount > _options.MaxAliases)
+        {
+            return GraphQLValidationResult.Failure(
+                "TOO_MANY_ALIASES",
+                $"Query contains {aliasCount} aliases, exceeding maximum of {_options.MaxAliases}");
+        }
+
+        // Check field count (including aliases - each alias is a separate field execution)
         var fieldCount = CountFields(query);
         if (fieldCount > _options.MaxFieldCount)
         {
@@ -128,12 +156,15 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
     }
 
     /// <summary>
-    /// Calculates the maximum nesting depth of a GraphQL query.
+    /// Validates that braces are balanced and calculates the maximum nesting depth.
+    /// Prevents DoS attacks using unbalanced braces like "{ { { { { { { { { {"
     /// </summary>
-    private int CalculateQueryDepth(string query)
+    /// <param name="query">The GraphQL query string.</param>
+    /// <returns>A tuple of (isBalanced, maxDepth) where isBalanced indicates if braces match.</returns>
+    private (bool isBalanced, int maxDepth) ValidateAndCalculateDepth(string query)
     {
-        int maxDepth = 0;
         int currentDepth = 0;
+        int maxDepth = 0;
 
         foreach (char c in query)
         {
@@ -141,14 +172,25 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
             {
                 currentDepth++;
                 maxDepth = Math.Max(maxDepth, currentDepth);
+
+                // Early exit if too deep to prevent DoS with many opening braces
+                if (currentDepth > _options.MaxQueryDepth * 2)
+                    return (false, currentDepth);
             }
             else if (c == '}')
             {
-                currentDepth = Math.Max(0, currentDepth - 1);
+                currentDepth--;
+                // Unbalanced: more closing braces than opening
+                if (currentDepth < 0)
+                    return (false, 0);
             }
         }
 
-        return maxDepth;
+        // Must be balanced at end (no unclosed opening braces)
+        if (currentDepth != 0)
+            return (false, 0);
+
+        return (true, maxDepth);
     }
 
     /// <summary>
@@ -216,6 +258,63 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
     }
 
     /// <summary>
+    /// Counts the number of field aliases in a GraphQL query.
+    /// Aliases allow the same field to be queried multiple times with different names,
+    /// which can be exploited to multiply database queries.
+    /// Example: { user1: user { id } user2: user { id } } - this has 2 aliases.
+    /// </summary>
+    private int CountAliases(string query)
+    {
+        // Remove string literals to avoid false positives
+        var cleanQuery = RemoveStringLiterals(query);
+
+        // Count alias patterns (word: word pattern)
+        // Exclude variable definitions like $id: ID! by checking context
+        var matches = AliasPattern.Matches(cleanQuery);
+        int aliasCount = 0;
+
+        foreach (Match match in matches)
+        {
+            var alias = match.Groups[1].Value;
+            var fieldName = match.Groups[2].Value;
+
+            // Skip if this looks like a type definition (in variable declaration)
+            // Variable defs use $ prefix and type names are typically capitalized
+            if (IsGraphQLTypeName(fieldName))
+            {
+                continue;
+            }
+
+            // Skip GraphQL keywords used as "aliases" (shouldn't happen but be safe)
+            if (IsGraphQLKeyword(alias) || IsGraphQLKeyword(fieldName))
+            {
+                continue;
+            }
+
+            aliasCount++;
+        }
+
+        return aliasCount;
+    }
+
+    /// <summary>
+    /// Checks if a word looks like a GraphQL type name (capitalized, common type patterns).
+    /// Used to distinguish field aliases from type declarations.
+    /// </summary>
+    private bool IsGraphQLTypeName(string word)
+    {
+        if (string.IsNullOrEmpty(word))
+            return false;
+
+        // Common GraphQL scalar types
+        return word switch
+        {
+            "ID" or "Int" or "Float" or "String" or "Boolean" => true,
+            _ => false
+        };
+    }
+
+    /// <summary>
     /// Removes string literals from a query to avoid false positives.
     /// </summary>
     private string RemoveStringLiterals(string query)
@@ -259,5 +358,41 @@ public class GraphQLQueryValidator : IGraphQLQueryValidator
     private bool ContainsIntrospection(string query)
     {
         return IntrospectionPattern.IsMatch(query);
+    }
+
+    // Compiled regex for efficient mutation detection
+    private static readonly Regex MutationOperationPattern = new(
+        @"^\s*mutation\s*(?:\w+)?\s*(?:\([^)]*\))?\s*\{",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
+    /// <summary>
+    /// Determines if a GraphQL query is a mutation operation.
+    /// Uses proper pattern matching to detect mutation operations rather than simple string matching.
+    /// </summary>
+    /// <param name="query">The GraphQL query string</param>
+    /// <returns>True if the query is a mutation, false otherwise</returns>
+    public bool IsMutation(string query)
+    {
+        if (string.IsNullOrWhiteSpace(query))
+            return false;
+
+        var trimmed = query.TrimStart();
+
+        // Check for explicit mutation operation type at the start
+        if (trimmed.StartsWith("mutation", StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        // Check for mutation keyword with optional operation name and variables
+        // Pattern matches: "mutation", "mutation CreateUser", "mutation CreateUser($input: Input!)"
+        if (MutationOperationPattern.IsMatch(query))
+            return true;
+
+        // Note: Anonymous operations (queries without explicit type) are treated as queries by default
+        // per GraphQL spec. We don't assume mutation for security-conservative reasons because:
+        // 1. If no operation type is specified, GraphQL treats it as a query
+        // 2. Blocking legitimate queries would impact usability
+        // 3. Actual mutations should always be explicitly declared
+
+        return false;
     }
 }

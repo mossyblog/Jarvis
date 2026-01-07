@@ -2,6 +2,7 @@ using System.Text.Json;
 using core.jarvis.Data.GraphQL;
 using core.jarvis.Data.Query;
 using core.jarvis.Data.Schema;
+using core.jarvis.Security;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -246,6 +247,8 @@ public class DataContextCore : IDataContextCore
     public IGraphQLQuery GraphQL(string query)
     {
         var logger = _serviceProvider.GetRequiredService<ILogger<GraphQLQueryBuilder>>();
-        return new GraphQLQueryBuilder(_pgClient, logger, _auditService, query);
+        // Try to get IJwtValidator from DI - if not registered, will pass null (backward compatible)
+        var jwtValidator = _serviceProvider.GetService<IJwtValidator>();
+        return new GraphQLQueryBuilder(_pgClient, logger, _auditService, query, jwtValidator);
     }
 }

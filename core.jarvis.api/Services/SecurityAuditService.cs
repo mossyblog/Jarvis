@@ -88,6 +88,15 @@ public interface ISecurityAuditService
     /// <param name="targetType">The type of target (user, role, etc.)</param>
     /// <param name="targetId">The ID of the target entity</param>
     Task LogPermissionChange(Guid userId, string action, string permissionId, string targetType, Guid targetId);
+
+    /// <summary>
+    /// Logs role update events for comprehensive audit trails.
+    /// </summary>
+    /// <param name="updatedByUserId">The ID of the user performing the update</param>
+    /// <param name="roleId">The ID of the role being updated</param>
+    /// <param name="roleName">The name of the role</param>
+    /// <param name="permissionsChangedCount">The number of permissions that were modified</param>
+    Task LogRoleUpdated(Guid updatedByUserId, Guid roleId, string roleName, int permissionsChangedCount);
 }
 
 public class SecurityAuditService : ISecurityAuditService
@@ -236,13 +245,30 @@ public class SecurityAuditService : ISecurityAuditService
             // Use handler for all data operations
             var handler = _dataContext.For<SecurityAuditHandler>(userId);
             await handler.LogPermissionChanged(action, permissionId, targetType, targetId);
-            
-            _logger.LogInformation("Permission {Action} by {UserId} on {TargetType} {TargetId} for permission {PermissionId}", 
+
+            _logger.LogInformation("Permission {Action} by {UserId} on {TargetType} {TargetId} for permission {PermissionId}",
                 action, userId, targetType, targetId, permissionId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to log permission change");
+        }
+    }
+
+    public async Task LogRoleUpdated(Guid updatedByUserId, Guid roleId, string roleName, int permissionsChangedCount)
+    {
+        try
+        {
+            // Use handler - audit for the user making the update
+            var handler = _dataContext.For<SecurityAuditHandler>(updatedByUserId);
+            await handler.LogRoleUpdated(roleId, roleName, permissionsChangedCount);
+
+            _logger.LogInformation("Role {RoleName} (ID: {RoleId}) updated by {UserId}, permissions changed: {PermissionsCount}",
+                roleName, roleId, updatedByUserId, permissionsChangedCount);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to log role update");
         }
     }
 }

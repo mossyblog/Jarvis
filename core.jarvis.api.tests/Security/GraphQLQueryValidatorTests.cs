@@ -442,6 +442,217 @@ public class GraphQLQueryValidatorTests
         options.MaxFieldCount.ShouldBe(100);
         options.MaxQueryLength.ShouldBe(10000);
         options.BlockIntrospection.ShouldBeTrue();
+        options.MaxAliases.ShouldBe(10);
+    }
+
+    #endregion
+
+    #region Alias Multiplication Attack Tests
+
+    /// <summary>
+    /// INTENT: Verify queries with too many aliases are rejected (DoS prevention)
+    /// SECURITY: Prevents alias multiplication attack where same expensive field is queried multiple times
+    /// </summary>
+    [Fact]
+    public void Validate_TooManyAliases_ReturnsError()
+    {
+        // Arrange
+        var options = new GraphQLValidationOptions { MaxAliases = 3 };
+        var validator = new GraphQLQueryValidator(options, isProduction: false);
+        // 5 aliases - exceeds limit of 3
+        var query = "{ u1: user { id } u2: user { id } u3: user { id } u4: user { id } u5: user { id } }";
+
+        // Act
+        var result = validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.ErrorCode.ShouldBe("TOO_MANY_ALIASES");
+        result.ErrorMessage.ShouldContain("5");
+        result.ErrorMessage.ShouldContain("3");
+    }
+
+    /// <summary>
+    /// INTENT: Verify queries at alias limit pass validation
+    /// </summary>
+    [Fact]
+    public void Validate_AliasesAtLimit_ReturnsSuccess()
+    {
+        // Arrange
+        var options = new GraphQLValidationOptions { MaxAliases = 3, MaxFieldCount = 100 };
+        var validator = new GraphQLQueryValidator(options, isProduction: false);
+        // 3 aliases - exactly at limit
+        var query = "{ u1: user { id } u2: user { id } u3: user { id } }";
+
+        // Act
+        var result = validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// INTENT: Verify alias multiplication attack is blocked
+    /// SECURITY: Each alias causes a separate database query execution
+    /// </summary>
+    [Fact]
+    public void Validate_AliasMultiplicationAttack_IsBlocked()
+    {
+        // Arrange - simulate alias multiplication attack
+        var options = new GraphQLValidationOptions { MaxAliases = 10 };
+        var validator = new GraphQLQueryValidator(options, isProduction: false);
+
+        // Build an attack query with 15 aliases - each would execute the expensive user query
+        var aliases = string.Join(" ", Enumerable.Range(1, 15).Select(i => $"user{i}: user {{ id name email }}"));
+        var query = $"{{ {aliases} }}";
+
+        // Act
+        var result = validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.ErrorCode.ShouldBe("TOO_MANY_ALIASES");
+    }
+
+    /// <summary>
+    /// INTENT: Verify variable type definitions are not counted as aliases
+    /// </summary>
+    [Fact]
+    public void Validate_VariableDefinitions_NotCountedAsAliases()
+    {
+        // Arrange
+        var options = new GraphQLValidationOptions { MaxAliases = 1 };
+        var validator = new GraphQLQueryValidator(options, isProduction: false);
+        // This has variable definitions like $id: ID! which look like aliases but aren't
+        var query = @"query GetUser($id: ID!, $name: String) { user(id: $id) { id name } }";
+
+        // Act
+        var result = validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// INTENT: Verify queries without aliases pass
+    /// </summary>
+    [Fact]
+    public void Validate_NoAliases_ReturnsSuccess()
+    {
+        // Arrange
+        var options = new GraphQLValidationOptions { MaxAliases = 1 };
+        var validator = new GraphQLQueryValidator(options, isProduction: false);
+        var query = "{ user { id name email } }";
+
+        // Act
+        var result = validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
+    }
+
+    #endregion
+
+    #region Unbalanced Brace DoS Prevention Tests (jarvis-44)
+
+    /// <summary>
+    /// INTENT: Verify queries with more opening braces than closing are rejected
+    /// SECURITY: Prevents DoS attack using queries like "{ { { { { { {"
+    /// </summary>
+    [Fact]
+    public void Validate_UnbalancedOpeningBraces_ReturnsError()
+    {
+        // Arrange - Attack pattern with many opening braces
+        var query = "query { users { { { { { { { { { { {";
+
+        // Act
+        var result = _validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.ErrorCode.ShouldBe("UNBALANCED_BRACES");
+    }
+
+    /// <summary>
+    /// INTENT: Verify queries with more closing braces than opening are rejected
+    /// SECURITY: Prevents malformed queries with unbalanced structure
+    /// </summary>
+    [Fact]
+    public void Validate_UnbalancedClosingBraces_ReturnsError()
+    {
+        // Arrange
+        var query = "{ users } } } } }";
+
+        // Act
+        var result = _validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        result.ErrorCode.ShouldBe("UNBALANCED_BRACES");
+    }
+
+    /// <summary>
+    /// INTENT: Verify extreme opening brace attack (10000 braces) is blocked efficiently
+    /// SECURITY: Ensures early exit for obviously malicious queries
+    /// </summary>
+    [Fact]
+    public void Validate_MassiveOpeningBraceAttack_ReturnsError()
+    {
+        // Arrange - Simulate DoS attack with thousands of opening braces
+        var query = "query " + new string('{', 10000);
+
+        // Act
+        var result = _validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeFalse();
+        // Either caught as unbalanced or too deep (early exit)
+        (result.ErrorCode == "UNBALANCED_BRACES" || result.ErrorCode == "QUERY_TOO_LONG").ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// INTENT: Verify balanced braces pass validation
+    /// </summary>
+    [Fact]
+    public void Validate_BalancedBraces_ReturnsSuccess()
+    {
+        // Arrange
+        var query = "{ users { profile { settings { theme } } } }";
+
+        // Act
+        var result = _validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
+    }
+
+    /// <summary>
+    /// INTENT: Verify mixed content with balanced braces passes
+    /// </summary>
+    [Fact]
+    public void Validate_ComplexBalancedQuery_ReturnsSuccess()
+    {
+        // Arrange
+        var query = @"
+            query GetUserData($id: ID!) {
+                user(id: $id) {
+                    id
+                    name
+                    profile {
+                        avatar
+                        settings {
+                            theme
+                        }
+                    }
+                }
+            }
+        ";
+
+        // Act
+        var result = _validator.Validate(query);
+
+        // Assert
+        result.IsValid.ShouldBeTrue();
     }
 
     #endregion

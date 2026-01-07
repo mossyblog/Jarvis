@@ -1,5 +1,6 @@
 using System.Text.Json;
 using core.jarvis.Exceptions;
+using core.jarvis.Security;
 using Microsoft.Extensions.Logging;
 
 namespace core.jarvis.Data.GraphQL
@@ -12,15 +13,18 @@ namespace core.jarvis.Data.GraphQL
     {
         private readonly IPgClient _pgClient;
         private readonly IAuditService? _auditService;
+        private readonly IJwtValidator? _jwtValidator;
 
         protected GraphQLHandler(
             IDataContext dataContext,
             IPgClient pgClient,
             ILogger logger,
-            IAuditService? auditService = null) : base(dataContext, logger)
+            IAuditService? auditService = null,
+            IJwtValidator? jwtValidator = null) : base(dataContext, logger)
         {
             _pgClient = pgClient ?? throw new ArgumentNullException(nameof(pgClient));
             _auditService = auditService;
+            _jwtValidator = jwtValidator;
         }
 
         public async Task<T> Query<T>(string query, object? variables = null)
@@ -202,13 +206,14 @@ namespace core.jarvis.Data.GraphQL
 
         private IGraphQLQuery CreateQueryBuilder(string query)
         {
-            var jwt = _pgClient.GetJWT() 
+            var jwt = _pgClient.GetJWT()
                 ?? throw new UnauthorizedException("No JWT token available");
 
-            return new GraphQLQueryBuilder(_pgClient, 
+            return new GraphQLQueryBuilder(_pgClient,
                 Logger as ILogger<GraphQLQueryBuilder> ?? throw new InvalidOperationException("Logger type mismatch"),
-                _auditService, 
-                query)
+                _auditService,
+                query,
+                _jwtValidator)
                 .WithAuth(jwt);
         }
     }
