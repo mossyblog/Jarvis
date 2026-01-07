@@ -2,6 +2,7 @@ using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.Exceptions;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -21,13 +22,13 @@ public class RegistrationSystem
     /// Should match the cost factor used in PasswordPolicyService.
     /// </summary>
     private const int BCryptCostFactor = 12;
-    
+
     /// <summary>
     /// Maximum allowed length for user full name field.
     /// Prevents excessively long names that could impact database performance.
     /// </summary>
     private const int MaxFullNameLength = 255;
-    
+
     private readonly IDataContext _dataContext;
     private readonly IPasswordPolicyService _passwordPolicy;
     private readonly ISecurityAuditService _securityAudit;
@@ -55,18 +56,18 @@ public class RegistrationSystem
         // 1. Parse and validate request
         var request = ParseRegistrationRequest(requestBody);
         await ValidateRegistration(request);
-        
+
         // 2. Check email availability
         await CheckEmailAvailability(request.Email);
-        
+
         // 3. Generate new entity ID for the user
         var userEntityId = Guid.NewGuid();
-        
+
         // 4. Execute registration within a transaction for data consistency
         return await _dataContext.ExecuteInTransaction(async () =>
         {
             _logger.LogDebug("Starting transactional user registration for email: {Email}", request.Email);
-            
+
             // Create account component through handler
             var accountHandler = _dataContext.For<AccountHandler>(userEntityId);
             var account = await accountHandler.CreateAccount(new Account
@@ -81,13 +82,13 @@ public class RegistrationSystem
                 CreatedAt = DateTime.UtcNow,
                 LastUpdated = DateTime.UtcNow
             });
-            
+
             // Create security profile using handler with the provided name
             var profileHandler = _dataContext.For<AccountProfileHandler>(userEntityId);
             var profile = await profileHandler.CreateWithDefaults(request.Email, request.FullName);
-            
+
             // Log successful registration - wrapped in try-catch to prevent transaction failure
-            try 
+            try
             {
                 await _securityAudit.LogSuccessfulAuthentication(
                     userEntityId,
@@ -101,9 +102,9 @@ public class RegistrationSystem
                 // Log the error but don't fail the registration
                 _logger.LogWarning(ex, "Failed to log security audit event for registration, but continuing with registration");
             }
-            
+
             _logger.LogInformation("User registered successfully within transaction: {Email}", request.Email);
-            
+
             // Return both components as a flat list
             return new List<IComponent> { account, profile };
         });
@@ -122,13 +123,13 @@ public class RegistrationSystem
             {
                 PropertyNameCaseInsensitive = true
             };
-            
+
             var request = JsonSerializer.Deserialize<RegistrationRequest>(requestBody, options);
             if (request == null)
             {
                 throw new ValidationException(new Dictionary<string, string[]> { ["body"] = new[] { "Invalid request format" } });
             }
-            
+
             return request;
         }
         catch (JsonException ex)
@@ -141,7 +142,7 @@ public class RegistrationSystem
     private async Task ValidateRegistration(RegistrationRequest request)
     {
         var errors = new Dictionary<string, string[]>();
-        
+
         // Validate email
         if (string.IsNullOrWhiteSpace(request.Email))
         {
@@ -151,7 +152,7 @@ public class RegistrationSystem
         {
             errors["email"] = new[] { "Invalid email format" };
         }
-        
+
         // Validate password
         if (string.IsNullOrWhiteSpace(request.Password))
         {
@@ -165,13 +166,13 @@ public class RegistrationSystem
                 errors["password"] = passwordResult.Errors.ToArray();
             }
         }
-        
+
         // Validate name (optional but if provided, must be valid)
         if (!string.IsNullOrWhiteSpace(request.FullName) && request.FullName.Length > MaxFullNameLength)
         {
             errors["fullName"] = new[] { $"Name is too long (max {MaxFullNameLength} characters)" };
         }
-        
+
         if (errors.Any())
         {
             throw new ValidationException(errors);
@@ -182,16 +183,16 @@ public class RegistrationSystem
     {
         // Normalize email to lowercase for comparison
         var normalizedEmail = email.ToLower();
-        
+
         // Get all accounts and filter in memory to avoid SQL translation issues
         var allAccounts = await _dataContext.Query()
-            .WithAll<Account>(a => true)
+            .WithAll<Account>(Filter<Account>.All())
             .ToEntityComponents();
-            
+
         var existingAccount = allAccounts
             .Select(kvp => kvp.Value.Get<Account>())
             .FirstOrDefault(a => a != null && a.Email.ToLower() == normalizedEmail);
-            
+
         if (existingAccount != null)
         {
             _logger.LogInformation("Registration attempted with existing email: {Email}", email);

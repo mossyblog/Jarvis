@@ -1,4 +1,5 @@
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.tests.Components;
 using core.jarvis.tests.Helpers;
 using Shouldly;
@@ -396,7 +397,7 @@ public class EntityQueryIntegrationTests : IntegrationTestBase
             try
             {
                 entity = await TestDataContext().Query()
-                    .WithAll<TestComponent>(c => c.Name == testComponent.Name)
+                    .WithAll<TestComponent>(Filter<TestComponent>.Eq(c => c.Name, testComponent.Name))
                     .Single();
                 querySucceeded = true;
             }
@@ -438,7 +439,7 @@ public class EntityQueryIntegrationTests : IntegrationTestBase
         var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
         {
             await TestDataContext().Query()
-                .WithAll<TestComponent>(c => c.Name == "NonExistentEntity_" + Guid.NewGuid())
+                .WithAll<TestComponent>(Filter<TestComponent>.Eq(c => c.Name, "NonExistentEntity_" + Guid.NewGuid()))
                 .Single();
         });
         
@@ -478,7 +479,7 @@ public class EntityQueryIntegrationTests : IntegrationTestBase
         var exception = await Should.ThrowAsync<InvalidOperationException>(async () =>
         {
             await TestDataContext().Query()
-                .WithAll<TestComponent>(c => c.Status == sharedStatus)
+                .WithAll<TestComponent>(Filter<TestComponent>.Eq(c => c.Status, sharedStatus))
                 .Single();
         });
         
@@ -521,8 +522,8 @@ public class EntityQueryIntegrationTests : IntegrationTestBase
         
         // Act - Query with ordering then Single
         var entity = await TestDataContext().Query()
-            .WithAll<TestComponent>(c => c.Name == uniqueName)
-            .WithAll<PositionComponent>(p => p.X == 100)
+            .WithAll<TestComponent>(Filter<TestComponent>.Eq(c => c.Name, uniqueName))
+            .WithAll<PositionComponent>(Filter<PositionComponent>.Eq(p => p.X, 100))
             .OrderBy<TestComponent>(c => c.Value)
             .Single();
         

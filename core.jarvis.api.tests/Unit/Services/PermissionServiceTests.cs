@@ -158,21 +158,39 @@ public class PermissionServiceTests : ApiIntegrationTestBase
         var account = await CreateTestAccount(email, "TestPassword123!");
         var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
         var profile = await profileHandler.CreateWithDefaults(email);
-        
-        // Add a specific permission
-        var permissionId = "test.permission.read";
-        var updatedProfile = profile with 
-        { 
-            PermissionIds = profile.PermissionIds.Concat(new[] { permissionId }).ToArray() 
+
+        // Create a Permission entity with the specific permission
+        var permission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "test.permission",
+            Actions = new[] { "read" }
+        };
+        await TestDataContext().Commit(permission);
+
+        // Create a Role with that permission
+        var role = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "TestRole",
+            Description = "Role for testing direct permissions",
+            PermissionIds = new[] { permission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(role);
+
+        // Update the profile to have this role
+        var updatedProfile = profile with
+        {
+            RoleIds = profile.RoleIds.Concat(new[] { role.OwnerEntityId.ToString() }).ToArray()
         };
         await TestDataContext().Commit(updatedProfile);
         TrackEntity(account.OwnerEntityId);
-        
+
         // Invalidate cache to ensure fresh data
         await _permissionService.InvalidateCacheAsync(account.OwnerEntityId);
 
         // Act
-        var hasPermission = await _permissionService.HasPermissionAsync(account.OwnerEntityId, permissionId);
+        var hasPermission = await _permissionService.HasPermissionAsync(account.OwnerEntityId, "test.permission.read");
 
         // Assert
         hasPermission.ShouldBeTrue();
@@ -219,14 +237,36 @@ public class PermissionServiceTests : ApiIntegrationTestBase
         var account = await CreateTestAccount(email, "TestPassword123!");
         var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
         var profile = await profileHandler.CreateWithDefaults(email);
-        
-        // Add parent permission "admin"
-        var updatedProfile = profile with 
-        { 
-            PermissionIds = new[] { "admin" }
+
+        // Create a Permission with parent permission "admin"
+        var adminPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "admin",
+            Actions = Array.Empty<string>()
+        };
+        await TestDataContext().Commit(adminPermission);
+
+        // Create a Role with the admin permission
+        var adminRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "AdminRole",
+            Description = "Admin role with hierarchical permissions",
+            PermissionIds = new[] { adminPermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(adminRole);
+
+        // Update profile with admin role
+        var updatedProfile = profile with
+        {
+            RoleIds = new[] { adminRole.OwnerEntityId.ToString() }
         };
         await TestDataContext().Commit(updatedProfile);
         TrackEntity(account.OwnerEntityId);
+
+        // Invalidate cache to ensure fresh data
+        await _permissionService.InvalidateCacheAsync(account.OwnerEntityId);
 
         // Act - Check for child permissions
         var hasAdminUsers = await _permissionService.HasPermissionAsync(account.OwnerEntityId, "admin.users");
@@ -255,14 +295,36 @@ public class PermissionServiceTests : ApiIntegrationTestBase
         var account = await CreateTestAccount(email, "TestPassword123!");
         var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
         var profile = await profileHandler.CreateWithDefaults(email);
-        
-        // Add wildcard permission
-        var updatedProfile = profile with 
-        { 
-            PermissionIds = new[] { "admin.users.*" }
+
+        // Create a Permission with wildcard pattern
+        var wildcardPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "admin.users.*",
+            Actions = Array.Empty<string>()
+        };
+        await TestDataContext().Commit(wildcardPermission);
+
+        // Create a Role with the wildcard permission
+        var wildcardRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "WildcardRole",
+            Description = "Role with wildcard permissions",
+            PermissionIds = new[] { wildcardPermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(wildcardRole);
+
+        // Update profile with wildcard role
+        var updatedProfile = profile with
+        {
+            RoleIds = new[] { wildcardRole.OwnerEntityId.ToString() }
         };
         await TestDataContext().Commit(updatedProfile);
         TrackEntity(account.OwnerEntityId);
+
+        // Invalidate cache to ensure fresh data
+        await _permissionService.InvalidateCacheAsync(account.OwnerEntityId);
 
         // Act
         var hasRead = await _permissionService.HasPermissionAsync(account.OwnerEntityId, "admin.users.read");
@@ -293,20 +355,42 @@ public class PermissionServiceTests : ApiIntegrationTestBase
         var account = await CreateTestAccount(email, "TestPassword123!");
         var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
         var profile = await profileHandler.CreateWithDefaults(email);
-        
-        // Add one of the permissions
-        var updatedProfile = profile with 
-        { 
-            PermissionIds = new[] { "users.read" }
+
+        // Create a Permission with users.read
+        var readPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "users",
+            Actions = new[] { "read" }
+        };
+        await TestDataContext().Commit(readPermission);
+
+        // Create a Role with the read permission
+        var readerRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "ReaderRole",
+            Description = "Role with read permission",
+            PermissionIds = new[] { readPermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(readerRole);
+
+        // Update profile with reader role
+        var updatedProfile = profile with
+        {
+            RoleIds = new[] { readerRole.OwnerEntityId.ToString() }
         };
         await TestDataContext().Commit(updatedProfile);
         TrackEntity(account.OwnerEntityId);
 
+        // Invalidate cache to ensure fresh data
+        await _permissionService.InvalidateCacheAsync(account.OwnerEntityId);
+
         // Act
         var hasAny = await _permissionService.HasAnyPermissionAsync(
-            account.OwnerEntityId, 
-            "users.read", 
-            "users.write", 
+            account.OwnerEntityId,
+            "users.read",
+            "users.write",
             "admin.users"
         );
 
@@ -330,21 +414,45 @@ public class PermissionServiceTests : ApiIntegrationTestBase
         var account = await CreateTestAccount(email, "TestPassword123!");
         var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
         var profile = await profileHandler.CreateWithDefaults(email);
-        
-        // Add only some of the required permissions
-        var updatedProfile = profile with 
-        { 
-            PermissionIds = new[] { "users.read", "users.write" }
+
+        // Create permissions for different domains: documents.read, documents.write
+        // (but NOT reports.analyze to demonstrate AND logic failure)
+        // Using different domains to avoid hierarchical permission inheritance
+        var documentsPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "documents",
+            Actions = new[] { "read", "write" }
+        };
+        await TestDataContext().Commit(documentsPermission);
+
+        // Create a Role with documents read/write permissions (but NOT reports.analyze)
+        var editorRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "EditorRole",
+            Description = "Role with document read and write permissions",
+            PermissionIds = new[] { documentsPermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(editorRole);
+
+        // Update profile with editor role
+        var updatedProfile = profile with
+        {
+            RoleIds = new[] { editorRole.OwnerEntityId.ToString() }
         };
         await TestDataContext().Commit(updatedProfile);
         TrackEntity(account.OwnerEntityId);
 
-        // Act
+        // Invalidate cache to ensure fresh data
+        await _permissionService.InvalidateCacheAsync(account.OwnerEntityId);
+
+        // Act - user has documents.read and documents.write, but NOT reports.analyze
         var hasAll = await _permissionService.HasAllPermissionsAsync(
-            account.OwnerEntityId, 
-            "users.read", 
-            "users.write", 
-            "users.delete" // Missing this one
+            account.OwnerEntityId,
+            "documents.read",
+            "documents.write",
+            "reports.analyze" // Missing this one (different domain)
         );
 
         // Assert

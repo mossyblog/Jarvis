@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using core.jarvis.api.Models;
 using core.jarvis.api.tests.Helpers;
 using core.jarvis.api.Handlers;
@@ -5,8 +8,6 @@ using core.jarvis.api.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Shouldly;
 using Xunit;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace core.jarvis.api.tests.Integration;
 
@@ -111,10 +112,36 @@ public class JwtTokenIntegrationTests : ApiIntegrationTestBase
         var profileHandler = TestDataContext().For<AccountProfileHandler>(account.OwnerEntityId);
         var profile = await profileHandler.CreateWithDefaults("noperms@example.com");
         
-        // Add permissions to the profile
-        var updatedProfile = profile with 
-        { 
-            PermissionIds = new[] { "admin.users.read", "admin.users.write" }
+        // Create permissions for admin.users.read and admin.users.write
+        var readPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "admin.users",
+            Actions = new[] { "read" }
+        };
+        var writePermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "admin.users",
+            Actions = new[] { "write" }
+        };
+        await TestDataContext().Commit(readPermission);
+        await TestDataContext().Commit(writePermission);
+
+        // Create a Role with those permissions
+        var adminRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "AdminUsersRole",
+            Description = "Role with admin user permissions",
+            PermissionIds = new[] { readPermission.OwnerEntityId.ToString(), writePermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(adminRole);
+
+        // Update profile with admin role
+        var updatedProfile = profile with
+        {
+            RoleIds = profile.RoleIds.Concat(new[] { adminRole.OwnerEntityId.ToString() }).ToArray()
         };
         await TestDataContext().Commit(updatedProfile);
         
@@ -158,11 +185,33 @@ public class JwtTokenIntegrationTests : ApiIntegrationTestBase
             await profileHandler.AssignRole(Guid.NewGuid());
         }
         
+        // Create many permissions
+        var permissionIds = new List<string>();
+        for (int p = 1; p <= 50; p++)
+        {
+            var perm = new Permission
+            {
+                OwnerEntityId = Guid.NewGuid(),
+                Resource = $"permission.{p}",
+                Actions = new[] { "read", "write" }
+            };
+            await TestDataContext().Commit(perm);
+            permissionIds.Add(perm.OwnerEntityId.ToString());
+        }
+
+        // Create a role with all those permissions
+        var manyPermsRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "ManyPermsRole",
+            Description = "Role with many permissions",
+            PermissionIds = permissionIds.ToArray()
+        };
+        await TestDataContext().Commit(manyPermsRole);
+
+        // Update profile with the role
         var updatedProfile = await profileHandler.Get();
-        var manyPermissions = Enumerable.Range(1, 50)
-            .Select(i => $"permission.{i}")
-            .ToArray();
-        updatedProfile = updatedProfile! with { PermissionIds = manyPermissions };
+        updatedProfile = updatedProfile! with { RoleIds = updatedProfile.RoleIds.Concat(new[] { manyPermsRole.OwnerEntityId.ToString() }).ToArray() };
         await TestDataContext().Commit(updatedProfile);
         
         TrackEntity(account.OwnerEntityId);

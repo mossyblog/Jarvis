@@ -27,12 +27,6 @@ public record SecurityProfile : IComponent
     public string[] RoleIds { get; init; } = Array.Empty<string>();
 
     /// <summary>
-    /// Array of permission entity IDs this user has.
-    /// This is denormalized from roles for fast permission checks.
-    /// </summary>
-    public string[] PermissionIds { get; init; } = Array.Empty<string>();
-
-    /// <summary>
     /// User preferences as JSON string (stored as JSONB in database).
     /// </summary>
     public string Preferences { get; init; } = "{}";

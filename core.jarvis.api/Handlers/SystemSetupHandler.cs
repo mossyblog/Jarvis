@@ -1,4 +1,5 @@
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.api.Models;
 using Microsoft.Extensions.Logging;
 
@@ -23,7 +24,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
     public async Task<SystemSetup> Save()
     {
         var setup = await GetOrDefault() ?? throw new InvalidOperationException("SystemSetup component not found");
-        
+
         setup = setup with { OwnerEntityId = OwnerEntityId, LastUpdated = DateTime.UtcNow };
         await DataContext.TryCommit(setup);
         return setup;
@@ -87,7 +88,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
 
         // Fetch all navigation items ONCE before the loop
         var allItems = await DataContext.Query()
-            .WithAll<NavigationItem>()
+            .WithAll<NavigationItem>(Filter<NavigationItem>.All())
             .ToEntityComponents();
 
         var existingByMenuId = allItems
@@ -123,7 +124,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
     public async Task<List<Role>> GetAllRoles()
     {
         var roleEntities = await DataContext.Query()
-            .WithAll<Role>()
+            .WithAll<Role>(Filter<Role>.All())
             .ToEntityComponents();
 
         var roles = new List<Role>();
@@ -168,7 +169,7 @@ public class SystemSetupHandler : ComponentHandler<SystemSetup>
 
         // Fetch all roles ONCE before the loop
         var allRoles = await DataContext.Query()
-            .WithAll<Role>()
+            .WithAll<Role>(Filter<Role>.All())
             .ToEntityComponents();
 
         var existingByName = allRoles

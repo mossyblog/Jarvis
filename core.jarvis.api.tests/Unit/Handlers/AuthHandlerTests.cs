@@ -58,13 +58,38 @@ public class AuthHandlerTests : ApiIntegrationTestBase
         };
         await TestDataContext().Commit(account);
         
-        // Create SecurityProfile
+        // Create Permission entities
+        var readPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "data",
+            Actions = new[] { "read" }
+        };
+        var writePermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "data",
+            Actions = new[] { "write" }
+        };
+        await TestDataContext().Commit(readPermission);
+        await TestDataContext().Commit(writePermission);
+
+        // Create Role with those permissions
+        var adminRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "admin",
+            Description = "Admin role",
+            PermissionIds = new[] { readPermission.OwnerEntityId.ToString(), writePermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(adminRole);
+
+        // Create SecurityProfile with role
         var securityProfile = new SecurityProfile
         {
             OwnerEntityId = userEntityId,
             Name = "Test User",
-            RoleIds = new[] { "admin" },
-            PermissionIds = new[] { "read", "write" },
+            RoleIds = new[] { adminRole.OwnerEntityId.ToString() },
             Preferences = """{"theme": "dark", "language": "en"}""",
             LastUpdated = DateTime.UtcNow
         };

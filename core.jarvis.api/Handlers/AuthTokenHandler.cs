@@ -2,6 +2,7 @@ using System.Linq;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 
@@ -57,12 +58,12 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
         // Find and revoke the token by SessionId
         var tokenEntities = await DataContext.Query()
-            .WithAll<AuthToken>()
+            .WithAll<AuthToken>(Filter<AuthToken>.All())
             .ToEntityComponents();
-            
+
         // Filter in memory to avoid SQL translation issues
         var activeTokens = tokenEntities
-            .Where(kvp => 
+            .Where(kvp =>
             {
                 var token = kvp.Value.Get<AuthToken>();
                 return token != null && token.SessionId == authToken.SessionId && !token.IsRevoked;
@@ -84,8 +85,8 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             }
         }
 
-        return authToken with 
-        { 
+        return authToken with
+        {
             AccessToken = string.Empty,
             RefreshToken = string.Empty,
             IsRevoked = true,
@@ -124,12 +125,12 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
 
             // Find active token by refresh token
             var tokenEntities = await DataContext.Query()
-                .WithAll<AuthToken>()
+                .WithAll<AuthToken>(Filter<AuthToken>.All())
                 .ToEntityComponents();
-                
+
             // Filter in memory for active tokens
             var activeTokens = tokenEntities
-                .Where(kvp => 
+                .Where(kvp =>
                 {
                     var token = kvp.Value.Get<AuthToken>();
                     return token != null && !token.IsRevoked && token.RefreshExpiresAt > DateTime.UtcNow;
@@ -186,7 +187,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             };
 
             await DataContext.TryCommit(newToken);
-            Logger.LogInformation("Token rotated: old session {OldSession} revoked, new session {NewSession} created", 
+            Logger.LogInformation("Token rotated: old session {OldSession} revoked, new session {NewSession} created",
                 matchingToken.SessionId, newToken.SessionId);
 
             return newToken;
@@ -230,7 +231,7 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
         {
             var tokenService = _tokenService;
             var principal = tokenService.Validate(authToken.AccessToken);
-            
+
             if (principal == null)
             {
                 return new TokenValidation
@@ -277,15 +278,15 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
         try
         {
             var allTokens = await DataContext.Query()
-                .WithAll<AuthToken>()
+                .WithAll<AuthToken>(Filter<AuthToken>.All())
                 .ToEntityComponents();
-                
+
             // Filter in memory for expired/revoked tokens for this owner
             var expiredTokens = allTokens
-                .Where(kvp => 
+                .Where(kvp =>
                 {
                     var token = kvp.Value.Get<AuthToken>();
-                    return token != null && token.OwnerEntityId == OwnerEntityId && 
+                    return token != null && token.OwnerEntityId == OwnerEntityId &&
                         (token.RefreshExpiresAt < DateTime.UtcNow || token.IsRevoked);
                 });
 
@@ -327,15 +328,15 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
         try
         {
             var allSessions = await DataContext.Query()
-                .WithAll<AuthToken>()
+                .WithAll<AuthToken>(Filter<AuthToken>.All())
                 .ToEntityComponents();
-                
+
             // Filter in memory for active sessions for this owner
             var activeSessions = allSessions
-                .Where(kvp => 
+                .Where(kvp =>
                 {
                     var token = kvp.Value.Get<AuthToken>();
-                    return token != null && token.OwnerEntityId == OwnerEntityId && 
+                    return token != null && token.OwnerEntityId == OwnerEntityId &&
                         !token.IsRevoked && token.RefreshExpiresAt > DateTime.UtcNow;
                 })
                 .ToList();

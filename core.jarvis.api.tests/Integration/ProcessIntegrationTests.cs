@@ -179,13 +179,46 @@ public class ProcessIntegrationTests : ApiIntegrationTestBase, IAsyncLifetime
         var password = "TestPassword123!";
         var userEntityId = await CreateTestUser(email, password);
         
+        // Create Permission entities
+        var readPermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "data",
+            Actions = new[] { "read" }
+        };
+        var writePermission = new Permission
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Resource = "data",
+            Actions = new[] { "write" }
+        };
+        await TestDataContext().Commit(readPermission);
+        await TestDataContext().Commit(writePermission);
+
+        // Create Roles with permissions
+        var adminRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "admin",
+            Description = "Admin role",
+            PermissionIds = new[] { readPermission.OwnerEntityId.ToString(), writePermission.OwnerEntityId.ToString() }
+        };
+        var userRole = new Role
+        {
+            OwnerEntityId = Guid.NewGuid(),
+            Name = "user",
+            Description = "User role",
+            PermissionIds = new[] { readPermission.OwnerEntityId.ToString() }
+        };
+        await TestDataContext().Commit(adminRole);
+        await TestDataContext().Commit(userRole);
+
         // Create SecurityProfile with JSONB preferences
         var securityProfile = new SecurityProfile
         {
             OwnerEntityId = userEntityId,
             Name = "Test User",
-            RoleIds = new[] { "admin", "user" },
-            PermissionIds = new[] { "read", "write" },
+            RoleIds = new[] { adminRole.OwnerEntityId.ToString(), userRole.OwnerEntityId.ToString() },
             Preferences = """{"theme": "dark", "language": "en", "nested": {"value": 123}}""",
             LastUpdated = DateTime.UtcNow
         };

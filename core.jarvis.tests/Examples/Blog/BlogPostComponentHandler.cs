@@ -1,4 +1,5 @@
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.Exceptions;
 using core.jarvis.Validation;
 using Microsoft.Extensions.Logging;
@@ -23,7 +24,7 @@ public class BlogPostComponentHandler : ComponentHandler<BlogPostComponent>
     {
         // Get all entities that have BlogPostComponent for this specific entity
         var entityComponents = await DataContext.Query()
-            .WithAll<BlogPostComponent>(p => p.OwnerEntityId == OwnerEntityId)  // Filter by owner entity
+            .WithAll<BlogPostComponent>(Filter<BlogPostComponent>.Eq(p => p.OwnerEntityId, OwnerEntityId))  // Filter by owner entity
             .ToEntityComponents();
 
         var posts = new List<BlogPostComponent>();

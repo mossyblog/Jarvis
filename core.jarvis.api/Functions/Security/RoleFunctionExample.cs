@@ -9,6 +9,7 @@ using core.jarvis.api.Middleware;
 using core.jarvis.api.Extensions;
 using core.jarvis.api.Attributes;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 
 namespace core.jarvis.api.Functions.Security;
 
@@ -49,11 +50,11 @@ public class RoleFunctionExample
         {
             // Authorization is handled by middleware using the RequirePermission attribute
             // No need to manually check permissions here
-            
+
             var roleEntities = await _dataContext.Query()
-                .WithAll<Role>(r => true)
+                .WithAll<Role>(Filter<Role>.All())
                 .ToEntityComponents();
-            
+
             var roles = roleEntities.Values
                 .Select(entity => entity.Get<Role>())
                 .Where(role => role != null)

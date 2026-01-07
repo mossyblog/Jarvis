@@ -11,6 +11,7 @@ using core.jarvis.api.Attributes;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.Functions.Worker.Middleware;
@@ -28,7 +29,7 @@ namespace core.jarvis.api.Middleware;
 public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
 {
     private readonly ILogger<AuthorizationMiddleware> _logger;
-    
+
     // Define which endpoints don't require authentication
     private static readonly HashSet<string> PublicEndpoints = new()
     {
@@ -55,7 +56,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         }
 
         var path = httpRequest.Url.AbsolutePath.ToLower();
-        
+
         // Allow public endpoints without authentication
         if (IsPublicEndpoint(path))
         {
@@ -69,7 +70,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
         {
             authHeader = authValues?.FirstOrDefault();
         }
-        
+
         if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("Missing or invalid Authorization header for path: {Path}", path);
@@ -84,7 +85,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             // Validate token
             var configuration = context.InstanceServices.GetRequiredService<IConfiguration>();
             var tokenService = context.InstanceServices.GetRequiredService<ITokenService>();
-            
+
             var principal = tokenService.Validate(token);
             if (principal == null)
             {
@@ -111,9 +112,9 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             {
                 var dataContext = context.InstanceServices.GetRequiredService<IDataContext>();
                 var authTokens = await dataContext.Query()
-                    .WithAll<AuthToken>(t => t.SessionId == sessionGuid && t.IsRevoked)
+                    .WithAll<AuthToken>(Filter<AuthToken>.Eq(t => t.SessionId, sessionGuid).And(Filter<AuthToken>.Eq(t => t.IsRevoked, true)))
                     .ToEntityComponents();
-                    
+
                 if (authTokens.Any())
                 {
                     _logger.LogWarning("Revoked token used by user {UserId} for path: {Path}", userId, path);
@@ -143,7 +144,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             context.Items["AuthToken"] = token;
 
             _logger.LogInformation("Authorized user {UserId} for path: {Path}", userId, path);
-            
+
             // Continue to the function
             await next(context);
         }
@@ -176,12 +177,12 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
             {
                 var typeName = targetMethod.Substring(0, lastDotIndex);
                 var methodName = targetMethod.Substring(lastDotIndex + 1);
-                
+
                 // Try to find the type and method
                 var type = AppDomain.CurrentDomain.GetAssemblies()
                     .SelectMany(a => a.GetTypes())
                     .FirstOrDefault(t => t.FullName == typeName);
-                    
+
                 if (type != null)
                 {
                     var method = type.GetMethod(methodName);
@@ -189,7 +190,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                     {
                         // Check for RequirePermission attributes
                         var permissionAttributes = method.GetCustomAttributes<RequirePermissionAttribute>().ToList();
-                        
+
                         if (permissionAttributes.Any())
                         {
                             // Group by operator
@@ -197,12 +198,12 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                                 .Where(p => p.Operator == PermissionOperator.Or)
                                 .Select(p => p.Permission)
                                 .ToList();
-                                
+
                             var andPermissions = permissionAttributes
                                 .Where(p => p.Operator == PermissionOperator.And)
                                 .Select(p => p.Permission)
                                 .ToList();
-                            
+
                             // Check OR permissions (user needs at least one)
                             if (orPermissions.Any())
                             {
@@ -212,7 +213,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                                     return false;
                                 }
                             }
-                            
+
                             // Check AND permissions (user needs all)
                             if (andPermissions.Any())
                             {
@@ -222,19 +223,19 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                                     return false;
                                 }
                             }
-                            
+
                             return true;
                         }
                     }
                 }
             }
         }
-        
+
         // Fallback to path-based permission requirements for backward compatibility
         var permissionRequirements = new Dictionary<string, string>
         {
             { "/api/security/roles", "admin.roles" },           // Role management
-            { "/api/security/accounts", "admin.accounts" },     // Account management  
+            { "/api/security/accounts", "admin.accounts" },     // Account management
             { "/api/security/permissions", "admin.permissions" }, // Permission management
             { "/api/security/navigation", null }                // Navigation available to all authenticated users
         };
@@ -249,7 +250,7 @@ public class AuthorizationMiddleware : IFunctionsWorkerMiddleware
                 {
                     return true;
                 }
-                
+
                 return await permissionService.HasPermissionAsync(userId, requirement.Value);
             }
         }
@@ -310,7 +311,7 @@ public static class FunctionContextExtensions
     {
         return context.Items.TryGetValue("UserPermissions", out var permissions) ? permissions as HashSet<string> : null;
     }
-    
+
     public static SecurityProfile? GetSecurityProfile(this FunctionContext context)
     {
         return context.Items.TryGetValue("SecurityProfile", out var profile) ? profile as SecurityProfile : null;

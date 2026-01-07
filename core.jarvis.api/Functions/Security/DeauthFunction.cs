@@ -10,6 +10,7 @@ using System.Text.Json;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Models;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using Newtonsoft.Json.Serialization;
 
 namespace core.jarvis.api.Functions.Security;
@@ -102,7 +103,7 @@ public class DeauthFunction
 
             // Find tokens by SessionId and revoke them using handler
             var tokenEntities = await _dataContext.Query()
-                .WithAll<AuthToken>(t => t.SessionId == deauthRequest.SessionId)
+                .WithAll<AuthToken>(Filter<AuthToken>.Eq(t => t.SessionId, deauthRequest.SessionId))
                 .ToList();
 
             if (!tokenEntities.Any())
@@ -158,7 +159,7 @@ public static partial class HttpRequestDataExtensions
             Message = message,
             StatusCode = (int)statusCode
         };
-        
+
         var response = request.CreateResponse(statusCode);
         response.Headers.Add("Content-Type", "application/json");
         await response.WriteStringAsync(JsonSerializer.Serialize(error, new JsonSerializerOptions
@@ -176,8 +177,8 @@ public class DeauthRequestExample : OpenApiExample<AuthToken>
 {
     public override IOpenApiExample<AuthToken> Build(NamingStrategy? namingStrategy = null)
     {
-        Examples.Add(OpenApiExampleResolver.Resolve("Deauth Request", new AuthToken 
-        { 
+        Examples.Add(OpenApiExampleResolver.Resolve("Deauth Request", new AuthToken
+        {
             SessionId = Guid.Parse("550e8400-e29b-41d4-a716-446655440000")
         }, namingStrategy));
         return this;
