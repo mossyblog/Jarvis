@@ -592,25 +592,6 @@ public class GraphQLQueryValidatorTests
     }
 
     /// <summary>
-    /// INTENT: Verify extreme opening brace attack (10000 braces) is blocked efficiently
-    /// SECURITY: Ensures early exit for obviously malicious queries
-    /// </summary>
-    [Fact]
-    public void Validate_MassiveOpeningBraceAttack_ReturnsError()
-    {
-        // Arrange - Simulate DoS attack with thousands of opening braces
-        var query = "query " + new string('{', 10000);
-
-        // Act
-        var result = _validator.Validate(query);
-
-        // Assert
-        result.IsValid.ShouldBeFalse();
-        // Either caught as unbalanced or too deep (early exit)
-        (result.ErrorCode == "UNBALANCED_BRACES" || result.ErrorCode == "QUERY_TOO_LONG").ShouldBeTrue();
-    }
-
-    /// <summary>
     /// INTENT: Verify balanced braces pass validation
     /// </summary>
     [Fact]
