@@ -93,6 +93,29 @@ public class PermissionService : IPermissionService
         _cache.Remove(cacheKey);
         _logger.LogInformation("Invalidated permission cache for user {UserId}", userId);
     }
+
+    public async Task InvalidateCacheForRoleAsync(Guid roleId)
+    {
+        // Find all users with this role and invalidate their caches
+        var roleIdStr = roleId.ToString();
+        var profiles = await _dataContext.Query()
+            .WithAll<SecurityProfile>()
+            .ToEntityComponents();
+
+        var invalidatedCount = 0;
+        foreach (var kvp in profiles)
+        {
+            var profile = kvp.Value.Get<SecurityProfile>();
+            if (profile != null && profile.RoleIds.Contains(roleIdStr))
+            {
+                var cacheKey = GetCacheKey(profile.OwnerEntityId);
+                _cache.Remove(cacheKey);
+                invalidatedCount++;
+            }
+        }
+
+        _logger.LogInformation("Invalidated permission cache for {Count} users with role {RoleId}", invalidatedCount, roleId);
+    }
     
     public async Task<HashSet<string>> GetUserPermissionsAsync(Guid userId)
     {

@@ -11,6 +11,7 @@ public interface IDataContextCore
     IComponentHandler For(Type componentType, Guid entityId);
     THandler For<THandler>(Guid entityId) where THandler : class, IComponentHandler;
     Entity NewEntity();
+    Task EnsureTableExists<TComponent>() where TComponent : class, IComponent, new();
     Task<TComponent?> GetExistingComponent<TComponent>(TComponent component) where TComponent : class, IComponent, new();
     Task Commit<TComponent>(TComponent component) where TComponent : class, IComponent, new();
     Task<bool> TryCommit<TComponent>(TComponent component) where TComponent : class, IComponent, new();

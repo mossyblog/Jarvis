@@ -62,50 +62,10 @@ public static class ServiceCollectionExtensions
         // Add core Jarvis services
         services.RegisterJarvis();
 
-        // Register query handlers for API-specific components
-        services.AddScoped<IComponentQueryHandler<SecurityProfile>, ComponentQueryHandler<SecurityProfile>>();
-        services.AddScoped<IComponentQueryHandler<Account>, ComponentQueryHandler<Account>>();
-        services.AddScoped<IComponentQueryHandler<AuthToken>, ComponentQueryHandler<AuthToken>>();
-        services.AddScoped<IComponentQueryHandler<Role>, ComponentQueryHandler<Role>>();
-        services.AddScoped<IComponentQueryHandler<Permission>, ComponentQueryHandler<Permission>>();
-        services.AddScoped<IComponentQueryHandler<NavigationItem>, ComponentQueryHandler<NavigationItem>>();
-        services.AddScoped<IComponentQueryHandler<SecurityAuditEvent>, ComponentQueryHandler<SecurityAuditEvent>>();
+        // Auto-register all handlers and query handlers from this assembly
+        // This replaces manual registration of 11 handlers (22 lines) with assembly scanning
+        services.RegisterAllComponentHandlersAndQueriesFromAssembly(typeof(AuthHandler).Assembly);
 
-        // Register API-specific handlers - both as interface and concrete type
-        // This allows DataContext.For<THandler> to resolve them by concrete type
-        services.AddScoped<IComponentHandler, SystemSetupHandler>();
-        services.AddScoped<SystemSetupHandler>();
-        
-        services.AddScoped<IComponentHandler, AuthHandler>();
-        services.AddScoped<AuthHandler>();
-        
-        services.AddScoped<IComponentHandler, AuthTokenHandler>();
-        services.AddScoped<AuthTokenHandler>();
-        
-        services.AddScoped<IComponentHandler, SecurityTokenHandler>();
-        services.AddScoped<SecurityTokenHandler>();
-        
-        services.AddScoped<IComponentHandler, AccountHandler>();
-        services.AddScoped<AccountHandler>();
-        
-        services.AddScoped<IComponentHandler, AccountProfileHandler>();
-        services.AddScoped<AccountProfileHandler>();
-        
-        services.AddScoped<IComponentHandler, RoleHandler>();
-        services.AddScoped<RoleHandler>();
-        
-        services.AddScoped<IComponentHandler, PermissionHandler>();
-        services.AddScoped<PermissionHandler>();
-        
-        services.AddScoped<IComponentHandler, NavigationItemHandler>();
-        services.AddScoped<NavigationItemHandler>();
-        
-        services.AddScoped<IComponentHandler, NavigationHandler>();
-        services.AddScoped<NavigationHandler>();
-        
-        services.AddScoped<IComponentHandler, SecurityAuditHandler>();
-        services.AddScoped<SecurityAuditHandler>();
-        
         // Add System services
         services.AddScoped<Systems.RegistrationSystem>();
         services.AddScoped<Systems.AuthSystem>();

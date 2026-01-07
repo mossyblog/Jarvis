@@ -211,21 +211,24 @@ public static class JarvisServiceCollectionExtensions
             // Register IComponentHandler<T> implementations
             var componentHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == componentHandlerInterface);
-                
+
             foreach (var handlerInterface in componentHandlerInterfaces)
             {
-                services.AddTransient(handlerInterface, type);
+                // Use Scoped lifetime - handlers should be scoped with DataContext
+                services.AddScoped(handlerInterface, type);
+                // Also register to non-generic IComponentHandler base interface
+                services.AddScoped(typeof(IComponentHandler), type);
                 // Also register the concrete type for DataContext.For<THandler>()
-                services.AddTransient(type);
+                services.AddScoped(type);
             }
-            
+
             // Register IComponentQueryHandler<T> implementations
             var queryHandlerInterfaces = type.GetInterfaces()
                 .Where(i => i.IsGenericType && i.GetGenericTypeDefinition() == queryHandlerInterface);
-                
+
             foreach (var queryInterface in queryHandlerInterfaces)
             {
-                services.AddTransient(queryInterface, type);
+                services.AddScoped(queryInterface, type);
             }
         }
         

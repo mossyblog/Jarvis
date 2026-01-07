@@ -225,7 +225,13 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 
         await DataContext.TryCommit(updated);
         Logger.LogInformation("Updated profile for user {UserId}", OwnerEntityId);
-        
+
+        // Invalidate permission cache since profile may affect permissions
+        if (_permissionService != null)
+        {
+            await _permissionService.InvalidateCacheAsync(OwnerEntityId);
+        }
+
         return updated;
     }
 

@@ -98,6 +98,14 @@ public class EventEmissionIntegrationTests : IntegrationTestBase
         services.AddScoped<IEntityQuery, EntityQuery>();
         services.AddScoped<core.jarvis.Data.Schema.ITableManager, core.jarvis.Data.Schema.PostgreSqlTableManager>();
         services.AddSingleton<IPgClient>(_serviceProvider.GetRequiredService<IPgClient>());
+
+        // Register the refactored DataContext dependencies
+        services.AddScoped<IDataContextCore, DataContextCore>();
+        services.AddScoped<IAuditManager, AuditManager>();
+        services.AddScoped<IRelationshipManager, RelationshipManager>();
+        services.AddScoped<ITransactionManager, TransactionManager>();
+
+        // Register the failing emitter to test error handling
         services.AddSingleton<IEventEmitter>(new FailingEventEmitter());
         services.AddScoped<IDataContext, DataContext>();
 
@@ -108,7 +116,7 @@ public class EventEmissionIntegrationTests : IntegrationTestBase
         // Act & Assert
         var exception = await Should.ThrowAsync<EventEmissionException>(
             async () => await dataContext.Emit(testEvent));
-        
+
         exception.Message.ShouldContain("Failed to emit event");
         exception.InnerException.ShouldNotBeNull();
     }
