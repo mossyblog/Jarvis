@@ -1,5 +1,6 @@
 using FastEndpoints;
 using core.jarvis.api.Attributes;
+using core.jarvis.api.Extensions;
 using core.jarvis.api.Services;
 
 namespace core.jarvis.api.Processors;
@@ -29,9 +30,8 @@ public class PermissionPreProcessor : IGlobalPreProcessor
             return;
         }
 
-        // Get user ID from claims
-        var userIdClaim = httpContext.User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        // Get user ID from claims using safe extension that handles claim mapping
+        if (!httpContext.User.TryGetUserId(out var userId))
         {
             await ctx.HttpContext.Response.SendUnauthorizedAsync(ct);
             return;

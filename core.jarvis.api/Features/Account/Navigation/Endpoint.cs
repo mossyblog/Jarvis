@@ -1,4 +1,5 @@
 using FastEndpoints;
+using core.jarvis.api.Extensions;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
@@ -22,8 +23,7 @@ public class Endpoint : EndpointWithoutRequest<List<NavigationItem>>
 
     public override async Task HandleAsync(CancellationToken ct)
     {
-        var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
             await SendUnauthorizedAsync(ct);
             return;

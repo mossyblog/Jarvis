@@ -1,4 +1,5 @@
 using FastEndpoints;
+using core.jarvis.api.Extensions;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.Data;
@@ -21,8 +22,7 @@ public class Endpoint : Endpoint<SecurityProfile, SecurityProfile>
 
     public override async Task HandleAsync(SecurityProfile req, CancellationToken ct)
     {
-        var userIdClaim = User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        if (!User.TryGetUserId(out var userId))
         {
             await SendUnauthorizedAsync(ct);
             return;

@@ -1,4 +1,5 @@
 using FastEndpoints;
+using core.jarvis.api.Extensions;
 using core.jarvis.api.Models;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
@@ -31,9 +32,8 @@ public class UserValidationPreProcessor : IGlobalPreProcessor
             return;
         }
 
-        // Extract user ID from JWT claims
-        var userIdClaim = httpContext.User.FindFirst("sub")?.Value;
-        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+        // Extract user ID from JWT claims using safe extension that handles claim mapping
+        if (!httpContext.User.TryGetUserId(out var userId))
         {
             // Invalid sub claim format - reject
             await ctx.HttpContext.Response.SendUnauthorizedAsync(ct);
