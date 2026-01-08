@@ -41,12 +41,24 @@ public class PermissionPreProcessor : IGlobalPreProcessor
         var permissionService = httpContext.Resolve<IPermissionService>();
 
         // Check permissions based on operator
+        // If ANY attribute specifies And operator, require ALL permissions
         var permissions = permissionAttributes.Select(a => a.Permission).ToArray();
-        var hasAnyPermission = await permissionService.HasAnyPermissionAsync(userId, permissions);
+        var requireAll = permissionAttributes.Any(a => a.Operator == PermissionOperator.And);
 
-        if (!hasAnyPermission)
+        bool hasPermission;
+        if (requireAll)
+        {
+            hasPermission = await permissionService.HasAllPermissionsAsync(userId, permissions);
+        }
+        else
+        {
+            hasPermission = await permissionService.HasAnyPermissionAsync(userId, permissions);
+        }
+
+        if (!hasPermission)
         {
             await ctx.HttpContext.Response.SendForbiddenAsync(ct);
+            return;
         }
     }
 }

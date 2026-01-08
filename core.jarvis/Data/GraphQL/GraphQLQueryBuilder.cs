@@ -78,7 +78,7 @@ namespace core.jarvis.Data.GraphQL
         public async Task<T> Execute<T>()
         {
             var result = await Execute();
-            
+
             if (result.Errors?.Any() == true)
             {
                 throw new GraphQLException($"GraphQL errors: {string.Join(", ", result.Errors.Select(e => e.Message))}", result.Errors);
@@ -91,7 +91,7 @@ namespace core.jarvis.Data.GraphQL
 
             // Deserialize the data portion
             var dataJson = JsonSerializer.Serialize(result.Data);
-            return JsonSerializer.Deserialize<T>(dataJson) 
+            return JsonSerializer.Deserialize<T>(dataJson)
                 ?? throw new GraphQLException("Failed to deserialize GraphQL response");
         }
 
@@ -112,36 +112,29 @@ namespace core.jarvis.Data.GraphQL
                 throw new UnauthorizedException("GraphQL queries require authentication. Call WithAuth() before Execute()");
             }
 
-            // Parse and validate JWT claims
-            // SECURITY: If IJwtValidator is available, use it to validate signature
-            // Otherwise fall back to parsing without validation (for backward compatibility during migration)
-            Dictionary<string, string>? claims = null;
-            if (_jwtValidator != null)
+            // SECURITY: IJwtValidator is required to validate JWT signatures
+            if (_jwtValidator == null)
             {
-                claims = _jwtValidator.GetValidatedClaims(_jwt);
-                if (claims == null)
+                throw new InvalidOperationException("GraphQLQueryBuilder requires IJwtValidator to be injected. Insecure JWT parsing without signature validation is no longer supported.");
+            }
+
+            // Parse and validate JWT claims with signature verification
+            var claims = _jwtValidator.GetValidatedClaims(_jwt);
+            if (claims == null)
+            {
+                // Audit the invalid token attempt
+                if (_auditService != null)
                 {
-                    // Audit the invalid token attempt
-                    if (_auditService != null)
+                    await _auditService.LogEvent(AuditEventTypes.GraphQLUnauthorized, Guid.Empty, new
                     {
-                        await _auditService.LogEvent(AuditEventTypes.GraphQLUnauthorized, Guid.Empty, new
-                        {
-                            reason = "JWT signature validation failed - token may be forged or tampered",
-                            query = _query
-                        });
-                    }
-                    _logger.LogWarning("JWT signature validation failed - rejecting potentially forged token");
-                    throw new UnauthorizedException("Invalid or expired JWT token");
+                        reason = "JWT signature validation failed - token may be forged or tampered",
+                        query = _query
+                    });
                 }
+                _logger.LogWarning("JWT signature validation failed - rejecting potentially forged token");
+                throw new UnauthorizedException("Invalid or expired JWT token");
             }
-            else
-            {
-                // DEPRECATED: Fallback to insecure parsing when no validator is provided
-                // This should be removed once all callers provide IJwtValidator
-                _logger.LogWarning("SECURITY: GraphQL query executed without JWT signature validation - inject IJwtValidator to fix");
-                claims = ParseJWTClaims(_jwt);
-            }
-            
+
             // Create context for validation
             var context = new GraphQLContext
             {
@@ -210,10 +203,10 @@ namespace core.jarvis.Data.GraphQL
             if (_auditService != null)
             {
                 // Determine if this is a query or mutation
-                var eventType = _query.TrimStart().StartsWith("mutation", StringComparison.OrdinalIgnoreCase) 
-                    ? AuditEventTypes.GraphQLMutation 
+                var eventType = _query.TrimStart().StartsWith("mutation", StringComparison.OrdinalIgnoreCase)
+                    ? AuditEventTypes.GraphQLMutation
                     : AuditEventTypes.GraphQLQuery;
-                    
+
                 await _auditService.LogEvent(eventType, Guid.Empty, new
                 {
                     userId,
@@ -233,7 +226,7 @@ namespace core.jarvis.Data.GraphQL
             {
                 // Execute via pg_graphql - it expects just the query string
                 using var conn = await _pgClient.GetConnectionAsync();
-                
+
                 // Try to use the wrapper function first (for test environments where postgres user doesn't have graphql access)
                 string? resultJson = null;
                 try
@@ -246,7 +239,7 @@ namespace core.jarvis.Data.GraphQL
                 {
                     // Fall back to direct graphql.resolve
                 }
-                
+
                 // Fall back to direct graphql.resolve if wrapper doesn't exist or didn't return a result
                 if (resultJson == null)
                 {
@@ -254,20 +247,20 @@ namespace core.jarvis.Data.GraphQL
                     cmd2.Parameters.AddWithValue(_query);
                     resultJson = await cmd2.ExecuteScalarAsync() as string;
                 }
-                
+
                 if (string.IsNullOrEmpty(resultJson))
                 {
                     throw new GraphQLException("Empty response from GraphQL");
                 }
 
-                var result = JsonSerializer.Deserialize<GraphQLResult>(resultJson) 
+                var result = JsonSerializer.Deserialize<GraphQLResult>(resultJson)
                     ?? throw new GraphQLException("Failed to parse GraphQL response");
-                
+
                 // Check for GraphQL errors
                 if (result.Errors?.Any() == true)
                 {
                     var errorMessages = string.Join(", ", result.Errors.Select(e => e.Message));
-                    
+
                     // Audit the GraphQL errors
                     if (_auditService != null)
                     {
@@ -278,10 +271,10 @@ namespace core.jarvis.Data.GraphQL
                             variables = _variables
                         });
                     }
-                    
+
                     throw new GraphQLException($"GraphQL errors: {errorMessages}", result.Errors);
                 }
-                
+
                 return result;
             }
             catch (PostgresException ex)
@@ -293,47 +286,6 @@ namespace core.jarvis.Data.GraphQL
             {
                 _logger.LogError(ex, "Unexpected error executing GraphQL");
                 throw new GraphQLException("Failed to execute GraphQL query", innerException: ex);
-            }
-        }
-
-        /// <summary>
-        /// DEPRECATED: Parses JWT claims without signature validation.
-        /// This method is a security vulnerability and should not be used.
-        /// Use IJwtValidator.GetValidatedClaims() instead which validates signatures.
-        /// This method will be removed in a future version once all callers inject IJwtValidator.
-        /// </summary>
-        [Obsolete("Use IJwtValidator.GetValidatedClaims() instead - this method does not validate JWT signatures")]
-        private Dictionary<string, string> ParseJWTClaims(string jwt)
-        {
-            try
-            {
-                // SECURITY WARNING: This method does NOT validate JWT signatures!
-                // An attacker can forge arbitrary claims. This is kept only for
-                // backward compatibility during migration to IJwtValidator.
-                var parts = jwt.Split('.');
-                if (parts.Length != 3)
-                {
-                    return new Dictionary<string, string>();
-                }
-
-                var payload = parts[1];
-                // Add padding if needed
-                var padded = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-                var bytes = Convert.FromBase64String(padded);
-                var json = System.Text.Encoding.UTF8.GetString(bytes);
-
-                var claims = JsonSerializer.Deserialize<Dictionary<string, object>>(json) ?? new();
-
-                // Convert to string dictionary
-                return claims.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => kvp.Value?.ToString() ?? ""
-                );
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to parse JWT claims");
-                return new Dictionary<string, string>();
             }
         }
     }

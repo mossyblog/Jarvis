@@ -20,7 +20,6 @@ public class Endpoint : Endpoint<GraphQLRequest, GraphQLResult>
     public override void Configure()
     {
         Post("/graphql");
-        AllowAnonymous();
         Description(d => d
             .WithTags("GraphQL")
             .Produces<GraphQLResult>(200)
@@ -30,6 +29,16 @@ public class Endpoint : Endpoint<GraphQLRequest, GraphQLResult>
 
     public override async Task HandleAsync(GraphQLRequest req, CancellationToken ct)
     {
+        // Check authentication FIRST before any query processing
+        var authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
+        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+        {
+            await SendUnauthorizedAsync(ct);
+            return;
+        }
+
+        var jwt = authHeader.Substring(7);
+
         // Validate query against security limits
         var validationResult = QueryValidator.Validate(req.Query);
         if (!validationResult.IsValid)
@@ -53,16 +62,6 @@ public class Endpoint : Endpoint<GraphQLRequest, GraphQLResult>
             }, 400, ct);
             return;
         }
-
-        // Get JWT from Authorization header
-        var authHeader = HttpContext.Request.Headers.Authorization.FirstOrDefault();
-        if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-        {
-            await SendUnauthorizedAsync(ct);
-            return;
-        }
-
-        var jwt = authHeader.Substring(7);
 
         try
         {

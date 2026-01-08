@@ -2,6 +2,7 @@ using FastEndpoints;
 using core.jarvis.api.Models;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Attributes;
+using core.jarvis.api.Extensions;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
 
@@ -35,14 +36,29 @@ public class Endpoint : Endpoint<Role, Role>
             return;
         }
 
-        // Check if role exists
+        // Check if role exists - query by role Id, not OwnerEntityId
         var existingRoles = await DataContext.Query()
-            .WithAll<Role>(Filter<Role>.Eq(r => r.OwnerEntityId, roleId))
+            .WithAll<Role>(Filter<Role>.Eq(r => r.Id, roleId))
             .ToEntityComponents();
 
         if (!existingRoles.Any())
         {
             await SendNotFoundAsync(ct);
+            return;
+        }
+
+        // Verify the role belongs to the authenticated user's entity
+        if (!User.TryGetUserId(out var userId))
+        {
+            await SendUnauthorizedAsync(ct);
+            return;
+        }
+
+        // Check that the authenticated user has authority over this role's entity
+        var role = existingRoles.First().Value.Get<Role>();
+        if (role?.OwnerEntityId != userId)
+        {
+            await SendForbiddenAsync(ct);
             return;
         }
 

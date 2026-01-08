@@ -78,7 +78,9 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
                 {
                     IsRevoked = true,
                     RevokedAt = DateTime.UtcNow,
-                    LastUpdated = DateTime.UtcNow
+                    LastUpdated = DateTime.UtcNow,
+                    AccessToken = string.Empty,
+                    RefreshToken = string.Empty
                 };
                 await DataContext.TryCommit(revokedToken);
                 Logger.LogInformation("Revoked token for session: {SessionId}", token.SessionId);
@@ -160,22 +162,25 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             var configuration = _configuration;
             var refreshTokenExpirationDays = int.Parse(configuration["Jwt:RefreshTokenExpirationDays"] ?? "30");
 
-            // Revoke the old token (token rotation)
+            // Revoke the old token (token rotation) and clear plaintext values
             var revokedToken = matchingToken with
             {
                 IsRevoked = true,
                 RevokedAt = DateTime.UtcNow,
-                LastUpdated = DateTime.UtcNow
+                LastUpdated = DateTime.UtcNow,
+                AccessToken = string.Empty,
+                RefreshToken = string.Empty
             };
             await DataContext.TryCommit(revokedToken);
 
             // Create new token entity (rotation creates new session)
+            // SECURITY: Never store plaintext tokens - return in response only
             var newToken = new AuthToken
             {
                 Id = Guid.NewGuid(),
                 OwnerEntityId = matchingToken.OwnerEntityId,
-                AccessToken = newAccessToken,
-                RefreshToken = newRefreshToken,
+                AccessToken = string.Empty,  // Never store - return in response only
+                RefreshToken = string.Empty, // Never store - return in response only
                 RefreshTokenHash = tokenService.HashRefreshToken(newRefreshToken),
                 ExpiresAt = expiresAt,
                 RefreshExpiresAt = DateTime.UtcNow.AddDays(refreshTokenExpirationDays),
@@ -190,7 +195,12 @@ public class AuthTokenHandler : ComponentHandler<AuthToken>
             Logger.LogInformation("Token rotated: old session {OldSession} revoked, new session {NewSession} created",
                 matchingToken.SessionId, newToken.SessionId);
 
-            return newToken;
+            // Return the token with actual values for the response (not persisted)
+            return newToken with
+            {
+                AccessToken = newAccessToken,
+                RefreshToken = newRefreshToken
+            };
         }
         catch (Exception ex)
         {

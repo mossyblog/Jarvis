@@ -55,6 +55,15 @@ namespace core.jarvis.data.RLS
         private readonly Dictionary<string, List<RLSPolicy>> _policies = new();
 
         /// <summary>
+        /// Quotes a PostgreSQL identifier to prevent SQL injection.
+        /// Doubles any embedded quotes and wraps in double quotes.
+        /// </summary>
+        private static string QuoteIdentifier(string identifier)
+        {
+            return $"\"{identifier.Replace("\"", "\"\"")}\"";
+        }
+
+        /// <summary>
         /// Registers a policy for a table.
         /// </summary>
         public void RegisterPolicy(RLSPolicy policy)
@@ -88,6 +97,16 @@ namespace core.jarvis.data.RLS
         }
 
         /// <summary>
+        /// Gets all policies that have PostgreSQL policy definitions (PolicyName is not null).
+        /// </summary>
+        public IEnumerable<RLSPolicy> GetAllPostgresPolicies()
+        {
+            return _policies.Values
+                .SelectMany(p => p)
+                .Where(p => p.PolicyName != null);
+        }
+
+        /// <summary>
         /// Builds WHERE clause additions for SELECT operations.
         /// </summary>
         public string BuildWhereClause(string tableName, Dictionary<string, string> claims)
@@ -112,11 +131,11 @@ namespace core.jarvis.data.RLS
         public bool CheckOperation(string tableName, PolicyType type, Dictionary<string, string> claims, Dictionary<string, object> data)
         {
             var policies = GetPolicies(tableName, type);
-            
+
             // If no policies exist for this table, allow the operation (no RLS configured)
             if (!_policies.ContainsKey(tableName))
                 return true;
-            
+
             // If table has policies but none for this operation type, deny by default
             if (!policies.Any())
                 return false;
@@ -132,21 +151,11 @@ namespace core.jarvis.data.RLS
         }
 
         /// <summary>
-        /// Gets all policies that have PostgreSQL policy definitions (PolicyName is not null).
-        /// </summary>
-        public IEnumerable<RLSPolicy> GetAllPostgresPolicies()
-        {
-            return _policies.Values
-                .SelectMany(p => p)
-                .Where(p => p.PolicyName != null);
-        }
-
-        /// <summary>
         /// Generates SQL to enable Row Level Security on a table.
         /// </summary>
         public string GenerateEnableRLSSql(string tableName)
         {
-            return $"ALTER TABLE {tableName} ENABLE ROW LEVEL SECURITY;";
+            return $"ALTER TABLE {QuoteIdentifier(tableName)} ENABLE ROW LEVEL SECURITY;";
         }
 
         /// <summary>
@@ -154,7 +163,7 @@ namespace core.jarvis.data.RLS
         /// </summary>
         public string GenerateForceRLSSql(string tableName)
         {
-            return $"ALTER TABLE {tableName} FORCE ROW LEVEL SECURITY;";
+            return $"ALTER TABLE {QuoteIdentifier(tableName)} FORCE ROW LEVEL SECURITY;";
         }
 
         /// <summary>
@@ -164,7 +173,7 @@ namespace core.jarvis.data.RLS
         {
             var policyType = policy.Type == PolicyType.All ? "ALL" : policy.Type.ToString().ToUpper();
 
-            var sql = $"CREATE POLICY {policy.PolicyName} ON {policy.TableName} FOR {policyType} USING ({policy.UsingExpression})";
+            var sql = $"CREATE POLICY {QuoteIdentifier(policy.PolicyName!)} ON {QuoteIdentifier(policy.TableName)} FOR {policyType} USING ({policy.UsingExpression})";
 
             if (policy.WithCheckExpression != null)
             {
@@ -181,7 +190,7 @@ namespace core.jarvis.data.RLS
         /// </summary>
         public string GenerateDropPolicySql(string tableName, string policyName)
         {
-            return $"DROP POLICY IF EXISTS {policyName} ON {tableName};";
+            return $"DROP POLICY IF EXISTS {QuoteIdentifier(policyName)} ON {QuoteIdentifier(tableName)};";
         }
     }
 

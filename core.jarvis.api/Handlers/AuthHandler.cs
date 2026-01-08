@@ -176,11 +176,12 @@ public class AuthHandler : ComponentHandler<Account>
         var finalAccessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
 
         // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
+        // SECURITY: Never store plaintext tokens in the database - return in response only
         var authToken = new AuthToken
         {
             OwnerEntityId = authenticatedEntityId,
-            AccessToken = finalAccessToken ?? string.Empty,
-            RefreshToken = refreshToken ?? string.Empty,
+            AccessToken = string.Empty,  // Never store - return in response only
+            RefreshToken = string.Empty, // Never store - return in response only
             RefreshTokenHash = tokenService.HashRefreshToken(refreshToken ?? string.Empty),
             ExpiresAt = expiresAt,
             RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
@@ -200,7 +201,12 @@ public class AuthHandler : ComponentHandler<Account>
             accountCredentials.UserAgent
         );
 
-        return authToken;
+        // Return the token with actual values for the response (not persisted)
+        return authToken with
+        {
+            AccessToken = finalAccessToken ?? string.Empty,
+            RefreshToken = refreshToken ?? string.Empty
+        };
     }
 
 
@@ -398,22 +404,24 @@ public class AuthHandler : ComponentHandler<Account>
         var newAccessToken = tokenService.AccessToken(account.Id, account.Email);
         var newRefreshToken = tokenService.RefreshToken();
 
-        // Revoke the old token
+        // Revoke the old token and clear plaintext values
         var revokedToken = existingToken with
         {
             IsRevoked = true,
             RevokedAt = DateTime.UtcNow,
-            LastUpdated = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow,
+            AccessToken = string.Empty,
+            RefreshToken = string.Empty
         };
         await DataContext.TryCommit(revokedToken);
 
-        // Create new auth token
+        // Create new auth token - store only hash, not plaintext
         var newAuthToken = new AuthToken
         {
             Id = Guid.NewGuid(),
             OwnerEntityId = account.Id,
-            AccessToken = newAccessToken,
-            RefreshToken = newRefreshToken,
+            AccessToken = string.Empty,  // Never store - return in response only
+            RefreshToken = string.Empty, // Never store - return in response only
             RefreshTokenHash = tokenService.HashRefreshToken(newRefreshToken),
             SessionId = existingToken.SessionId, // Keep the same session
             RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
@@ -427,7 +435,13 @@ public class AuthHandler : ComponentHandler<Account>
         await DataContext.TryCommit(newAuthToken);
 
         Logger.LogInformation("Token refreshed for entity {EntityId}", account.Id);
-        return newAuthToken;
+
+        // Return the token with actual values for the response (not persisted)
+        return newAuthToken with
+        {
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshToken
+        };
     }
 
     /// <summary>
