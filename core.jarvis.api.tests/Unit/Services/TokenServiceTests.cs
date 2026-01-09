@@ -100,15 +100,6 @@ public class TokenServiceTests
         principal.ShouldBeNull();
     }
 
-    [Fact(Skip = "JWT library doesn't allow creating tokens with expiration in the past")]
-    public async Task Validate_With_Expired_Token_Should_Return_Null()
-    {
-        // This test is skipped because the JWT library validates that expiration
-        // must be after the issue time when creating the token.
-        // In a real scenario, expired tokens would be tested with actual time passage.
-        await Task.CompletedTask;
-    }
-
     [Fact]
     public void RefreshToken_Should_Create_Unique_Tokens()
     {

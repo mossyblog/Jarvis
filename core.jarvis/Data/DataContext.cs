@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using core.jarvis.Data.Components;
 using core.jarvis.Data.GraphQL;
 using core.jarvis.Data.Query;
@@ -6,7 +5,6 @@ using core.jarvis.Data.Schema;
 using core.jarvis.ErrorHandling;
 using core.jarvis.Events;
 using core.jarvis.Exceptions;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace core.jarvis.Data;
@@ -17,54 +15,45 @@ namespace core.jarvis.Data;
 /// </summary>
 public class DataContext : IDataContext
 {
-    private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<DataContext> _logger;
     private readonly IComponentQueryHandlerRegistry _componentQueryHandlerRegistry;
-
-    // Lazy-loaded services to avoid circular dependencies
-    private readonly Lazy<IDataContextCore> _core;
-    private readonly Lazy<IAuditManager> _audit;
-    private readonly Lazy<IRelationshipManager> _relationships;
-    private readonly Lazy<ITransactionManager> _transactions;
-    private readonly Lazy<IAuditService> _auditService;
-    private readonly Lazy<Events.IEventEmitter> _eventEmitter;
+    private readonly IDataContextCore _core;
+    private readonly IAuditManager _audit;
+    private readonly IRelationshipManager _relationships;
+    private readonly ITransactionManager _transactions;
+    private readonly IAuditService _auditService;
+    private readonly Events.IEventEmitter _eventEmitter;
 
     public DataContext(
-        IServiceProvider serviceProvider,
         IComponentQueryHandlerRegistry queryRegistry,
-        IPgClient pgClient,
-        ILogger<DataContext> logger,
+        IDataContextCore core,
+        IAuditManager audit,
+        IRelationshipManager relationships,
+        ITransactionManager transactions,
         IAuditService auditService,
         Events.IEventEmitter eventEmitter,
-        ITableManager tableManager)
+        ILogger<DataContext> logger)
     {
-        _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _componentQueryHandlerRegistry = queryRegistry ?? throw new ArgumentNullException(nameof(queryRegistry));
-
-        // Lazy load services to avoid circular dependencies
-        _core = new Lazy<IDataContextCore>(() =>
-            serviceProvider.GetRequiredService<IDataContextCore>());
-        _audit = new Lazy<IAuditManager>(() =>
-            serviceProvider.GetRequiredService<IAuditManager>());
-        _relationships = new Lazy<IRelationshipManager>(() =>
-            serviceProvider.GetRequiredService<IRelationshipManager>());
-        _transactions = new Lazy<ITransactionManager>(() =>
-            serviceProvider.GetRequiredService<ITransactionManager>());
-        _auditService = new Lazy<IAuditService>(() => auditService);
-        _eventEmitter = new Lazy<Events.IEventEmitter>(() => eventEmitter);
+        _core = core ?? throw new ArgumentNullException(nameof(core));
+        _audit = audit ?? throw new ArgumentNullException(nameof(audit));
+        _relationships = relationships ?? throw new ArgumentNullException(nameof(relationships));
+        _transactions = transactions ?? throw new ArgumentNullException(nameof(transactions));
+        _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
+        _eventEmitter = eventEmitter ?? throw new ArgumentNullException(nameof(eventEmitter));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <inheritdoc/>
     public IComponentHandler For(Type componentType, Guid entityId)
     {
-        return _core.Value.For(componentType, entityId);
+        return _core.For(componentType, entityId);
     }
 
     /// <inheritdoc/>
     public THandler For<THandler>(Guid entityId) where THandler : class, IComponentHandler
     {
-        return _core.Value.For<THandler>(entityId);
+        return _core.For<THandler>(entityId);
     }
 
     /// <inheritdoc/>
@@ -76,7 +65,7 @@ public class DataContext : IDataContext
     /// <inheritdoc/>
     public Entity NewEntity()
     {
-        return _core.Value.NewEntity();
+        return _core.NewEntity();
     }
 
     /// <inheritdoc/>
@@ -92,20 +81,23 @@ public class DataContext : IDataContext
         try
         {
             _logger.LogInformation("DataContext.Commit: Starting transaction for ComponentId={ComponentId}", component.Id);
-            await _transactions.Value.ExecuteWithAudit(
+            await _transactions.ExecuteWithAudit(
                 async () => {
+                    // Ensure table exists before any operations
+                    await _core.EnsureTableExists<TComponent>();
+
                     // Determine operation type inside the transaction context
-                    existing = await _core.Value.GetExistingComponent(component);
+                    existing = await _core.GetExistingComponent(component);
                     operation = existing == null ? "CREATE" : "UPDATE";
 
                     _logger.LogInformation("DataContext.Commit: Operation determined as {Operation} for ComponentId={ComponentId}", operation, component.Id);
 
                     // Execute the actual commit
-                    await _core.Value.Commit(component);
+                    await _core.Commit(component);
 
                     // Create snapshot INSIDE the transaction for atomic consistency
                     _logger.LogInformation("DataContext.Commit: Creating snapshot within transaction for ComponentId={ComponentId}, operation={Operation}", component.Id, operation);
-                    await _core.Value.CreateSnapshot(component, existing, operation);
+                    await _core.CreateSnapshot(component, existing, operation);
                 },
                 component.OwnerEntityId,
                 $"Commit<{typeof(TComponent).Name}>",
@@ -124,7 +116,7 @@ public class DataContext : IDataContext
         {
             try
             {
-                await _audit.Value.LogChange(
+                await _audit.LogChange(
                     AuditEventTypes.ComponentUpdated,
                     component.OwnerEntityId,
                     existing,
@@ -143,7 +135,7 @@ public class DataContext : IDataContext
         try
         {
             var snapshotVersion = component is IVersionedComponent versionedComponent ? versionedComponent.Version : null;
-            await _audit.Value.LogEvent(
+            await _audit.LogEvent(
                 AuditEventTypes.SnapshotCreated,
                 component.OwnerEntityId,
                 new { 
@@ -170,20 +162,23 @@ public class DataContext : IDataContext
         TComponent? existing = null;
         string operation = "UNKNOWN";
 
-        var result = await _transactions.Value.ExecuteWithAudit(
+        var result = await _transactions.ExecuteWithAudit(
             async () => {
+                // Ensure table exists before any operations
+                await _core.EnsureTableExists<TComponent>();
+
                 // Get existing state within transaction
-                existing = await _core.Value.GetExistingComponent(component);
+                existing = await _core.GetExistingComponent(component);
                 operation = existing == null ? "CREATE" : "UPDATE";
 
                 // Execute TryCommit
-                var commitResult = await _core.Value.TryCommit(component);
+                var commitResult = await _core.TryCommit(component);
 
                 // Create snapshot INSIDE the transaction for atomic consistency (only if commit succeeded)
                 if (commitResult)
                 {
                     _logger.LogInformation("TryCommit: Creating snapshot within transaction for ComponentId={ComponentId}, operation={Operation}", component.Id, operation);
-                    await _core.Value.CreateSnapshot(component, existing, operation);
+                    await _core.CreateSnapshot(component, existing, operation);
                 }
 
                 return commitResult;
@@ -211,7 +206,7 @@ public class DataContext : IDataContext
                     auditData["ActualVersion"] = componentVersioned.Version?.ToString() ?? "null";
                 }
 
-                await _audit.Value.LogEvent(
+                await _audit.LogEvent(
                     AuditEventTypes.ComponentVersionConflict,
                     component.OwnerEntityId,
                     auditData);
@@ -230,7 +225,7 @@ public class DataContext : IDataContext
         {
             try
             {
-                await _audit.Value.LogChange(
+                await _audit.LogChange(
                     AuditEventTypes.ComponentUpdated,
                     component.OwnerEntityId,
                     existing,
@@ -251,7 +246,7 @@ public class DataContext : IDataContext
             try
             {
                 var snapshotVersion = component is IVersionedComponent versionedComponent ? versionedComponent.Version : null;
-                await _audit.Value.LogEvent(
+                await _audit.LogEvent(
                     AuditEventTypes.SnapshotCreated,
                     component.OwnerEntityId,
                     new {
@@ -277,11 +272,27 @@ public class DataContext : IDataContext
     public async Task Remove<TComponent>(Guid entityId)
         where TComponent : class, IComponent, new()
     {
-        await _transactions.Value.ExecuteWithAudit(
-            () => _core.Value.Remove<TComponent>(entityId),
+        await _transactions.ExecuteWithAudit(
+            () => _core.Remove<TComponent>(entityId),
             entityId,
             $"Remove<{typeof(TComponent).Name}>",
             new { ComponentType = typeof(TComponent).Name });
+
+        // Log component deleted audit event
+        try
+        {
+            await _audit.LogEvent(
+                AuditEventTypes.ComponentDeleted,
+                entityId,
+                new {
+                    ComponentType = typeof(TComponent).Name,
+                    Operation = "Remove"
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to log component deletion audit for {ComponentType}", typeof(TComponent).Name);
+        }
     }
 
     
@@ -292,68 +303,84 @@ public class DataContext : IDataContext
     {
         var entityId = model is IComponent component ? component.OwnerEntityId : Guid.Empty;
 
-        await _transactions.Value.ExecuteWithAudit(
-            () => _core.Value.Insert(model),
+        await _transactions.ExecuteWithAudit(
+            () => _core.Insert(model),
             entityId,
             $"Insert<{typeof(TModel).Name}>",
             new { ModelType = typeof(TModel).Name });
+
+        // Log data inserted audit event
+        try
+        {
+            await _audit.LogEvent(
+                AuditEventTypes.DataInserted,
+                entityId,
+                new {
+                    ModelType = typeof(TModel).Name,
+                    Operation = "Insert"
+                });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to log data insertion audit for {ModelType}", typeof(TModel).Name);
+        }
     }
 
     /// <inheritdoc/>
     public Query.ISnapshotQuery Snapshots()
     {
-        return _core.Value.Snapshots();
+        return _core.Snapshots();
     }
 
     /// <inheritdoc/>
     public GraphQL.IGraphQLQuery GraphQL(string query)
     {
-        return _core.Value.GraphQL(query);
+        return _core.GraphQL(query);
     }
 
     /// <inheritdoc/>
     public async Task<Guid?> Parent(Guid entityId)
     {
-        return await _relationships.Value.Parent(entityId);
+        return await _relationships.Parent(entityId);
     }
 
     /// <inheritdoc/>
     public async Task<List<Guid>> Children(Guid entityId)
     {
-        return await _relationships.Value.Children(entityId);
+        return await _relationships.Children(entityId);
     }
 
     /// <inheritdoc/>
     public async Task<bool> ChildOf(Guid childId, Guid parentId)
     {
-        return await _relationships.Value.ChildOf(childId, parentId);
+        return await _relationships.ChildOf(childId, parentId);
     }
 
     /// <inheritdoc/>
     public async Task LinkRelationship(Guid parentId, Guid childId, string? parentType = null, string? childType = null)
     {
         // Track the pending relationship for validation at commit time
-        _transactions.Value.TrackPendingRelationship(childId, parentId);
+        _transactions.TrackPendingRelationship(childId, parentId);
 
-        await _relationships.Value.LinkRelationship(parentId, childId, parentType, childType);
+        await _relationships.LinkRelationship(parentId, childId, parentType, childType);
     }
 
     /// <inheritdoc/>
     public async Task UnlinkRelationship(Guid parentId, Guid childId)
     {
-        await _relationships.Value.UnlinkRelationship(parentId, childId);
+        await _relationships.UnlinkRelationship(parentId, childId);
     }
 
     /// <inheritdoc/>
     public async Task<List<Guid>> Ancestors(Guid entityId)
     {
-        return await _relationships.Value.Ancestors(entityId);
+        return await _relationships.Ancestors(entityId);
     }
 
     /// <inheritdoc/>
     public async Task<List<Guid>> Descendants(Guid entityId)
     {
-        return await _relationships.Value.Descendants(entityId);
+        return await _relationships.Descendants(entityId);
     }
 
     /// <inheritdoc/>
@@ -362,9 +389,9 @@ public class DataContext : IDataContext
         try
         {
             AddEventMetadata(@event);
-            await _eventEmitter.Value.Emit(@event);
+            await _eventEmitter.Emit(@event);
 
-            await _auditService.Value.LogEvent(
+            await _auditService.LogEvent(
                 AuditEventTypes.EventEmitted,
                 Guid.Empty,
                 new {
@@ -375,7 +402,7 @@ public class DataContext : IDataContext
         }
         catch (Exception ex)
         {
-            await _auditService.Value.LogError(
+            await _auditService.LogError(
                 AuditEventTypes.EventEmissionFailed,
                 Guid.Empty,
                 ex,
@@ -396,9 +423,9 @@ public class DataContext : IDataContext
                 AddEventMetadata(@event);
             }
 
-            await _eventEmitter.Value.EmitBatch(eventsList);
+            await _eventEmitter.EmitBatch(eventsList);
 
-            await _auditService.Value.LogEvent(
+            await _auditService.LogEvent(
                 AuditEventTypes.EventBatchEmitted,
                 Guid.Empty,
                 new {
@@ -408,7 +435,7 @@ public class DataContext : IDataContext
         }
         catch (Exception ex)
         {
-            await _auditService.Value.LogError(
+            await _auditService.LogError(
                 AuditEventTypes.EventEmissionFailed,
                 Guid.Empty,
                 ex,
@@ -421,19 +448,19 @@ public class DataContext : IDataContext
     /// <inheritdoc/>
     public async Task EnsureEntityTableExists()
     {
-        await _transactions.Value.EnsureEntityTableExists();
+        await _transactions.EnsureEntityTableExists();
     }
 
     /// <inheritdoc/>
     public async Task<T> ExecuteInTransaction<T>(Func<Task<T>> operation)
     {
-        return await _transactions.Value.ExecuteInTransaction(operation);
+        return await _transactions.ExecuteInTransaction(operation);
     }
 
     /// <inheritdoc/>
     public async Task ExecuteInTransaction(Func<Task> operation)
     {
-        await _transactions.Value.ExecuteInTransaction(operation);
+        await _transactions.ExecuteInTransaction(operation);
     }
 
     private void AddEventMetadata<TEvent>(TEvent @event) where TEvent : Events.IEvent

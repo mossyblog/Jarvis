@@ -60,39 +60,39 @@ namespace core.jarvis.data.tests.Tables
             ";
             await _conn.ExecuteAsync(dropSql);
 
-            // Create helper functions to extract JWT claims
+            // Create helper functions to extract JWT claims (using app.* session variables)
             var functionsSql = @"
                 -- Generic function to get any JWT claim
-                CREATE OR REPLACE FUNCTION current_jwt_claim(claim TEXT) 
+                CREATE OR REPLACE FUNCTION current_jwt_claim(claim TEXT)
                 RETURNS TEXT AS $$
                 BEGIN
-                    RETURN current_setting('jwt.claims.' || claim, true);
+                    RETURN current_setting('app.' || claim, true);
                 END;
                 $$ LANGUAGE plpgsql STABLE;
 
                 -- Convenience functions for common claims
-                CREATE OR REPLACE FUNCTION current_user_id() 
+                CREATE OR REPLACE FUNCTION current_user_id()
                 RETURNS UUID AS $$
                 BEGIN
-                    RETURN current_setting('jwt.claims.sub', true)::UUID;
+                    RETURN current_setting('app.user_id', true)::UUID;
                 EXCEPTION
                     WHEN OTHERS THEN RETURN NULL;
                 END;
                 $$ LANGUAGE plpgsql STABLE;
 
-                CREATE OR REPLACE FUNCTION current_tenant_id() 
+                CREATE OR REPLACE FUNCTION current_tenant_id()
                 RETURNS UUID AS $$
                 BEGIN
-                    RETURN current_setting('jwt.claims.tenant_id', true)::UUID;
+                    RETURN current_setting('app.tenant_id', true)::UUID;
                 EXCEPTION
                     WHEN OTHERS THEN RETURN NULL;
                 END;
                 $$ LANGUAGE plpgsql STABLE;
 
-                CREATE OR REPLACE FUNCTION current_user_role() 
+                CREATE OR REPLACE FUNCTION current_user_role()
                 RETURNS TEXT AS $$
                 BEGIN
-                    RETURN current_setting('jwt.claims.role', true);
+                    RETURN current_setting('app.role', true);
                 END;
                 $$ LANGUAGE plpgsql STABLE;
             ";

@@ -170,6 +170,17 @@ public class PgClientWrapper : IPgClient, IDisposable
     
     private void AddParameters(NpgsqlCommand command, object parameters)
     {
+        // Handle ExpandoObject and other IDictionary<string, object> types
+        if (parameters is IDictionary<string, object> dict)
+        {
+            foreach (var kvp in dict)
+            {
+                command.Parameters.AddWithValue($"@{kvp.Key}", kvp.Value ?? DBNull.Value);
+            }
+            return;
+        }
+
+        // Handle regular objects via reflection
         var properties = parameters.GetType().GetProperties();
         foreach (var prop in properties)
         {

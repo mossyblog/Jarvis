@@ -50,6 +50,40 @@ public class PostgreSqlTableManager : ITableManager
         return Task.CompletedTask;
     }
 
+    public async Task EnsureSnapshotsTableExists()
+    {
+        const string tableName = "component_snapshots";
+
+        var tableExists = await CheckTableExists(tableName);
+        if (tableExists)
+            return;
+
+        const string createTableSql = @"
+            CREATE TABLE IF NOT EXISTS component_snapshots (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                entity_id UUID NOT NULL,
+                component_type TEXT NOT NULL,
+                component_id UUID NOT NULL,
+                snapshots JSONB DEFAULT '[]'::jsonb,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                last_updated TIMESTAMPTZ DEFAULT NOW(),
+                UNIQUE(component_id, component_type)
+            )";
+
+        try
+        {
+            await _pgClient.Execute(createTableSql);
+
+            // Create indexes for common query patterns
+            await _pgClient.Execute("CREATE INDEX IF NOT EXISTS idx_component_snapshots_entity_id ON component_snapshots(entity_id)");
+            await _pgClient.Execute("CREATE INDEX IF NOT EXISTS idx_component_snapshots_component_type ON component_snapshots(component_type)");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Snapshots table may already exist");
+        }
+    }
+
     private async Task<bool> CheckTableExists(string tableName)
     {
         var query = @"

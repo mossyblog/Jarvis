@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using core.jarvis.api.Models;
-using Microsoft.Azure.Functions.Worker.Http;
 using System.Net;
+using core.jarvis.api.Models;
 
 namespace core.jarvis.api.Services;
 

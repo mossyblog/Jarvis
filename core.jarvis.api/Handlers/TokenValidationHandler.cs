@@ -1,4 +1,5 @@
 using System.Linq;
+using core.jarvis.api.Extensions;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
@@ -81,10 +82,10 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                 };
             }
 
-            // Extract claims
-            var userIdClaim = principal.FindFirst("sub")?.Value;
-            var sessionIdClaim = principal.FindFirst("session_id")?.Value;
-            var expClaim = principal.FindFirst("exp")?.Value;
+            // Extract claims using safe extensions that handle both short and long-form claim types
+            var userIdClaim = principal.GetUserId();
+            var sessionIdClaim = principal.GetSessionId();
+            var expClaim = principal.GetExpiration();
 
             if (!Guid.TryParse(userIdClaim, out var userId))
             {
@@ -111,7 +112,7 @@ public class TokenValidationHandler : ComponentHandler<TokenValidation>
                 {
                     ["sub"] = userIdClaim!,
                     ["session_id"] = sessionIdClaim ?? string.Empty,
-                    ["email"] = principal.FindFirst("email")?.Value ?? string.Empty
+                    ["email"] = principal.GetEmail() ?? string.Empty
                 },
                 ErrorMessage = null,
                 LastUpdated = DateTime.UtcNow

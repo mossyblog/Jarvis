@@ -12,9 +12,9 @@ public class EntityQuery : IEntityQuery
     private readonly IDataContext? _dataContext;
 
     // Store filters for each query type
-    private readonly Dictionary<Type, LambdaExpression> _withAll = new();
-    private readonly Dictionary<Type, LambdaExpression> _withAny = new();
-    private readonly Dictionary<Type, LambdaExpression> _withNone = new();
+    private readonly Dictionary<Type, object> _withAll = new();
+    private readonly Dictionary<Type, object> _withAny = new();
+    private readonly Dictionary<Type, object> _withNone = new();
     private readonly Dictionary<Type, QueryPlan> _includes = new();
     private readonly List<OrderingExpression> _orderings = new();
 
@@ -38,42 +38,50 @@ public class EntityQuery : IEntityQuery
     }
 
     /// <inheritdoc/>
-    public IEntityQuery WithAll<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new()
+    public IEntityQuery WithAll<T>(IFilterExpression<T> filter) where T : class, IComponent, new()
     {
-        _withAll[typeof(T)] = filter;
+        _withAll[typeof(T)] = filter ?? Filter<T>.All();
         return this;
     }
-    
+
     /// <inheritdoc/>
     public IEntityQuery WithAll<T>() where T : class, IComponent, new()
     {
-        // Use a filter that always returns true
-        Expression<Func<T, bool>> alwaysTrue = _ => true;
-        _withAll[typeof(T)] = alwaysTrue;
+        _withAll[typeof(T)] = Filter<T>.All();
         return this;
     }
 
     /// <inheritdoc/>
-    public IEntityQuery WithAny<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new()
+    public IEntityQuery WithAny<T>(IFilterExpression<T> filter) where T : class, IComponent, new()
     {
-        _withAny[typeof(T)] = filter;
+        _withAny[typeof(T)] = filter ?? Filter<T>.All();
         return this;
     }
 
     /// <inheritdoc/>
-    public IEntityQuery WithNone<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new()
+    public IEntityQuery WithNone<T>(IFilterExpression<T> filter) where T : class, IComponent, new()
     {
-        _withNone[typeof(T)] = filter;
+        _withNone[typeof(T)] = filter ?? Filter<T>.All();
         return this;
     }
 
     /// <inheritdoc/>
     public IEntityQuery With<T>(Expression<Func<T, bool>> filter) where T : class, new()
     {
-        // Legacy support - maps to WithAll
+        // Legacy support - maps to WithAll for backwards compatibility
+        // Note: This method is kept for backwards compatibility but new code should use WithAll with IFilterExpression
         if (typeof(IComponent).IsAssignableFrom(typeof(T)))
         {
-            _withAll[typeof(T)] = filter;
+            // For IComponent types, use LambdaFilter to process the expression properly
+            var componentType = typeof(T);
+            var lambdaFilterType = typeof(LambdaFilter<>).MakeGenericType(componentType);
+            var lambdaFilter = Activator.CreateInstance(lambdaFilterType, filter);
+            _withAll[componentType] = lambdaFilter!;
+        }
+        else
+        {
+            // For non-IComponent types, store in includes (legacy behavior)
+            _includes[typeof(T)] = new QueryPlan { Filter = filter };
         }
         return this;
     }
@@ -125,7 +133,7 @@ public class EntityQuery : IEntityQuery
         if (allSets.Any())
         {
             result = allSets.Aggregate((a, b) => { a.IntersectWith(b); return a; });
-            
+
             // If we also have ANY filters, intersect with the union of ANY results
             if (anySet.Any())
             {
@@ -143,15 +151,15 @@ public class EntityQuery : IEntityQuery
 
         // Exclude NONE matches
         result.ExceptWith(noneSet);
-        
+
         var entityIds = result.ToList();
-        
+
         // Apply ordering if specified
         if (_orderings.Any() && entityIds.Any())
         {
             entityIds = await ApplyOrdering(entityIds);
         }
-        
+
         return entityIds;
     }
 
@@ -184,7 +192,7 @@ public class EntityQuery : IEntityQuery
     /// <summary>
     /// Executes a query for entity IDs using the appropriate handler.
     /// </summary>
-    private async Task<IEnumerable<Guid>> ExecuteQueryEntityIds(Type componentType, LambdaExpression filter)
+    private async Task<IEnumerable<Guid>> ExecuteQueryEntityIds(Type componentType, object filter)
     {
         var handler = _handlerRegistry.GetHandler(componentType);
         return await handler.QueryEntityIds(filter);
@@ -211,10 +219,10 @@ public class EntityQuery : IEntityQuery
     {
         if (_dataContext == null)
             throw new InvalidOperationException("DataContext is required for ToList(). EntityQuery must be created through IDataContext.Query().");
-        
+
         // Get the entity IDs that match the query
         var entityIds = await ToEntityIds();
-        
+
         // Create Entity objects with DataContext binding
         var entities = new List<Entity>();
         foreach (var id in entityIds)
@@ -223,7 +231,7 @@ public class EntityQuery : IEntityQuery
             entity.SetContext(_dataContext);
             entities.Add(entity);
         }
-        
+
         return entities;
     }
 
@@ -234,32 +242,32 @@ public class EntityQuery : IEntityQuery
     {
         // Load components needed for ordering
         var orderingData = new Dictionary<Guid, Dictionary<Type, IComponent>>();
-        
+
         // Get unique component types from orderings
         var componentTypes = _orderings.Select(o => o.ComponentType).Distinct();
-        
+
         foreach (var componentType in componentTypes)
         {
             var handler = _handlerRegistry.GetHandler(componentType);
             var components = await handler.LoadComponents(entityIds);
-            
+
             foreach (var component in components)
             {
                 if (!orderingData.ContainsKey(component.OwnerEntityId))
                     orderingData[component.OwnerEntityId] = new Dictionary<Type, IComponent>();
-                
+
                 orderingData[component.OwnerEntityId][componentType] = component;
             }
         }
-        
+
         // Apply ordering using LINQ
         IOrderedEnumerable<Guid>? orderedQuery = null;
-        
+
         foreach (var ordering in _orderings)
         {
             // Compile the key selector for this ordering
             var compiledSelector = CompileKeySelector(ordering);
-            
+
             if (ordering.IsPrimary)
             {
                 orderedQuery = ordering.Descending
@@ -273,34 +281,34 @@ public class EntityQuery : IEntityQuery
                     : orderedQuery.ThenBy(id => GetOrderKey(id, ordering, orderingData, compiledSelector));
             }
         }
-        
+
         return orderedQuery?.ToList() ?? entityIds;
     }
-    
+
     /// <summary>
     /// Compiles the key selector expression for a specific ordering.
     /// </summary>
     private static Delegate CompileKeySelector(OrderingExpression ordering)
     {
-        // The KeySelector is Expression<Func<T, object>> but we need to compile it 
+        // The KeySelector is Expression<Func<T, object>> but we need to compile it
         // to a delegate that can work with IComponent
         return ordering.KeySelector.Compile();
     }
-    
+
     /// <summary>
     /// Gets the sort key value for a specific entity and ordering.
     /// </summary>
-    private static object? GetOrderKey(Guid entityId, OrderingExpression ordering, 
+    private static object? GetOrderKey(Guid entityId, OrderingExpression ordering,
         Dictionary<Guid, Dictionary<Type, IComponent>> orderingData, Delegate compiledSelector)
     {
         // Check if we have data for this entity
         if (!orderingData.TryGetValue(entityId, out var entityComponents))
             return null;
-        
+
         // Check if we have the component for this ordering
         if (!entityComponents.TryGetValue(ordering.ComponentType, out var component))
             return null;
-        
+
         // Apply the compiled selector to get the sort key
         try
         {
@@ -346,7 +354,7 @@ public class EntityQuery : IEntityQuery
     {
         if (!_orderings.Any())
             throw new InvalidOperationException("ThenBy can only be used after OrderBy or OrderByDescending");
-        
+
         _orderings.Add(new OrderingExpression
         {
             ComponentType = typeof(T),
@@ -362,7 +370,7 @@ public class EntityQuery : IEntityQuery
     {
         if (!_orderings.Any())
             throw new InvalidOperationException("ThenByDescending can only be used after OrderBy or OrderByDescending");
-        
+
         _orderings.Add(new OrderingExpression
         {
             ComponentType = typeof(T),
@@ -378,17 +386,17 @@ public class EntityQuery : IEntityQuery
     {
         if (_dataContext == null)
             throw new InvalidOperationException("DataContext is required for Single(). EntityQuery must be created through IDataContext.Query().");
-        
+
         // Get the entity IDs that match the query
         var entityIds = await ToEntityIds();
-        
+
         // Check for exactly one result
         if (!entityIds.Any())
             throw new InvalidOperationException("Sequence contains no elements");
-        
+
         if (entityIds.Count > 1)
             throw new InvalidOperationException($"Sequence contains more than one element ({entityIds.Count} entities found)");
-        
+
         // Create and return the single Entity with DataContext binding
         var entity = new Entity(entityIds[0]);
         entity.SetContext(_dataContext);

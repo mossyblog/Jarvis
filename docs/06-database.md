@@ -118,7 +118,7 @@ PostgreSQL RLS enforces data isolation at the database level. JWT claims are pas
 
 1. User authenticates and receives a JWT token
 2. PgClient parses JWT and extracts claims
-3. Claims are set as PostgreSQL session variables (`jwt.claims.*`)
+3. Claims are set as PostgreSQL session variables (`app.*`)
 4. RLS policies use these variables to filter rows
 
 ```csharp
@@ -126,7 +126,7 @@ pgClient.JWT(authToken);
 
 // Claims become session variables accessible in SQL
 // CREATE POLICY user_data ON orders
-//     USING (user_id = current_setting('jwt.claims.sub')::uuid);
+//     USING (user_id = current_setting('app.user_id', true)::uuid);
 ```
 
 ### Security Guarantees

@@ -1,5 +1,5 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
-# 
+#
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.tests", "core.jarvis.tests\core.jarvis.tests.csproj", "{A9B8CBA4-BB7F-401E-9696-C70E4F20023E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis", "core.jarvis\core.jarvis.csproj", "{CBA0F714-5A11-4DAA-96DB-468760438014}"
@@ -7,6 +7,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.data", "core.jarvis.data\core.jarvis.data.csproj", "{7DE7E9E2-BDFE-4944-BBF2-4FA4CDB4EC35}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.data.tests", "core.jarvis.data.tests\core.jarvis.data.tests.csproj", "{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.api", "core.jarvis.api\core.jarvis.api.csproj", "{9B59305F-B08E-4AD7-80E9-1D6FD26373C1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core.jarvis.api.tests", "core.jarvis.api.tests\core.jarvis.api.tests.csproj", "{B9E83363-5FC5-4D0B-BF19-D8E1FBA54411}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,5 +38,13 @@ Global
 		{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{414E9F4E-9AE4-4250-9B31-6B1D803CB1BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B59305F-B08E-4AD7-80E9-1D6FD26373C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B59305F-B08E-4AD7-80E9-1D6FD26373C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B59305F-B08E-4AD7-80E9-1D6FD26373C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B59305F-B08E-4AD7-80E9-1D6FD26373C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B9E83363-5FC5-4D0B-BF19-D8E1FBA54411}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9E83363-5FC5-4D0B-BF19-D8E1FBA54411}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9E83363-5FC5-4D0B-BF19-D8E1FBA54411}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9E83363-5FC5-4D0B-BF19-D8E1FBA54411}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -63,6 +63,10 @@ public static class AuditEventTypes
     public const string EventBatchEmitted = "EVENT_BATCH_EMITTED";
     public const string EventEmissionFailed = "EVENT_EMISSION_FAILED";
 
+    // Generic data events
+    public const string DataInserted = "DATA_INSERTED";
+    public const string DataDeleted = "DATA_DELETED";
+
     /// <summary>
     /// Creates a component-specific event type.
     /// </summary>

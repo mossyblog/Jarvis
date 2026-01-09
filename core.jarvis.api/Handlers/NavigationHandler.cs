@@ -1,4 +1,5 @@
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.api.Models;
 using Microsoft.Extensions.Logging;
 
@@ -28,9 +29,9 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
         var allNavItems = await DataContext.Query()
             .WithAll<NavigationItem>()
             .ToEntityComponents();
-            
+
         var navigation = new List<NavigationItem>();
-        
+
         foreach (var entity in allNavItems)
         {
             var navItem = entity.Value.Get<NavigationItem>();
@@ -40,9 +41,9 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
             }
         }
 
-        Logger.LogInformation("Retrieved {Count} navigation items for user with {PermCount} permissions", 
+        Logger.LogInformation("Retrieved {Count} navigation items for user with {PermCount} permissions",
                               navigation.Count, userPermissionIds.Length);
-        
+
         return navigation.OrderBy(n => n.SortOrder).ToList();
     }
 
@@ -56,9 +57,9 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
         var allNavItems = await DataContext.Query()
             .WithAll<NavigationItem>()
             .ToEntityComponents();
-            
+
         var navigation = new List<NavigationItem>();
-        
+
         foreach (var entity in allNavItems)
         {
             var navItem = entity.Value.Get<NavigationItem>();
@@ -69,7 +70,7 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
         }
 
         Logger.LogInformation("Retrieved {Count} total navigation items", navigation.Count);
-        
+
         return navigation.OrderBy(n => n.SortOrder).ToList();
     }
 
@@ -83,19 +84,19 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
     public async Task<bool> CanAccessNavigation(string menuId, string[] userPermissionIds)
     {
         var allNavItems = await DataContext.Query()
-            .WithAll<NavigationItem>(n => n.MenuId == menuId)
+            .WithAll<NavigationItem>(Filter<NavigationItem>.Eq(n => n.MenuId, menuId))
             .ToEntityComponents();
-            
+
         var navItem = allNavItems
             .Select(kvp => kvp.Value.Get<NavigationItem>())
             .FirstOrDefault(item => item != null && item.MenuId == menuId);
-            
+
         if (navItem == null)
         {
             Logger.LogWarning("Navigation item with MenuId {MenuId} not found", menuId);
             return false;
         }
-        
+
         return CanUserAccessNavigation(navItem, userPermissionIds);
     }
 
@@ -125,25 +126,25 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
     {
         // Validate MenuId uniqueness
         var existingItems = await DataContext.Query()
-            .WithAll<NavigationItem>(n => n.MenuId == navigationItem.MenuId)
+            .WithAll<NavigationItem>(Filter<NavigationItem>.Eq(n => n.MenuId, navigationItem.MenuId))
             .ToEntityComponents();
-            
+
         if (existingItems.Any())
         {
             throw new InvalidOperationException($"Navigation item with MenuId '{navigationItem.MenuId}' already exists");
         }
-        
+
         // Set proper entity ownership and timestamp
-        var newNavItem = navigationItem with 
-        { 
+        var newNavItem = navigationItem with
+        {
             OwnerEntityId = OwnerEntityId,
             LastUpdated = DateTime.UtcNow
         };
-        
+
         await DataContext.TryCommit(newNavItem);
-        Logger.LogInformation("Created navigation item {MenuId} for entity {EntityId}", 
+        Logger.LogInformation("Created navigation item {MenuId} for entity {EntityId}",
                               newNavItem.MenuId, OwnerEntityId);
-        
+
         return newNavItem;
     }
 
@@ -160,17 +161,17 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
         {
             throw new InvalidOperationException("NavigationItem component not found");
         }
-        
-        var updated = updatedNavigationItem with 
-        { 
+
+        var updated = updatedNavigationItem with
+        {
             OwnerEntityId = OwnerEntityId,
             LastUpdated = DateTime.UtcNow
         };
-        
+
         await DataContext.TryCommit(updated);
-        Logger.LogInformation("Updated navigation item {MenuId} for entity {EntityId}", 
+        Logger.LogInformation("Updated navigation item {MenuId} for entity {EntityId}",
                               updated.MenuId, OwnerEntityId);
-        
+
         return updated;
     }
 
@@ -188,9 +189,9 @@ public class NavigationHandler : ComponentHandler<NavigationItem>
         {
             return navItem.IsActive;
         }
-        
+
         // Check if user has the required permission and item is active
-        return navItem.IsActive && 
+        return navItem.IsActive &&
                userPermissionIds.Contains(navItem.RequiredPermissionId.Value.ToString());
     }
 }

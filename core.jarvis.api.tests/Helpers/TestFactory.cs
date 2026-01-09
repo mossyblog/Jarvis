@@ -1,210 +1,124 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.Azure.Functions.Worker;
-using Microsoft.Azure.Functions.Worker.Http;
+using core.jarvis.tests.Helpers;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace core.jarvis.api.tests.Helpers;
 
 /// <summary>
-/// Factory for creating test objects.
+/// Factory for creating test objects for FastEndpoints-based API testing.
 /// </summary>
 public static class TestFactory
 {
     /// <summary>
-    /// Creates a mock HttpRequestData for testing.
+    /// Creates an HTTP client with optional JWT authorization.
     /// </summary>
-    public static HttpRequestData CreateHttpRequestData(string method, string url, string? body = null)
+    public static HttpClient CreateClient(WebApplicationFactory<Program> factory, string? jwt = null)
     {
-        var services = new ServiceCollection();
-        var serviceProvider = services.BuildServiceProvider();
-        var context = new TestFunctionContext(serviceProvider);
-        
-        // Handle relative URLs by prepending a base URL
-        Uri uri;
-        if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
+        var client = factory.CreateClient();
+
+        if (!string.IsNullOrEmpty(jwt))
         {
-            uri = new Uri(url);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         }
-        else
+
+        return client;
+    }
+
+    /// <summary>
+    /// Creates an HTTP request message for testing.
+    /// </summary>
+    public static HttpRequestMessage CreateRequest(HttpMethod method, string url, string? body = null, string? jwt = null)
+    {
+        var request = new HttpRequestMessage(method, url);
+
+        if (!string.IsNullOrEmpty(body))
         {
-            // For relative URLs, create a full URI with a dummy host
-            uri = new Uri("http://localhost" + (url.StartsWith("/") ? url : "/" + url));
+            request.Content = new StringContent(body, Encoding.UTF8, "application/json");
         }
-        
-        var request = new MockHttpRequestData(context, uri, method);
-        
-        if (body != null)
+
+        if (!string.IsNullOrEmpty(jwt))
         {
-            var bytes = Encoding.UTF8.GetBytes(body);
-            request.SetBody(new MemoryStream(bytes));
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", jwt);
         }
-        
+
         return request;
     }
 
     /// <summary>
     /// Gets the response body as a string.
     /// </summary>
-    public static async Task<string> GetResponseBodyAsync(HttpResponseData response)
+    public static async Task<string> GetResponseBodyAsync(HttpResponseMessage response)
     {
-        response.Body.Position = 0;
-        using var reader = new StreamReader(response.Body);
-        return await reader.ReadToEndAsync();
+        return await response.Content.ReadAsStringAsync();
+    }
+
+    /// <summary>
+    /// Creates a test JWT token for testing purposes.
+    /// </summary>
+    public static string CreateTestJwt(Guid userId, string email, Dictionary<string, string>? additionalClaims = null)
+    {
+        // For testing, create a simple base64 encoded payload (not a real JWT)
+        // Real JWT validation is done by the TokenService in integration tests
+        var claims = new Dictionary<string, object>
+        {
+            ["sub"] = userId.ToString(),
+            ["email"] = email,
+            ["exp"] = DateTimeOffset.UtcNow.AddHours(1).ToUnixTimeSeconds()
+        };
+
+        if (additionalClaims != null)
+        {
+            foreach (var claim in additionalClaims)
+            {
+                claims[claim.Key] = claim.Value;
+            }
+        }
+
+        var payload = System.Text.Json.JsonSerializer.Serialize(claims);
+        var base64Payload = Convert.ToBase64String(Encoding.UTF8.GetBytes(payload));
+
+        // Return a fake JWT structure for testing
+        return $"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.{base64Payload}.test_signature";
     }
 }
 
 /// <summary>
-/// Mock implementation of HttpRequestData for testing.
+/// Custom WebApplicationFactory for testing FastEndpoints API.
+/// Configures test-specific settings including JWT keys and database connections.
 /// </summary>
-public class MockHttpRequestData : HttpRequestData
+public class JarvisApiWebApplicationFactory : WebApplicationFactory<Program>
 {
-    private readonly string _method;
-    private readonly Uri _url;
-    private MockHttpHeadersCollection _headers;
-    private Stream _body;
-
-    public MockHttpRequestData(FunctionContext functionContext, Uri url, string method) 
-        : base(functionContext)
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
-        _url = url;
-        _method = method;
-        _headers = new MockHttpHeadersCollection();
-        _body = new MemoryStream();
+        builder.UseEnvironment("Test");
+
+        // Inject test configuration BEFORE the app builds
+        builder.ConfigureAppConfiguration((context, config) =>
+        {
+            // Get the test database connection string
+            var testConnectionString = TestDatabaseSetup.GetConnectionString();
+
+            // Add test configuration values
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:JarvisDb"] = testConnectionString,
+                ["Jwt:Issuer"] = "jarvis-api-test",
+                ["Jwt:Audience"] = "jarvis-test-clients",
+                ["Jwt:SecretKey"] = "TEST_JARVIS_KEY_FOR_UNIT_TESTING_PURPOSES_ONLY_MINIMUM_256_BITS_LONG_TO_MEET_ALL_REQUIREMENTS",
+                ["Jwt:AccessTokenExpirationMinutes"] = "15",
+                ["Jwt:RefreshTokenExpirationDays"] = "30"
+            });
+        });
+
+        builder.ConfigureServices(services =>
+        {
+            // Override services for testing as needed
+        });
     }
-
-    public override Stream Body => _body;
-
-    public void SetBody(Stream body)
-    {
-        _body = body;
-    }
-
-    public override HttpHeadersCollection Headers => _headers;
-
-    public override IReadOnlyCollection<IHttpCookie> Cookies => new List<IHttpCookie>();
-
-    public override Uri Url => _url;
-
-    public override IEnumerable<ClaimsIdentity> Identities => Enumerable.Empty<ClaimsIdentity>();
-
-    public override string Method => _method;
-
-    public override HttpResponseData CreateResponse()
-    {
-        return new MockHttpResponseData(FunctionContext);
-    }
-}
-
-/// <summary>
-/// Mock implementation of HttpHeadersCollection for testing.
-/// </summary>
-public class MockHttpHeadersCollection : HttpHeadersCollection
-{
-    private readonly Dictionary<string, List<string>> _headers = new(StringComparer.OrdinalIgnoreCase);
-
-    public new void Add(string name, string value)
-    {
-        base.Add(name, value);
-    }
-}
-
-/// <summary>
-/// Mock implementation of HttpResponseData for testing.
-/// </summary>
-public class MockHttpResponseData : HttpResponseData
-{
-    private HttpHeadersCollection _headers;
-
-    public MockHttpResponseData(FunctionContext functionContext) 
-        : base(functionContext)
-    {
-        Body = new MemoryStream();
-        StatusCode = HttpStatusCode.OK;
-        _headers = new HttpHeadersCollection();
-    }
-
-    public override HttpStatusCode StatusCode { get; set; }
-
-    public override HttpHeadersCollection Headers 
-    { 
-        get => _headers;
-        set => _headers = value;
-    }
-
-    public override Stream Body { get; set; }
-
-    public override HttpCookies Cookies => new MockHttpCookies();
-}
-
-/// <summary>
-/// Mock implementation of HttpCookies for testing.
-/// </summary>
-public class MockHttpCookies : HttpCookies
-{
-    private readonly List<IHttpCookie> _cookies = new();
-
-    public override void Append(IHttpCookie cookie)
-    {
-        _cookies.Add(cookie);
-    }
-
-    public override void Append(string name, string value)
-    {
-        // Simple implementation for testing
-    }
-
-    public override IHttpCookie CreateNew()
-    {
-        return new MockHttpCookie();
-    }
-}
-
-/// <summary>
-/// Mock implementation of IHttpCookie for testing.
-/// </summary>
-public class MockHttpCookie : IHttpCookie
-{
-    public string Name { get; set; } = string.Empty;
-    public string Value { get; set; } = string.Empty;
-    public string? Domain { get; set; }
-    public DateTimeOffset? Expires { get; set; }
-    public bool? HttpOnly { get; set; }
-    public double? MaxAge { get; set; }
-    public string? Path { get; set; }
-    public SameSite SameSite { get; set; }
-    public bool? Secure { get; set; }
-}
-
-/// <summary>
-/// Test implementation of FunctionContext
-/// </summary>
-public class TestFunctionContext : FunctionContext
-{
-    private readonly IServiceProvider _serviceProvider;
-    private readonly IDictionary<object, object> _items = new Dictionary<object, object>();
-    
-    public TestFunctionContext(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-    
-    public override string InvocationId => Guid.NewGuid().ToString();
-    public override string FunctionId => "test";
-    public override TraceContext TraceContext => null!;
-    public override BindingContext BindingContext => null!;
-    public override RetryContext RetryContext => null!;
-    public override IServiceProvider InstanceServices 
-    {
-        get => _serviceProvider;
-        set => throw new NotSupportedException();
-    }
-    public override FunctionDefinition FunctionDefinition => null!;
-    public override IDictionary<object, object> Items
-    {
-        get => _items;
-        set => throw new NotSupportedException();
-    }
-    public override IInvocationFeatures Features => null!;
 }

@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using core.jarvis.Data.Query;
 
 namespace core.jarvis.Data;
 
@@ -9,14 +10,14 @@ namespace core.jarvis.Data;
 public interface IEntityQuery
 {
     /// <summary>
-    /// Adds an intersection (AND) filter for entities that have a specific component matching the predicate.
+    /// Adds an intersection (AND) filter for entities that have a specific component matching the filter.
     /// Multiple WithAll clauses result in an intersection of entity IDs.
     /// </summary>
     /// <typeparam name="T">The component type to filter on.</typeparam>
     /// <param name="filter">The filter expression to apply.</param>
     /// <returns>The query builder for chaining.</returns>
-    IEntityQuery WithAll<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new();
-    
+    IEntityQuery WithAll<T>(IFilterExpression<T> filter) where T : class, IComponent, new();
+
     /// <summary>
     /// Adds an intersection (AND) filter for entities that have a specific component type.
     /// No filtering is applied - all entities with this component type are included.
@@ -26,26 +27,27 @@ public interface IEntityQuery
     IEntityQuery WithAll<T>() where T : class, IComponent, new();
 
     /// <summary>
-    /// Adds a union (OR) filter for entities that have a specific component matching the predicate.
+    /// Adds a union (OR) filter for entities that have a specific component matching the filter.
     /// Multiple WithAny clauses result in a union of entity IDs.
     /// </summary>
     /// <typeparam name="T">The component type to filter on.</typeparam>
     /// <param name="filter">The filter expression to apply.</param>
     /// <returns>The query builder for chaining.</returns>
-    IEntityQuery WithAny<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new();
+    IEntityQuery WithAny<T>(IFilterExpression<T> filter) where T : class, IComponent, new();
 
     /// <summary>
-    /// Adds an exclusion (NOT) filter for entities that have a specific component matching the predicate.
+    /// Adds an exclusion (NOT) filter for entities that have a specific component matching the filter.
     /// Entities matching this filter will be excluded from results.
     /// </summary>
     /// <typeparam name="T">The component type to filter on.</typeparam>
     /// <param name="filter">The filter expression to apply.</param>
     /// <returns>The query builder for chaining.</returns>
-    IEntityQuery WithNone<T>(Expression<Func<T, bool>> filter) where T : class, IComponent, new();
+    IEntityQuery WithNone<T>(IFilterExpression<T> filter) where T : class, IComponent, new();
 
     /// <summary>
     /// Adds a filter criterion for entities that have a specific component matching the predicate.
     /// Multiple With clauses result in an intersection (AND) of entity IDs.
+    /// This is a legacy method for backwards compatibility - prefer using WithAll with IFilterExpression.
     /// </summary>
     /// <typeparam name="T">The component type to filter on.</typeparam>
     /// <param name="filter">The filter expression to apply.</param>

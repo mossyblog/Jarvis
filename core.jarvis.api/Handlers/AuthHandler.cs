@@ -2,6 +2,7 @@ using System.Linq;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.data;
 using core.jarvis.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -67,23 +68,23 @@ public class AuthHandler : ComponentHandler<Account>
         // Stronger timing attack protection
         var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
         var minimumTime = isTestEnvironment ? 10 : 500; // Increased minimum time for production
-        
-        var result = await _constantTimeService.ExecuteWithMinimumTime(async () => 
-            await AuthenticateInternal(accountCredentials), 
+
+        var result = await _constantTimeService.ExecuteWithMinimumTime(async () =>
+            await AuthenticateInternal(accountCredentials),
             minimumMilliseconds: minimumTime);
-        
+
         // Add random delay even in test environment for better security
         var minDelay = isTestEnvironment ? 5 : 50;
         var maxDelay = isTestEnvironment ? 15 : 200;
         await _constantTimeService.AddRandomDelay(minDelay, maxDelay);
-        
+
         return result;
     }
 
     private async Task<AuthToken> AuthenticateInternal(Account accountCredentials)
     {
         // Basic input validation
-        if (string.IsNullOrWhiteSpace(accountCredentials.Email) || 
+        if (string.IsNullOrWhiteSpace(accountCredentials.Email) ||
             string.IsNullOrWhiteSpace(accountCredentials.Password))
         {
             Logger.LogWarning("Invalid input: empty email or password");
@@ -99,64 +100,64 @@ public class AuthHandler : ComponentHandler<Account>
 
         // Get services
         var tokenService = _tokenService;
-        
-        // Query account by email using the component system
+
+        // Query account by email using the component system with Filter API
         var query = DataContext.Query()
-            .With<Account>(a => a.Email == accountCredentials.Email);
+            .WithAll<Account>(Filter<Account>.Eq(a => a.Email, accountCredentials.Email).IgnoreCase());
         var componentsByEntity = await query.ToEntityComponents();
-        
+
         Account? account = null;
         foreach (var kvp in componentsByEntity)
         {
             var acc = kvp.Value.Get<Account>();
-            if (acc != null && acc.Email == accountCredentials.Email)
+            if (acc != null && acc.Email.Equals(accountCredentials.Email, StringComparison.OrdinalIgnoreCase))
             {
                 account = acc;
                 break;
             }
         }
-        
+
         if (account == null)
         {
             // Log failed authentication attempt
             await _securityAudit.LogFailedAuthentication(
-                accountCredentials.Email, 
+                accountCredentials.Email,
                 accountCredentials.IpAddress ?? "unknown",
                 accountCredentials.UserAgent,
                 "Account not found"
             );
-            
+
             return new AuthToken(); // Return empty token to indicate failure
         }
-        
+
         // Check if account is active
         if (!account.IsActive)
         {
             await _securityAudit.LogFailedAuthentication(
-                accountCredentials.Email, 
+                accountCredentials.Email,
                 accountCredentials.IpAddress ?? "unknown",
                 accountCredentials.UserAgent,
                 "Account is not active"
             );
-            
+
             return new AuthToken();
         }
-        
+
         // Verify password using BCrypt
         var isValidPassword = BCrypt.Net.BCrypt.Verify(accountCredentials.Password, account.PasswordHash);
-        
+
         if (!isValidPassword)
         {
             await _securityAudit.LogFailedAuthentication(
-                accountCredentials.Email, 
+                accountCredentials.Email,
                 accountCredentials.IpAddress ?? "unknown",
                 accountCredentials.UserAgent,
                 "Invalid credentials"
             );
-            
+
             return new AuthToken(); // Return empty token to indicate failure
         }
-        
+
         // Authentication successful - use the account's owner entity ID
         var authenticatedEntityId = account.OwnerEntityId;
 
@@ -175,11 +176,12 @@ public class AuthHandler : ComponentHandler<Account>
         var finalAccessToken = tokenService.AccessToken(authenticatedEntityId, accountCredentials.Email, additionalClaims);
 
         // Create AuthToken result - OwnerEntityId is the authenticated user's entity ID
+        // SECURITY: Never store plaintext tokens in the database - return in response only
         var authToken = new AuthToken
         {
             OwnerEntityId = authenticatedEntityId,
-            AccessToken = finalAccessToken ?? string.Empty,
-            RefreshToken = refreshToken ?? string.Empty,
+            AccessToken = string.Empty,  // Never store - return in response only
+            RefreshToken = string.Empty, // Never store - return in response only
             RefreshTokenHash = tokenService.HashRefreshToken(refreshToken ?? string.Empty),
             ExpiresAt = expiresAt,
             RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
@@ -199,7 +201,12 @@ public class AuthHandler : ComponentHandler<Account>
             accountCredentials.UserAgent
         );
 
-        return authToken;
+        // Return the token with actual values for the response (not persisted)
+        return authToken with
+        {
+            AccessToken = finalAccessToken ?? string.Empty,
+            RefreshToken = refreshToken ?? string.Empty
+        };
     }
 
 
@@ -309,7 +316,7 @@ public class AuthHandler : ComponentHandler<Account>
             return false;
         }
     }
-    
+
     /// <summary>
     /// Refreshes an authentication token using a valid refresh token.
     /// Validates the refresh token, revokes the old token, and generates new access and refresh tokens.
@@ -332,87 +339,89 @@ public class AuthHandler : ComponentHandler<Account>
     {
         if (string.IsNullOrEmpty(refreshToken))
         {
-            throw new core.jarvis.Exceptions.ValidationException(new Dictionary<string, string[]> 
-            { 
-                { "refreshToken", new[] { "Refresh token is required" } } 
+            throw new core.jarvis.Exceptions.ValidationException(new Dictionary<string, string[]>
+            {
+                { "refreshToken", new[] { "Refresh token is required" } }
             });
         }
 
         var tokenService = _tokenService;
         var entityQuery = _entityQuery;
-        
+
         // Hash the refresh token for lookup
         var refreshTokenHash = tokenService.HashRefreshToken(refreshToken);
-        
-        // Find the auth token by refresh token hash
+
+        // Find the auth token by refresh token hash using Filter API
         var entityIds = await entityQuery
-            .WithAll<AuthToken>(t => t.RefreshTokenHash == refreshTokenHash && !t.IsRevoked)
+            .WithAll<AuthToken>(Filter<AuthToken>.Eq(t => t.RefreshTokenHash, refreshTokenHash).And(Filter<AuthToken>.Eq(t => t.IsRevoked, false)))
             .ToEntityIds();
-            
+
         if (!entityIds.Any())
-            {
-                throw new core.jarvis.Exceptions.UnauthorizedException("Invalid or expired refresh token");
+        {
+            throw new core.jarvis.Exceptions.UnauthorizedException("Invalid or expired refresh token");
         }
-        
+
         // Get the first auth token
         var entityId = entityIds.First();
         var components = await DataContext.Query()
-            .With<AuthToken>(t => t.OwnerEntityId == entityId)
+            .WithAll<AuthToken>(Filter<AuthToken>.Eq(t => t.OwnerEntityId, entityId))
             .ToEntityComponents();
-            
+
         if (!components.TryGetValue(entityId, out var entityComponents))
         {
             throw new EntityNotFoundException(entityId, "AuthToken");
         }
-        
+
         var existingToken = entityComponents.Get<AuthToken>();
         if (existingToken == null)
         {
             throw new EntityNotFoundException(entityId, "AuthToken");
         }
-        
+
         // Check if refresh token is expired
         if (existingToken.RefreshExpiresAt < DateTime.UtcNow)
         {
             throw new core.jarvis.Exceptions.UnauthorizedException("Refresh token has expired");
         }
-        
+
         // Get the account associated with the token
         var accountComponents = await DataContext.Query()
-            .With<Account>(a => a.OwnerEntityId == existingToken.OwnerEntityId)
+            .WithAll<Account>(Filter<Account>.Eq(a => a.OwnerEntityId, existingToken.OwnerEntityId))
             .ToEntityComponents();
-            
+
         if (!accountComponents.TryGetValue(existingToken.OwnerEntityId, out var accountEntityComponents))
         {
             throw new EntityNotFoundException(existingToken.OwnerEntityId, "Account");
         }
-        
+
         var account = accountEntityComponents.Get<Account>();
         if (account == null)
         {
             throw new EntityNotFoundException(existingToken.OwnerEntityId, "Account");
         }
-        
+
         // Generate new tokens
         var newAccessToken = tokenService.AccessToken(account.Id, account.Email);
         var newRefreshToken = tokenService.RefreshToken();
-        
-        // Revoke the old token
-        var revokedToken = existingToken with 
-        { 
-            IsRevoked = true, 
+
+        // Revoke the old token and clear plaintext values
+        var revokedToken = existingToken with
+        {
+            IsRevoked = true,
             RevokedAt = DateTime.UtcNow,
-            LastUpdated = DateTime.UtcNow
+            LastUpdated = DateTime.UtcNow,
+            AccessToken = string.Empty,
+            RefreshToken = string.Empty
         };
         await DataContext.TryCommit(revokedToken);
-        
-        // Create new auth token
+
+        // Create new auth token - store only hash, not plaintext
         var newAuthToken = new AuthToken
         {
             Id = Guid.NewGuid(),
             OwnerEntityId = account.Id,
-            AccessToken = newAccessToken,
-            RefreshToken = newRefreshToken,
+            AccessToken = string.Empty,  // Never store - return in response only
+            RefreshToken = string.Empty, // Never store - return in response only
             RefreshTokenHash = tokenService.HashRefreshToken(newRefreshToken),
             SessionId = existingToken.SessionId, // Keep the same session
             RefreshExpiresAt = DateTime.UtcNow.AddDays(_refreshTokenExpirationDays),
@@ -422,11 +431,17 @@ public class AuthHandler : ComponentHandler<Account>
             IsRevoked = false,
             LastUpdated = DateTime.UtcNow
         };
-        
+
         await DataContext.TryCommit(newAuthToken);
-        
+
         Logger.LogInformation("Token refreshed for entity {EntityId}", account.Id);
-        return newAuthToken;
+
+        // Return the token with actual values for the response (not persisted)
+        return newAuthToken with
+        {
+            AccessToken = newAccessToken,
+            RefreshToken = newRefreshToken
+        };
     }
 
     /// <summary>
@@ -446,7 +461,7 @@ public class AuthHandler : ComponentHandler<Account>
 
         // Comprehensive injection pattern detection
         // Check for SQL injection, NoSQL injection, command injection, and script injection patterns
-        var dangerousPatterns = new[] { 
+        var dangerousPatterns = new[] {
             // SQL injection patterns
             "' OR '", "'; DROP", "'; DELETE", "'; UPDATE", "'; INSERT", "'; CREATE", "'; ALTER",
             "\' OR ", "\';DROP", "\';DELETE", "\';UPDATE", "\';INSERT", "\';CREATE", "\';ALTER",
@@ -462,7 +477,7 @@ public class AuthHandler : ComponentHandler<Account>
             // Control characters
             "\n", "\r", "\t", "\0", "\x00"
         };
-        
+
         foreach (var pattern in dangerousPatterns)
         {
             if (input.Contains(pattern, StringComparison.OrdinalIgnoreCase))

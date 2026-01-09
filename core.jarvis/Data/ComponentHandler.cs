@@ -1,3 +1,4 @@
+using core.jarvis.Data.Query;
 using core.jarvis.ErrorHandling;
 using core.jarvis.Exceptions;
 using core.jarvis.Validation;
@@ -78,7 +79,7 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
     {
         // Create Table if it doesn't Exist.
         var query = DataContext.Query()
-            .With<TComponent>(c => c.OwnerEntityId == OwnerEntityId);
+            .WithAll<TComponent>(Filter<TComponent>.Eq(c => c.OwnerEntityId, OwnerEntityId));
         var componentsByEntity = await query.ToEntityComponents();
 
         if (!componentsByEntity.TryGetValue(OwnerEntityId, out var entityComponents))
@@ -165,7 +166,7 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
         try
         {
             var query = DataContext.Query()
-                .With<T>(c => c.OwnerEntityId == OwnerEntityId);
+                .WithAll<T>(Filter<T>.Eq(c => c.OwnerEntityId, OwnerEntityId));
             var result = await query.ToEntityComponents();
 
             if (result.TryGetValue(OwnerEntityId, out var components))
@@ -205,7 +206,7 @@ public abstract class ComponentHandler<TComponent> : IComponentHandler<TComponen
             return null;
 
         var query = DataContext.Query()
-            .With<T>(c => childIds.Contains(c.OwnerEntityId));
+            .WithAll<T>(Filter<T>.In(c => c.OwnerEntityId, childIds));
         var result = await query.ToEntityComponents();
 
         var children = new List<T>();

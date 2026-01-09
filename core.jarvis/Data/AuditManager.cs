@@ -21,11 +21,10 @@ public class AuditManager : IAuditManager
     {
         try
         {
-            await _auditService.LogEvent(eventType, entityId, new
+            // Use LogChange to properly set OldValue and NewValue fields
+            await _auditService.LogChange(eventType, entityId, existing, updated, new
             {
-                ComponentType = typeof(TComponent).Name,
-                Previous = existing,
-                Current = updated
+                ComponentType = typeof(TComponent).Name
             });
         }
         catch (Exception ex)

@@ -1,5 +1,6 @@
 using core.jarvis.Data;
 using core.jarvis.api.Models;
+using core.jarvis.api.Services;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -14,11 +15,15 @@ namespace core.jarvis.api.Handlers;
 /// </summary>
 public class RoleHandler : ComponentHandler<Role>
 {
+    private readonly IPermissionService? _permissionService;
+
     public RoleHandler(
         IDataContext dataContext,
-        ILogger<RoleHandler> logger)
+        ILogger<RoleHandler> logger,
+        IPermissionService? permissionService = null)
         : base(dataContext, logger)
     {
+        _permissionService = permissionService;
     }
 
     /// <summary>
@@ -51,6 +56,13 @@ public class RoleHandler : ComponentHandler<Role>
 
         await DataContext.TryCommit(updated); // Use TryCommit - NEVER DataContext.Commit directly!
         Logger.LogInformation("Granted permission {PermissionId} to role {RoleId}", permissionId, OwnerEntityId);
+
+        // Invalidate permission cache for all users with this role
+        if (_permissionService != null)
+        {
+            await _permissionService.InvalidateCacheForRoleAsync(OwnerEntityId);
+        }
+
         return updated;
     }
 
@@ -84,6 +96,13 @@ public class RoleHandler : ComponentHandler<Role>
 
         await DataContext.TryCommit(updated); // Use TryCommit - NEVER DataContext.Commit directly!
         Logger.LogInformation("Revoked permission {PermissionId} from role {RoleId}", permissionId, OwnerEntityId);
+
+        // Invalidate permission cache for all users with this role
+        if (_permissionService != null)
+        {
+            await _permissionService.InvalidateCacheForRoleAsync(OwnerEntityId);
+        }
+
         return updated;
     }
 
@@ -134,6 +153,13 @@ public class RoleHandler : ComponentHandler<Role>
 
         await DataContext.TryCommit(updated);
         Logger.LogInformation("Updated role {RoleId}", OwnerEntityId);
+
+        // Invalidate permission cache for all users with this role
+        if (_permissionService != null)
+        {
+            await _permissionService.InvalidateCacheForRoleAsync(OwnerEntityId);
+        }
+
         return updated;
     }
 
@@ -143,7 +169,13 @@ public class RoleHandler : ComponentHandler<Role>
     public async Task<bool> DeleteRole()
     {
         var role = await GetOrDefault() ?? throw new InvalidOperationException("Role not found");
-        
+
+        // Invalidate permission cache for all users with this role BEFORE deleting
+        if (_permissionService != null)
+        {
+            await _permissionService.InvalidateCacheForRoleAsync(OwnerEntityId);
+        }
+
         // Actually remove the role
         await DataContext.Remove<Role>(OwnerEntityId);
         Logger.LogInformation("Deleted role {RoleId}", OwnerEntityId);

@@ -2,15 +2,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using core.jarvis.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace core.jarvis.api.Services;
 
 /// <summary>
-/// Implementation of JWT token operations.
+/// Implementation of JWT token operations with full signature validation.
 /// </summary>
-public class TokenService : ITokenService
+public class TokenService : ITokenService, IJwtValidator
 {
     /// <summary>
     /// Default access token expiration time in minutes.
@@ -64,8 +65,8 @@ public class TokenService : ITokenService
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Email, email),
+                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             }),
@@ -201,19 +202,85 @@ public class TokenService : ITokenService
     public bool VerifyRefreshToken(string refreshToken, string hashedToken)
     {
         var computedHash = HashRefreshToken(refreshToken);
-        
+
         // Use constant-time comparison to prevent timing attacks
         if (computedHash.Length != hashedToken.Length)
         {
             return false;
         }
-        
+
         var result = 0;
         for (int i = 0; i < computedHash.Length; i++)
         {
             result |= computedHash[i] ^ hashedToken[i];
         }
-        
+
         return result == 0;
     }
+
+    #region IJwtValidator Implementation
+
+    /// <summary>
+    /// Validates a JWT token including signature verification.
+    /// Implementation of IJwtValidator.ValidateToken - delegates to Validate method.
+    /// </summary>
+    /// <param name="token">The JWT token to validate.</param>
+    /// <returns>ClaimsPrincipal if token is valid and signature is verified, null otherwise.</returns>
+    ClaimsPrincipal? IJwtValidator.ValidateToken(string token)
+    {
+        return Validate(token);
+    }
+
+    /// <summary>
+    /// Extracts claims from a validated JWT token as a dictionary.
+    /// Only returns claims if the token signature is valid.
+    /// </summary>
+    /// <param name="token">The JWT token to validate and extract claims from.</param>
+    /// <returns>Dictionary of claims if token is valid, null otherwise.</returns>
+    public Dictionary<string, string>? GetValidatedClaims(string token)
+    {
+        var principal = Validate(token);
+        if (principal == null)
+        {
+            return null;
+        }
+
+        // Convert ClaimsPrincipal to Dictionary<string, string>
+        var claims = new Dictionary<string, string>();
+        foreach (var claim in principal.Claims)
+        {
+            // Handle duplicate claim types by taking the first value
+            if (!claims.ContainsKey(claim.Type))
+            {
+                claims[claim.Type] = claim.Value;
+            }
+
+            // Also map standard claim types to their short names for compatibility
+            // e.g., http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier -> sub
+            var shortName = GetShortClaimName(claim.Type);
+            if (shortName != claim.Type && !claims.ContainsKey(shortName))
+            {
+                claims[shortName] = claim.Value;
+            }
+        }
+
+        return claims;
+    }
+
+    /// <summary>
+    /// Maps long claim type URIs to short claim names for compatibility.
+    /// </summary>
+    private static string GetShortClaimName(string claimType)
+    {
+        return claimType switch
+        {
+            ClaimTypes.NameIdentifier => "sub",
+            ClaimTypes.Email => "email",
+            ClaimTypes.Role => "role",
+            ClaimTypes.Name => "name",
+            _ => claimType
+        };
+    }
+
+    #endregion
 }

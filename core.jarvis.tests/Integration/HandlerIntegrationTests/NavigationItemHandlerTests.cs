@@ -1,4 +1,5 @@
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.tests.Helpers;
 using Shouldly;
 
@@ -65,7 +66,7 @@ public class NavigationItemHandlerTests : IntegrationTestBase
         
         // Verify the component was persisted by retrieving it
         var result = await TestDataContext().Query()
-            .WithAll<NavigationItemTestComponent>(n => n.OwnerEntityId == entityId)
+            .WithAll<NavigationItemTestComponent>(Filter<NavigationItemTestComponent>.Eq(n => n.OwnerEntityId, entityId))
             .ToEntityComponents();
         
         result.ShouldNotBeEmpty("NavigationItem should be retrievable after commit");
@@ -138,10 +139,10 @@ public class NavigationItemHandlerTests : IntegrationTestBase
         
         // Verify both components were persisted correctly
         var result1 = await TestDataContext().Query()
-            .WithAll<NavigationItemTestComponent>(n => n.OwnerEntityId == entity1Id)
+            .WithAll<NavigationItemTestComponent>(Filter<NavigationItemTestComponent>.Eq(n => n.OwnerEntityId, entity1Id))
             .ToEntityComponents();
         var result2 = await TestDataContext().Query()
-            .WithAll<NavigationItemTestComponent>(n => n.OwnerEntityId == entity2Id)
+            .WithAll<NavigationItemTestComponent>(Filter<NavigationItemTestComponent>.Eq(n => n.OwnerEntityId, entity2Id))
             .ToEntityComponents();
             
         result1.ShouldNotBeEmpty();

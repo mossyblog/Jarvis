@@ -305,7 +305,6 @@ public class AuthSystemIntegrationTests : ApiIntegrationTestBase
             OwnerEntityId = ownerEntityId,
             Name = "Test User",
             RoleIds = Array.Empty<string>(),
-            PermissionIds = Array.Empty<string>(),
             Preferences = System.Text.Json.JsonSerializer.Serialize(new Dictionary<string, object>())
         };
         

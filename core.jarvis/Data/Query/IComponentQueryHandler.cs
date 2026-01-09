@@ -1,5 +1,3 @@
-using System.Linq.Expressions;
-
 namespace core.jarvis.Data.Query;
 
 /// <summary>
@@ -16,9 +14,9 @@ public interface IComponentQueryHandler
     /// <summary>
     /// Queries for entity IDs that have components matching the given filter.
     /// </summary>
-    /// <param name="filter">The filter expression to apply.</param>
+    /// <param name="filter">The filter expression to apply (must be IFilterExpression of the handler's component type).</param>
     /// <returns>Entity IDs that match the filter.</returns>
-    Task<IEnumerable<Guid>> QueryEntityIds(LambdaExpression filter);
+    Task<IEnumerable<Guid>> QueryEntityIds(object filter);
 
     /// <summary>
     /// Loads all components for the given entity IDs.
@@ -32,7 +30,7 @@ public interface IComponentQueryHandler
 /// Generic interface for component query handlers that provides type-safe operations.
 /// </summary>
 /// <typeparam name="T">The component type this handler manages.</typeparam>
-public interface IComponentQueryHandler<T> : IComponentQueryHandler 
+public interface IComponentQueryHandler<T> : IComponentQueryHandler
     where T : class, IComponent, new()
 {
     /// <summary>
@@ -40,7 +38,7 @@ public interface IComponentQueryHandler<T> : IComponentQueryHandler
     /// </summary>
     /// <param name="filter">The filter expression to apply.</param>
     /// <returns>Entity IDs that match the filter.</returns>
-    Task<IEnumerable<Guid>> QueryEntityIds(Expression<Func<T, bool>> filter);
+    Task<IEnumerable<Guid>> QueryEntityIds(IFilterExpression<T> filter);
 
     /// <summary>
     /// Loads all components for the given entity IDs.

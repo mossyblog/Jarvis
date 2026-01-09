@@ -17,6 +17,7 @@ CLAUDE.md
 .env.local
 .env.*.local
 *.env
+.env.test
 
 scripts/
 
@@ -36,3 +37,4 @@ auth-debug.log
 TestResults/
 
 .serena/
+auth-debug*

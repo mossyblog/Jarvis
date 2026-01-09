@@ -209,16 +209,18 @@ namespace core.jarvis.data
                 // Some JWT claims (like Microsoft's) have very long names
                 // We need to sanitize the claim key to be a valid PostgreSQL identifier
                 var sanitizedKey = SanitizeClaimKey(claim.Key);
-                var variableName = $"jwt.claims.{sanitizedKey}";
-                
-                // PostgreSQL custom variables need to be set with literal values
-                // We escape single quotes to prevent SQL injection
-                var escapedValue = claim.Value.Replace("'", "''");
-                var sql = $"SET SESSION \"{variableName}\" = '{escapedValue}';";
-                
+                var variableName = $"app.{sanitizedKey}";
+
+                // Use set_config() with proper parameterization to prevent SQL injection
+                // set_config(setting_name, new_value, is_local) returns the new value
+                // is_local = false means the setting persists for the session
+                const string sql = "SELECT set_config(@varName, @value, false)";
+
                 try
                 {
                     using var cmd = new NpgsqlCommand(sql, _conn);
+                    cmd.Parameters.AddWithValue("varName", variableName);
+                    cmd.Parameters.AddWithValue("value", claim.Value);
                     await cmd.ExecuteNonQueryAsync();
                 }
                 catch (Exception ex)
@@ -237,43 +239,59 @@ namespace core.jarvis.data
         /// <summary>
         /// Sanitizes a JWT claim key to be a valid PostgreSQL identifier.
         /// Handles common JWT claim types and shortens long names.
+        ///
+        /// SECURITY: Applies Unicode normalization to prevent homograph attacks
+        /// where visually similar Unicode characters could bypass security checks.
+        /// For example: "admin" vs "admіn" (with Cyrillic 'і' U+0456).
         /// </summary>
         private string SanitizeClaimKey(string claimKey)
         {
+            if (string.IsNullOrEmpty(claimKey))
+                return "claim";
+
+            // SECURITY: Normalize Unicode to detect homograph attacks
+            // FormKD (Compatibility Decomposition) breaks characters into base + combining marks
+            // This helps detect look-alike characters from different scripts
+            var normalized = claimKey.Normalize(System.Text.NormalizationForm.FormKD);
+
             // Handle common JWT claim types with long URIs
+            // Also map standard claims to RLS-friendly names
             var commonMappings = new Dictionary<string, string>
             {
                 ["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] = "role",
-                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] = "sub",
+                ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"] = "user_id",
                 ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name"] = "name",
                 ["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] = "email",
                 ["http://schemas.microsoft.com/identity/claims/objectidentifier"] = "oid",
-                ["http://schemas.microsoft.com/identity/claims/tenantid"] = "tid"
+                ["http://schemas.microsoft.com/identity/claims/tenantid"] = "tenant_id",
+                // Map standard JWT "sub" claim to user_id for RLS owner checks
+                ["sub"] = "user_id"
             };
-            
-            if (commonMappings.TryGetValue(claimKey, out var shortName))
+
+            if (commonMappings.TryGetValue(normalized, out var shortName))
                 return shortName;
-            
+
             // For other claims, sanitize the key
             // Remove URI prefixes
-            if (claimKey.StartsWith("http://") || claimKey.StartsWith("https://"))
+            if (normalized.StartsWith("http://") || normalized.StartsWith("https://"))
             {
-                var lastSlash = claimKey.LastIndexOf('/');
-                if (lastSlash >= 0 && lastSlash < claimKey.Length - 1)
-                    claimKey = claimKey.Substring(lastSlash + 1);
+                var lastSlash = normalized.LastIndexOf('/');
+                if (lastSlash >= 0 && lastSlash < normalized.Length - 1)
+                    normalized = normalized.Substring(lastSlash + 1);
             }
-            
-            // Replace invalid characters with underscores
-            var sanitized = System.Text.RegularExpressions.Regex.Replace(claimKey, @"[^a-zA-Z0-9_]", "_");
-            
+
+            // SECURITY: Remove all non-ASCII characters entirely for safety
+            // This prevents Unicode confusables/homoglyphs from bypassing security
+            var sanitized = System.Text.RegularExpressions.Regex.Replace(normalized, @"[^a-zA-Z0-9_]", "_");
+
             // Ensure it doesn't start with a number
             if (sanitized.Length > 0 && char.IsDigit(sanitized[0]))
                 sanitized = "_" + sanitized;
-            
-            // Truncate to 63 characters minus "jwt.claims." prefix (11 chars)
-            if (sanitized.Length > 52)
-                sanitized = sanitized.Substring(0, 52);
-            
+
+            // Truncate to 63 characters minus "app." prefix (4 chars)
+            if (sanitized.Length > 59)
+                sanitized = sanitized.Substring(0, 59);
+
             return string.IsNullOrEmpty(sanitized) ? "claim" : sanitized;
         }
 

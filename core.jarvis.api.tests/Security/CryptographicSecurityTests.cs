@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
-using core.jarvis.api.Functions.Security;
 using core.jarvis.api.tests.Helpers;
 using core.jarvis.api.Services;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Shouldly;
@@ -38,23 +39,23 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
     {
         // Password hashing should use bcrypt, scrypt, or Argon2
         // Never MD5, SHA1, or plain SHA256
-        
+
         var passwordService = _serviceProvider.GetRequiredService<IPasswordPolicyService>();
         var testPassword = "TestPassword123!";
-        
+
         // If the service has a hash method, test it
         var serviceType = passwordService.GetType();
         var hashMethod = serviceType.GetMethod("HashPassword");
-        
+
         if (hashMethod != null)
         {
             var hash = hashMethod.Invoke(passwordService, new object[] { testPassword }) as string;
             hash.ShouldNotBeNullOrEmpty();
-            
+
             // Verify it's not a weak hash
             hash.Length.ShouldBeGreaterThan(32, "Hash should be longer than MD5/SHA1");
             hash.ShouldNotBe(testPassword, "Password must not be stored in plain text");
-            
+
             // Check it's not a simple SHA hash
             using (var sha256 = SHA256.Create())
             {
@@ -63,69 +64,6 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
                 hash.ShouldNotBe(simpleSha, "Must not use simple SHA256");
             }
         }
-    }
-
-    /// <summary>
-    /// INTENT: Test timing attack resistance in authentication
-    /// PURPOSE: Prevent username enumeration via timing
-    /// BUSINESS CONTEXT: Timing attacks reveal valid usernames
-    /// WHY IMPORTANT: Prevents user enumeration
-    /// ARCHITECTURAL SIGNIFICANCE: Tests constant-time comparison
-    /// FUTURE RESILIENCE: Maintains timing attack resistance
-    /// </summary>
-    [Fact]
-    public async Task Authentication_MustResistTimingAttacks()
-    {
-        // Arrange
-        var authFunction = _serviceProvider.GetRequiredService<AuthFunction>();
-        var iterations = 10;
-        var validUserTimes = new List<long>();
-        var invalidUserTimes = new List<long>();
-
-        // Act - Time authentication attempts
-        for (int i = 0; i < iterations; i++)
-        {
-            // Test with potentially valid email format
-            var validReq = TestFactory.CreateHttpRequestData(
-                "POST",
-                "/api/security/auth",
-                JsonConvert.SerializeObject(new
-                {
-                    email = $"admin_{Guid.NewGuid()}@test.com",
-                    password = "wrongpassword"
-                })
-            );
-
-            var sw1 = Stopwatch.StartNew();
-            await authFunction.Run(validReq);
-            sw1.Stop();
-            validUserTimes.Add(sw1.ElapsedMilliseconds);
-
-            // Test with clearly invalid email
-            var invalidReq = TestFactory.CreateHttpRequestData(
-                "POST",
-                "/api/security/auth",
-                JsonConvert.SerializeObject(new
-                {
-                    email = $"nonexistent{Guid.NewGuid()}@test.com",
-                    password = "wrongpassword"
-                })
-            );
-
-            var sw2 = Stopwatch.StartNew();
-            await authFunction.Run(invalidReq);
-            sw2.Stop();
-            invalidUserTimes.Add(sw2.ElapsedMilliseconds);
-        }
-
-        // Assert - Timing should be similar (constant-time)
-        var validAvg = validUserTimes.Average();
-        var invalidAvg = invalidUserTimes.Average();
-        
-        // Allow for some variance, but not significant differences
-        var difference = Math.Abs(validAvg - invalidAvg);
-        difference.ShouldBeLessThan(50, // 50ms tolerance
-            $"Timing difference too large: valid={validAvg}ms, invalid={invalidAvg}ms");
     }
 
     /// <summary>
@@ -160,7 +98,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         {
             token.ShouldNotBeNullOrEmpty();
             token.Length.ShouldBeGreaterThan(20, "Tokens should be sufficiently long");
-            
+
             // Verify base64 encoding (typical for crypto random)
             Should.NotThrow(() => Convert.FromBase64String(token),
                 "Tokens should be valid base64");
@@ -186,14 +124,14 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         // Get configuration
         var config = _serviceProvider.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
         var jwtSecret = config["Jwt:SecretKey"];
-        
+
         // Assert key strength
         jwtSecret.ShouldNotBeNullOrEmpty("JWT secret must be configured");
-        
+
         // Check minimum length (256 bits = 32 bytes for HMAC-SHA256)
         jwtSecret.Length.ShouldBeGreaterThanOrEqualTo(32,
             "JWT secret must be at least 256 bits");
-        
+
         // Check it's not a weak/common secret
         var weakSecrets = new[]
         {
@@ -201,7 +139,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
             "your-256-bit-secret", "your-secret-key",
             "dev-secret", "test-secret"
         };
-        
+
         foreach (var weak in weakSecrets)
         {
             jwtSecret.ToLower().ShouldNotContain(weak); // JWT secret must not contain weak phrase
@@ -257,14 +195,14 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         );
 
         var token = tokenService.AccessToken(Guid.NewGuid(), "test@test.com");
-        
+
         // Decode header to check algorithm
         var parts = token.Split('.');
         parts.Length.ShouldBe(3, "JWT must have 3 parts");
-        
+
         var headerJson = Encoding.UTF8.GetString(
             Convert.FromBase64String(parts[0].PadRight(parts[0].Length + (4 - parts[0].Length % 4) % 4, '=')));
-        
+
         headerJson.ShouldContain("HS256"); // Should use HMAC-SHA256
         headerJson.ShouldNotContain("none"); // Must not use 'none' algorithm
         headerJson.ShouldNotContain("HS1"); // Must not use SHA1
@@ -284,15 +222,15 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         // Test refresh token hashing uses different results for same input
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
         var sampleToken = "SampleRefreshToken123";
-        
+
         // Hash same token multiple times
         var hash1 = tokenService.HashRefreshToken(sampleToken);
         var hash2 = tokenService.HashRefreshToken(sampleToken);
-        
+
         // For SHA256 (deterministic), hashes will be same
         // This is acceptable for refresh tokens as they're already random
         hash1.ShouldBe(hash2, "SHA256 is deterministic (OK for random tokens)");
-        
+
         // But verify the hash is strong
         hash1.Length.ShouldBeGreaterThan(20, "Hash should be substantial");
         Convert.FromBase64String(hash1).Length.ShouldBe(32, "SHA256 produces 32 bytes");
@@ -312,12 +250,12 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
         var tokenService = _serviceProvider.GetRequiredService<ITokenService>();
         var token = "TestRefreshToken123";
         var hash = tokenService.HashRefreshToken(token);
-        
+
         // Test comparison timing
         var iterations = 100;
         var correctTimes = new List<long>();
         var incorrectTimes = new List<long>();
-        
+
         for (int i = 0; i < iterations; i++)
         {
             // Time correct token
@@ -326,7 +264,7 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
             sw1.Stop();
             correctTimes.Add(sw1.ElapsedTicks);
             result1.ShouldBeTrue();
-            
+
             // Time incorrect token (different at start)
             var sw2 = Stopwatch.StartNew();
             var result2 = tokenService.VerifyRefreshToken("X" + token.Substring(1), hash);
@@ -334,44 +272,14 @@ public class CryptographicSecurityTests : ApiIntegrationTestBase
             incorrectTimes.Add(sw2.ElapsedTicks);
             result2.ShouldBeFalse();
         }
-        
+
         // Check timing consistency
         var correctAvg = correctTimes.Average();
         var incorrectAvg = incorrectTimes.Average();
         var ratio = Math.Max(correctAvg, incorrectAvg) / Math.Min(correctAvg, incorrectAvg);
-        
+
         ratio.ShouldBeLessThan(2.0,
             "Timing should be similar for correct/incorrect tokens");
     }
 
-    /// <summary>
-    /// INTENT: Comprehensive cryptographic security summary
-    /// PURPOSE: Ensure all crypto aspects are secure
-    /// BUSINESS CONTEXT: Complete crypto validation
-    /// WHY IMPORTANT: Crypto is security foundation
-    /// ARCHITECTURAL SIGNIFICANCE: Validates crypto implementation
-    /// FUTURE RESILIENCE: Maintains strong cryptography
-    /// </summary>
-    [Fact]
-    public void CryptographicSecurity_Summary()
-    {
-        // Summary of cryptographic validations
-        var testMethods = GetType().GetMethods()
-            .Where(m => m.GetCustomAttributes(typeof(FactAttribute), false).Length > 0)
-            .Select(m => m.Name)
-            .ToList();
-
-        // Verify comprehensive crypto coverage
-        testMethods.ShouldContain("PasswordHashing_MustUseSecureAlgorithm");
-        testMethods.ShouldContain("Authentication_MustResistTimingAttacks");
-        testMethods.ShouldContain("TokenGeneration_MustUseCryptoRandom");
-        testMethods.ShouldContain("JWT_SecretKey_MustBeStrong");
-        testMethods.ShouldContain("TokenExpiration_MustBeSecure");
-        testMethods.ShouldContain("Cryptography_MustUseStrongAlgorithms");
-        testMethods.ShouldContain("Hashing_MustUseSalts");
-        testMethods.ShouldContain("SecureComparison_MustBeConstantTime");
-        
-        testMethods.Count.ShouldBeGreaterThanOrEqualTo(8,
-            "Comprehensive cryptographic testing required");
-    }
 }

@@ -29,7 +29,7 @@ Developers don't write access control logic. The framework enforces it at the da
                                                           v
 +------------------+     +------------------+     +------------------+
 |   PostgreSQL     | <-- |   Session Vars   | <-- |   PgClient       |
-|   RLS Policies   |     |   jwt.claims.*   |     |   .JWT(token)    |
+|   RLS Policies   |     |   app.*          |     |   .JWT(token)    |
 +------------------+     +------------------+     +------------------+
 ```
 
@@ -119,7 +119,7 @@ PostgreSQL policies use session variables set by PgClient:
 -- PostgreSQL RLS policy
 CREATE POLICY tenant_isolation ON orders
     FOR ALL
-    USING (tenant_id = current_setting('jwt.claims.tenant_id')::uuid);
+    USING (tenant_id = current_setting('app.tenant_id', true)::uuid);
 ```
 
 Both layers must pass. If either denies, data is not accessible.
@@ -134,9 +134,9 @@ When you call `pgClient.JWT(token)`, the following happens:
 
 ```csharp
 // PgClient.JWTClaims() executes:
-SET SESSION "jwt.claims.sub" = '11111111-1111-1111-1111-111111111111';
-SET SESSION "jwt.claims.tenant_id" = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
-SET SESSION "jwt.claims.role" = 'manager';
+SET SESSION "app.user_id" = '11111111-1111-1111-1111-111111111111';
+SET SESSION "app.tenant_id" = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
+SET SESSION "app.role" = 'manager';
 ```
 
 PostgreSQL functions then read these:
@@ -144,7 +144,7 @@ PostgreSQL functions then read these:
 ```sql
 -- In your database
 CREATE FUNCTION current_tenant_id() RETURNS uuid AS $$
-    SELECT current_setting('jwt.claims.tenant_id')::uuid;
+    SELECT current_setting('app.tenant_id', true)::uuid;
 $$ LANGUAGE sql STABLE;
 ```
 

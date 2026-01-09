@@ -314,10 +314,19 @@ public static class PostgreSqlTypeConverter
     /// <returns>True if the property should be JSON serialized/deserialized.</returns>
     public static bool IsJsonColumn(string columnName, Type propertyType)
     {
+        // CRITICAL: If the property type is already a string, do NOT treat it as a JSON column
+        // that needs serialization. The string already contains the JSON content.
+        // This prevents double-serialization of fields like ComponentSnapshots.Snapshots
+        // which store JSON data as a string.
+        if (propertyType == typeof(string))
+        {
+            return false;
+        }
+
         // Known JSONB columns from database schema
         var jsonColumns = new HashSet<string>
         {
-            "payment_policy", "client_communication", "client_work_preferences", 
+            "payment_policy", "client_communication", "client_work_preferences",
             "departments", "metadata", "snapshots", "child_types", "preferences"
         };
 

@@ -1,4 +1,5 @@
 using core.jarvis.Data;
+using core.jarvis.Data.Query;
 using core.jarvis.api.Models;
 using core.jarvis.api.Services;
 using Microsoft.Extensions.Logging;
@@ -38,38 +39,20 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 
         // Get default role - fetch all roles and filter in memory
         var allRoles = await DataContext.Query()
-            .WithAll<Role>(r => true)
+            .WithAll<Role>(Filter<Role>.Eq(r => r.Name, "default"))
             .ToEntityComponents();
 
-        var defaultRoleEntity = allRoles
-            .FirstOrDefault(kvp => 
-            {
-                var role = kvp.Value.Get<Role>();
-                return role != null && role.Name == "default";
-            });
-            
+        var defaultRoleEntity = allRoles.FirstOrDefault();
+
         var defaultRoleId = defaultRoleEntity.Key;
 
-        // Get permissions from default role
-        var permissionIds = new List<string>();
-        if (defaultRoleId != Guid.Empty)
-        {
-            var roleHandler = DataContext.For<RoleHandler>(defaultRoleId);
-            var defaultRole = await roleHandler.Get();
-            if (defaultRole != null)
-            {
-                permissionIds.AddRange(defaultRole.PermissionIds);
-            }
-        }
-
-        // Create user profile with default role and permissions
-        var userName = !string.IsNullOrWhiteSpace(fullName) ? fullName.Trim() : email.Split('@')[0]; // Use provided name or email prefix as default
+        // Create user profile with default role (permissions calculated at runtime by PermissionService)
+        var userName = !string.IsNullOrWhiteSpace(fullName) ? fullName.Trim() : email.Split('@')[0];
         var userProfile = new SecurityProfile
         {
             OwnerEntityId = OwnerEntityId,
             Name = userName,
             RoleIds = defaultRoleId != Guid.Empty ? new[] { defaultRoleId.ToString() } : Array.Empty<string>(),
-            PermissionIds = permissionIds.ToArray(),
             Avatar = null,
             LastUpdated = DateTime.UtcNow
         };
@@ -80,15 +63,15 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
     }
 
     /// <summary>
-    /// Assigns a role to this user and recalculates permissions.
+    /// Assigns a role to this user.
     /// </summary>
     public async Task<SecurityProfile> AssignRole(Guid roleId)
     {
         var profile = await GetOrDefault() ?? throw new InvalidOperationException("SecurityProfile component not found");
-        
+
         var roleIds = profile.RoleIds.ToList();
         var roleIdStr = roleId.ToString();
-        
+
         if (roleIds.Contains(roleIdStr))
         {
             Logger.LogInformation("User {UserId} already has role {RoleId}", OwnerEntityId, roleId);
@@ -96,61 +79,35 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         }
 
         roleIds.Add(roleIdStr);
-        
-        // Recalculate permissions based on all roles
-        var allPermissionIds = new HashSet<string>();
-        foreach (var rid in roleIds)
-        {
-            if (!Guid.TryParse(rid, out var parsedRoleId))
-                continue;
-                
-            // Query role directly instead of handler-to-handler call
-            var roleResults = await DataContext.Query()
-                .With<Role>(r => r.OwnerEntityId == parsedRoleId)
-                .ToEntityComponents();
 
-            if (roleResults.TryGetValue(parsedRoleId, out var roleComponents))
-            {
-                var role = roleComponents.Get<Role>();
-                if (role != null)
-                {
-                    foreach (var permId in role.PermissionIds)
-                    {
-                        allPermissionIds.Add(permId);
-                    }
-                }
-            }
-        }
-        
-        var updated = profile with 
-        { 
+        var updated = profile with
+        {
             RoleIds = roleIds.ToArray(),
-            PermissionIds = allPermissionIds.ToArray(),
             LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.TryCommit(updated);
         Logger.LogInformation("Assigned role {RoleId} to user {UserId}", roleId, OwnerEntityId);
-        
+
         // Invalidate permission cache since permissions have changed
         if (_permissionService != null)
         {
             await _permissionService.InvalidateCacheAsync(OwnerEntityId);
         }
-        
+
         return updated;
     }
 
     /// <summary>
-    /// Removes a role from this user and recalculates permissions.
+    /// Removes a role from this user.
     /// </summary>
     public async Task<SecurityProfile> RemoveRole(Guid roleId)
     {
         var profile = await GetOrDefault() ?? throw new InvalidOperationException("SecurityProfile component not found");
-        
+
         var roleIds = profile.RoleIds.ToList();
         var roleIdStr = roleId.ToString();
-        
+
         if (!roleIds.Contains(roleIdStr))
         {
             Logger.LogInformation("User {UserId} doesn't have role {RoleId}", OwnerEntityId, roleId);
@@ -158,48 +115,22 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
         }
 
         roleIds.Remove(roleIdStr);
-        
-        // Recalculate permissions based on remaining roles
-        var allPermissionIds = new HashSet<string>();
-        foreach (var rid in roleIds)
-        {
-            if (!Guid.TryParse(rid, out var parsedRoleId))
-                continue;
-                
-            // Query role directly instead of handler-to-handler call
-            var roleResults = await DataContext.Query()
-                .With<Role>(r => r.OwnerEntityId == parsedRoleId)
-                .ToEntityComponents();
 
-            if (roleResults.TryGetValue(parsedRoleId, out var roleComponents))
-            {
-                var role = roleComponents.Get<Role>();
-                if (role != null)
-                {
-                    foreach (var permId in role.PermissionIds)
-                    {
-                        allPermissionIds.Add(permId);
-                    }
-                }
-            }
-        }
-        
-        var updated = profile with 
-        { 
+        var updated = profile with
+        {
             RoleIds = roleIds.ToArray(),
-            PermissionIds = allPermissionIds.ToArray(),
             LastUpdated = DateTime.UtcNow
         };
 
         await DataContext.TryCommit(updated);
         Logger.LogInformation("Removed role {RoleId} from user {UserId}", roleId, OwnerEntityId);
-        
+
         // Invalidate permission cache since permissions have changed
         if (_permissionService != null)
         {
             await _permissionService.InvalidateCacheAsync(OwnerEntityId);
         }
-        
+
         return updated;
     }
 
@@ -225,7 +156,13 @@ public class AccountProfileHandler : ComponentHandler<SecurityProfile>
 
         await DataContext.TryCommit(updated);
         Logger.LogInformation("Updated profile for user {UserId}", OwnerEntityId);
-        
+
+        // Invalidate permission cache since profile may affect permissions
+        if (_permissionService != null)
+        {
+            await _permissionService.InvalidateCacheAsync(OwnerEntityId);
+        }
+
         return updated;
     }
 

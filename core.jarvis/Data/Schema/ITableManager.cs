@@ -21,4 +21,10 @@ public interface ITableManager
     /// Validates all registered component tables in the system.
     /// </summary>
     Task ValidateAllComponentTables();
+
+    /// <summary>
+    /// Ensures the component_snapshots table exists for storing component history.
+    /// This is a non-component table used for audit/versioning purposes.
+    /// </summary>
+    Task EnsureSnapshotsTableExists();
 }

@@ -63,7 +63,7 @@ public class PgTable<T> where T : class, new()
     private static readonly ActivitySource ActivitySource = new ActivitySource("Jarvis.Database.PgTable");
 
     // Whitelist of allowed operators for filtering (prevents SQL injection)
-    private static readonly HashSet<string> AllowedOperators = new() { "eq", "neq", "lt", "lte", "gt", "gte" };
+    private static readonly HashSet<string> AllowedOperators = new() { "eq", "neq", "lt", "lte", "gt", "gte", "like", "ilike" };
 
     // Performance-optimized caches for expensive reflection operations
     private static readonly Lazy<PropertyInfo[]> _writableProperties = new(() => 
@@ -301,7 +301,9 @@ public class PgTable<T> where T : class, new()
     /// - "lte": Less than or equal (&lt;=)
     /// - "gt": Greater than (&gt;)
     /// - "gte": Greater than or equal (&gt;=)
-    /// 
+    /// - "like": Pattern match (LIKE) - use % for wildcards
+    /// - "ilike": Case-insensitive pattern match (ILIKE) - use % for wildcards
+    ///
     /// PostgreSQL Type Handling:
     /// - Guid values automatically mapped to UUID type
     /// - DateTime values properly formatted for PostgreSQL
@@ -315,7 +317,7 @@ public class PgTable<T> where T : class, new()
     /// </code>
     /// </summary>
     /// <param name="column">The column name in snake_case format. Must correspond to an entity property.</param>
-    /// <param name="op">The comparison operator. Must be one of: eq, neq, lt, lte, gt, gte.</param>
+    /// <param name="op">The comparison operator. Must be one of: eq, neq, lt, lte, gt, gte, like, ilike.</param>
     /// <param name="value">The value to compare against. Will be properly parameterized and type-converted.</param>
     /// <returns>The current PgTable instance for method chaining.</returns>
     /// <exception cref="ArgumentException">Thrown if column name is not allowed (not found in entity properties) or operator is not in the whitelist.</exception>
@@ -660,14 +662,14 @@ public class PgTable<T> where T : class, new()
     /// <summary>
     /// Maps a logical operator string to its SQL equivalent.
     /// </summary>
-    /// <param name="op">The logical operator (eq, neq, lt, lte, gt, gte).</param>
+    /// <param name="op">The logical operator (eq, neq, lt, lte, gt, gte, like, ilike).</param>
     /// <returns>The SQL operator string.</returns>
     /// <exception cref="ArgumentException">Thrown if the operator is not supported.</exception>
     private string TranslateOperator(string op)
     {
         // Security: This method is protected by operator whitelisting in the Filter method.
         // The switch expression provides compile-time validation and is optimal for the small set of operators.
-        
+
         return op switch
         {
             "eq" => "=",
@@ -676,6 +678,8 @@ public class PgTable<T> where T : class, new()
             "lte" => "<=",
             "gt" => ">",
             "gte" => ">=",
+            "like" => "LIKE",
+            "ilike" => "ILIKE",
             _ => throw new ArgumentException($"Unsupported operator: {op}")
         };
     }

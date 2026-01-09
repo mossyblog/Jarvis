@@ -199,7 +199,7 @@ public class ConcurrencyControlIntegrationTests : IntegrationTestBase
             await TestDataContext().Commit(component);
         });
         
-        exception.Message.ShouldContain("Version mismatch");
+        exception.Message.ShouldContain("Concurrency conflict");
         exception.Message.ShouldContain("Expected version: 1");
         exception.Message.ShouldContain("Actual version: 2");
         

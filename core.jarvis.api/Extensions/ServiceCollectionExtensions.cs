@@ -1,8 +1,8 @@
 using core.jarvis;
 using core.jarvis.api.Handlers;
 using core.jarvis.api.Systems;
-using core.jarvis.api.Middleware;
 using core.jarvis.api.Models;
+using core.jarvis.api.Security;
 using core.jarvis.api.Services;
 using core.jarvis.Data;
 using core.jarvis.Data.Query;
@@ -34,12 +34,22 @@ public static class ServiceCollectionExtensions
 
         // Set the connection string as environment variable for core Jarvis services
         var connectionString = configuration.GetConnectionString("JarvisDb");
-        
-        // Validate database connection string
+        var isTestEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Test";
+
+        // Validate database connection string (use test default in Test environment)
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException(
-                "Database connection string not configured. Please set ConnectionStrings__JarvisDb in .env.local or environment variables.");
+            if (isTestEnvironment)
+            {
+                // Use test database connection string from TestDatabaseSetup
+                connectionString = Environment.GetEnvironmentVariable("TEST_DATABASE_URL")
+                    ?? "Host=localhost;Port=5432;Database=jarvis_test;Username=postgres;Password=postgres";
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "Database connection string not configured. Please set ConnectionStrings__JarvisDb in .env.local or environment variables.");
+            }
         }
         
         if (connectionString.Contains("Password=CHANGE_ME"))
@@ -62,50 +72,10 @@ public static class ServiceCollectionExtensions
         // Add core Jarvis services
         services.RegisterJarvis();
 
-        // Register query handlers for API-specific components
-        services.AddScoped<IComponentQueryHandler<SecurityProfile>, ComponentQueryHandler<SecurityProfile>>();
-        services.AddScoped<IComponentQueryHandler<Account>, ComponentQueryHandler<Account>>();
-        services.AddScoped<IComponentQueryHandler<AuthToken>, ComponentQueryHandler<AuthToken>>();
-        services.AddScoped<IComponentQueryHandler<Role>, ComponentQueryHandler<Role>>();
-        services.AddScoped<IComponentQueryHandler<Permission>, ComponentQueryHandler<Permission>>();
-        services.AddScoped<IComponentQueryHandler<NavigationItem>, ComponentQueryHandler<NavigationItem>>();
-        services.AddScoped<IComponentQueryHandler<SecurityAuditEvent>, ComponentQueryHandler<SecurityAuditEvent>>();
+        // Auto-register all handlers and query handlers from this assembly
+        // This replaces manual registration of 11 handlers (22 lines) with assembly scanning
+        services.RegisterAllComponentHandlersAndQueriesFromAssembly(typeof(AuthHandler).Assembly);
 
-        // Register API-specific handlers - both as interface and concrete type
-        // This allows DataContext.For<THandler> to resolve them by concrete type
-        services.AddScoped<IComponentHandler, SystemSetupHandler>();
-        services.AddScoped<SystemSetupHandler>();
-        
-        services.AddScoped<IComponentHandler, AuthHandler>();
-        services.AddScoped<AuthHandler>();
-        
-        services.AddScoped<IComponentHandler, AuthTokenHandler>();
-        services.AddScoped<AuthTokenHandler>();
-        
-        services.AddScoped<IComponentHandler, SecurityTokenHandler>();
-        services.AddScoped<SecurityTokenHandler>();
-        
-        services.AddScoped<IComponentHandler, AccountHandler>();
-        services.AddScoped<AccountHandler>();
-        
-        services.AddScoped<IComponentHandler, AccountProfileHandler>();
-        services.AddScoped<AccountProfileHandler>();
-        
-        services.AddScoped<IComponentHandler, RoleHandler>();
-        services.AddScoped<RoleHandler>();
-        
-        services.AddScoped<IComponentHandler, PermissionHandler>();
-        services.AddScoped<PermissionHandler>();
-        
-        services.AddScoped<IComponentHandler, NavigationItemHandler>();
-        services.AddScoped<NavigationItemHandler>();
-        
-        services.AddScoped<IComponentHandler, NavigationHandler>();
-        services.AddScoped<NavigationHandler>();
-        
-        services.AddScoped<IComponentHandler, SecurityAuditHandler>();
-        services.AddScoped<SecurityAuditHandler>();
-        
         // Add System services
         services.AddScoped<Systems.RegistrationSystem>();
         services.AddScoped<Systems.AuthSystem>();
@@ -139,13 +109,6 @@ public static class ServiceCollectionExtensions
 
         // AuthHandler will get refresh token days from configuration directly
 
-        // Add middleware
-        services.AddSingleton<ComponentValidationMiddleware>();
-        services.AddSingleton<RateLimitingMiddleware>();
-        services.AddSingleton<SecurityHeadersMiddleware>();
-        services.AddSingleton<InputValidationMiddleware>();
-        services.AddSingleton<AuthorizationMiddleware>();
-
         // Add security services
         services.AddScoped<IPasswordPolicyService, PasswordPolicyService>();
         services.AddScoped<ISecurityAuditService, SecurityAuditService>();
@@ -154,6 +117,19 @@ public static class ServiceCollectionExtensions
         // Add permission service with caching
         services.AddMemoryCache();
         services.AddScoped<IPermissionService, PermissionService>();
+
+        // Add GraphQL query validator with configurable options
+        services.AddSingleton<IGraphQLQueryValidator>(provider =>
+        {
+            var options = new GraphQLValidationOptions
+            {
+                MaxQueryDepth = int.Parse(configuration["GraphQL:MaxQueryDepth"] ?? "10"),
+                MaxFieldCount = int.Parse(configuration["GraphQL:MaxFieldCount"] ?? "100"),
+                MaxQueryLength = int.Parse(configuration["GraphQL:MaxQueryLength"] ?? "10000"),
+                BlockIntrospection = bool.Parse(configuration["GraphQL:BlockIntrospection"] ?? "true")
+            };
+            return new GraphQLQueryValidator(options);
+        });
 
         return services;
     }

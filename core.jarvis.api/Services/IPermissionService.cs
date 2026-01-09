@@ -33,7 +33,13 @@ public interface IPermissionService
     /// Should be called when permissions or roles change.
     /// </summary>
     Task InvalidateCacheAsync(Guid userId);
-    
+
+    /// <summary>
+    /// Invalidates the cached security profiles for all users with a specific role.
+    /// Should be called when role permissions change.
+    /// </summary>
+    Task InvalidateCacheForRoleAsync(Guid roleId);
+
     /// <summary>
     /// Gets all permissions for a user, expanded from roles.
     /// </summary>
